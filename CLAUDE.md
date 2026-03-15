@@ -1,8 +1,8 @@
 # CLAUDE.md
 
-Laravel 12 + React 19 + Inertia.js 2 starter template with Fortify auth, Tailwind CSS v4, shadcn/ui components, and TypeScript.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Extracted from the production **fuel-system** project at `/Users/andrade-mac-22/Documents/AI/fuel-system` (reference for advanced patterns).
+Laravel 12 + React 19 + Inertia.js 2 starter template with Fortify auth, Tailwind CSS v4, shadcn/ui components, and TypeScript. Extracted from the production **fuel-system** project at `/Users/andrade-mac-22/Documents/AI/fuel-system` (reference for advanced patterns).
 
 ## Project Documents
 
@@ -41,35 +41,88 @@ When starting a new feature, always check `docs/project/` for relevant PRDs or s
 
 ## Development Environment
 
-Uses **Laravel Herd** - sites served at `http://[directory-name].test` (e.g., `http://claude-react-laravel-template.test`). No manual server setup needed.
+Uses **Laravel Herd** - sites served at `http://[directory-name].test` (e.g., `http://iot-hub.test`). No manual server setup needed.
 
 ```bash
-composer dev              # Start queue workers, logs, and Vite (Herd serves the app)
+# Development
+composer dev              # Start queue workers, logs, Reverb (WebSocket), and Vite (Herd serves the app)
+composer setup            # First-time setup: install deps, .env, key, migrate, npm install, build
+
+# Build & Quality
 npm run build             # Production build
+npm run build:ssr         # Production build with SSR
 npm run lint              # ESLint with auto-fix
 npm run format            # Prettier formatting
-npm run types             # TypeScript type checking
-composer test             # PHP tests with Pest
+npm run format:check      # Check formatting without changes
+npm run types             # TypeScript type checking (tsc --noEmit)
+
+# Testing
+composer test             # PHP tests with Pest (clears config cache first)
+php artisan test --filter=ExampleTest  # Run a single test class
+php artisan test --filter=test_example # Run a single test method
+
+# Database
+php artisan migrate              # Run migrations
+php artisan migrate:fresh --seed # Reset DB and seed all test data
+php artisan db:seed              # Seed without resetting
 ```
+
+### Test Credentials (after seeding)
+
+| Email | Password | Role |
+|-------|----------|------|
+| `admin@example.com` | `password` | admin |
+| `editor@example.com` | `password` | editor |
+| `user@example.com` | `password` | user |
+| `unverified@example.com` | `password` | user (unverified email) |
 
 ## Architecture
 
 ### Backend (Laravel)
-- **Routes**: `routes/web.php`
+- **Routes**: `routes/web.php` (main), `routes/settings.php` (settings pages)
 - **Controllers**: `app/Http/Controllers/`
-- **Models**: `app/Models/`
-- **Migrations**: `database/migrations/`
-- **Policies**: `app/Policies/`
+- **Models**: `app/Models/` — User, Product, Category, File
+- **Policies**: `app/Policies/` — ProductPolicy, FilePolicy, NotificationPolicy
+- **Services**: `app/Services/` — Business logic layer
+- **Notifications**: `app/Notifications/` — SystemNotification, ActivityNotification
+- **Migrations**: `database/migrations/` (SQLite by default, in-memory for tests)
 
 ### Frontend (React + Inertia)
-- **Pages**: `resources/js/pages/` - Correspond to routes
-- **Components**: `resources/js/components/` - UI components (`ui/` has shadcn)
-- **Layouts**: `resources/js/layouts/` - Page wrappers (use `AppLayout`)
-- **Hooks**: `resources/js/hooks/` - Custom React hooks
-- **Utils**: `resources/js/utils/` - Utility functions
-- **Types**: `resources/js/types/` - TypeScript definitions
-- **Config**: `resources/js/config/` - Navigation, etc.
-- **CSS**: `resources/css/app.css` - Tailwind CSS v4 with `@tailwindcss/vite` plugin
+- **Pages**: `resources/js/pages/` — Correspond to Inertia routes
+- **Components**: `resources/js/components/` — UI components (`ui/` has shadcn, 90+ components)
+- **Layouts**: `resources/js/layouts/` — `AppLayout` (sidebar+header), `AuthLayout` (card/simple/split), `SettingsLayout`
+- **Hooks**: `resources/js/hooks/` — 18 custom hooks
+- **Utils**: `resources/js/utils/` — Utility functions
+- **Types**: `resources/js/types/` — TypeScript definitions
+- **Config**: `resources/js/config/` — Navigation, etc.
+- **CSS**: `resources/css/app.css` — Tailwind CSS v4 with `@tailwindcss/vite` plugin
+
+### Shared Inertia Data
+
+The `HandleInertiaRequests` middleware shares these props on every page load:
+- `auth` — Current user object
+- `flash` — Success/error/warning/info messages (auto-displayed as Sonner toasts)
+- `notifications` / `unreadNotificationsCount` — Database notifications
+- `locale` — Current language (`en`/`es`)
+- `sidebarOpen` — Navigation state
+- `quote` — Daily motivational quote
+
+### Auth & Permissions
+
+**Fortify** handles authentication with: registration, password reset, email verification, two-factor authentication.
+
+**Spatie Laravel Permission** manages roles/permissions:
+- Roles: `admin`, `editor`, `user`
+- Check with `$user->hasRole('admin')` or `$user->hasPermissionTo('edit articles')`
+- Gate checks in policies
+
+### Real-time
+
+**Laravel Reverb** provides WebSocket support. Included in `composer dev`. Used for real-time notifications via `use-realtime-notifications` hook.
+
+### i18n
+
+`laravel-react-i18n` provides translations. Use `useLaravelReactI18n()` hook with `t('key')` for translated strings. Locale files in `lang/`.
 
 ## Project-Specific Patterns
 
@@ -108,6 +161,10 @@ const { theme, setTheme } = useAppearance(); // from '@/hooks/use-appearance'
 setTheme('dark'); // 'light' | 'dark' | 'system'
 ```
 
+### Activity Logging
+
+Models use the `LogsActivity` trait from Spatie Activity Log. Configure via `getActivitylogOptions()` on each model.
+
 ### Key Types
 
 - **Core** (`resources/js/types/index.d.ts`): `User`, `Auth`, `SharedData`, `BreadcrumbItem`, `NavItem`, `NavGroup`
@@ -115,21 +172,21 @@ setTheme('dark'); // 'light' | 'dark' | 'system'
 
 ### Key Utilities
 
-- `parseDecimalField`, `safeParseFloat` from `@/utils/typeHelpers` - Laravel decimal string to JS number
-- `handleInertiaErrors` from `@/utils/errorHandling` - Standardized error handling
-- `cn` from `@/lib/utils` - Tailwind class merging
+- `parseDecimalField`, `safeParseFloat` from `@/utils/typeHelpers` — Laravel decimal string to JS number
+- `handleInertiaErrors` from `@/utils/errorHandling` — Standardized error handling
+- `cn` from `@/lib/utils` — Tailwind class merging
 
 ## Skill & Plugin Workflow
 
 ### Required
 
-- **`/frontend-design`** - Invoke FIRST for any frontend task (new pages, components, UI changes, anything in `resources/js/`).
+- **`/frontend-design`** — Invoke FIRST for any frontend task (new pages, components, UI changes, anything in `resources/js/`).
 
 ### Recommended
 
-- **`/feature-dev`** - For features spanning multiple files/layers or needing architecture decisions.
-- **`/code-simplifier`** / **`/laravel-simplifier`** - After completing implementations or before PRs.
-- **`/ralph-loop`** - For complex multi-step tasks that benefit from autonomous iteration.
+- **`/feature-dev`** — For features spanning multiple files/layers or needing architecture decisions.
+- **`/code-simplifier`** / **`/laravel-simplifier`** — After completing implementations or before PRs.
+- **`/ralph-loop`** — For complex multi-step tasks that benefit from autonomous iteration.
 
 ### MCP Tools
 

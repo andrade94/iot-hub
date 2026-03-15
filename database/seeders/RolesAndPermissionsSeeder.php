@@ -9,9 +9,6 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         // Reset cached roles and permissions
@@ -19,65 +16,88 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Create permissions
         $permissions = [
-            // User management
+            // Organizations
+            'view organizations',
+            'manage organizations',
+            // Sites
+            'view sites',
+            'manage sites',
+            'onboard sites',
+            // Devices
+            'view devices',
+            'manage devices',
+            'provision devices',
+            // Alerts
+            'view alerts',
+            'acknowledge alerts',
+            'manage alert rules',
+            // Users
             'view users',
-            'create users',
-            'edit users',
-            'delete users',
-
-            // Content management
-            'view content',
-            'create content',
-            'edit content',
-            'delete content',
-            'publish content',
-
+            'manage users',
+            'assign site users',
+            // Reports
+            'view reports',
+            'generate reports',
+            // Work orders
+            'view work orders',
+            'manage work orders',
+            'complete work orders',
             // Settings
-            'manage settings',
+            'manage org settings',
             'view activity log',
+            // Command center
+            'access command center',
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Create roles and assign permissions
-
-        // Super Admin - has all permissions
-        $superAdmin = Role::firstOrCreate(['name' => 'super-admin']);
+        // Super Admin — all permissions
+        $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdmin->givePermissionTo(Permission::all());
 
-        // Admin - has most permissions
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $admin->givePermissionTo([
-            'view users',
-            'create users',
-            'edit users',
-            'view content',
-            'create content',
-            'edit content',
-            'delete content',
-            'publish content',
+        // Org Admin — all except manage organizations and command center
+        $orgAdmin = Role::firstOrCreate(['name' => 'org_admin']);
+        $orgAdmin->givePermissionTo(
+            collect($permissions)->reject(fn ($p) => in_array($p, [
+                'manage organizations',
+                'access command center',
+            ]))->toArray()
+        );
+
+        // Site Manager
+        $siteManager = Role::firstOrCreate(['name' => 'site_manager']);
+        $siteManager->givePermissionTo([
+            'view sites', 'manage sites',
+            'view devices', 'manage devices',
+            'view alerts', 'acknowledge alerts', 'manage alert rules',
+            'view users', 'assign site users',
+            'view reports', 'generate reports',
+            'view work orders', 'manage work orders',
             'view activity log',
         ]);
 
-        // Editor - can manage content
-        $editor = Role::firstOrCreate(['name' => 'editor']);
-        $editor->givePermissionTo([
-            'view content',
-            'create content',
-            'edit content',
-            'publish content',
+        // Site Viewer
+        $siteViewer = Role::firstOrCreate(['name' => 'site_viewer']);
+        $siteViewer->givePermissionTo([
+            'view sites',
+            'view devices',
+            'view alerts',
+            'view reports',
         ]);
 
-        // User - basic permissions
-        $user = Role::firstOrCreate(['name' => 'user']);
-        $user->givePermissionTo([
-            'view content',
+        // Technician
+        $technician = Role::firstOrCreate(['name' => 'technician']);
+        $technician->givePermissionTo([
+            'view sites',
+            'view devices',
+            'view alerts', 'acknowledge alerts',
+            'view work orders', 'complete work orders',
         ]);
 
-        $this->command->info('Roles and permissions created successfully!');
-        $this->command->info('Created roles: super-admin, admin, editor, user');
+        $this->command->info('IoT roles and permissions created successfully!');
+        $this->command->info('Created roles: super_admin, org_admin, site_manager, site_viewer, technician');
         $this->command->info('Created '.count($permissions).' permissions');
     }
 }

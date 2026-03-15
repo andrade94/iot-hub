@@ -1,32 +1,27 @@
 /**
  * Navigation Configuration
  *
- * This file defines the navigation structure for the application.
- * It includes main navigation items, groups, and helper functions
- * for managing navigation state and breadcrumbs.
+ * IoT platform navigation structure.
  */
 
 import type { BreadcrumbItem, NavGroup, NavItem } from '@/types';
 import {
-    Home,
-    Settings,
-    User,
-    FileText,
-    Package,
-    LayoutGrid,
     Activity,
     Bell,
-    Shield,
+    BookOpen,
+    Building2,
+    Cpu,
+    LayoutGrid,
+    MapPin,
     Palette,
-    Upload,
-    Sparkles,
-    Layers,
-    Code2,
+    Radio,
+    Shield,
+    User,
+    Users,
 } from 'lucide-react';
 
 /**
  * Main navigation structure
- * Customize this array to define your application's navigation menu
  */
 export const navigation: NavGroup[] = [
     {
@@ -36,7 +31,13 @@ export const navigation: NavGroup[] = [
                 title: 'Dashboard',
                 href: '/dashboard',
                 icon: LayoutGrid,
-                tooltip: 'Application dashboard',
+                tooltip: 'Platform overview',
+            },
+            {
+                title: 'Alerts',
+                href: '/alerts',
+                icon: Bell,
+                tooltip: 'Alert center',
             },
             {
                 title: 'Activity',
@@ -44,46 +45,22 @@ export const navigation: NavGroup[] = [
                 icon: Activity,
                 tooltip: 'View activity log',
             },
-            {
-                title: 'Notifications',
-                href: '/notifications',
-                icon: Bell,
-                tooltip: 'Notification center',
-                badge: 'New',
-            },
         ],
     },
     {
-        title: 'Manage',
+        title: 'Monitor',
         items: [
             {
-                title: 'Products',
-                href: '/products',
-                icon: Package,
-                tooltip: 'Manage products',
-            },
-        ],
-    },
-    {
-        title: 'Examples',
-        items: [
-            {
-                title: 'UI Components',
-                href: '/ui-demo',
-                icon: Layers,
-                tooltip: 'View component examples',
+                title: 'Sites',
+                href: '/sites',
+                icon: MapPin,
+                tooltip: 'Manage sites',
             },
             {
-                title: 'Components',
-                href: '/components-demo',
-                icon: Code2,
-                tooltip: 'Component showcase',
-            },
-            {
-                title: 'File Upload',
-                href: '/file-upload-demo',
-                icon: Upload,
-                tooltip: 'File upload demo',
+                title: 'Devices',
+                href: '/devices',
+                icon: Cpu,
+                tooltip: 'Manage devices',
             },
         ],
     },
@@ -110,11 +87,45 @@ export const navigation: NavGroup[] = [
             },
         ],
     },
+    {
+        title: 'Administration',
+        items: [
+            {
+                title: 'Organization',
+                href: '/settings/organization',
+                icon: Building2,
+                tooltip: 'Organization settings',
+            },
+            {
+                title: 'Sites',
+                href: '/settings/sites',
+                icon: MapPin,
+                tooltip: 'Manage sites',
+            },
+            {
+                title: 'Gateways',
+                href: '/settings/gateways',
+                icon: Radio,
+                tooltip: 'Manage gateways',
+            },
+            {
+                title: 'Recipes',
+                href: '/recipes',
+                icon: BookOpen,
+                tooltip: 'Sensor recipes',
+            },
+            {
+                title: 'Users',
+                href: '/settings/users',
+                icon: Users,
+                tooltip: 'Manage users',
+            },
+        ],
+    },
 ];
 
 /**
  * Flatten all navigation items into a single array
- * Useful for searching or filtering navigation items
  */
 export function getAllNavigationItems(navGroups: NavGroup[] = navigation): NavItem[] {
     const items: NavItem[] = [];
@@ -122,7 +133,6 @@ export function getAllNavigationItems(navGroups: NavGroup[] = navigation): NavIt
     navGroups.forEach((group) => {
         group.items.forEach((item) => {
             items.push(item);
-            // Recursively add nested items if they exist
             if (item.items && item.items.length > 0) {
                 items.push(...getAllNavigationItems([{ title: '', items: item.items }]));
             }
@@ -134,30 +144,26 @@ export function getAllNavigationItems(navGroups: NavGroup[] = navigation): NavIt
 
 /**
  * Find the active navigation item based on the current URL
- * Supports nested navigation items
  */
 export function findActiveNavItem(
     url: string,
-    navGroups: NavGroup[] = navigation
+    navGroups: NavGroup[] = navigation,
 ): NavItem | null {
     const allItems = getAllNavigationItems(navGroups);
 
-    // Find exact match first
     const exactMatch = allItems.find((item) => item.href === url);
     if (exactMatch) return exactMatch;
 
-    // Find partial match (for nested routes)
-    const partialMatch = allItems.find((item) => url.startsWith(item.href));
+    const partialMatch = allItems.find((item) => typeof item.href === 'string' && url.startsWith(item.href));
     return partialMatch || null;
 }
 
 /**
  * Build breadcrumbs from the current URL
- * This is a basic implementation - enhance based on your routing needs
  */
 export function buildBreadcrumbs(
     url: string,
-    navGroups: NavGroup[] = navigation
+    navGroups: NavGroup[] = navigation,
 ): BreadcrumbItem[] {
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -179,17 +185,16 @@ export function buildBreadcrumbs(
 
 /**
  * Mark navigation items as active based on current URL
- * Returns a new navigation structure with isActive flags set
  */
 export function markActiveNavigation(
     url: string,
-    navGroups: NavGroup[] = navigation
+    navGroups: NavGroup[] = navigation,
 ): NavGroup[] {
     return navGroups.map((group) => ({
         ...group,
         items: group.items.map((item) => ({
             ...item,
-            isActive: url === item.href || url.startsWith(item.href + '/'),
+            isActive: typeof item.href === 'string' && (url === item.href || url.startsWith(item.href + '/')),
         })),
     }));
 }

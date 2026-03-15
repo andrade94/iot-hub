@@ -13,9 +13,9 @@ class ActivityLogController extends Controller
      * Allowed models for activity log queries
      */
     protected array $allowedModels = [
-        'product' => \App\Models\Product::class,
-        'category' => \App\Models\Category::class,
         'user' => \App\Models\User::class,
+        'organization' => \App\Models\Organization::class,
+        'site' => \App\Models\Site::class,
     ];
 
     /**
@@ -71,7 +71,7 @@ class ActivityLogController extends Controller
         $currentUser = $request->user();
 
         // Authorization: Users can only view their own activity unless they have admin role
-        if ($currentUser->id !== $userId && ! $currentUser->hasRole('admin')) {
+        if ($currentUser->id !== $userId && ! $currentUser->hasAnyRole(['super_admin', 'org_admin'])) {
             abort(403, 'You can only view your own activity.');
         }
 
@@ -106,8 +106,7 @@ class ActivityLogController extends Controller
             if ((string) $currentUser->id !== $id && ! $currentUser->hasRole('admin')) {
                 abort(403, 'You can only view your own activity.');
             }
-        } elseif (! $currentUser->hasRole('admin')) {
-            // For other models (product, category), require admin role
+        } elseif (! $currentUser->hasAnyRole(['super_admin', 'org_admin'])) {
             abort(403, 'Admin access required to view this activity.');
         }
 

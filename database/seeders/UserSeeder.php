@@ -2,63 +2,83 @@
 
 namespace Database\Seeders;
 
+use App\Models\Organization;
+use App\Models\Site;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * Creates test users for development and testing purposes.
-     * All users use the password: "password"
-     */
     public function run(): void
     {
-        // Admin User - Verified
-        $admin = User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
+        $org1 = Organization::where('slug', 'cadena-frio-demo')->first();
+        $org1Sites = Site::where('org_id', $org1->id)->get();
+
+        // Super Admin — no org
+        $superAdmin = User::create([
+            'name' => 'Astrea Super Admin',
+            'email' => 'super@astrea.io',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
         ]);
-        $admin->assignRole('admin');
+        $superAdmin->assignRole('super_admin');
 
-        // Regular User - Verified
-        $user = User::create([
-            'name' => 'Test User',
-            'email' => 'user@example.com',
+        // Org Admin — org 1
+        $orgAdmin = User::create([
+            'name' => 'Admin Cadena Frio',
+            'email' => 'admin@cadenademo.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
+            'org_id' => $org1->id,
         ]);
-        $user->assignRole('user');
+        $orgAdmin->assignRole('org_admin');
 
-        // Editor User - Verified
-        $editor = User::create([
-            'name' => 'Editor User',
-            'email' => 'editor@example.com',
+        // Site Manager — org 1, sites 1 & 2
+        $manager = User::create([
+            'name' => 'Manager Norte-Centro',
+            'email' => 'manager@cadenademo.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
+            'org_id' => $org1->id,
         ]);
-        $editor->assignRole('editor');
+        $manager->assignRole('site_manager');
+        $manager->sites()->attach([
+            $org1Sites[0]->id => ['assigned_at' => now()],
+            $org1Sites[1]->id => ['assigned_at' => now()],
+        ]);
 
-        // Unverified User - For testing email verification flow
-        $unverified = User::create([
-            'name' => 'Unverified User',
-            'email' => 'unverified@example.com',
+        // Site Viewer — org 1, site 1 only
+        $viewer = User::create([
+            'name' => 'Viewer Norte',
+            'email' => 'viewer@cadenademo.com',
             'password' => Hash::make('password'),
-            'email_verified_at' => null, // Not verified
+            'email_verified_at' => now(),
+            'org_id' => $org1->id,
         ]);
-        $unverified->assignRole('user');
+        $viewer->assignRole('site_viewer');
+        $viewer->sites()->attach([
+            $org1Sites[0]->id => ['assigned_at' => now()],
+        ]);
 
-        // Optionally create additional random users using factory
-        // User::factory(10)->create();
+        // Technician — org 1, all 3 sites
+        $tech = User::create([
+            'name' => 'Técnico Campo',
+            'email' => 'tech@cadenademo.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'org_id' => $org1->id,
+        ]);
+        $tech->assignRole('technician');
+        $tech->sites()->attach(
+            $org1Sites->mapWithKeys(fn ($site) => [$site->id => ['assigned_at' => now()]])->toArray()
+        );
 
-        $this->command->info('✓ Created 4 test users with roles');
-        $this->command->info('  Admin: admin@example.com / password (admin role)');
-        $this->command->info('  Editor: editor@example.com / password (editor role)');
-        $this->command->info('  User: user@example.com / password (user role)');
-        $this->command->info('  Unverified: unverified@example.com / password (user role)');
+        $this->command->info('✓ Created 5 IoT test users');
+        $this->command->info('  Super Admin: super@astrea.io / password');
+        $this->command->info('  Org Admin: admin@cadenademo.com / password');
+        $this->command->info('  Site Manager: manager@cadenademo.com / password');
+        $this->command->info('  Site Viewer: viewer@cadenademo.com / password');
+        $this->command->info('  Technician: tech@cadenademo.com / password');
     }
 }

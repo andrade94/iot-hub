@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'twilio' => [
+        'account_sid' => env('TWILIO_ACCOUNT_SID', ''),
+        'auth_token' => env('TWILIO_AUTH_TOKEN', ''),
+        'whatsapp_from' => env('TWILIO_WHATSAPP_FROM', ''),
+    ],
+
+    'chirpstack' => [
+        'url' => env('CHIRPSTACK_URL', 'https://cloud.chirpstack.io'),
+        'api_key' => env('CHIRPSTACK_API_KEY', ''),
+        'tenant_id' => env('CHIRPSTACK_TENANT_ID', ''),
+    ],
+
 ];

@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureSiteAccess
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $site = $request->route('site');
+
+        if (! $site) {
+            return $next($request);
+        }
+
+        $user = $request->user();
+
+        if (! $user) {
+            abort(403);
+        }
+
+        $siteId = is_object($site) ? $site->id : (int) $site;
+
+        if (! $user->canAccessSite($siteId)) {
+            abort(403, 'You do not have access to this site.');
+        }
+
+        return $next($request);
+    }
+}

@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -16,22 +18,17 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, HasRoles, LogsActivity, Notifiable, TwoFactorAuthenticatable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
+        'org_id',
+        'phone',
+        'whatsapp_phone',
+        'has_app_access',
+        'escalation_level',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'two_factor_secret',
@@ -39,29 +36,77 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'has_app_access' => 'boolean',
         ];
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class, 'org_id');
+    }
+
+    public function sites(): BelongsToMany
+    {
+        return $this->belongsToMany(Site::class, 'user_sites')
+            ->withPivot(['role', 'assigned_at', 'assigned_by']);
+    }
+
     /**
-     * Configure activity logging options
+     * Get all sites this user can access.
+     * org_admin and super_admin get all org sites; others get pivot sites only.
      */
+    public function accessibleSites(): Collection
+    {
+        if ($this->isSuperAdmin()) {
+            $orgId = session('current_org_id') ?? $this->org_id;
+
+            return $orgId
+                ? Site::where('org_id', $orgId)->get()
+                : Site::all();
+        }
+
+        if ($this->hasRole('org_admin') && $this->org_id) {
+            return Site::where('org_id', $this->org_id)->get();
+        }
+
+        return $this->sites()->get();
+    }
+
+    public function canAccessSite(int $siteId): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($this->hasRole('org_admin') && $this->org_id) {
+            return Site::where('id', $siteId)->where('org_id', $this->org_id)->exists();
+        }
+
+        return $this->sites()->where('sites.id', $siteId)->exists();
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    public function belongsToOrg(int $orgId): bool
+    {
+        return $this->org_id === $orgId;
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'email']) // Only log these attributes
-            ->logOnlyDirty() // Only log changed attributes
-            ->dontSubmitEmptyLogs() // Don't log if nothing changed
+            ->logOnly(['name', 'email', 'org_id', 'phone'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn (string $eventName) => "User {$eventName}");
     }
 }

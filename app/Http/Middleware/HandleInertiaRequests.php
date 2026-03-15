@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Foundation\Inspiring;
+use App\Models\Site;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,14 +36,29 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
-
         $user = $request->user();
+
+        $currentOrg = app()->bound('current_organization')
+            ? app('current_organization')
+            : null;
+
+        $currentSiteId = session('current_site_id');
+        $currentSite = null;
+        if ($currentSiteId && $user) {
+            $site = Site::find($currentSiteId);
+            if ($site && $user->canAccessSite($site->id)) {
+                $currentSite = [
+                    'id' => $site->id,
+                    'name' => $site->name,
+                    'status' => $site->status,
+                    'timezone' => $site->timezone,
+                ];
+            }
+        }
 
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $user,
                 'roles' => $user ? $user->getRoleNames() : [],
@@ -55,6 +70,19 @@ class HandleInertiaRequests extends Middleware
                     )
                     : [],
             ],
+            'current_organization' => $currentOrg ? [
+                'id' => $currentOrg->id,
+                'name' => $currentOrg->name,
+                'slug' => $currentOrg->slug,
+                'segment' => $currentOrg->segment,
+                'settings' => $currentOrg->settings,
+            ] : null,
+            'accessible_sites' => $user ? $user->accessibleSites()->map(fn ($site) => [
+                'id' => $site->id,
+                'name' => $site->name,
+                'status' => $site->status,
+            ])->values()->toArray() : [],
+            'current_site' => $currentSite,
             'notifications' => $user
                 ? $user->notifications()
                     ->latest()

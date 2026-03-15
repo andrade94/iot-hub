@@ -1,0 +1,136 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Site;
+use App\Models\WorkOrder;
+use App\Services\WorkOrders\WorkOrderService;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class WorkOrderController extends Controller
+{
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        $query = WorkOrder::with(['site', 'device', 'assignedTo', 'createdBy']);
+
+        // Scope by user's accessible sites
+        if (! $user->hasRole('super_admin')) {
+            $siteIds = $user->accessibleSites()->pluck('id');
+            $query->whereIn('site_id', $siteIds);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Filter by priority
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->input('priority'));
+        }
+
+        // Filter by type
+        if ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        $workOrders = $query->latest()->paginate(20)->withQueryString();
+
+        return Inertia::render('work-orders/index', [
+            'workOrders' => $workOrders,
+            'filters' => $request->only(['status', 'priority', 'type']),
+        ]);
+    }
+
+    public function show(WorkOrder $workOrder)
+    {
+        $workOrder->load([
+            'site',
+            'alert',
+            'device',
+            'assignedTo',
+            'createdBy',
+            'photos.uploadedByUser',
+            'notes.user',
+        ]);
+
+        return Inertia::render('work-orders/show', [
+            'workOrder' => $workOrder,
+        ]);
+    }
+
+    public function store(Request $request, Site $site)
+    {
+        $validated = $request->validate([
+            'type' => 'required|string|in:battery_replace,sensor_replace,maintenance,inspection,install',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'priority' => 'required|string|in:low,medium,high,urgent',
+            'device_id' => 'nullable|exists:devices,id',
+            'assigned_to' => 'nullable|exists:users,id',
+        ]);
+
+        $validated['site_id'] = $site->id;
+        $validated['created_by'] = $request->user()->id;
+
+        WorkOrder::create($validated);
+
+        return redirect()->route('work-orders.index')
+            ->with('success', 'Work order created.');
+    }
+
+    public function updateStatus(Request $request, WorkOrder $workOrder)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:assigned,in_progress,completed,cancelled',
+            'assigned_to' => 'nullable|exists:users,id',
+        ]);
+
+        $user = $request->user();
+        $service = app(WorkOrderService::class);
+
+        match ($validated['status']) {
+            'assigned' => $workOrder->assign($validated['assigned_to'] ?? $user->id),
+            'in_progress' => $workOrder->start(),
+            'completed' => $service->complete($workOrder, $user->id),
+            'cancelled' => $workOrder->cancel(),
+        };
+
+        return back()->with('success', 'Work order status updated.');
+    }
+
+    public function addPhoto(Request $request, WorkOrder $workOrder)
+    {
+        $request->validate([
+            'photo' => 'required|image|max:5120',
+            'caption' => 'nullable|string|max:255',
+        ]);
+
+        $path = $request->file('photo')->store('work-order-photos', 'public');
+
+        $workOrder->photos()->create([
+            'photo_path' => $path,
+            'caption' => $request->input('caption'),
+            'uploaded_by' => $request->user()->id,
+            'uploaded_at' => now(),
+        ]);
+
+        return back()->with('success', 'Photo uploaded.');
+    }
+
+    public function addNote(Request $request, WorkOrder $workOrder)
+    {
+        $request->validate([
+            'note' => 'required|string|max:2000',
+        ]);
+
+        $workOrder->notes()->create([
+            'user_id' => $request->user()->id,
+            'note' => $request->input('note'),
+        ]);
+
+        return back()->with('success', 'Note added.');
+    }
+}

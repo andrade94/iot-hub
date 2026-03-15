@@ -4,10 +4,8 @@ namespace App\Providers;
 
 use App\Mail\WelcomeMail;
 use App\Models\File;
-use App\Models\Product;
 use App\Policies\FilePolicy;
 use App\Policies\NotificationPolicy;
-use App\Policies\ProductPolicy;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Event;
@@ -30,7 +28,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(DatabaseNotification::class, NotificationPolicy::class);
         Gate::policy(File::class, FilePolicy::class);
 
