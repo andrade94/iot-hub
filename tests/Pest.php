@@ -13,6 +13,9 @@
 
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function () {
+        $this->withoutVite();
+    })
     ->in('Feature');
 
 /*
@@ -41,7 +44,46 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function createOrg(array $attrs = []): \App\Models\Organization
 {
-    // ..
+    return \App\Models\Organization::create(array_merge([
+        'name' => 'Test Org',
+        'slug' => 'test-org-' . \Illuminate\Support\Str::random(5),
+        'segment' => 'cold_chain',
+    ], $attrs));
+}
+
+function createSite(\App\Models\Organization $org, array $attrs = []): \App\Models\Site
+{
+    return \App\Models\Site::create(array_merge([
+        'org_id' => $org->id,
+        'name' => 'Test Site',
+        'status' => 'active',
+    ], $attrs));
+}
+
+function createDevice(\App\Models\Site $site, array $attrs = []): \App\Models\Device
+{
+    return \App\Models\Device::create(array_merge([
+        'site_id' => $site->id,
+        'model' => 'EM300-TH',
+        'dev_eui' => strtoupper(\Illuminate\Support\Str::random(16)),
+        'name' => 'Test Sensor',
+        'status' => 'active',
+    ], $attrs));
+}
+
+function createUserWithRole(string $role, ?\App\Models\Organization $org = null): \App\Models\User
+{
+    $user = \App\Models\User::factory()->create([
+        'org_id' => $org?->id,
+    ]);
+    $user->assignRole($role);
+
+    return $user;
+}
+
+function seedPermissions(): void
+{
+    test()->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
 }
