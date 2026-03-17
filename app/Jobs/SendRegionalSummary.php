@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Site;
 use App\Models\User;
+use App\Services\Push\PushNotificationService;
 use App\Services\Reports\MorningSummaryService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,13 +51,20 @@ class SendRegionalSummary implements ShouldQueue
 
             $summary = $summaryService->generateRegionalSummary($manager);
 
-            // TODO Phase 4: Send via notification channel (email/push/in-app)
+            $deviceTotals = $summary['device_totals'];
+            $body = "{$summary['site_count']} sites — "
+                . "{$deviceTotals['online']}/{$deviceTotals['total']} devices online"
+                . ($summary['total_active_alerts'] > 0 ? ", {$summary['total_active_alerts']} active alerts" : '');
+
+            app(PushNotificationService::class)->sendToUser(
+                $manager,
+                'Regional Summary',
+                $body,
+                ['type' => 'morning_summary'],
+            );
+
             Log::info('Regional summary dispatched to site_manager', [
                 'user_id' => $manager->id,
-                'user_name' => $manager->name,
-                'total_alerts_24h' => $summary['total_alerts_24h'],
-                'total_active_alerts' => $summary['total_active_alerts'],
-                'device_totals' => $summary['device_totals'],
             ]);
         }
     }

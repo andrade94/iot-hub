@@ -33,6 +33,43 @@ class DeviceApiController extends Controller
         return response()->json(['data' => $devices]);
     }
 
+    public function show(Request $request, Device $device, ReadingStorageService $storageService): JsonResponse
+    {
+        $device->load(['gateway', 'recipe', 'site:id,name']);
+        $latest = $storageService->getLatest($device->id);
+
+        return response()->json([
+            'data' => [
+                'id' => $device->id,
+                'name' => $device->name,
+                'dev_eui' => $device->dev_eui,
+                'model' => $device->model,
+                'zone' => $device->zone,
+                'status' => $device->status,
+                'online' => $device->isOnline(),
+                'battery_pct' => $device->battery_pct,
+                'rssi' => $device->rssi,
+                'last_reading_at' => $device->last_reading_at?->toIso8601String(),
+                'installed_at' => $device->installed_at?->toIso8601String(),
+                'latest_readings' => $latest,
+                'site' => $device->site ? [
+                    'id' => $device->site->id,
+                    'name' => $device->site->name,
+                ] : null,
+                'gateway' => $device->gateway ? [
+                    'id' => $device->gateway->id,
+                    'model' => $device->gateway->model,
+                    'status' => $device->gateway->status,
+                    'last_seen_at' => $device->gateway->last_seen_at?->toIso8601String(),
+                ] : null,
+                'recipe' => $device->recipe ? [
+                    'id' => $device->recipe->id,
+                    'name' => $device->recipe->name,
+                ] : null,
+            ],
+        ]);
+    }
+
     public function readings(Request $request, Device $device, ReadingQueryService $queryService): JsonResponse
     {
         $request->validate([

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Site;
+use App\Services\Push\PushNotificationService;
 use App\Services\Reports\MorningSummaryService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -47,15 +48,22 @@ class SendMorningSummary implements ShouldQueue
 
             $summary = $summaryService->generateStoreSummary($site);
 
+            $pushService = app(PushNotificationService::class);
+
             foreach ($site->users as $user) {
-                // TODO Phase 4: Send via notification channel (email/push/in-app)
+                $deviceStatus = $summary['device_status'];
+                $body = "{$deviceStatus['online']}/{$deviceStatus['total']} devices online"
+                    . ($summary['alert_count_24h'] > 0 ? ", {$summary['alert_count_24h']} alerts (24h)" : '')
+                    . ($deviceStatus['offline'] > 0 ? ", {$deviceStatus['offline']} offline" : '');
+
+                $pushService->sendToUser($user, "Good morning — {$site->name}", $body, [
+                    'type' => 'morning_summary',
+                    'site_id' => $site->id,
+                ]);
+
                 Log::info('Morning summary dispatched to user', [
                     'user_id' => $user->id,
-                    'user_name' => $user->name,
                     'site_id' => $site->id,
-                    'alert_count_24h' => $summary['alert_count_24h'],
-                    'device_online' => $summary['device_status']['online'],
-                    'device_offline' => $summary['device_status']['offline'],
                 ]);
             }
         }

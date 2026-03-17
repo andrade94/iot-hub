@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Organization;
 use App\Models\User;
+use App\Services\Push\PushNotificationService;
 use App\Services\Reports\MorningSummaryService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -44,16 +45,23 @@ class SendCorporateSummary implements ShouldQueue
 
             $summary = $summaryService->generateCorporateSummary($org);
 
+            $pushService = app(PushNotificationService::class);
+            $deviceTotals = $summary['device_totals'];
+            $body = "{$summary['site_count']} sites — "
+                . "{$deviceTotals['online']}/{$deviceTotals['total']} devices online"
+                . ($summary['total_active_alerts'] > 0 ? ", {$summary['total_active_alerts']} active alerts" : '');
+
             foreach ($orgAdmins as $admin) {
-                // TODO Phase 4: Send email digest via Mailable
+                $pushService->sendToUser(
+                    $admin,
+                    "Corporate Summary — {$org->name}",
+                    $body,
+                    ['type' => 'morning_summary'],
+                );
+
                 Log::info('Corporate summary dispatched to org_admin', [
                     'user_id' => $admin->id,
-                    'user_name' => $admin->name,
                     'org_name' => $org->name,
-                    'site_count' => $summary['site_count'],
-                    'total_alerts_24h' => $summary['total_alerts_24h'],
-                    'total_active_alerts' => $summary['total_active_alerts'],
-                    'device_totals' => $summary['device_totals'],
                 ]);
             }
         }

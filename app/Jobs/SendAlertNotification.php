@@ -65,14 +65,25 @@ class SendAlertNotification implements ShouldQueue
 
     protected function sendPush(User $user): bool
     {
-        // Reverb broadcast is handled by AlertRouter
-        // Push notifications (Expo) will be added in Phase 8
-        Log::info('Push notification placeholder', [
-            'alert_id' => $this->alert->id,
-            'user_id' => $user->id,
-        ]);
+        $device = $this->alert->device;
+        $site = $this->alert->site;
 
-        return true;
+        $title = match ($this->alert->severity) {
+            'critical' => "CRITICAL Alert — {$site?->name}",
+            'high' => "High Alert — {$site?->name}",
+            default => "Alert — {$site?->name}",
+        };
+
+        $body = $device
+            ? "{$device->name}: {$this->alert->severity} alert triggered"
+            : "Alert triggered at {$site?->name}";
+
+        return app(\App\Services\Push\PushNotificationService::class)->sendToUser($user, $title, $body, [
+            'type' => 'alert',
+            'alert_id' => $this->alert->id,
+            'site_id' => $this->alert->site_id,
+            'severity' => $this->alert->severity,
+        ]);
     }
 
     protected function sendEmail(User $user): bool
