@@ -1,11 +1,11 @@
 # PRD — Astrea Mobile App
 
 > Product Requirements Document
-> **Status:** v1.0
+> **Status:** v1.1 (verified against codebase 2026-03-17)
 > **App:** Expo SDK 54, React Native 0.81, TypeScript
 > **Backend:** iot-hub (Laravel 12 + Sanctum API tokens)
 > **Repo:** `iot-expo` (separate repo, connects to iot-hub API)
-> **Date:** 2026-03-16
+> **Date:** 2026-03-16 (updated 2026-03-17)
 
 ---
 
@@ -34,7 +34,7 @@ The mobile app targets three field-oriented personas (Technician, Site Viewer, S
 | Auth | Sanctum API tokens |
 | Push | Expo Push Notifications + Firebase FCM |
 | i18n | EN/ES (mirrors web) |
-| Charts | Victory Native |
+| Charts | Not yet installed (Victory Native planned for v2 when chart work begins) |
 
 ---
 
@@ -133,7 +133,9 @@ The mobile app targets three field-oriented personas (Technician, Site Viewer, S
 
 ---
 
-## 4. Screen Specifications (15 screens)
+## 4. Screen Specifications (15 screens, 13 built)
+
+> **Implementation status:** 13 of 15 screens are built. Zone Detail and Notification Center are TODO.
 
 ### Auth (3 screens) — Already built in iot-expo template
 
@@ -184,7 +186,7 @@ The mobile app targets three field-oriented personas (Technician, Site Viewer, S
 ### Work Orders Tab (3 screens)
 
 **9. Work Order List**
-- Filterable: status (open/in_progress/completed/cancelled), priority (urgent/high/normal/low), type
+- Filterable: status (open/assigned/in_progress/completed/cancelled), priority (urgent/high/medium/low), type
 - Technician default view: `assigned_to = me`, status = open/in_progress
 - Site Manager default view: all WOs across their sites
 - Badge on tab: count of open WOs
@@ -195,28 +197,28 @@ The mobile app targets three field-oriented personas (Technician, Site Viewer, S
 - Info: description, type, assigned technician, created by, device link (if any)
 - Photos gallery: grid of attached photos. Tap to expand. "Add Photo" button (camera or gallery)
 - Notes timeline: chronological notes with author and timestamp. "Add Note" text input
-- Status actions: Open → In Progress → Completed (status machine)
+- Status actions: Open/Assigned → In Progress → Completed (status machine, also supports Cancel)
 - Device link: tap to navigate to Device Detail
 
 **11. Create Work Order** (site_manager only)
 - Form fields:
   - Site selector (dropdown of user's sites)
   - Device selector (optional, filtered by selected site)
-  - Type (installation/maintenance/repair/inspection)
-  - Priority (urgent/high/normal/low)
+  - Type (maintenance/inspection/install/battery_replace/sensor_replace)
+  - Priority (urgent/high/medium/low)
   - Title (text input)
   - Description (multiline text)
 - Submit → `POST /api/sites/{site}/work-orders`
 
 ### Profile Tab (1 screen)
 
-**12. Profile**
-- User info: name, email, role badge, organization name
-- Push notification settings: toggle on/off
-- Language picker: EN / ES
-- Theme picker: Glass/Minimal × Light/Dark
-- App version
-- Logout button
+**12. Profile** — *BUILT, minor gaps*
+- User info: name, email, role badge, organization name — DONE
+- Push notification settings: toggle on/off — TODO (not yet in profile screen)
+- Language picker: EN / ES — DONE
+- Theme picker: Light/Dark toggle — DONE (Glass/Minimal style switching available via `useDesignTheme`)
+- App version — TODO
+- Logout button — DONE
 
 ### Stack Screens (5 screens)
 
@@ -227,7 +229,7 @@ The mobile app targets three field-oriented personas (Technician, Site Viewer, S
 - Floor plan button → Floor Plan View
 - Mirrors web `settings/sites/show.tsx` layout adapted for mobile
 
-**14. Zone Detail**
+**14. Zone Detail** — *TODO: no dedicated screen yet; zone devices shown inline in Site Detail zone cards*
 - Zone name + site breadcrumb
 - Devices in zone: list with status icon, last reading, battery
 - Zone metric summary: avg temperature, min/max, humidity
@@ -243,7 +245,7 @@ The mobile app targets three field-oriented personas (Technician, Site Viewer, S
 - Readings chart: 24h time-series line chart (Victory Native)
 - Actions: none in v1 (configuration is web-only)
 
-**16. Floor Plan View**
+**16. Floor Plan View** — *PLACEHOLDER: screen exists but shows "coming in a future update" message*
 - Floor plan image (lazy-loaded, cached)
 - Colored dots overlaid on device positions:
   - Green = online, normal
@@ -253,7 +255,7 @@ The mobile app targets three field-oriented personas (Technician, Site Viewer, S
 - Tap dot → reading popover (device name, last reading, battery)
 - Tap popover → Device Detail
 
-**17. Notification Center**
+**17. Notification Center** — *TODO: no dedicated screen yet; API endpoints exist (`GET /api/notifications`, `POST /api/notifications/mark-all-read`)*
 - In-app notification list (database notifications from backend)
 - Types: alert triggered, WO assigned, WO status changed, morning summary
 - Mark as read on tap
@@ -264,15 +266,9 @@ The mobile app targets three field-oriented personas (Technician, Site Viewer, S
 
 ## 5. API Endpoints (Backend Work)
 
-The iot-hub backend currently has **3 Sanctum-protected API endpoints** in `routes/api.php`:
+The iot-hub backend has **22 Sanctum-protected API endpoints** in `routes/api.php` (all implemented as of 2026-03-17):
 
-```
-GET /api/sites/{site}/devices      → DeviceApiController@index
-GET /api/devices/{device}/readings → DeviceApiController@readings
-GET /api/devices/{device}/status   → DeviceApiController@status
-```
-
-The mobile app needs **~20 additional endpoints**:
+> **Note:** The original PRD listed 3 existing endpoints and ~20 additional needed. All are now built.
 
 ### Auth
 
@@ -307,10 +303,10 @@ The mobile app needs **~20 additional endpoints**:
 
 | Method | Endpoint | Description | Notes |
 |--------|----------|-------------|-------|
-| GET | `/api/sites/{site}/devices` | Paginated devices | **Exists** — may need additional fields |
-| GET | `/api/devices/{device}` | Device detail + gateway + recipe | **New** |
-| GET | `/api/devices/{device}/readings` | Time-series readings | **Exists** — may need date range params |
-| GET | `/api/devices/{device}/status` | Latest status | **Exists** |
+| GET | `/api/sites/{site}/devices` | Paginated devices | Implemented |
+| GET | `/api/devices/{device}` | Device detail + gateway + recipe | Implemented |
+| GET | `/api/devices/{device}/readings` | Time-series readings | Implemented (supports `from`, `to`, `metric`, `resolution` params) |
+| GET | `/api/devices/{device}/status` | Latest status | Implemented |
 
 ### Alerts
 
@@ -343,34 +339,36 @@ The mobile app needs **~20 additional endpoints**:
 
 ## 6. Push Notification Service (New Backend)
 
-### Infrastructure Required
+### Infrastructure — IMPLEMENTED
 
-1. **Migration:** `push_tokens` table
+1. **Migration:** `push_tokens` table (`2026_03_16_000001_create_push_tokens_table.php`)
 
 ```
 id              bigint PK
-user_id         bigint FK → users
+user_id         bigint FK → users (cascade delete)
 token           string (Expo push token, unique)
 device_name     string nullable
-platform        enum('ios', 'android')
+platform        string ('ios' | 'android') — note: string column, not enum
 created_at      timestamp
 updated_at      timestamp
 ```
 
-2. **Model:** `PushToken` — belongs to User. User has many PushTokens.
+2. **Model:** `App\Models\PushToken` — belongs to User. User has many PushTokens. IMPLEMENTED.
 
-3. **Service:** `PushNotificationService`
-   - Sends via [Expo Push API](https://docs.expo.dev/push-notifications/sending-notifications/)
-   - Accepts: `user_id`, `title`, `body`, `data` (deep link info)
-   - Resolves user's push tokens, sends to all registered devices
-   - Handles expired/invalid tokens (remove from DB)
+3. **Service:** `App\Services\Push\PushNotificationService` — IMPLEMENTED.
+   - Sends via Expo Push API (`https://exp.host/--/api/v2/push/send`)
+   - `sendToUser(User, title, body, data)` — resolves all user tokens
+   - `send(tokens, title, body, data)` — direct token send
+   - Handles expired/invalid tokens via `handleReceipts()` — removes `DeviceNotRegistered` / `InvalidCredentials` tokens
 
-4. **Job:** `SendPushNotification`
-   - Dispatched by `AlertRouter` when escalation channel = `'push'`
-   - Dispatched by `WorkOrder` events (assigned, status changed)
-   - Queued on `notifications` queue
+4. **Jobs using PushNotificationService:**
+   - `SendAlertNotification` — `sendPush()` method calls PushNotificationService when channel = `'push'`
+   - `SendWorkOrderNotification` — sends push for WO assignment/status changes
+   - `SendMorningSummary` — sends push to site_viewer and site_manager at 7:00 AM
+   - `SendCorporateSummary` — sends push to org admins
+   - Note: There is no standalone `SendPushNotification` job; push is integrated into domain-specific jobs.
 
-5. **Wire into EscalationChain:** Add `'push'` as a recognized channel alongside `'whatsapp'`, `'email'`, `'sms'`.
+5. **EscalationChain integration:** `'push'` is a recognized channel in `SendAlertNotification`.
 
 ### Push Notification Types
 
@@ -396,16 +394,18 @@ updated_at      timestamp
 | Work order list | Cache, `staleTime: 5 min` | Stale badge |
 | User profile + roles | Cache indefinitely until logout | — |
 
-### Write Queue (MMKV)
+### Write Queue (MMKV) — IMPLEMENTED
 
-Queued actions when offline, synced on reconnect:
+Queued actions when offline, synced on reconnect via `src/lib/offline-queue.ts`:
 
-| Action | Queue Key | Sync Trigger |
+All actions stored in a single MMKV key (`offline_queue`) as a `QueuedAction[]` array.
+
+| Action | Queue Type | Sync Trigger |
 |--------|-----------|--------------|
-| Acknowledge alert | `queue:alert:ack` | Network recovery + `useOnForeground()` |
-| Resolve alert | `queue:alert:resolve` | Network recovery + `useOnForeground()` |
-| Update WO status | `queue:wo:status` | Network recovery + `useOnForeground()` |
-| Add WO note | `queue:wo:note` | Network recovery + `useOnForeground()` |
+| Acknowledge alert | `alert:ack` | Network recovery + `useOnForeground()` via `useOfflineSync` hook |
+| Resolve alert | `alert:resolve` | Network recovery + `useOnForeground()` |
+| Update WO status | `wo:status` | Network recovery + `useOnForeground()` |
+| Add WO note | `wo:note` | Network recovery + `useOnForeground()` |
 
 ### Online-Only (Not Cached)
 
@@ -413,28 +413,35 @@ Queued actions when offline, synced on reconnect:
 - Create work order (needs server-side validation)
 - Floor plan images (lazy-loaded, cached by RN image cache — not MMKV)
 
-### Network Status
+### Network Status — IMPLEMENTED
 
-- `useNetworkStatus()` hook — already exists in iot-expo template
-- `NetworkBanner` component — shows at top when offline
-- Queued action count badge shown in banner: "3 actions pending sync"
+- `useNetworkStatus()` hook — implemented in `src/hooks/useNetworkStatus.ts` (uses `@react-native-community/netinfo`)
+- `NetworkBanner` component — implemented in `src/components/ui/NetworkBanner.tsx` (animated slide-in/out, shows "No internet")
+- `useOfflineSync()` hook — implemented in `src/hooks/useOfflineSync.ts` (exposes `pendingCount`, `syncing`, `isOffline`)
+- Queued action count badge: the `pendingCount` is available via `useOfflineSync` but is not yet displayed in `NetworkBanner` (TODO)
 
 ---
 
-## 8. Data Types (Expo Side)
+## 8. Data Types (Expo Side) — IMPLEMENTED
 
-Extend `src/types/models.ts` in iot-expo with Astrea domain types. Mirror the web app's `resources/js/types/index.d.ts`:
+Astrea domain types are in `src/types/astrea.ts` (not in `models.ts` as originally planned). The `models.ts` file contains base types (`User`, `PaginatedResponse`, etc.). Key differences from original spec noted below:
 
 ```typescript
 // Core
+// NOTE: Actual implementation uses flatter types with separate SiteDetail extending Site.
+// Site does NOT include organization_id (org scoping is backend-only).
 interface Site {
   id: number;
   name: string;
-  organization_id: number;
   address: string | null;
   timezone: string;
-  zones: Zone[];
+  status: string;
   kpis: SiteKPIs;
+}
+
+interface SiteDetail extends Site {
+  zones: ZoneSummary[];
+  active_alerts: AlertSummary[];
 }
 
 interface Zone {
@@ -483,7 +490,7 @@ interface Alert {
   device_id: number;
   site_id: number;
   severity: 'critical' | 'high' | 'medium' | 'low';
-  status: 'active' | 'acknowledged' | 'resolved' | 'auto_resolved';
+  status: 'active' | 'acknowledged' | 'resolved' | 'dismissed'; // NOTE: 'dismissed' not 'auto_resolved'
   triggered_at: string;
   acknowledged_at: string | null;
   acknowledged_by: number | null;
@@ -513,9 +520,9 @@ interface WorkOrder {
   device_id: number | null;
   assigned_to: number | null;
   created_by: number;
-  type: 'installation' | 'maintenance' | 'repair' | 'inspection';
-  priority: 'urgent' | 'high' | 'normal' | 'low';
-  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
+  type: 'battery_replace' | 'sensor_replace' | 'maintenance' | 'inspection' | 'install'; // actual types differ from original spec
+  priority: 'urgent' | 'high' | 'medium' | 'low'; // 'medium' not 'normal'
+  status: 'open' | 'assigned' | 'in_progress' | 'completed' | 'cancelled'; // includes 'assigned'
   title: string;
   description: string | null;
   completed_at: string | null;
@@ -529,21 +536,16 @@ interface WorkOrder {
 
 interface WorkOrderPhoto {
   id: number;
-  work_order_id: number;
-  file_path: string;
-  thumbnail_path: string | null;
+  photo_path: string; // actual field name is 'photo_path' not 'file_path'
   caption: string | null;
-  uploaded_by: number;
-  created_at: string;
+  uploaded_at: string | null; // actual field name is 'uploaded_at' not 'created_at'
 }
 
 interface WorkOrderNote {
   id: number;
-  work_order_id: number;
-  user_id: number;
-  body: string;
+  note: string; // actual field name is 'note' not 'body'
   created_at: string;
-  user: User;
+  user: { id: number; name: string } | null; // simplified user shape
 }
 
 // Readings
@@ -562,7 +564,7 @@ interface SiteKPIs {
   online_pct: number;
   active_alerts: number;
   open_work_orders: number;
-  last_reading_at: string | null;
+  // NOTE: last_reading_at is NOT included in actual implementation
 }
 
 interface ZoneSummary {
@@ -580,56 +582,57 @@ interface ZoneSummary {
 
 ## 9. Implementation Phases
 
-### Phase A: API Layer (iot-hub backend) — 1 week
+### Phase A: API Layer (iot-hub backend) — DONE
 
-| Task | Details |
-|------|---------|
-| Auth endpoints | Login (with `has_app_access` check), logout, user profile |
-| Push token model + migration | `push_tokens` table, `PushToken` model |
-| `PushNotificationService` | Expo Push API integration |
-| Dashboard endpoint | Role-scoped KPIs aggregation |
-| Site/Zone endpoints | Site list, site detail, zone detail |
-| Device detail endpoint | Extend existing API controller |
-| Alert endpoints | CRUD + acknowledge/resolve with role gating |
-| Work order endpoints | CRUD + photos + notes |
-| Notification endpoints | List + mark-all-read |
-| Rate limiting | `throttle:60,1` for mobile endpoints |
-| API tests | Feature tests for all new endpoints |
+| Task | Details | Status |
+|------|---------|--------|
+| Auth endpoints | Login (with `has_app_access` check), logout, user profile | DONE |
+| Push token model + migration | `push_tokens` table, `PushToken` model | DONE |
+| `PushNotificationService` | Expo Push API integration | DONE |
+| Dashboard endpoint | Role-scoped KPIs aggregation | DONE |
+| Site/Zone endpoints | Site list, site detail, zone detail | DONE |
+| Device detail endpoint | Extend existing API controller | DONE |
+| Alert endpoints | CRUD + acknowledge/resolve with role gating | DONE |
+| Work order endpoints | CRUD + photos + notes | DONE |
+| Notification endpoints | List + mark-all-read | DONE |
+| Rate limiting | `throttle:60,1` for mobile endpoints | DONE (`throttle:10,1` for login) |
+| API tests | Feature tests for all new endpoints | DONE (`MobileApiTest.php`) |
 
-### Phase B: Core Screens (iot-expo) — 2 weeks
+### Phase B: Core Screens (iot-expo) — PARTIAL
 
-| Task | Details |
-|------|---------|
-| Navigation setup | Replace template tabs with 4 Astrea tabs |
-| Auth flow | Wire login/logout to Sanctum API |
-| Home screen | 3 role-variant dashboards |
-| Alert screens | List + detail with role-gated actions |
-| Work order screens | List + detail + create form |
-| Stack screens | Site, Zone, Device, Floor Plan detail |
-| API client | Configure React Query + auth interceptor |
-| Role gating | `useAuth()` hook checks for action permissions |
+| Task | Details | Status |
+|------|---------|--------|
+| Navigation setup | Replace template tabs with 4 Astrea tabs | DONE — Home, Alerts, Work Orders, Profile |
+| Auth flow | Wire login/logout to Sanctum API | DONE |
+| Home screen | 3 role-variant dashboards | DONE — single screen with role-conditional rendering |
+| Alert screens | List + detail with role-gated actions | DONE |
+| Work order screens | List + detail + create form | DONE |
+| Stack screens | Site, Zone, Device, Floor Plan detail | PARTIAL — Site + Device done, Floor Plan placeholder, Zone Detail TODO |
+| API client | Configure React Query + auth interceptor | DONE — `src/services/astrea.ts` + `src/services/api.ts` |
+| Role gating | `useAuth()` hook checks for action permissions | DONE — `canAcknowledgeAlerts()`, `canCreateWorkOrders()` in `astrea.ts` |
+| Notification Center | In-app notification list screen | TODO |
 
-### Phase C: Push Notifications — 1 week
+### Phase C: Push Notifications — PARTIAL
 
-| Task | Details |
-|------|---------|
-| Token registration | Register Expo push token on login |
-| Foreground handling | Show in-app notification banner |
-| Background handling | Badge count update |
-| Deep linking | Notification tap → alert/WO detail screen |
-| `SendPushNotification` job | Wire into AlertRouter + WO events |
-| Morning summary | Scheduled job at 7:00 AM per site timezone |
+| Task | Details | Status |
+|------|---------|--------|
+| Token registration | Register Expo push token on login | DONE — `usePushNotifications` hook + `registerPushToken` API call |
+| Foreground handling | Show in-app notification banner | DONE — `Notifications.setNotificationHandler` configured |
+| Background handling | Badge count update | DONE — `setBadgeCount` / `clearBadge` in hook |
+| Deep linking | Notification tap → alert/WO detail screen | DONE — `handleNotificationResponse` in `usePushNotifications` |
+| Alert push job | Wire into AlertRouter + WO events | DONE — `SendAlertNotification.sendPush()` + `SendWorkOrderNotification` |
+| Morning summary | Scheduled job at 7:00 AM per site timezone | PARTIAL — `SendMorningSummary` job exists, pushes via PushNotificationService |
 
-### Phase D: Offline + Polish — 1 week
+### Phase D: Offline + Polish — PARTIAL
 
-| Task | Details |
-|------|---------|
-| React Query cache config | `staleTime`, `gcTime` per query type |
-| Offline write queue | MMKV queue + sync on reconnect |
-| NetworkBanner | Offline indicator + pending action count |
-| i18n | Add `sites`, `alerts`, `workOrders`, `devices` namespaces (EN/ES) |
-| Biometric login | Optional, via `useBiometric()` hook |
-| App Store metadata | Screenshots, description, privacy policy URL |
+| Task | Details | Status |
+|------|---------|--------|
+| React Query cache config | `staleTime`, `gcTime` per query type | PARTIAL — `query-client.ts` exists but screens use manual state, not React Query hooks |
+| Offline write queue | MMKV queue + sync on reconnect | DONE — `offline-queue.ts` + `useOfflineSync` hook |
+| NetworkBanner | Offline indicator + pending action count | PARTIAL — banner exists, but pending count not displayed in it |
+| i18n | Add `sites`, `alerts`, `workOrders`, `devices` namespaces (EN/ES) | PARTIAL — `tabs` namespace has translations, domain screens use hardcoded English strings |
+| Biometric login | Optional, via `useBiometric()` hook | DONE — hook exists with full Face ID / Touch ID support |
+| App Store metadata | Screenshots, description, privacy policy URL | TODO |
 
 **Total estimated effort: ~5 weeks** (1 full-stack developer)
 
@@ -667,7 +670,7 @@ interface ZoneSummary {
 |------|--------|------------|------------|
 | Push notifications need Expo project + Apple/Google credentials | Blocks Phase C | Medium | Set up EAS project early in Phase A |
 | Web milestone M1 (ChirpStack live data) not done yet | No live readings charts | High | Mobile shows device metadata, alerts, WOs — charts deferred until M1 |
-| `has_app_access` flag doesn't exist on User model yet | Auth gate broken | Low | Add migration in Phase A (boolean, default false) |
+| ~~`has_app_access` flag doesn't exist on User model yet~~ | ~~Auth gate broken~~ | ~~Low~~ | RESOLVED — `has_app_access` exists (default true), AuthController enforces it |
 | Floor plan images may be large | Slow load on mobile | Medium | Use cached image component with progressive loading |
 | Work order photo upload needs S3/storage | Upload fails without config | Low | `FileStorageService` already exists — expose via API endpoint |
 | Expo Push API rate limits | Dropped notifications at scale | Low | Batch sends, respect 600 req/sec limit, use receipts API |
@@ -696,7 +699,7 @@ Key business rules from `ASTREA_BUSINESS_RULES.md` that affect the mobile app:
 |------|---------|---------------|
 | AC-005 | Alert acknowledgment requires site_manager or technician role | site_viewer sees disabled acknowledge button |
 | AC-006 | Alert resolution requires site_manager or technician role | site_viewer sees disabled resolve button |
-| AC-003 | Alerts auto-resolve when metric returns to normal range | Mobile shows `auto_resolved` status, no action needed |
-| WO-001 | Work order status machine: open → in_progress → completed | Mobile enforces same state transitions |
+| AC-003 | Alerts auto-resolve when metric returns to normal range | Mobile shows `resolved` status with `resolution_type = 'auto'`, no action needed. Note: status enum uses `'dismissed'` not `'auto_resolved'`. |
+| WO-001 | Work order status machine: open/assigned → in_progress → completed (also cancel) | Mobile enforces same state transitions in WO detail screen |
 | OP-005 | Device auto-activates on first reading | Mobile shows real-time status updates |
 | SC-001 | Users only see sites they are assigned to | All API endpoints scope by user-site assignments |
