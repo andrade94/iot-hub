@@ -1,49 +1,51 @@
 # Documentation
 
-Welcome to the Laravel + React + Inertia Starter Template documentation.
+Welcome to the Astrea IoT Platform documentation.
 
-## Getting Started
+## Project
 
-- [Setup Guide](development/setup-guide.md) - Get your development environment running
-- [Quick Start (README)](../README.md) - 5-minute quick start guide
+- [PRD](project/prd_platform.md) - Product Requirements Document (v2.0)
+- [Platform Reference](project/PLATFORM_REFERENCE.md) - Complete technical reference (1,420 lines)
+- [Entity Reference](project/ENTITY_REFERENCE.md) - All 31 models with fields, relations, scopes
+- [Audit Package](project/AUDIT_PACKAGE.md) - Route, page, controller, component inventory
+- [Gap Analysis](project/ASTREA_GAP_ANALYSIS.md) - Business-first gap analysis with priorities
+- [Business Rules](project/ASTREA_BUSINESS_RULES.md) - 65 business rules with implementation status
+- [Roadmap](project/ASTREA_ROADMAP.md) - 5 milestones, 42 tasks, 8-10 week plan
 
-## Components
+## Features
 
-- [Component Library Overview](components/overview.md) - All available UI components
-- [Form Patterns](components/forms.md) - Working with forms using React Hook Form + Zod
-- [Table Patterns](components/tables.md) - Data tables with sorting and pagination
-- [Layout System](components/layouts.md) - Page layouts and structure
+- [Permissions](features/permissions.md) - Roles, permissions, and access control
+- [Notifications](features/notifications.md) - Real-time and database notifications
+- [File Upload](features/file-upload.md) - File upload, storage, and management
+- [Activity Log](features/activity-log.md) - Activity logging and audit trail
+- [i18n](features/i18n.md) - Internationalization (English + Spanish)
 
 ## Development
 
 - [Coding Standards](development/coding-standards.md) - File naming, imports, and conventions
-- [Setup Guide](development/setup-guide.md) - Local development setup
-- [Testing Guide](development/testing-guide.md) - Testing strategies and patterns
-- [Deployment](development/deployment.md) - Production deployment instructions
 
-## Architecture
+## Components
 
-- [Architecture Overview](architecture/overview.md) - System architecture and design patterns
-- [Frontend Patterns](architecture/frontend-patterns.md) - React + Inertia patterns
-- [Backend Patterns](architecture/backend-patterns.md) - Laravel patterns and conventions
-- [Type Safety](architecture/type-safety.md) - TypeScript patterns and best practices
+- [Component Library Overview](components/overview.md) - All available UI components (90+)
 
-## Templates
+## Mobile App (iot-expo)
 
-- [PRD Template](templates/PRD-TEMPLATE.md) - Product Requirements Document template
-- [Roadmap Template](templates/ROADMAP-TEMPLATE.md) - Implementation roadmap template
-- [Feature Template](templates/FEATURE-TEMPLATE.md) - Feature specification template
+The Astrea platform includes a React Native / Expo companion app in a separate repository (`iot-expo`). See the [Mobile Documentation](mobile/README.md) for full details.
+
+- [Mobile README](mobile/README.md) - Overview, quick start, documentation index
+- [Architecture](mobile/ARCHITECTURE.md) - Directory structure, navigation, state management, offline strategy
+- [Screens](mobile/SCREENS.md) - All 13 built screens with file paths, API calls, role restrictions
+- [API Integration](mobile/API_INTEGRATION.md) - Auth flow, API functions, offline queue, push tokens
+- [Setup](mobile/SETUP.md) - Installation, environment variables, EAS builds, test credentials
+
+### Mobile Project Docs
+
+- [Mobile PRD](project/MOBILE_APP_PRD.md) - Product requirements (17 screens, 22 API endpoints)
+- [Mobile Gap Analysis](project/MOBILE_GAP_ANALYSIS.md) - Screen-by-screen audit with priority classification
+- [Mobile Task Breakdown](project/MOBILE_TASK_BREAKDOWN.md) - 24 tasks across 3 implementation cycles
+- [Mobile Business Rules](project/MOBILE_BUSINESS_RULES.md) - Mobile-specific business rules derived from code
+- [Mobile Validation Report](project/MOBILE_VALIDATION_REPORT.md) - Phase 8 validation findings
 
 ## AI Assistant
 
 - [CLAUDE.md](../CLAUDE.md) - Guide for AI assistants (Claude Code, GitHub Copilot, etc.)
-
-## External Resources
-
-- [Laravel Documentation](https://laravel.com/docs)
-- [React Documentation](https://react.dev)
-- [Inertia.js Documentation](https://inertiajs.com)
-- [shadcn/ui Components](https://ui.shadcn.com)
-- [Tailwind CSS](https://tailwindcss.com)
-- [React Hook Form](https://react-hook-form.com)
-- [Zod Validation](https://zod.dev)

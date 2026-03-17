@@ -2,6 +2,8 @@
 
 The Astrea mobile app (`iot-expo`) is a React Native / Expo companion to the iot-hub web platform. It provides field technicians, site managers, and organization admins with real-time visibility into IoT deployments -- alerts, work orders, device health, and site KPIs -- from their phone.
 
+**Current status (2026-03-17):** 13 of 17 PRD screens built, 26 API endpoints implemented, backend 100% complete, mobile ~65% complete. See [MOBILE_VALIDATION_REPORT.md](../project/MOBILE_VALIDATION_REPORT.md) for full validation findings.
+
 ## Who it's for
 
 | Role | Primary use |

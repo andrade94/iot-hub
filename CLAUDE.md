@@ -176,6 +176,19 @@ Models use the `LogsActivity` trait from Spatie Activity Log. Configure via `get
 - `handleInertiaErrors` from `@/utils/errorHandling` — Standardized error handling
 - `cn` from `@/lib/utils` — Tailwind class merging
 
+## Mobile Companion App (iot-expo)
+
+The Astrea platform has a mobile companion app in a separate repository at `/Users/andrade-mac-22/Documents/AI/iot-expo`. It is a React Native / Expo SDK 54 app that connects to the iot-hub backend via Sanctum API tokens.
+
+- **Routes**: `routes/api.php` defines 26 mobile API endpoints (22 Sanctum-protected + login + WhatsApp webhook)
+- **API Controllers**: `app/Http/Controllers/Api/` (9 controllers)
+- **Push Notifications**: `app/Services/Push/PushNotificationService.php` sends via Expo Push API
+- **Mobile Tests**: `tests/Feature/Http/MobileApiTest.php` (39 tests), `tests/Feature/Jobs/PushNotificationTest.php` (5 tests)
+- **Mobile Docs**: `docs/mobile/` (README, ARCHITECTURE, SCREENS, API_INTEGRATION, SETUP)
+- **Mobile PRD**: `docs/project/MOBILE_APP_PRD.md`
+
+When modifying API endpoints in `routes/api.php`, verify that corresponding mobile service calls in `iot-expo/src/services/astrea.ts` are updated.
+
 ## Skill & Plugin Workflow
 
 ### Required
