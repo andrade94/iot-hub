@@ -88,12 +88,19 @@ class SendAlertNotification implements ShouldQueue
 
     protected function sendEmail(User $user): bool
     {
-        // TODO: Create AlertMail notification
-        Log::info('Email notification placeholder', [
-            'alert_id' => $this->alert->id,
-            'user_id' => $user->id,
-        ]);
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)
+                ->queue(new \App\Mail\AlertMail($this->alert->load(['site', 'device'])));
 
-        return true;
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Alert email failed', [
+                'alert_id' => $this->alert->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }

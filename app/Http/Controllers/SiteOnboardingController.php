@@ -7,6 +7,7 @@ use App\Models\Module;
 use App\Models\Recipe;
 use App\Models\Site;
 use App\Services\ChirpStack\DeviceProvisioner;
+use App\Services\Recipes\RecipeApplicationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -24,12 +25,16 @@ class SiteOnboardingController extends Controller
 
         $step = $request->query('step', $this->determineCurrentStep($site));
 
+        $org = $site->organization;
+        $segmentSuggestions = $this->getSegmentSuggestions($org?->segment);
+
         return Inertia::render('settings/sites/onboard', [
             'site' => $site,
             'modules' => $modules,
             'recipes' => $recipes,
             'currentStep' => $step,
             'steps' => $this->getStepStatuses($site),
+            'segmentSuggestions' => $segmentSuggestions,
         ]);
     }
 
@@ -92,9 +97,25 @@ class SiteOnboardingController extends Controller
             }
         }
 
+        // Apply recipes from active modules to newly registered devices
+        $activeModuleIds = $site->modules()->wherePivot('activated_at', '!=', null)->pluck('modules.id');
+        $recipeRulesCreated = 0;
+        if ($activeModuleIds->isNotEmpty()) {
+            $recipeService = app(RecipeApplicationService::class);
+            foreach ($activeModuleIds as $moduleId) {
+                $module = Module::find($moduleId);
+                if ($module) {
+                    $recipeRulesCreated += $recipeService->applyModuleRecipes($site, $module);
+                }
+            }
+        }
+
         $message = count($validated['devices']).' device(s) registered.';
         if ($provisionedCount > 0) {
             $message .= " {$provisionedCount} provisioned in ChirpStack.";
+        }
+        if ($recipeRulesCreated > 0) {
+            $message .= " {$recipeRulesCreated} alert rule(s) auto-created.";
         }
         if ($failedCount > 0) {
             return back()->with('warning', $message." {$failedCount} failed provisioning — retry from device settings.");
@@ -119,7 +140,22 @@ class SiteOnboardingController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Modules activated.');
+        // Apply recipes from activated modules to existing devices
+        $recipeService = app(RecipeApplicationService::class);
+        $totalRules = 0;
+        foreach ($validated['module_ids'] as $moduleId) {
+            $module = Module::find($moduleId);
+            if ($module) {
+                $totalRules += $recipeService->applyModuleRecipes($site, $module);
+            }
+        }
+
+        $message = 'Modules activated.';
+        if ($totalRules > 0) {
+            $message .= " {$totalRules} alert rule(s) auto-created.";
+        }
+
+        return back()->with('success', $message);
     }
 
     /**
@@ -164,6 +200,48 @@ class SiteOnboardingController extends Controller
             ['label' => 'Floor Plans', 'completed' => $site->floorPlans->isNotEmpty()],
             ['label' => 'Modules', 'completed' => $site->modules->isNotEmpty()],
             ['label' => 'Complete', 'completed' => $site->status === 'active'],
+        ];
+    }
+
+    /**
+     * Get module and sensor suggestions based on organization segment.
+     *
+     * @return array{modules: string[], sensor_models: string[], description: string}
+     */
+    protected function getSegmentSuggestions(?string $segment): array
+    {
+        $suggestions = [
+            'cold_chain' => [
+                'modules' => ['cold_chain', 'compliance', 'safety'],
+                'sensor_models' => ['EM300-TH', 'WS301'],
+                'description' => 'Cold chain monitoring: temperature sensors for coolers/freezers, door sensors for access control, COFEPRIS compliance.',
+            ],
+            'energy' => [
+                'modules' => ['energy'],
+                'sensor_models' => ['CT101'],
+                'description' => 'Energy monitoring: current transformers on circuits for consumption tracking and cost analysis.',
+            ],
+            'industrial' => [
+                'modules' => ['industrial', 'energy', 'safety'],
+                'sensor_models' => ['CT101', 'EM310-UDL', 'EM300-PT'],
+                'description' => 'Industrial monitoring: vibration, pressure, compressed air, and energy for production equipment.',
+            ],
+            'commercial' => [
+                'modules' => ['iaq', 'energy', 'people'],
+                'sensor_models' => ['AM307', 'CT101', 'VS121'],
+                'description' => 'Commercial buildings: indoor air quality, energy efficiency, and occupancy tracking.',
+            ],
+            'foodservice' => [
+                'modules' => ['cold_chain', 'compliance', 'safety', 'energy'],
+                'sensor_models' => ['EM300-TH', 'WS301', 'CT101', 'GS101'],
+                'description' => 'Food service: temperature monitoring, gas leak detection, door monitoring, and energy tracking.',
+            ],
+        ];
+
+        return $suggestions[$segment] ?? [
+            'modules' => [],
+            'sensor_models' => [],
+            'description' => 'Select modules and sensors appropriate for your operation.',
         ];
     }
 }

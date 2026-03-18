@@ -19,14 +19,22 @@ import {
     CheckCircle2,
     Cpu,
     Image,
+    Info,
     Layers,
     Plus,
     Radio,
+    Sparkles,
     Trash2,
     Upload,
     X,
 } from 'lucide-react';
 import { useState } from 'react';
+
+interface SegmentSuggestions {
+    modules: string[];
+    sensor_models: string[];
+    description: string;
+}
 
 interface Props {
     site: Site & {
@@ -39,6 +47,7 @@ interface Props {
     recipes: Recipe[];
     currentStep: number;
     steps: OnboardingStep[];
+    segmentSuggestions?: SegmentSuggestions;
 }
 
 const wizardSteps: Step[] = [
@@ -49,9 +58,10 @@ const wizardSteps: Step[] = [
     { id: 'complete', title: 'Complete' },
 ];
 
-export default function SiteOnboard({ site, modules, recipes, currentStep, steps }: Props) {
+export default function SiteOnboard({ site, modules, recipes, currentStep, steps, segmentSuggestions }: Props) {
     const { t } = useLang();
     const [activeStep, setActiveStep] = useState(currentStep - 1);
+    const hasSuggestions = segmentSuggestions && segmentSuggestions.modules.length > 0;
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Sites', href: '/settings/sites' },
@@ -63,6 +73,11 @@ export default function SiteOnboard({ site, modules, recipes, currentStep, steps
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${t('Onboarding')} — ${site.name}`} />
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* Segment Suggestion Banner */}
+                {hasSuggestions && (
+                    <SegmentSuggestionBanner suggestions={segmentSuggestions} />
+                )}
+
                 {/* Header */}
                 <div className="rounded-xl border border-sidebar-border/70 bg-card p-6 dark:border-sidebar-border">
                     <div className="mb-6 flex items-center justify-between">
@@ -111,6 +126,7 @@ export default function SiteOnboard({ site, modules, recipes, currentStep, steps
                             site={site}
                             modules={modules}
                             activatedModules={site.modules}
+                            suggestedModuleSlugs={segmentSuggestions?.modules ?? []}
                             onNext={() => setActiveStep(4)}
                             onBack={() => setActiveStep(2)}
                         />
@@ -125,6 +141,46 @@ export default function SiteOnboard({ site, modules, recipes, currentStep, steps
                 </div>
             </div>
         </AppLayout>
+    );
+}
+
+/* ── Segment Suggestion Banner ────────────────────── */
+
+function SegmentSuggestionBanner({ suggestions }: { suggestions: SegmentSuggestions }) {
+    const { t } = useLang();
+
+    return (
+        <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/30">
+            <CardContent className="flex items-start gap-4 py-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+                    <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1 space-y-2">
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        {t('Recommended for your segment')}
+                    </p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                        {suggestions.description}
+                    </p>
+                    {suggestions.sensor_models.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                            <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                                {t('Suggested sensors:')}
+                            </span>
+                            {suggestions.sensor_models.map((model) => (
+                                <Badge
+                                    key={model}
+                                    variant="outline"
+                                    className="border-blue-300 bg-blue-100/50 text-xs text-blue-700 dark:border-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
+                                >
+                                    {model}
+                                </Badge>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -628,18 +684,33 @@ function ModuleStep({
     site,
     modules,
     activatedModules,
+    suggestedModuleSlugs,
     onNext,
     onBack,
 }: {
     site: Site;
     modules: Module[];
     activatedModules: Module[];
+    suggestedModuleSlugs: string[];
     onNext: () => void;
     onBack: () => void;
 }) {
     const { t } = useLang();
     const activatedIds = new Set(activatedModules.map((m) => m.id));
-    const [selected, setSelected] = useState<Set<number>>(activatedIds);
+    const suggestedSlugs = new Set(suggestedModuleSlugs);
+
+    // Pre-select suggested modules (in addition to already activated ones)
+    const [selected, setSelected] = useState<Set<number>>(() => {
+        const initial = new Set(activatedIds);
+        if (suggestedSlugs.size > 0) {
+            for (const mod of modules) {
+                if (suggestedSlugs.has(mod.slug)) {
+                    initial.add(mod.id);
+                }
+            }
+        }
+        return initial;
+    });
 
     function toggle(id: number) {
         const next = new Set(selected);
@@ -692,6 +763,7 @@ function ModuleStep({
                         {modules.map((mod) => {
                             const isSelected = selected.has(mod.id);
                             const wasActive = activatedIds.has(mod.id);
+                            const isSuggested = suggestedSlugs.has(mod.slug);
 
                             return (
                                 <button
@@ -701,7 +773,9 @@ function ModuleStep({
                                     className={`relative flex flex-col gap-2 rounded-lg border-2 p-4 text-left transition-all ${
                                         isSelected
                                             ? 'border-primary bg-primary/5 shadow-sm'
-                                            : 'border-border hover:border-muted-foreground/40'
+                                            : isSuggested
+                                              ? 'border-blue-300 bg-blue-50/30 hover:border-blue-400 dark:border-blue-800 dark:bg-blue-950/20 dark:hover:border-blue-700'
+                                              : 'border-border hover:border-muted-foreground/40'
                                     }`}
                                 >
                                     {isSelected && (
@@ -718,11 +792,21 @@ function ModuleStep({
                                             {mod.description}
                                         </p>
                                     </div>
-                                    {wasActive && (
-                                        <Badge variant="success" className="w-fit text-xs">
-                                            {t('Active')}
-                                        </Badge>
-                                    )}
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {wasActive && (
+                                            <Badge variant="success" className="w-fit text-xs">
+                                                {t('Active')}
+                                            </Badge>
+                                        )}
+                                        {isSuggested && !wasActive && (
+                                            <Badge
+                                                variant="outline"
+                                                className="w-fit border-blue-300 bg-blue-100/50 text-xs text-blue-700 dark:border-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
+                                            >
+                                                {t('Recommended')}
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </button>
                             );
                         })}

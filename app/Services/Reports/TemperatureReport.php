@@ -210,7 +210,7 @@ class TemperatureReport
 
         // Fallback: check alert rules for temperature thresholds
         $rules = $device->alertRules()
-            ->where('is_active', true)
+            ->where('active', true)
             ->get();
 
         $min = null;

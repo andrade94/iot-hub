@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ApplyOrgBranding;
+use App\Http\Middleware\EnsureModuleActive;
 use App\Http\Middleware\EnsureOrganizationScope;
 use App\Http\Middleware\EnsureSiteAccess;
 use App\Http\Middleware\HandleAppearance;
@@ -38,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'org.scope' => EnsureOrganizationScope::class,
             'site.access' => EnsureSiteAccess::class,
+            'module.active' => EnsureModuleActive::class,
         ]);
     })
     ->withSchedule(function (Schedule $schedule) {

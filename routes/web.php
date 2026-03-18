@@ -149,8 +149,12 @@ Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
 
     // Module dashboards
     Route::middleware('site.access')->group(function () {
-        Route::get('sites/{site}/modules/iaq', [\App\Http\Controllers\ModuleDashboardController::class, 'iaq'])->name('modules.iaq');
-        Route::get('sites/{site}/modules/industrial', [\App\Http\Controllers\ModuleDashboardController::class, 'industrial'])->name('modules.industrial');
+        Route::get('sites/{site}/modules/iaq', [\App\Http\Controllers\ModuleDashboardController::class, 'iaq'])
+            ->middleware('module.active:iaq')
+            ->name('modules.iaq');
+        Route::get('sites/{site}/modules/industrial', [\App\Http\Controllers\ModuleDashboardController::class, 'industrial'])
+            ->middleware('module.active:industrial')
+            ->name('modules.industrial');
     });
 
     // Report builder landing page
