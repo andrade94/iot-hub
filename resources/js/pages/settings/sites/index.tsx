@@ -19,6 +19,8 @@ interface SiteRecord {
     id: number;
     name: string;
     address: string | null;
+    latitude: number | null;
+    longitude: number | null;
     status: 'draft' | 'active' | 'suspended';
     timezone: string | null;
     opening_hour: string | null;
@@ -186,6 +188,8 @@ function SiteForm({
     const form = useForm({
         name: site?.name ?? '',
         address: site?.address ?? '',
+        latitude: site?.latitude ?? '',
+        longitude: site?.longitude ?? '',
         timezone: site?.timezone ?? '',
         opening_hour: site?.opening_hour ?? '',
         status: site?.status ?? 'draft',
@@ -218,6 +222,35 @@ function SiteForm({
                 <Label>{t('Address')}</Label>
                 <Input value={form.data.address} onChange={(e) => form.setData('address', e.target.value)} />
                 <InputError message={form.errors.address} />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                    <Label>{t('Latitude')}</Label>
+                    <Input
+                        type="number"
+                        step="any"
+                        min={-90}
+                        max={90}
+                        value={form.data.latitude}
+                        onChange={(e) => form.setData('latitude', e.target.value)}
+                        placeholder="-90 to 90"
+                    />
+                    <InputError message={form.errors.latitude} />
+                </div>
+                <div className="grid gap-2">
+                    <Label>{t('Longitude')}</Label>
+                    <Input
+                        type="number"
+                        step="any"
+                        min={-180}
+                        max={180}
+                        value={form.data.longitude}
+                        onChange={(e) => form.setData('longitude', e.target.value)}
+                        placeholder="-180 to 180"
+                    />
+                    <InputError message={form.errors.longitude} />
+                </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

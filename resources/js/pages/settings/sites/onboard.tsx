@@ -11,8 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, Device, FloorPlan, Gateway, Module, OnboardingStep, Recipe, Site } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
+    AlertTriangle,
     ArrowLeft,
     ArrowRight,
     Check,
@@ -48,6 +49,7 @@ interface Props {
     currentStep: number;
     steps: OnboardingStep[];
     segmentSuggestions?: SegmentSuggestions;
+    chirpstackConfigured?: boolean;
 }
 
 const wizardSteps: Step[] = [
@@ -58,7 +60,7 @@ const wizardSteps: Step[] = [
     { id: 'complete', title: 'Complete' },
 ];
 
-export default function SiteOnboard({ site, modules, recipes, currentStep, steps, segmentSuggestions }: Props) {
+export default function SiteOnboard({ site, modules, recipes, currentStep, steps, segmentSuggestions, chirpstackConfigured }: Props) {
     const { t } = useLang();
     const [activeStep, setActiveStep] = useState(currentStep - 1);
     const hasSuggestions = segmentSuggestions && segmentSuggestions.modules.length > 0;
@@ -73,6 +75,11 @@ export default function SiteOnboard({ site, modules, recipes, currentStep, steps
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${t('Onboarding')} — ${site.name}`} />
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ChirpStack Warning Banner */}
+                {chirpstackConfigured === false && (
+                    <ChirpStackWarningBanner />
+                )}
+
                 {/* Segment Suggestion Banner */}
                 {hasSuggestions && (
                     <SegmentSuggestionBanner suggestions={segmentSuggestions} />
@@ -141,6 +148,30 @@ export default function SiteOnboard({ site, modules, recipes, currentStep, steps
                 </div>
             </div>
         </AppLayout>
+    );
+}
+
+/* ── ChirpStack Warning Banner ────────────────────── */
+
+function ChirpStackWarningBanner() {
+    const { t } = useLang();
+
+    return (
+        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/30">
+            <CardContent className="flex items-start gap-4 py-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                        {t('ChirpStack is not configured')}
+                    </p>
+                    <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                        {t('Gateway and device provisioning will be skipped. Contact your administrator to configure the LoRaWAN server.')}
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -857,19 +888,36 @@ function CompleteStep({
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
-                    {steps.map((step, idx) => (
-                        <div
-                            key={idx}
-                            className="flex items-center justify-between rounded-lg border p-3"
-                        >
-                            <span className="text-sm font-medium">{step.label}</span>
-                            {step.completed ? (
-                                <Badge variant="success">{t('Done')}</Badge>
-                            ) : (
-                                <Badge variant="outline">{t('Pending')}</Badge>
-                            )}
-                        </div>
-                    ))}
+                    {steps.map((step, idx) => {
+                        const isEscalation = step.label === 'Escalation';
+
+                        let badge: React.ReactNode;
+                        if (step.completed) {
+                            badge = <Badge variant="success">{t('Done')}</Badge>;
+                        } else if (isEscalation) {
+                            badge = <Badge variant="warning">{t('Optional')}</Badge>;
+                        } else {
+                            badge = <Badge variant="outline">{t('Pending')}</Badge>;
+                        }
+
+                        return (
+                            <div
+                                key={idx}
+                                className="flex items-center justify-between rounded-lg border p-3"
+                            >
+                                <span className="text-sm font-medium">{step.label}</span>
+                                {badge}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <div className="mt-4">
+                    <Button variant="link" className="h-auto p-0 text-sm" asChild>
+                        <Link href="/settings/escalation-chains">
+                            {t('Set up escalation chain')} &rarr;
+                        </Link>
+                    </Button>
                 </div>
 
                 <div className="mt-6 flex items-center justify-between">

@@ -33,7 +33,7 @@ class SendMorningSummary implements ShouldQueue
         $sites = Site::active()
             ->whereNotNull('timezone')
             ->whereNotNull('opening_hour')
-            ->with(['users' => fn ($q) => $q->wherePivot('role', 'site_viewer')])
+            ->with(['users'])
             ->get();
 
         foreach ($sites as $site) {
@@ -52,7 +52,15 @@ class SendMorningSummary implements ShouldQueue
 
             $pushService = app(PushNotificationService::class);
 
-            foreach ($site->users as $user) {
+            // Collect all users who should receive summaries:
+            // site-level users (viewers, managers) + org-level admins
+            $recipients = $site->users;
+            $orgAdmins = \App\Models\User::where('org_id', $site->org_id)
+                ->role('org_admin')
+                ->get();
+            $allRecipients = $recipients->merge($orgAdmins)->unique('id');
+
+            foreach ($allRecipients as $user) {
                 $deviceStatus = $summary['device_status'];
                 $body = "{$deviceStatus['online']}/{$deviceStatus['total']} devices online"
                     . ($summary['alert_count_24h'] > 0 ? ", {$summary['alert_count_24h']} alerts (24h)" : '')

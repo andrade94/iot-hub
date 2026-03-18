@@ -28,6 +28,10 @@ class SiteOnboardingController extends Controller
         $org = $site->organization;
         $segmentSuggestions = $this->getSegmentSuggestions($org?->segment);
 
+        // Check ChirpStack configuration
+        $chirpstackConfigured = ! empty(config('services.chirpstack.url'))
+            && ! empty(config('services.chirpstack.api_key'));
+
         return Inertia::render('settings/sites/onboard', [
             'site' => $site,
             'modules' => $modules,
@@ -35,6 +39,7 @@ class SiteOnboardingController extends Controller
             'currentStep' => $step,
             'steps' => $this->getStepStatuses($site),
             'segmentSuggestions' => $segmentSuggestions,
+            'chirpstackConfigured' => $chirpstackConfigured,
         ]);
     }
 
@@ -163,9 +168,33 @@ class SiteOnboardingController extends Controller
      */
     public function complete(Request $request, Site $site)
     {
+        // Validate minimum onboarding requirements
+        $warnings = [];
+        if ($site->gateways->isEmpty()) {
+            $warnings[] = 'No gateway registered.';
+        }
+        if ($site->devices->isEmpty()) {
+            $warnings[] = 'No devices registered.';
+        }
+        if ($site->modules->isEmpty()) {
+            $warnings[] = 'No modules activated.';
+        }
+
+        // Check escalation chain
+        $hasEscalationChain = \App\Models\EscalationChain::where('site_id', $site->id)->exists();
+        if (! $hasEscalationChain) {
+            $warnings[] = 'No escalation chain configured — alert notifications will not be delivered.';
+        }
+
         $site->update(['status' => 'active']);
 
-        return redirect()->route('dashboard')->with('success', "Site '{$site->name}' is now active.");
+        $message = "Site '{$site->name}' is now active.";
+        if (! empty($warnings)) {
+            $message .= ' Warnings: '.implode(' ', $warnings);
+            return redirect()->route('dashboard')->with('warning', $message);
+        }
+
+        return redirect()->route('dashboard')->with('success', $message);
     }
 
     /**
@@ -197,8 +226,9 @@ class SiteOnboardingController extends Controller
         return [
             ['label' => 'Gateway', 'completed' => $site->gateways->isNotEmpty()],
             ['label' => 'Devices', 'completed' => $site->devices->isNotEmpty()],
-            ['label' => 'Floor Plans', 'completed' => $site->floorPlans->isNotEmpty()],
+            ['label' => 'Floor Plans', 'completed' => $site->floorPlans->isNotEmpty(), 'optional' => true],
             ['label' => 'Modules', 'completed' => $site->modules->isNotEmpty()],
+            ['label' => 'Escalation', 'completed' => \App\Models\EscalationChain::where('site_id', $site->id)->exists()],
             ['label' => 'Complete', 'completed' => $site->status === 'active'],
         ];
     }

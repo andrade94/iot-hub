@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BillingProfile;
 use App\Models\Organization;
+use App\Services\Billing\SubscriptionService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -30,8 +32,19 @@ class PartnerController extends Controller
             'default_opening_hour' => 'nullable|date_format:H:i',
         ]);
 
-        Organization::create($validated);
+        $org = Organization::create($validated);
 
-        return back()->with('success', "Organization '{$validated['name']}' created.");
+        // Auto-create a default billing profile and subscription
+        $profile = BillingProfile::create([
+            'org_id' => $org->id,
+            'name' => $org->name,
+            'rfc' => 'XAXX010101000', // Generic RFC placeholder — client will update
+            'razon_social' => $org->name,
+            'is_default' => true,
+        ]);
+
+        app(SubscriptionService::class)->createSubscription($org, $profile);
+
+        return back()->with('success', "Organization '{$org->name}' created with default subscription.");
     }
 }
