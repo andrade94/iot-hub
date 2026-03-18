@@ -20,26 +20,38 @@ This template includes a complete permissions and role-based access control (RBA
 
 | Role | Description |
 |------|-------------|
-| `super-admin` | Full system access with all permissions |
-| `admin` | Administrative access to most features |
-| `editor` | Content management permissions |
-| `user` | Basic user permissions |
+| `super_admin` | Full platform access, all permissions, cross-org visibility |
+| `org_admin` | Organization-level admin, all permissions except `manage organizations` and `access command center` |
+| `site_manager` | Operational site management, devices, alerts, users, reports |
+| `site_viewer` | Read-only access to sites, devices, alerts, reports |
+| `technician` | Field operations: view devices/alerts, complete work orders |
 
-### Permissions
+### Permissions (23 total)
 
-| Permission | Description |
-|------------|-------------|
-| `view users` | Can view user list |
-| `create users` | Can create new users |
-| `edit users` | Can edit existing users |
-| `delete users` | Can delete users |
-| `view content` | Can view content |
-| `create content` | Can create new content |
-| `edit content` | Can edit existing content |
-| `delete content` | Can delete content |
-| `publish content` | Can publish content |
-| `manage settings` | Can manage application settings |
-| `view activity log` | Can view activity logs |
+| Permission | super_admin | org_admin | site_manager | site_viewer | technician |
+|------------|:-----------:|:---------:|:------------:|:-----------:|:----------:|
+| `view organizations` | ✓ | ✓ | | | |
+| `manage organizations` | ✓ | | | | |
+| `view sites` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `manage sites` | ✓ | ✓ | ✓ | | |
+| `onboard sites` | ✓ | ✓ | | | |
+| `view devices` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `manage devices` | ✓ | ✓ | ✓ | | |
+| `provision devices` | ✓ | ✓ | | | |
+| `view alerts` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `acknowledge alerts` | ✓ | ✓ | ✓ | | ✓ |
+| `manage alert rules` | ✓ | ✓ | ✓ | | |
+| `view users` | ✓ | ✓ | ✓ | | |
+| `manage users` | ✓ | ✓ | | | |
+| `assign site users` | ✓ | ✓ | ✓ | | |
+| `view reports` | ✓ | ✓ | ✓ | ✓ | |
+| `generate reports` | ✓ | ✓ | ✓ | | |
+| `view work orders` | ✓ | ✓ | ✓ | | ✓ |
+| `manage work orders` | ✓ | ✓ | ✓ | | |
+| `complete work orders` | ✓ | | | | ✓ |
+| `manage org settings` | ✓ | ✓ | | | |
+| `view activity log` | ✓ | ✓ | ✓ | | |
+| `access command center` | ✓ | | | | |
 
 ---
 
@@ -314,11 +326,13 @@ function MyComponent() {
 
 The template includes pre-seeded test users with different roles:
 
-| Email | Password | Role | Permissions |
-|-------|----------|------|-------------|
-| `admin@example.com` | `password` | `admin` | Most permissions |
-| `editor@example.com` | `password` | `editor` | Content permissions |
-| `user@example.com` | `password` | `user` | Basic permissions |
+| Email | Password | Role |
+|-------|----------|------|
+| `super@astrea.io` | `password` | `super_admin` |
+| `admin@cadenademo.com` | `password` | `org_admin` |
+| `manager@cadenademo.com` | `password` | `site_manager` |
+| `viewer@cadenademo.com` | `password` | `site_viewer` |
+| `tech@cadenademo.com` | `password` | `technician` |
 
 ---
 
@@ -493,4 +507,4 @@ $middleware->alias([
 
 ---
 
-**Last Updated:** 2025-10-21
+**Last Updated:** 2026-03-15

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\BillingProfile;
 use App\Models\Invoice;
 use App\Models\Subscription;
+use App\Services\Billing\FacturapiService;
+use App\Services\Billing\InvoiceService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -27,7 +29,7 @@ class BillingController extends Controller
 
         $monthlyTotal = $subscription?->calculateMonthlyTotal() ?? 0;
 
-        return Inertia::render('settings/billing/dashboard', [
+        return Inertia::render('settings/billing/index', [
             'subscription' => $subscription,
             'invoices' => $invoices,
             'monthlyTotal' => $monthlyTotal,
@@ -78,5 +80,68 @@ class BillingController extends Controller
         ]);
 
         return back()->with('success', 'Billing profile created.');
+    }
+
+    public function generateInvoice(Request $request, InvoiceService $invoiceService)
+    {
+        $user = $request->user();
+        $orgId = $user->org_id;
+        $period = $request->input('period', now()->format('Y-m'));
+
+        $subscription = Subscription::where('org_id', $orgId)
+            ->where('status', 'active')
+            ->first();
+
+        if (! $subscription) {
+            return back()->with('error', 'No active subscription found.');
+        }
+
+        // Prevent duplicate invoices
+        $existing = $subscription->invoices()->where('period', $period)->exists();
+        if ($existing) {
+            return back()->with('warning', "Invoice for {$period} already exists.");
+        }
+
+        $invoice = $invoiceService->generateInvoice($subscription, $period);
+
+        return back()->with('success', "Invoice #{$invoice->id} generated for {$period} — \${$invoice->total} MXN.");
+    }
+
+    public function markInvoicePaid(Request $request, Invoice $invoice, InvoiceService $invoiceService)
+    {
+        $user = $request->user();
+        if ($invoice->org_id !== $user->org_id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'payment_method' => ['required', 'string', 'in:spei,cash,card,other'],
+        ]);
+
+        $invoiceService->markPaid($invoice, $validated['payment_method']);
+
+        return back()->with('success', 'Invoice marked as paid.');
+    }
+
+    public function downloadInvoice(Request $request, Invoice $invoice, string $format, FacturapiService $facturapiService)
+    {
+        $user = $request->user();
+        if ($invoice->org_id !== $user->org_id) {
+            abort(403);
+        }
+
+        if (! $invoice->cfdi_api_id) {
+            return back()->with('error', 'No CFDI available for this invoice.');
+        }
+
+        $path = $format === 'pdf'
+            ? $facturapiService->downloadPdf($invoice->cfdi_api_id)
+            : $facturapiService->downloadXml($invoice->cfdi_api_id);
+
+        if (! $path) {
+            return back()->with('error', 'Download not available.');
+        }
+
+        return response()->download(storage_path("app/{$path}"));
     }
 }

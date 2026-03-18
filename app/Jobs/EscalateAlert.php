@@ -19,10 +19,11 @@ class EscalateAlert implements ShouldQueue
     public function __construct(
         public Alert $alert,
         public EscalationChain $chain,
+        public int $level = 1,
     ) {}
 
     public function handle(EscalationService $escalationService): void
     {
-        $escalationService->escalate($this->alert, $this->chain);
+        $escalationService->escalate($this->alert, $this->chain, $this->level);
     }
 }

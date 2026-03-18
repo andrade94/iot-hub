@@ -20,6 +20,17 @@ import {
     Radio,
     Signal,
 } from 'lucide-react';
+import { useMemo } from 'react';
+import {
+    CartesianGrid,
+    Line,
+    LineChart,
+    ReferenceLine,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
 interface LatestReading {
     metric: string;
@@ -139,52 +150,8 @@ export default function DeviceShow({
                             </CardContent>
                         </Card>
 
-                        {/* Chart placeholder — data is ready for Recharts */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                    <Activity className="h-4 w-4" />
-                                    {metric} — {period}
-                                </CardTitle>
-                                <CardDescription>
-                                    {chartData.length} {t('data points')}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {chartData.length === 0 ? (
-                                    <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-                                        {t('No readings for this period')}
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {/* Simple ASCII-style data visualization */}
-                                        <div className="grid grid-cols-3 gap-4 rounded-lg bg-muted/50 p-4">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">{t('Min')}</p>
-                                                <p className="text-lg font-bold tabular-nums">
-                                                    {Math.min(...chartData.map((d) => d.min_value ?? d.value ?? 0)).toFixed(1)}
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">{t('Avg')}</p>
-                                                <p className="text-lg font-bold tabular-nums">
-                                                    {(chartData.reduce((sum, d) => sum + (d.avg_value ?? d.value ?? 0), 0) / chartData.length).toFixed(1)}
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">{t('Max')}</p>
-                                                <p className="text-lg font-bold tabular-nums">
-                                                    {Math.max(...chartData.map((d) => d.max_value ?? d.value ?? 0)).toFixed(1)}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground text-center">
-                                            {t('Recharts integration ready — chartData prop contains time-series data')}
-                                        </p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                        {/* Device metric chart */}
+                        <DeviceChart chartData={chartData} metric={metric} period={period} t={t} />
 
                         {/* Latest readings */}
                         <Card>
@@ -268,6 +235,123 @@ export default function DeviceShow({
                 </div>
             </div>
         </AppLayout>
+    );
+}
+
+interface DeviceChartProps {
+    chartData: ChartDataPoint[];
+    metric: string;
+    period: string;
+    t: (key: string) => string;
+}
+
+function DeviceChart({ chartData, metric, period, t }: DeviceChartProps) {
+    const stats = useMemo(() => {
+        if (chartData.length === 0) return null;
+
+        const values = chartData.map((d) => d.avg_value ?? d.value ?? 0);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+
+        return { min, max, avg };
+    }, [chartData]);
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                    <Activity className="h-4 w-4" />
+                    {metric} — {period}
+                </CardTitle>
+                <CardDescription>
+                    {chartData.length} {t('data points')}
+                    {stats && (
+                        <span className="ml-3 tabular-nums">
+                            {t('Min')} {stats.min.toFixed(1)} · {t('Avg')} {stats.avg.toFixed(1)} · {t('Max')} {stats.max.toFixed(1)}
+                        </span>
+                    )}
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                {chartData.length === 0 ? (
+                    <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
+                        {t('No readings for this period')}
+                    </div>
+                ) : (
+                    <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={chartData} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="deviceLineGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.15} />
+                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.01} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                            <XAxis
+                                dataKey="time"
+                                tick={{ fontSize: 11 }}
+                                tickLine={false}
+                                axisLine={false}
+                                className="fill-muted-foreground"
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11 }}
+                                tickLine={false}
+                                axisLine={false}
+                                className="fill-muted-foreground"
+                                domain={['auto', 'auto']}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: 'hsl(var(--popover))',
+                                    border: '1px solid hsl(var(--border))',
+                                    borderRadius: '8px',
+                                    fontSize: 12,
+                                    color: 'hsl(var(--popover-foreground))',
+                                }}
+                                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                                formatter={(val: number) => [val.toFixed(2), metric]}
+                                labelFormatter={(label: string) => label}
+                            />
+                            {stats && (
+                                <>
+                                    <ReferenceLine
+                                        y={stats.min}
+                                        stroke="#ef4444"
+                                        strokeDasharray="4 4"
+                                        strokeOpacity={0.5}
+                                        label={{ value: t('Min'), position: 'insideTopLeft', fontSize: 10, fill: '#ef4444' }}
+                                    />
+                                    <ReferenceLine
+                                        y={stats.avg}
+                                        stroke="#f59e0b"
+                                        strokeDasharray="4 4"
+                                        strokeOpacity={0.5}
+                                        label={{ value: t('Avg'), position: 'insideTopLeft', fontSize: 10, fill: '#f59e0b' }}
+                                    />
+                                    <ReferenceLine
+                                        y={stats.max}
+                                        stroke="#ef4444"
+                                        strokeDasharray="4 4"
+                                        strokeOpacity={0.5}
+                                        label={{ value: t('Max'), position: 'insideBottomLeft', fontSize: 10, fill: '#ef4444' }}
+                                    />
+                                </>
+                            )}
+                            <Line
+                                type="monotone"
+                                dataKey="value"
+                                stroke="#3b82f6"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 4, strokeWidth: 2 }}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                )}
+            </CardContent>
+        </Card>
     );
 }
 

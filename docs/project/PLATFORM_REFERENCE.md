@@ -84,7 +84,7 @@ app/
 ├── Jobs/                     11 queued jobs
 ├── Events/                   3 broadcast events
 ├── Notifications/            SystemNotification, ActivityNotification
-├── Policies/                 ProductPolicy, FilePolicy, NotificationPolicy
+├── Policies/                 FilePolicy, GatewayPolicy, NotificationPolicy
 └── Console/                  Artisan commands
 ```
 

@@ -10,12 +10,28 @@ class PartnerController extends Controller
 {
     public function index(Request $request)
     {
-        $organizations = Organization::select('id', 'name', 'slug', 'logo', 'branding')
+        $organizations = Organization::withCount('sites')
             ->orderBy('name')
             ->get();
 
         return Inertia::render('partner/index', [
             'organizations' => $organizations,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:organizations,slug',
+            'segment' => 'required|string|in:retail,cold_chain,industrial,commercial,foodservice',
+            'plan' => 'required|string|in:starter,standard,enterprise',
+            'default_timezone' => 'nullable|string|max:50',
+            'default_opening_hour' => 'nullable|date_format:H:i',
+        ]);
+
+        Organization::create($validated);
+
+        return back()->with('success', "Organization '{$validated['name']}' created.");
     }
 }

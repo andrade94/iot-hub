@@ -19,6 +19,15 @@ beforeEach(function () {
     $this->device = createDevice($this->site);
     $this->router = new AlertRouter;
 
+    // Clear Redis alert batch counters to prevent cross-test interference
+    try {
+        \Illuminate\Support\Facades\Redis::del("alert_batch:{$this->org->id}");
+        \Illuminate\Support\Facades\Redis::del("alert_batch_ids:{$this->org->id}");
+        \Illuminate\Support\Facades\Redis::del("alert_batch_scheduled:{$this->org->id}");
+    } catch (\Exception $e) {
+        // Redis unavailable — no cleanup needed
+    }
+
     $this->rule = AlertRule::create([
         'site_id' => $this->site->id,
         'name' => 'Test Rule',
@@ -32,7 +41,13 @@ test('routes alert to level 1 chain immediately', function () {
     Event::fake();
 
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user->id, 'level' => 1, 'delay_minutes' => 0, 'channel' => 'push']);
+    EscalationChain::create([
+        'site_id' => $this->site->id,
+        'name' => 'Test Chain',
+        'levels' => [
+            ['level' => 1, 'delay_minutes' => 0, 'user_ids' => [$user->id], 'channels' => ['push']],
+        ],
+    ]);
 
     $alert = Alert::create([
         'rule_id' => $this->rule->id,
@@ -54,8 +69,14 @@ test('critical alert triggers up to level 3', function () {
 
     $user1 = User::factory()->create(['org_id' => $this->org->id]);
     $user2 = User::factory()->create(['org_id' => $this->org->id]);
-    EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user1->id, 'level' => 1, 'delay_minutes' => 0, 'channel' => 'push']);
-    EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user2->id, 'level' => 2, 'delay_minutes' => 5, 'channel' => 'whatsapp']);
+    EscalationChain::create([
+        'site_id' => $this->site->id,
+        'name' => 'Test Chain',
+        'levels' => [
+            ['level' => 1, 'delay_minutes' => 0, 'user_ids' => [$user1->id], 'channels' => ['push']],
+            ['level' => 2, 'delay_minutes' => 5, 'user_ids' => [$user2->id], 'channels' => ['whatsapp']],
+        ],
+    ]);
 
     $alert = Alert::create([
         'rule_id' => $this->rule->id,
@@ -77,7 +98,13 @@ test('broadcasts alert via Reverb', function () {
     Queue::fake();
 
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user->id, 'level' => 1, 'delay_minutes' => 0, 'channel' => 'push']);
+    EscalationChain::create([
+        'site_id' => $this->site->id,
+        'name' => 'Test Chain',
+        'levels' => [
+            ['level' => 1, 'delay_minutes' => 0, 'user_ids' => [$user->id], 'channels' => ['push']],
+        ],
+    ]);
 
     $alert = Alert::create([
         'rule_id' => $this->rule->id,
@@ -116,8 +143,14 @@ test('low severity only triggers level 1', function () {
 
     $user1 = User::factory()->create(['org_id' => $this->org->id]);
     $user2 = User::factory()->create(['org_id' => $this->org->id]);
-    EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user1->id, 'level' => 1, 'delay_minutes' => 0, 'channel' => 'push']);
-    EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user2->id, 'level' => 2, 'delay_minutes' => 5, 'channel' => 'whatsapp']);
+    EscalationChain::create([
+        'site_id' => $this->site->id,
+        'name' => 'Test Chain',
+        'levels' => [
+            ['level' => 1, 'delay_minutes' => 0, 'user_ids' => [$user1->id], 'channels' => ['push']],
+            ['level' => 2, 'delay_minutes' => 5, 'user_ids' => [$user2->id], 'channels' => ['whatsapp']],
+        ],
+    ]);
 
     $alert = Alert::create([
         'rule_id' => $this->rule->id,
@@ -141,9 +174,15 @@ test('high severity triggers levels 1 and 2', function () {
     $user1 = User::factory()->create(['org_id' => $this->org->id]);
     $user2 = User::factory()->create(['org_id' => $this->org->id]);
     $user3 = User::factory()->create(['org_id' => $this->org->id]);
-    EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user1->id, 'level' => 1, 'delay_minutes' => 0, 'channel' => 'push']);
-    EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user2->id, 'level' => 2, 'delay_minutes' => 5, 'channel' => 'whatsapp']);
-    EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user3->id, 'level' => 3, 'delay_minutes' => 15, 'channel' => 'email']);
+    EscalationChain::create([
+        'site_id' => $this->site->id,
+        'name' => 'Multi-Level Chain',
+        'levels' => [
+            ['level' => 1, 'delay_minutes' => 0, 'user_ids' => [$user1->id], 'channels' => ['push']],
+            ['level' => 2, 'delay_minutes' => 5, 'user_ids' => [$user2->id], 'channels' => ['whatsapp']],
+            ['level' => 3, 'delay_minutes' => 15, 'user_ids' => [$user3->id], 'channels' => ['email']],
+        ],
+    ]);
 
     $alert = Alert::create([
         'rule_id' => $this->rule->id,

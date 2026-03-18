@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Mail\RegionalSummaryMail;
 use App\Models\Site;
 use App\Models\User;
 use App\Services\Push\PushNotificationService;
@@ -10,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendRegionalSummary implements ShouldQueue
 {
@@ -62,6 +64,8 @@ class SendRegionalSummary implements ShouldQueue
                 $body,
                 ['type' => 'morning_summary'],
             );
+
+            Mail::to($manager->email)->queue(new RegionalSummaryMail($manager->name, $summary));
 
             Log::info('Regional summary dispatched to site_manager', [
                 'user_id' => $manager->id,

@@ -58,6 +58,72 @@ class EnergyReport
                 'avg_daily_cost' => $avgDailyCost,
                 'baseline_comparison_pct' => $baselineComparisonPct,
             ],
+            'night_waste' => $this->analyzeNightWaste($site, $from, $to),
+        ];
+    }
+
+    /**
+     * Analyze overnight energy consumption to detect waste.
+     * "Night" = hours between site closing and opening (e.g., 22:00 - 06:00).
+     * Returns per-device overnight vs daytime consumption comparison.
+     *
+     * @return array{
+     *     devices: array<int, array{device_name: string, device_model: string, zone: string|null, day_kwh: float, night_kwh: float, night_pct: float, waste_flag: bool}>,
+     *     summary: array{total_night_kwh: float, total_day_kwh: float, night_cost_mxn: float, night_pct: float, operating_hours: string}
+     * }
+     */
+    public function analyzeNightWaste(Site $site, Carbon $from, Carbon $to): array
+    {
+        $openingHour = $site->opening_hour ? (int) $site->opening_hour->format('H') : 6;
+        $closingHour = min($openingHour + 16, 22); // Assume 16h operating day
+
+        $devices = Device::where('site_id', $site->id)->get();
+        $results = [];
+
+        foreach ($devices as $device) {
+            // Day consumption (opening to closing)
+            $dayKwh = DB::selectOne("
+                SELECT COALESCE(SUM(value), 0) as total
+                FROM sensor_readings
+                WHERE device_id = ? AND metric = 'current' AND time BETWEEN ? AND ?
+                AND CAST(strftime('%H', time) AS INTEGER) BETWEEN ? AND ?
+            ", [$device->id, $from, $to, $openingHour, $closingHour - 1])?->total ?? 0;
+
+            // Night consumption (closing to opening)
+            $nightKwh = DB::selectOne("
+                SELECT COALESCE(SUM(value), 0) as total
+                FROM sensor_readings
+                WHERE device_id = ? AND metric = 'current' AND time BETWEEN ? AND ?
+                AND (CAST(strftime('%H', time) AS INTEGER) >= ? OR CAST(strftime('%H', time) AS INTEGER) < ?)
+            ", [$device->id, $from, $to, $closingHour, $openingHour])?->total ?? 0;
+
+            $totalKwh = (float) $dayKwh + (float) $nightKwh;
+            $nightPct = $totalKwh > 0 ? round(((float) $nightKwh / $totalKwh) * 100, 1) : 0;
+
+            $results[] = [
+                'device_name' => $device->name,
+                'device_model' => $device->model,
+                'zone' => $device->zone,
+                'day_kwh' => round((float) $dayKwh, 2),
+                'night_kwh' => round((float) $nightKwh, 2),
+                'night_pct' => $nightPct,
+                'waste_flag' => $nightPct > 30, // Flag if >30% consumption is overnight
+            ];
+        }
+
+        $totalNight = array_sum(array_column($results, 'night_kwh'));
+        $totalDay = array_sum(array_column($results, 'day_kwh'));
+        $nightCost = $this->calculateCost($totalNight);
+
+        return [
+            'devices' => $results,
+            'summary' => [
+                'total_night_kwh' => round($totalNight, 2),
+                'total_day_kwh' => round($totalDay, 2),
+                'night_cost_mxn' => $nightCost,
+                'night_pct' => ($totalDay + $totalNight) > 0 ? round($totalNight / ($totalDay + $totalNight) * 100, 1) : 0,
+                'operating_hours' => "{$openingHour}:00 - {$closingHour}:00",
+            ],
         ];
     }
 

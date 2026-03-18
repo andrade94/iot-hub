@@ -6,21 +6,26 @@ use App\Http\Controllers\AlertRuleController;
 use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CommandCenterController;
+use App\Http\Controllers\ComplianceCalendarController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\DeviceDetailController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\FloorPlanController;
+use App\Http\Controllers\EscalationChainController;
 use App\Http\Controllers\GatewayController;
 use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PartnerController;
+use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SiteDetailController;
 use App\Http\Controllers\SiteOnboardingController;
+use App\Http\Controllers\SiteSettingsController;
 use App\Http\Controllers\WorkOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -37,9 +42,7 @@ Route::get('/', function () {
 Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
 Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     // Site context switching
     Route::post('site/switch', function (Request $request) {
@@ -144,10 +147,21 @@ Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
     // Device detail (public within org scope)
     Route::get('devices/{device}', [DeviceDetailController::class, 'show'])->name('devices.show');
 
+    // Module dashboards
+    Route::middleware('site.access')->group(function () {
+        Route::get('sites/{site}/modules/iaq', [\App\Http\Controllers\ModuleDashboardController::class, 'iaq'])->name('modules.iaq');
+        Route::get('sites/{site}/modules/industrial', [\App\Http\Controllers\ModuleDashboardController::class, 'industrial'])->name('modules.industrial');
+    });
+
+    // Report builder landing page
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+
     // Reports
     Route::middleware('site.access')->group(function () {
         Route::get('sites/{site}/reports/temperature', [ReportController::class, 'temperature'])->name('reports.temperature');
+        Route::get('sites/{site}/reports/temperature/download', [ReportController::class, 'downloadTemperature'])->name('reports.temperature.download');
         Route::get('sites/{site}/reports/energy', [ReportController::class, 'energy'])->name('reports.energy');
+        Route::get('sites/{site}/reports/energy/download', [ReportController::class, 'downloadEnergy'])->name('reports.energy.download');
         Route::get('sites/{site}/reports/summary', [ReportController::class, 'summary'])->name('reports.summary');
     });
 
@@ -200,6 +214,9 @@ Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
         Route::get('/alerts', [CommandCenterController::class, 'alerts'])->name('alerts');
         Route::get('/work-orders', [CommandCenterController::class, 'workOrders'])->name('work-orders');
         Route::get('/devices', [CommandCenterController::class, 'devices'])->name('devices');
+        Route::get('/revenue', [CommandCenterController::class, 'revenue'])->name('revenue');
+        Route::get('/dispatch', [CommandCenterController::class, 'dispatch'])->name('dispatch');
+        Route::get('/{organization}', [CommandCenterController::class, 'show'])->name('show');
     });
 
     // Billing
@@ -207,6 +224,11 @@ Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
         Route::get('/', [BillingController::class, 'dashboard'])->name('dashboard');
         Route::get('/profiles', [BillingController::class, 'profiles'])->name('profiles');
         Route::post('/profiles', [BillingController::class, 'storeProfile'])->name('profiles.store');
+        Route::post('/generate-invoice', [BillingController::class, 'generateInvoice'])->name('generate-invoice');
+        Route::post('/invoices/{invoice}/mark-paid', [BillingController::class, 'markInvoicePaid'])->name('invoices.mark-paid');
+        Route::get('/invoices/{invoice}/download/{format}', [BillingController::class, 'downloadInvoice'])
+            ->name('invoices.download')
+            ->where('format', 'pdf|xml');
     });
 
     // API Keys
@@ -222,9 +244,46 @@ Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
         Route::post('settings/integrations', [IntegrationController::class, 'store'])->name('integrations.store');
     });
 
+    // Site Management
+    Route::middleware('permission:manage sites')->prefix('settings/sites')->name('sites.settings.')->group(function () {
+        Route::get('/', [SiteSettingsController::class, 'index'])->name('index');
+        Route::post('/', [SiteSettingsController::class, 'store'])->name('store');
+        Route::put('{site}', [SiteSettingsController::class, 'update'])->name('update');
+        Route::delete('{site}', [SiteSettingsController::class, 'destroy'])->name('destroy');
+    });
+
+    // User Management
+    Route::middleware('permission:manage users')->prefix('settings/users')->name('users.')->group(function () {
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::post('/', [UserManagementController::class, 'store'])->name('store');
+        Route::put('{user}', [UserManagementController::class, 'update'])->name('update');
+        Route::delete('{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+    });
+
+    // Compliance Calendar
+    Route::prefix('settings/compliance')->name('compliance.')->group(function () {
+        Route::get('/', [ComplianceCalendarController::class, 'index'])->name('index');
+        Route::post('/', [ComplianceCalendarController::class, 'store'])->name('store');
+        Route::put('{complianceEvent}', [ComplianceCalendarController::class, 'update'])->name('update');
+        Route::post('{complianceEvent}/complete', [ComplianceCalendarController::class, 'complete'])->name('complete');
+        Route::delete('{complianceEvent}', [ComplianceCalendarController::class, 'destroy'])->name('destroy');
+    });
+
+    // Escalation Chains
+    Route::middleware('permission:manage alert rules')->prefix('settings/escalation-chains')->name('escalation-chains.')->group(function () {
+        Route::get('/', [EscalationChainController::class, 'index'])->name('index');
+        Route::post('/', [EscalationChainController::class, 'store'])->name('store');
+        Route::put('{escalationChain}', [EscalationChainController::class, 'update'])->name('update');
+        Route::delete('{escalationChain}', [EscalationChainController::class, 'destroy'])->name('destroy');
+    });
+
+    // Recipe Overrides
+    Route::post('recipes/{recipe}/overrides', [RecipeController::class, 'storeOverride'])->name('recipes.overrides.store');
+
     // Partner Portal (super_admin)
     Route::middleware('role:super_admin')->group(function () {
         Route::get('partner', [PartnerController::class, 'index'])->name('partner.index');
+        Route::post('partner', [PartnerController::class, 'store'])->name('partner.store');
     });
 });
 

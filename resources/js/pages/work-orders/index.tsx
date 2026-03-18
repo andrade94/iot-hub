@@ -20,7 +20,8 @@ interface PaginatedWorkOrders {
 
 interface Props {
     workOrders: PaginatedWorkOrders;
-    filters: { status?: string; priority?: string; type?: string };
+    filters: { status?: string; priority?: string; type?: string; assigned?: string };
+    isTechnician?: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -28,7 +29,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Work Orders', href: '/work-orders' },
 ];
 
-export default function WorkOrderIndex({ workOrders, filters }: Props) {
+export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Props) {
     const { t } = useLang();
 
     function applyFilter(key: string, value: string | undefined) {
@@ -53,6 +54,13 @@ export default function WorkOrderIndex({ workOrders, filters }: Props) {
                 <Card>
                     <CardContent className="flex flex-wrap items-center gap-3 p-3">
                         <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                        <Button
+                            variant={filters.assigned === 'me' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => applyFilter('assigned', filters.assigned === 'me' ? undefined : 'me')}
+                        >
+                            {t('My Work Orders')}
+                        </Button>
                         <Select value={filters.status ?? 'all'} onValueChange={(v) => applyFilter('status', v)}>
                             <SelectTrigger className="w-[140px]"><SelectValue placeholder={t('Status')} /></SelectTrigger>
                             <SelectContent>

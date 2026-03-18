@@ -7,12 +7,18 @@
 import type { BreadcrumbItem, NavGroup, NavItem } from '@/types';
 import {
     Activity,
+    BarChart3,
     Bell,
     BookOpen,
     Building2,
+    CalendarCheck,
+    ClipboardList,
     Cpu,
+    CreditCard,
+    GitBranch,
     LayoutGrid,
     MapPin,
+    Monitor,
     Palette,
     Radio,
     Shield,
@@ -48,6 +54,23 @@ export const navigation: NavGroup[] = [
         ],
     },
     {
+        title: 'Operations',
+        items: [
+            {
+                title: 'Command Center',
+                href: '/command-center',
+                icon: Monitor,
+                tooltip: 'Global operations view',
+            },
+            {
+                title: 'Work Orders',
+                href: '/work-orders',
+                icon: ClipboardList,
+                tooltip: 'Manage work orders',
+            },
+        ],
+    },
+    {
         title: 'Monitor',
         items: [
             {
@@ -61,6 +84,12 @@ export const navigation: NavGroup[] = [
                 href: '/devices',
                 icon: Cpu,
                 tooltip: 'Manage devices',
+            },
+            {
+                title: 'Reports',
+                href: '/reports',
+                icon: BarChart3,
+                tooltip: 'View reports',
             },
         ],
     },
@@ -115,10 +144,28 @@ export const navigation: NavGroup[] = [
                 tooltip: 'Sensor recipes',
             },
             {
+                title: 'Escalation Chains',
+                href: '/settings/escalation-chains',
+                icon: GitBranch,
+                tooltip: 'Alert escalation setup',
+            },
+            {
+                title: 'Compliance',
+                href: '/settings/compliance',
+                icon: CalendarCheck,
+                tooltip: 'Compliance calendar',
+            },
+            {
                 title: 'Users',
                 href: '/settings/users',
                 icon: Users,
                 tooltip: 'Manage users',
+            },
+            {
+                title: 'Billing',
+                href: '/settings/billing',
+                icon: CreditCard,
+                tooltip: 'Billing & invoices',
             },
         ],
     },

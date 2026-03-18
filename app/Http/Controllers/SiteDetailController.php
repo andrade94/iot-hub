@@ -38,11 +38,23 @@ class SiteDetailController extends Controller
             ->limit(10)
             ->get();
 
+        // Floor plans with placed devices
+        $floorPlans = $site->floorPlans->map(function ($fp) use ($site) {
+            $placedDevices = $site->devices
+                ->filter(fn ($d) => $d->floor_x !== null && $d->floor_y !== null)
+                ->values();
+
+            return array_merge($fp->toArray(), [
+                'devices' => $placedDevices,
+            ]);
+        });
+
         return Inertia::render('sites/show', [
             'site' => $site,
             'kpis' => $kpis,
             'zones' => $zones,
             'activeAlerts' => $activeAlerts,
+            'floorPlans' => $floorPlans,
         ]);
     }
 

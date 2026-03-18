@@ -36,11 +36,17 @@ class WorkOrderController extends Controller
             $query->where('type', $request->input('type'));
         }
 
+        // Filter by assigned to current user
+        if ($request->input('assigned') === 'me') {
+            $query->where('assigned_to', $user->id);
+        }
+
         $workOrders = $query->latest()->paginate(20)->withQueryString();
 
         return Inertia::render('work-orders/index', [
             'workOrders' => $workOrders,
-            'filters' => $request->only(['status', 'priority', 'type']),
+            'filters' => $request->only(['status', 'priority', 'type', 'assigned']),
+            'isTechnician' => $user->hasRole('technician'),
         ]);
     }
 

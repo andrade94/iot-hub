@@ -2,11 +2,11 @@ import { Button } from '@/components/ui/button';
 import Heading from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { type PropsWithChildren } from 'react';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { type PropsWithChildren, useMemo } from 'react';
 
-const sidebarNavItems: NavItem[] = [
+const baseNavItems: NavItem[] = [
     {
         title: 'Profile',
         href: '/settings/profile',
@@ -24,13 +24,33 @@ const sidebarNavItems: NavItem[] = [
     },
 ];
 
+const permissionNavItems: { item: NavItem; permission: string }[] = [
+    {
+        item: { title: 'Organization', href: '/settings/organization', icon: null },
+        permission: 'manage org settings',
+    },
+    {
+        item: { title: 'Users', href: '/settings/users', icon: null },
+        permission: 'manage users',
+    },
+];
+
 export default function SettingsLayout({ children }: PropsWithChildren) {
     // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;
     }
 
+    const { auth } = usePage<SharedData>().props;
     const currentPath = window.location.pathname;
+
+    const sidebarNavItems = useMemo(() => {
+        const userPermissions = auth.permissions ?? [];
+        const filtered = permissionNavItems
+            .filter(({ permission }) => userPermissions.includes(permission))
+            .map(({ item }) => item);
+        return [...baseNavItems, ...filtered];
+    }, [auth.permissions]);
 
     return (
         <div className="px-4 py-6">

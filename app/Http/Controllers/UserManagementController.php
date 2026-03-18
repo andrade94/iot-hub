@@ -1,0 +1,170 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Organization;
+use App\Models\Site;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
+
+class UserManagementController extends Controller
+{
+    public function index(Request $request)
+    {
+        $org = $this->resolveOrganization($request);
+
+        $users = User::where('org_id', $org->id)
+            ->with(['roles', 'sites:id,name'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'whatsapp_phone' => $user->whatsapp_phone,
+                'has_app_access' => $user->has_app_access,
+                'role' => $user->roles->first()?->name,
+                'sites' => $user->sites->map(fn ($s) => ['id' => $s->id, 'name' => $s->name]),
+                'created_at' => $user->created_at,
+            ]);
+
+        $sites = Site::where('org_id', $org->id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        $roles = Role::whereNotIn('name', ['super_admin'])
+            ->pluck('name');
+
+        return Inertia::render('settings/users/index', [
+            'users' => $users,
+            'sites' => $sites,
+            'roles' => $roles,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $org = $this->resolveOrganization($request);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')],
+            'phone' => 'nullable|string|max:30',
+            'whatsapp_phone' => 'nullable|string|max:30',
+            'password' => 'required|string|min:8',
+            'role' => ['required', 'string', Rule::in(['org_admin', 'site_manager', 'site_viewer', 'technician'])],
+            'site_ids' => 'nullable|array',
+            'site_ids.*' => 'integer|exists:sites,id',
+            'has_app_access' => 'boolean',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'whatsapp_phone' => $validated['whatsapp_phone'] ?? null,
+            'password' => Hash::make($validated['password']),
+            'org_id' => $org->id,
+            'has_app_access' => $validated['has_app_access'] ?? false,
+        ]);
+
+        $user->assignRole($validated['role']);
+
+        if (! empty($validated['site_ids'])) {
+            $orgSiteIds = Site::where('org_id', $org->id)
+                ->whereIn('id', $validated['site_ids'])
+                ->pluck('id');
+
+            $user->sites()->attach($orgSiteIds, [
+                'assigned_at' => now(),
+                'assigned_by' => $request->user()->id,
+            ]);
+        }
+
+        return back()->with('success', 'User created successfully.');
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $org = $this->resolveOrganization($request);
+
+        if ($user->org_id !== $org->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone' => 'nullable|string|max:30',
+            'whatsapp_phone' => 'nullable|string|max:30',
+            'role' => ['required', 'string', Rule::in(['org_admin', 'site_manager', 'site_viewer', 'technician'])],
+            'site_ids' => 'nullable|array',
+            'site_ids.*' => 'integer|exists:sites,id',
+            'has_app_access' => 'boolean',
+        ]);
+
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'whatsapp_phone' => $validated['whatsapp_phone'] ?? null,
+            'has_app_access' => $validated['has_app_access'] ?? false,
+        ]);
+
+        $user->syncRoles([$validated['role']]);
+
+        $orgSiteIds = Site::where('org_id', $org->id)
+            ->whereIn('id', $validated['site_ids'] ?? [])
+            ->pluck('id');
+
+        $pivotData = $orgSiteIds->mapWithKeys(fn ($id) => [
+            $id => [
+                'assigned_at' => now(),
+                'assigned_by' => $request->user()->id,
+            ],
+        ])->toArray();
+
+        $user->sites()->sync($pivotData);
+
+        return back()->with('success', 'User updated successfully.');
+    }
+
+    public function destroy(Request $request, User $user)
+    {
+        $org = $this->resolveOrganization($request);
+
+        if ($user->org_id !== $org->id) {
+            abort(403);
+        }
+
+        if ($user->id === $request->user()->id) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        $user->sites()->detach();
+        $user->delete();
+
+        return back()->with('success', 'User deleted successfully.');
+    }
+
+    private function resolveOrganization(Request $request): Organization
+    {
+        if (app()->bound('current_organization')) {
+            return app('current_organization');
+        }
+
+        $user = $request->user();
+
+        if ($user->org_id) {
+            return Organization::findOrFail($user->org_id);
+        }
+
+        abort(403, 'No organization selected.');
+    }
+}

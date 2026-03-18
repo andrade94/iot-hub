@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Mail\MorningSummaryMail;
 use App\Models\Site;
 use App\Services\Push\PushNotificationService;
 use App\Services\Reports\MorningSummaryService;
@@ -9,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendMorningSummary implements ShouldQueue
 {
@@ -60,6 +62,8 @@ class SendMorningSummary implements ShouldQueue
                     'type' => 'morning_summary',
                     'site_id' => $site->id,
                 ]);
+
+                Mail::to($user->email)->queue(new MorningSummaryMail($site->name, $summary));
 
                 Log::info('Morning summary dispatched to user', [
                     'user_id' => $user->id,

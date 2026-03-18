@@ -3,6 +3,8 @@ import { LucideIcon } from 'lucide-react';
 
 export interface Auth {
     user: User;
+    roles: string[];
+    permissions: string[];
 }
 
 export interface BreadcrumbItem {
@@ -31,6 +33,10 @@ export interface Organization {
     slug: string;
     segment: string;
     settings: Record<string, unknown>;
+    logo?: string | null;
+    branding?: Record<string, unknown> | null;
+    default_timezone?: string | null;
+    default_opening_hour?: string | null;
 }
 
 export interface Site {
@@ -210,6 +216,7 @@ export interface Device {
     replaced_device_id: number | null;
     created_at: string;
     updated_at: string;
+    site?: Site;
     gateway?: Gateway;
     recipe?: Recipe;
     floor_plan?: FloorPlan;
@@ -304,13 +311,18 @@ export interface AlertData {
 export interface EscalationChain {
     id: number;
     site_id: number;
-    level: number;
-    user_id: number;
-    delay_minutes: number;
-    channel: 'whatsapp' | 'push' | 'sms' | 'email';
+    name: string;
+    levels: EscalationLevel[];
+    site?: Site;
     created_at: string;
     updated_at: string;
-    user?: User;
+}
+
+export interface EscalationLevel {
+    level: number;
+    delay_minutes: number;
+    user_ids: number[];
+    channels: ('whatsapp' | 'push' | 'email')[];
 }
 
 export interface AlertNotificationRecord {

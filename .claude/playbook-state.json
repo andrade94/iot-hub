@@ -1,0 +1,139 @@
+{
+  "last_triage": "2026-03-17T18:00:00Z",
+  "last_triage_commit": "2387668",
+  "last_phase_run": "phase-8-9",
+  "last_phase_date": "2026-03-17T18:00:00Z",
+  "doc_freshness_snapshot": {
+    "PLATFORM_REFERENCE.md": "2026-03-17",
+    "ENTITY_REFERENCE.md": "2026-03-17",
+    "ASTREA_BUSINESS_RULES.md": "2026-03-17",
+    "AUDIT_PACKAGE.md": "2026-03-15",
+    "ASTREA_GAP_ANALYSIS.md": "2026-03-17",
+    "ASTREA_ROADMAP.md": "2026-03-17",
+    "prd_platform.md": "2026-03-14",
+    "CLAUDE.md": "2026-03-17"
+  },
+  "census_snapshot": {
+    "models": 32,
+    "controllers": 37,
+    "migrations": 45,
+    "services": 30,
+    "jobs": 13,
+    "policies": 3,
+    "commands": 8,
+    "mail": 6,
+    "middleware": 5,
+    "events": 3,
+    "notifications": 4,
+    "frontend_pages": 48,
+    "custom_components": 26,
+    "shadcn_components": 92,
+    "hooks": 13,
+    "tests": 80,
+    "routes_total": 162,
+    "roles": 5,
+    "permissions": 23
+  },
+  "milestone_status": {
+    "M1": {
+      "completion": "100%",
+      "completed_date": "2026-03-17",
+      "tasks": {
+        "M1-01": "DONE — User-site assignment UI with multi-select site checkboxes",
+        "M1-02": "DONE — ChirpStack gateway provisioning wired to onboarding",
+        "M1-03": "DONE — ChirpStack device provisioning wired to onboarding with OTAA keys",
+        "M1-04": "DONE — Dashboard shows live sensor data with real KPIs",
+        "M1-05": "DONE — DefrostDetector wired to RuleEvaluator",
+        "M1-06": "DONE — Command Center org metrics real queries (no longer hardcoded)",
+        "M1-07": "DONE — GenerateInvoicesCommand + billing endpoints (generate, mark paid, download)",
+        "M1-08": "DONE — Navigation sidebar complete (Command Center, Work Orders, Reports, Billing, Escalation Chains)"
+      }
+    },
+    "M2": {
+      "completion": "100%",
+      "completed_date": "2026-03-17",
+      "tasks": {
+        "M2-01": "DONE — Recharts AreaChart in zone detail",
+        "M2-02": "DONE — Recharts LineChart in device detail",
+        "M2-03": "DONE — Compliance bar chart + zone temperature trends in temperature report",
+        "M2-04": "DONE — Dual-axis AreaChart in energy report",
+        "M2-05": "DONE — Escalation chain CRUD page + controller + routes",
+        "M2-06": "DONE — FloorPlanView component with sensor dots",
+        "M2-07": "DONE — Drag-drop sensor placement saves normalized coordinates",
+        "M2-08": "DONE — Create Organization dialog in partner portal",
+        "M2-09": "DONE — All 9 missing pages created with full implementations",
+        "M2-10": "DONE — Recipe threshold override editor"
+      }
+    },
+    "M3": {
+      "completion": "100%",
+      "completed_date": "2026-03-17",
+      "tasks": {
+        "M3-01": "DONE — Morning summary email delivery (3 mailables + 3 Blade templates)",
+        "M3-02": "DONE — Push notification service wired via Expo Push API",
+        "M3-03": "DONE — Email + push in all summary jobs",
+        "M3-04": "DONE — PDF report generation (temperature + energy Blade templates, dompdf download endpoints)",
+        "M3-05": "DONE — Auto-create work orders from device health (offline >2h, battery <20%, gateway offline >30min)",
+        "M3-06": "DONE — CFDI timbrado via Facturapi (real HTTP calls, PDF/XML download)",
+        "M3-07": "DONE — Site CRUD in settings (SiteSettingsController + page)",
+        "M3-08": "DONE — Dashboard map view (Leaflet dynamic loading, site markers)",
+        "M3-09": "DONE — Alert rate limiting for mass events (Redis batching, SendBatchAlertSummary)"
+      }
+    },
+    "M4": {
+      "completion": "0%",
+      "tasks": {
+        "M4-01": "NOT STARTED — Model factories for all 32 models",
+        "M4-02": "NOT STARTED — Authorization policies for controllers",
+        "M4-03": "NOT STARTED — Integration test coverage for M1-M3 features",
+        "M4-04": "NOT STARTED — i18n completion (Spanish/English)",
+        "M4-05": "NOT STARTED — Report builder landing page",
+        "M4-06": "NOT STARTED — Excursion report with corrective actions",
+        "M4-07": "NOT STARTED — My Work Orders filter for technicians",
+        "M4-08": "NOT STARTED — WhatsApp ack integration test"
+      }
+    },
+    "M5": {
+      "completion": "0%",
+      "tasks": {
+        "M5-01": "NOT STARTED — Command Center revenue dashboard",
+        "M5-02": "NOT STARTED — Command Center org drill-down page",
+        "M5-03": "NOT STARTED — Compliance calendar",
+        "M5-04": "NOT STARTED — Field dispatch map",
+        "M5-05": "NOT STARTED — SAP/CONTPAQ real integration",
+        "M5-06": "NOT STARTED — Partner portal white-label",
+        "M5-07": "NOT STARTED — Advanced module dashboards (IAQ, Industrial)"
+      }
+    }
+  },
+  "p0_status": {
+    "P0-1": "RESOLVED — Dashboard live data implemented (DashboardController + Leaflet map)",
+    "P0-2": "RESOLVED — ChirpStack provisioning wired to onboarding (M1-02, M1-03)",
+    "P0-3": "RESOLVED — Invoice generation via GenerateInvoicesCommand + billing endpoints + CFDI timbrado (M1-07, M3-06)",
+    "P0-4": "RESOLVED — User-site assignment UI implemented (UserManagementController + multi-select)"
+  },
+  "p1_status": {
+    "P1-1": "PARTIAL — FloorPlanView component built (M2-06/M2-07) but not wired into site detail page",
+    "P1-2": "RESOLVED — Escalation chain CRUD (M2-05)",
+    "P1-3": "RESOLVED — Morning summary delivery via email + push (M3-01, M3-03)",
+    "P1-4": "RESOLVED — PDF report generation via dompdf (M3-04)",
+    "P1-5": "RESOLVED — DefrostDetector wired to RuleEvaluator (M1-05)",
+    "P1-6": "RESOLVED — Push notification service via Expo Push API (M3-02)",
+    "P1-7": "RESOLVED — Auto-create work orders from device health (M3-05)",
+    "P1-8": "RESOLVED — Organization creation dialog in partner portal (M2-08)",
+    "P1-9": "RESOLVED — Drag-drop sensor placement on floor plan (M2-07)",
+    "P1-10": "RESOLVED — Recharts charts in zone, device, temperature report, energy report (M2-01 through M2-04)",
+    "P1-11": "RESOLVED — Recipe threshold override editor (M2-10)",
+    "P1-12": "RESOLVED — Command Center org metrics real queries (M1-06)"
+  },
+  "p2_status": {
+    "P2-1": "RESOLVED — CFDI timbrado via Facturapi (M3-06)",
+    "P2-2": "RESOLVED — Dashboard map view with Leaflet (M3-08)",
+    "P2-3": "OPEN — Report builder page still missing",
+    "P2-4": "OPEN — Command Center revenue dashboard still missing",
+    "P2-5": "OPEN — Excursion report with corrective actions (M4-06)",
+    "P2-6": "OPEN — Night waste detection (energy) still missing",
+    "P2-7": "RESOLVED — Navigation sidebar complete (M1-08)",
+    "P2-8": "RESOLVED — Alert rate limiting for mass events (M3-09)"
+  }
+}

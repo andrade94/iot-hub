@@ -6,6 +6,7 @@ use App\Models\Gateway;
 use App\Models\Module;
 use App\Models\Recipe;
 use App\Models\Site;
+use App\Services\ChirpStack\DeviceProvisioner;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -43,9 +44,15 @@ class SiteOnboardingController extends Controller
             'is_addon' => 'boolean',
         ]);
 
-        $site->gateways()->create($validated);
+        $gateway = $site->gateways()->create($validated);
 
-        return back()->with('success', 'Gateway registered.');
+        // Provision gateway in ChirpStack
+        $provisioner = app(DeviceProvisioner::class);
+        if (! $provisioner->provisionGateway($gateway)) {
+            return back()->with('warning', 'Gateway saved but ChirpStack provisioning failed. Retry from gateway settings.');
+        }
+
+        return back()->with('success', 'Gateway registered and provisioned.');
     }
 
     /**
@@ -63,13 +70,37 @@ class SiteOnboardingController extends Controller
             'devices.*.recipe_id' => 'nullable|exists:recipes,id',
         ]);
 
+        $provisioner = app(DeviceProvisioner::class);
+        $provisionedCount = 0;
+        $failedCount = 0;
+
         foreach ($validated['devices'] as $deviceData) {
-            $site->devices()->create(array_merge($deviceData, [
+            $device = $site->devices()->create(array_merge($deviceData, [
                 'status' => 'pending',
             ]));
+
+            // Provision device in ChirpStack if application/profile IDs are configured
+            $applicationId = config('services.chirpstack.application_id', '');
+            $deviceProfileId = config('services.chirpstack.device_profile_id', '');
+
+            if ($applicationId && $deviceProfileId) {
+                if ($provisioner->provisionDevice($device, $applicationId, $deviceProfileId)) {
+                    $provisionedCount++;
+                } else {
+                    $failedCount++;
+                }
+            }
         }
 
-        return back()->with('success', count($validated['devices']).' device(s) registered.');
+        $message = count($validated['devices']).' device(s) registered.';
+        if ($provisionedCount > 0) {
+            $message .= " {$provisionedCount} provisioned in ChirpStack.";
+        }
+        if ($failedCount > 0) {
+            return back()->with('warning', $message." {$failedCount} failed provisioning — retry from device settings.");
+        }
+
+        return back()->with('success', $message);
     }
 
     /**

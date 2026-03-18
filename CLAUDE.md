@@ -71,18 +71,19 @@ php artisan db:seed              # Seed without resetting
 
 | Email | Password | Role |
 |-------|----------|------|
-| `admin@example.com` | `password` | admin |
-| `editor@example.com` | `password` | editor |
-| `user@example.com` | `password` | user |
-| `unverified@example.com` | `password` | user (unverified email) |
+| `super@astrea.io` | `password` | super_admin |
+| `admin@cadenademo.com` | `password` | org_admin |
+| `manager@cadenademo.com` | `password` | site_manager |
+| `viewer@cadenademo.com` | `password` | site_viewer |
+| `tech@cadenademo.com` | `password` | technician |
 
 ## Architecture
 
 ### Backend (Laravel)
-- **Routes**: `routes/web.php` (main), `routes/settings.php` (settings pages)
+- **Routes**: `routes/web.php` (main), `routes/settings.php` (settings pages), `routes/api.php` (mobile API)
 - **Controllers**: `app/Http/Controllers/`
-- **Models**: `app/Models/` — User, Product, Category, File
-- **Policies**: `app/Policies/` — ProductPolicy, FilePolicy, NotificationPolicy
+- **Models**: `app/Models/` — 32 models (User, Organization, Site, Device, Gateway, Alert, WorkOrder, etc.)
+- **Policies**: `app/Policies/` — FilePolicy, GatewayPolicy, NotificationPolicy
 - **Services**: `app/Services/` — Business logic layer
 - **Notifications**: `app/Notifications/` — SystemNotification, ActivityNotification
 - **Migrations**: `database/migrations/` (SQLite by default, in-memory for tests)
@@ -91,7 +92,7 @@ php artisan db:seed              # Seed without resetting
 - **Pages**: `resources/js/pages/` — Correspond to Inertia routes
 - **Components**: `resources/js/components/` — UI components (`ui/` has shadcn, 90+ components)
 - **Layouts**: `resources/js/layouts/` — `AppLayout` (sidebar+header), `AuthLayout` (card/simple/split), `SettingsLayout`
-- **Hooks**: `resources/js/hooks/` — 18 custom hooks
+- **Hooks**: `resources/js/hooks/` — 13 custom hooks
 - **Utils**: `resources/js/utils/` — Utility functions
 - **Types**: `resources/js/types/` — TypeScript definitions
 - **Config**: `resources/js/config/` — Navigation, etc.
@@ -100,21 +101,23 @@ php artisan db:seed              # Seed without resetting
 ### Shared Inertia Data
 
 The `HandleInertiaRequests` middleware shares these props on every page load:
-- `auth` — Current user object
-- `flash` — Success/error/warning/info messages (auto-displayed as Sonner toasts)
-- `notifications` / `unreadNotificationsCount` — Database notifications
+- `auth` — Current user object with `roles` and `permissions` (cached 5min)
+- `current_organization` — Active org (id, name, slug, segment, settings, logo, branding, timezones)
+- `accessible_sites` — Sites the user can access (id, name, status)
+- `current_site` — Currently selected site (id, name, status, timezone)
+- `notifications` / `unreadNotificationsCount` — Latest 10 database notifications
+- `sidebarOpen` — Navigation state (from cookie)
 - `locale` — Current language (`en`/`es`)
-- `sidebarOpen` — Navigation state
-- `quote` — Daily motivational quote
 
 ### Auth & Permissions
 
 **Fortify** handles authentication with: registration, password reset, email verification, two-factor authentication.
 
 **Spatie Laravel Permission** manages roles/permissions:
-- Roles: `admin`, `editor`, `user`
-- Check with `$user->hasRole('admin')` or `$user->hasPermissionTo('edit articles')`
-- Gate checks in policies
+- Roles: `super_admin`, `org_admin`, `site_manager`, `site_viewer`, `technician`
+- 23 permissions across organizations, sites, devices, alerts, users, reports, work orders, settings
+- Check with `$user->hasRole('org_admin')` or `$user->hasPermissionTo('manage devices')`
+- Gate checks in policies, middleware-based route protection
 
 ### Real-time
 

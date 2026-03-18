@@ -4,9 +4,11 @@ namespace App\Services\Alerts;
 
 use App\Jobs\EscalateAlert;
 use App\Jobs\SendAlertNotification;
+use App\Jobs\SendBatchAlertSummary;
 use App\Models\Alert;
 use App\Models\EscalationChain;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class AlertRouter
 {
@@ -15,49 +17,118 @@ class AlertRouter
      */
     public function route(Alert $alert): void
     {
+        // Check if we should batch this alert due to high volume
+        if ($this->shouldBatchAlert($alert)) {
+            $this->batchAlert($alert);
+
+            return;
+        }
+
         $siteId = $alert->site_id;
 
-        // Get escalation chain for this site, ordered by level
-        $chains = EscalationChain::where('site_id', $siteId)
-            ->orderBy('level')
-            ->get();
+        // Get escalation chain for this site (new grouped model with JSON levels)
+        $chain = EscalationChain::where('site_id', $siteId)->first();
 
-        if ($chains->isEmpty()) {
+        if (! $chain || empty($chain->levels)) {
             Log::warning('No escalation chain configured for site', [
                 'site_id' => $siteId,
                 'alert_id' => $alert->id,
             ]);
 
-            // Broadcast via Reverb as fallback
             $this->broadcastAlert($alert);
 
             return;
         }
 
-        // Determine which levels to notify based on severity
-        $levels = $this->getLevelsForSeverity($alert->severity, $chains->max('level'));
+        $levels = collect($chain->levels)->sortBy('level');
+        $maxLevel = $levels->max('level') ?? 1;
+        $targetLevels = $this->getLevelsForSeverity($alert->severity, $maxLevel);
 
-        foreach ($chains as $chain) {
-            if ($chain->level > max($levels)) {
+        foreach ($levels as $level) {
+            if ($level['level'] > max($targetLevels)) {
                 continue;
             }
 
-            if ($chain->level === min($levels)) {
-                // First level — notify immediately
-                SendAlertNotification::dispatch($alert, $chain->user_id, $chain->channel);
-            } else {
-                // Higher levels — schedule escalation with delay
-                $delayMinutes = $chains
-                    ->where('level', '<=', $chain->level)
-                    ->sum('delay_minutes');
+            $userIds = $level['user_ids'] ?? [];
+            $channels = $level['channels'] ?? ['push'];
+            $delayMinutes = $level['delay_minutes'] ?? 0;
 
-                EscalateAlert::dispatch($alert, $chain)
+            // Level 1 (immediate): dispatch SendAlertNotification directly
+            // Higher levels (delayed): dispatch EscalateAlert job with delay
+            if ($level['level'] === min($targetLevels) && $delayMinutes <= 0) {
+                foreach ($userIds as $userId) {
+                    foreach ($channels as $channel) {
+                        SendAlertNotification::dispatch($alert, $userId, $channel);
+                    }
+                }
+            } else {
+                EscalateAlert::dispatch($alert, $chain, $level['level'])
                     ->delay(now()->addMinutes($delayMinutes));
             }
         }
 
         // Always broadcast via Reverb for live dashboard
         $this->broadcastAlert($alert);
+    }
+
+    /**
+     * Determine if this alert should be batched due to high alert volume.
+     *
+     * Uses a 10-minute sliding window. If more than 5 alerts arrive for
+     * the same organization within the window, subsequent alerts are batched.
+     */
+    protected function shouldBatchAlert(Alert $alert): bool
+    {
+        $key = "alert_batch:{$alert->site->org_id}";
+
+        try {
+            $count = Redis::incr($key);
+
+            if ($count === 1) {
+                Redis::expire($key, 600); // 10-minute window
+            }
+
+            return $count > 5;
+        } catch (\Exception $e) {
+            Log::debug('Redis unavailable for alert batching', ['error' => $e->getMessage()]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Add the alert to the batch and schedule a summary job if not already scheduled.
+     */
+    protected function batchAlert(Alert $alert): void
+    {
+        $orgId = $alert->site->org_id;
+        $setKey = "alert_batch_ids:{$orgId}";
+        $scheduledKey = "alert_batch_scheduled:{$orgId}";
+
+        try {
+            Redis::sadd($setKey, $alert->id);
+            Redis::expire($setKey, 660); // slightly longer than the 10-minute window
+
+            // Only schedule the summary job once per batch window
+            $alreadyScheduled = Redis::set($scheduledKey, 1, 'EX', 600, 'NX');
+
+            if ($alreadyScheduled) {
+                SendBatchAlertSummary::dispatch($orgId)->delay(now()->addMinutes(10));
+            }
+
+            Log::info('Alert batched for mass event summary', [
+                'alert_id' => $alert->id,
+                'org_id' => $orgId,
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to batch alert — falling back to individual routing', [
+                'alert_id' => $alert->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fall back to broadcasting only
+            $this->broadcastAlert($alert);
+        }
     }
 
     /**

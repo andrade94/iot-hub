@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
-import type { Alert, BreadcrumbItem, Device, Site, SiteKPIs, ZoneSummary } from '@/types';
+import type { Alert, BreadcrumbItem, Device, FloorPlan, Site, SiteKPIs, ZoneSummary } from '@/types';
+import FloorPlanView from '@/components/FloorPlanView';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -22,9 +23,10 @@ interface Props {
     kpis: SiteKPIs;
     zones: ZoneSummary[];
     activeAlerts: Alert[];
+    floorPlans?: (FloorPlan & { devices: Device[] })[];
 }
 
-export default function SiteShow({ site, kpis, zones, activeAlerts }: Props) {
+export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans }: Props) {
     const { t } = useLang();
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -114,6 +116,25 @@ export default function SiteShow({ site, kpis, zones, activeAlerts }: Props) {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Floor Plans */}
+                {floorPlans && floorPlans.length > 0 && (
+                    <div className="space-y-3">
+                        <h2 className="text-lg font-semibold">{t('Floor Plans')}</h2>
+                        {floorPlans.map((fp) => (
+                            <Card key={fp.id}>
+                                <CardHeader>
+                                    <CardTitle className="text-base">
+                                        {fp.name} {fp.floor_number != null && `— Floor ${fp.floor_number}`}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <FloorPlanView floorPlan={fp} devices={fp.devices ?? []} />
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                )}
 
                 <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_320px]">
                     {/* Zones grid */}

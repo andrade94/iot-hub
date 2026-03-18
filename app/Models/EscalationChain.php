@@ -12,19 +12,16 @@ class EscalationChain extends Model
 
     protected $fillable = [
         'site_id',
-        'level',
-        'user_id',
-        'delay_minutes',
-        'channel',
+        'name',
+        'levels',
+    ];
+
+    protected $casts = [
+        'levels' => 'array',
     ];
 
     public function site(): BelongsTo
     {
         return $this->belongsTo(Site::class);
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
     }
 }

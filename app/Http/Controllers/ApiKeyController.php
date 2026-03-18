@@ -17,7 +17,7 @@ class ApiKeyController extends Controller
             ->latest()
             ->get();
 
-        return Inertia::render('settings/api-keys/index', [
+        return Inertia::render('settings/api-keys', [
             'apiKeys' => $apiKeys,
         ]);
     }

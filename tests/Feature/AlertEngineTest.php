@@ -253,12 +253,15 @@ test('EscalationService skips escalation if alert already acknowledged', functio
 
     $user = User::factory()->create(['org_id' => $this->org->id]);
     $chain = EscalationChain::create([
-        'site_id' => $this->site->id, 'level' => 2,
-        'user_id' => $user->id, 'delay_minutes' => 10, 'channel' => 'push',
+        'site_id' => $this->site->id,
+        'name' => 'Test Chain',
+        'levels' => [
+            ['level' => 2, 'delay_minutes' => 10, 'user_ids' => [$user->id], 'channels' => ['push']],
+        ],
     ]);
 
     $service = app(EscalationService::class);
-    $service->escalate($alert, $chain);
+    $service->escalate($alert, $chain, 2);
 
     // No new notification should be dispatched (we can check notification count)
     expect($alert->refresh()->status)->toBe('acknowledged');

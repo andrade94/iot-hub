@@ -27,9 +27,16 @@ test('escalates active alert', function () {
 
     $user = User::factory()->create(['org_id' => $this->org->id]);
     $alert = Alert::create(['rule_id' => $this->rule->id, 'site_id' => $this->site->id, 'device_id' => $this->device->id, 'severity' => 'high', 'status' => 'active', 'triggered_at' => now()]);
-    $chain = EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user->id, 'level' => 2, 'delay_minutes' => 5, 'channel' => 'whatsapp']);
+    $chain = EscalationChain::create([
+        'site_id' => $this->site->id,
+        'name' => 'Test Chain',
+        'levels' => [
+            ['level' => 1, 'delay_minutes' => 0, 'user_ids' => [$user->id], 'channels' => ['push']],
+            ['level' => 2, 'delay_minutes' => 5, 'user_ids' => [$user->id], 'channels' => ['whatsapp']],
+        ],
+    ]);
 
-    $this->service->escalate($alert, $chain);
+    $this->service->escalate($alert, $chain, 2);
 
     Queue::assertPushed(SendAlertNotification::class);
 });
@@ -39,9 +46,15 @@ test('skips acknowledged alert', function () {
 
     $user = User::factory()->create(['org_id' => $this->org->id]);
     $alert = Alert::create(['rule_id' => $this->rule->id, 'site_id' => $this->site->id, 'device_id' => $this->device->id, 'severity' => 'high', 'status' => 'acknowledged', 'triggered_at' => now()]);
-    $chain = EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user->id, 'level' => 2, 'delay_minutes' => 5, 'channel' => 'whatsapp']);
+    $chain = EscalationChain::create([
+        'site_id' => $this->site->id,
+        'name' => 'Test Chain',
+        'levels' => [
+            ['level' => 2, 'delay_minutes' => 5, 'user_ids' => [$user->id], 'channels' => ['whatsapp']],
+        ],
+    ]);
 
-    $this->service->escalate($alert, $chain);
+    $this->service->escalate($alert, $chain, 2);
 
     Queue::assertNotPushed(SendAlertNotification::class);
 });
@@ -51,9 +64,15 @@ test('skips resolved alert', function () {
 
     $user = User::factory()->create(['org_id' => $this->org->id]);
     $alert = Alert::create(['rule_id' => $this->rule->id, 'site_id' => $this->site->id, 'device_id' => $this->device->id, 'severity' => 'high', 'status' => 'resolved', 'triggered_at' => now()]);
-    $chain = EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user->id, 'level' => 2, 'delay_minutes' => 5, 'channel' => 'whatsapp']);
+    $chain = EscalationChain::create([
+        'site_id' => $this->site->id,
+        'name' => 'Test Chain',
+        'levels' => [
+            ['level' => 2, 'delay_minutes' => 5, 'user_ids' => [$user->id], 'channels' => ['whatsapp']],
+        ],
+    ]);
 
-    $this->service->escalate($alert, $chain);
+    $this->service->escalate($alert, $chain, 2);
 
     Queue::assertNotPushed(SendAlertNotification::class);
 });
@@ -63,9 +82,15 @@ test('skips dismissed alert', function () {
 
     $user = User::factory()->create(['org_id' => $this->org->id]);
     $alert = Alert::create(['rule_id' => $this->rule->id, 'site_id' => $this->site->id, 'device_id' => $this->device->id, 'severity' => 'high', 'status' => 'dismissed', 'triggered_at' => now()]);
-    $chain = EscalationChain::create(['site_id' => $this->site->id, 'user_id' => $user->id, 'level' => 2, 'delay_minutes' => 5, 'channel' => 'whatsapp']);
+    $chain = EscalationChain::create([
+        'site_id' => $this->site->id,
+        'name' => 'Test Chain',
+        'levels' => [
+            ['level' => 2, 'delay_minutes' => 5, 'user_ids' => [$user->id], 'channels' => ['whatsapp']],
+        ],
+    ]);
 
-    $this->service->escalate($alert, $chain);
+    $this->service->escalate($alert, $chain, 2);
 
     Queue::assertNotPushed(SendAlertNotification::class);
 });

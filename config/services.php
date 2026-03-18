@@ -47,4 +47,19 @@ return [
         'tenant_id' => env('CHIRPSTACK_TENANT_ID', ''),
     ],
 
+    'facturapi' => [
+        'api_key' => env('FACTURAPI_API_KEY', ''),
+    ],
+
+    'sap' => [
+        'endpoint' => env('SAP_API_ENDPOINT'),
+        'api_key' => env('SAP_API_KEY'),
+        'company_code' => env('SAP_COMPANY_CODE'),
+    ],
+
+    'contpaq' => [
+        'endpoint' => env('CONTPAQ_API_ENDPOINT'),
+        'api_key' => env('CONTPAQ_API_KEY'),
+    ],
+
 ];

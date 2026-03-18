@@ -1,10 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
-import type { Alert, BreadcrumbItem, Device, Site, ZoneMetricSummary } from '@/types';
+import type { Alert, BreadcrumbItem, ChartDataPoint, Device, Site, ZoneMetricSummary } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -15,7 +15,9 @@ import {
     Signal,
     SignalLow,
     SignalMedium,
+    Thermometer,
 } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 interface Props {
     site: Site;
@@ -23,9 +25,11 @@ interface Props {
     devices: Device[];
     summary: ZoneMetricSummary[];
     alerts: Alert[];
+    chartData?: ChartDataPoint[];
+    period?: string;
 }
 
-export default function ZoneDetail({ site, zone, devices, summary, alerts }: Props) {
+export default function ZoneDetail({ site, zone, devices, summary, alerts, chartData = [], period = '24h' }: Props) {
     const { t } = useLang();
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -34,6 +38,10 @@ export default function ZoneDetail({ site, zone, devices, summary, alerts }: Pro
     ];
 
     const onlineCount = devices.filter((d) => isOnline(d)).length;
+
+    function changePeriod(newPeriod: string): void {
+        router.get(`/sites/${site.id}/zones/${encodeURIComponent(zone)}`, { period: newPeriod }, { preserveState: true, replace: true });
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -51,6 +59,14 @@ export default function ZoneDetail({ site, zone, devices, summary, alerts }: Pro
                         </p>
                     </div>
                 </div>
+
+                {/* Zone temperature chart */}
+                <ZoneChart
+                    chartData={chartData}
+                    period={period}
+                    onPeriodChange={changePeriod}
+                    t={t}
+                />
 
                 {/* Metric summary cards */}
                 {summary.length > 0 && (
@@ -178,6 +194,97 @@ export default function ZoneDetail({ site, zone, devices, summary, alerts }: Pro
                 </div>
             </div>
         </AppLayout>
+    );
+}
+
+interface ZoneChartProps {
+    chartData: ChartDataPoint[];
+    period: string;
+    onPeriodChange: (period: string) => void;
+    t: (key: string) => string;
+}
+
+function ZoneChart({ chartData, period, onPeriodChange, t }: ZoneChartProps) {
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                        <Thermometer className="h-4 w-4" />
+                        {t('Temperature Readings')}
+                    </CardTitle>
+                    <CardDescription>
+                        {chartData.length > 0
+                            ? `${chartData.length} ${t('data points')}`
+                            : t('No data available for this period')}
+                    </CardDescription>
+                </div>
+                <div className="flex gap-1">
+                    {(['24h', '7d', '30d'] as const).map((p) => (
+                        <Button
+                            key={p}
+                            variant={period === p ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => onPeriodChange(p)}
+                        >
+                            {p}
+                        </Button>
+                    ))}
+                </div>
+            </CardHeader>
+            <CardContent>
+                {chartData.length === 0 ? (
+                    <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
+                        {t('No readings for this period')}
+                    </div>
+                ) : (
+                    <ResponsiveContainer width="100%" height={260}>
+                        <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="zoneAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                            <XAxis
+                                dataKey="time"
+                                tick={{ fontSize: 11 }}
+                                tickLine={false}
+                                axisLine={false}
+                                className="fill-muted-foreground"
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11 }}
+                                tickLine={false}
+                                axisLine={false}
+                                className="fill-muted-foreground"
+                                domain={['auto', 'auto']}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: 'hsl(var(--popover))',
+                                    border: '1px solid hsl(var(--border))',
+                                    borderRadius: '8px',
+                                    fontSize: 12,
+                                    color: 'hsl(var(--popover-foreground))',
+                                }}
+                                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke="#10b981"
+                                strokeWidth={2}
+                                fill="url(#zoneAreaGradient)"
+                                dot={false}
+                                activeDot={{ r: 4, strokeWidth: 2 }}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                )}
+            </CardContent>
+        </Card>
     );
 }
 

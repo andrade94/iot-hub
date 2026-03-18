@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrganizationSettingsController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
@@ -25,4 +26,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
+
+    // Organization settings
+    Route::middleware(['verified', 'org.scope', 'permission:manage org settings'])->group(function () {
+        Route::get('settings/organization', [OrganizationSettingsController::class, 'edit'])->name('organization.edit');
+        Route::patch('settings/organization', [OrganizationSettingsController::class, 'update'])->name('organization.update');
+    });
 });

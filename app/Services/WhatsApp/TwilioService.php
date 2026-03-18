@@ -40,6 +40,14 @@ class TwilioService
     }
 
     /**
+     * Send a freeform WhatsApp message to a phone number.
+     */
+    public function sendFreeformMessage(string $to, string $body): bool
+    {
+        return $this->sendMessage($to, $body);
+    }
+
+    /**
      * Send a WhatsApp message via Twilio API.
      */
     protected function sendMessage(string $to, string $body): bool

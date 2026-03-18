@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ApplyOrgBranding;
 use App\Http\Middleware\EnsureOrganizationScope;
 use App\Http\Middleware\EnsureSiteAccess;
 use App\Http\Middleware\HandleAppearance;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             SetLocale::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
+            ApplyOrgBranding::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 

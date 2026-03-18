@@ -1,6 +1,6 @@
 # Component Library Overview
 
-This starter template includes 40+ production-tested UI components from shadcn/ui plus custom enhancements.
+This starter template includes 90+ production-tested UI components from shadcn/ui plus custom enhancements.
 
 ## Component Categories
 
@@ -249,14 +249,12 @@ To add more shadcn/ui components:
 # If using shadcn CLI
 npx shadcn@latest add [component-name]
 
-# Or copy from fuel-system
-cp /Users/andrade-mac-22/Documents/AI/fuel-system/resources/js/Components/ui/[component].tsx resources/js/components/ui/
+# Or add from shadcn/ui registry
+npx shadcn@latest add [component]
 ```
 
 ## Component Documentation
 
 For detailed component API and props, see:
 - [shadcn/ui documentation](https://ui.shadcn.com)
-- Component source files in `resources/js/Components/ui/`
-- [Form Patterns](forms.md)
-- [Table Patterns](tables.md)
+- Component source files in `resources/js/components/ui/`

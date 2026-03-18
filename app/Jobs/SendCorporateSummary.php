@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Mail\CorporateSummaryMail;
 use App\Models\Organization;
 use App\Models\User;
 use App\Services\Push\PushNotificationService;
@@ -9,6 +10,7 @@ use App\Services\Reports\MorningSummaryService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendCorporateSummary implements ShouldQueue
 {
@@ -58,6 +60,8 @@ class SendCorporateSummary implements ShouldQueue
                     $body,
                     ['type' => 'morning_summary'],
                 );
+
+                Mail::to($admin->email)->queue(new CorporateSummaryMail($org->name, $summary));
 
                 Log::info('Corporate summary dispatched to org_admin', [
                     'user_id' => $admin->id,

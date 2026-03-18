@@ -6,6 +6,7 @@ use App\Models\Alert;
 use App\Models\AlertRule;
 use App\Models\Device;
 use App\Services\Alerts\AlertRouter;
+use App\Services\RulesEngine\DefrostDetector;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
@@ -13,6 +14,7 @@ class RuleEvaluator
 {
     public function __construct(
         protected AlertRouter $alertRouter,
+        protected DefrostDetector $defrostDetector,
     ) {}
 
     /**
@@ -60,6 +62,17 @@ class RuleEvaluator
             $severity = $condition['severity'] ?? $rule->severity;
 
             $breached = $this->checkCondition($value, $conditionType, $threshold);
+
+            // Suppress alerts during known defrost windows (cold chain)
+            if ($breached && $this->defrostDetector->shouldSuppressAlert($device, $metric)) {
+                Log::debug('Alert suppressed during defrost window', [
+                    'device' => $device->name,
+                    'metric' => $metric,
+                    'value' => $value,
+                ]);
+
+                continue;
+            }
 
             if ($breached) {
                 $this->handleBreach($rule, $device, $metric, $value, $threshold, $conditionType, $durationMinutes, $severity);

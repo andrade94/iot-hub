@@ -9,7 +9,18 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, EnergyReport, Site } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { DollarSign, Download, TrendingUp, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import {
+    Area,
+    AreaChart,
+    CartesianGrid,
+    Line,
+    ReferenceLine,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
 interface Props {
     site: Site;
@@ -34,6 +45,20 @@ export default function EnergyReportPage({ site, report, from, to }: Props) {
 
     const s = report.summary;
 
+    const dailyChartData = useMemo(() => {
+        return report.daily_totals.map((day) => ({
+            date: day.date,
+            kwh: Math.round(day.total_kwh * 10) / 10,
+            cost: Math.round(day.cost_mxn * 100) / 100,
+        }));
+    }, [report.daily_totals]);
+
+    const avgDailyKwh = useMemo(() => {
+        if (dailyChartData.length === 0) return null;
+        const total = dailyChartData.reduce((sum, d) => sum + d.kwh, 0);
+        return Math.round((total / dailyChartData.length) * 10) / 10;
+    }, [dailyChartData]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${t('Energy Report')} — ${site.name}`} />
@@ -44,6 +69,16 @@ export default function EnergyReportPage({ site, report, from, to }: Props) {
                         <h1 className="text-2xl font-bold tracking-tight">{t('Energy Report')}</h1>
                         <p className="text-sm text-muted-foreground">{site.name}</p>
                     </div>
+                    <Button variant="outline" asChild>
+                        <a
+                            href={`/sites/${site.id}/reports/energy/download?from=${dateFrom}&to=${dateTo}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            {t('Export PDF')}
+                        </a>
+                    </Button>
                     <Button variant="outline" disabled>
                         <Download className="mr-2 h-4 w-4" />
                         {t('Export PDF')}
@@ -105,6 +140,64 @@ export default function EnergyReportPage({ site, report, from, to }: Props) {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Daily Consumption Chart */}
+                {dailyChartData.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">{t('Daily Energy Consumption')}</CardTitle>
+                            <CardDescription>{t('kWh and cost over the selected period')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <AreaChart data={dailyChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="kwhGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.02} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                                    <YAxis yAxisId="kwh" tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}`} label={{ value: 'kWh', angle: -90, position: 'insideLeft', style: { fontSize: 11 } }} />
+                                    <YAxis yAxisId="cost" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} label={{ value: 'MXN', angle: 90, position: 'insideRight', style: { fontSize: 11 } }} />
+                                    <Tooltip
+                                        formatter={(value: number, name: string) => {
+                                            if (name === 'kwh') return [`${value.toFixed(1)} kWh`, t('Energy')];
+                                            return [`$${value.toFixed(2)} MXN`, t('Cost')];
+                                        }}
+                                        contentStyle={{ borderRadius: 8, fontSize: 13 }}
+                                    />
+                                    {avgDailyKwh !== null && (
+                                        <ReferenceLine
+                                            yAxisId="kwh"
+                                            y={avgDailyKwh}
+                                            stroke="#8b5cf6"
+                                            strokeDasharray="4 3"
+                                            label={{ value: `${t('Avg')}: ${avgDailyKwh} kWh`, position: 'insideTopRight', fontSize: 11, fill: '#8b5cf6' }}
+                                        />
+                                    )}
+                                    <Area
+                                        yAxisId="kwh"
+                                        type="monotone"
+                                        dataKey="kwh"
+                                        stroke="#3b82f6"
+                                        strokeWidth={2}
+                                        fill="url(#kwhGradient)"
+                                    />
+                                    <Line
+                                        yAxisId="cost"
+                                        type="monotone"
+                                        dataKey="cost"
+                                        stroke="#f59e0b"
+                                        strokeWidth={2}
+                                        dot={false}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Per-device breakdown */}
                 <Card>
