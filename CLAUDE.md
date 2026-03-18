@@ -80,10 +80,10 @@ php artisan db:seed              # Seed without resetting
 ## Architecture
 
 ### Backend (Laravel)
-- **Routes**: `routes/web.php` (main), `routes/settings.php` (settings pages), `routes/api.php` (mobile API)
+- **Routes**: `routes/web.php` (main), `routes/settings.php` (settings, compliance, module dashboards), `routes/api.php` (mobile API) — 173 total routes
 - **Controllers**: `app/Http/Controllers/`
-- **Models**: `app/Models/` — 32 models (User, Organization, Site, Device, Gateway, Alert, WorkOrder, etc.)
-- **Policies**: `app/Policies/` — FilePolicy, GatewayPolicy, NotificationPolicy
+- **Models**: `app/Models/` — 33 models (User, Organization, Site, Device, Gateway, Alert, WorkOrder, ComplianceEvent, etc.)
+- **Policies**: `app/Policies/` — 13 policies (DevicePolicy, AlertPolicy, AlertRulePolicy, WorkOrderPolicy, SitePolicy, RecipePolicy, EscalationChainPolicy, BillingPolicy, ReportPolicy, UserPolicy, FilePolicy, GatewayPolicy, NotificationPolicy)
 - **Services**: `app/Services/` — Business logic layer
 - **Notifications**: `app/Notifications/` — SystemNotification, ActivityNotification
 - **Migrations**: `database/migrations/` (SQLite by default, in-memory for tests)
@@ -92,7 +92,7 @@ php artisan db:seed              # Seed without resetting
 - **Pages**: `resources/js/pages/` — Correspond to Inertia routes
 - **Components**: `resources/js/components/` — UI components (`ui/` has shadcn, 90+ components)
 - **Layouts**: `resources/js/layouts/` — `AppLayout` (sidebar+header), `AuthLayout` (card/simple/split), `SettingsLayout`
-- **Hooks**: `resources/js/hooks/` — 13 custom hooks
+- **Hooks**: `resources/js/hooks/` — 18 custom hooks
 - **Utils**: `resources/js/utils/` — Utility functions
 - **Types**: `resources/js/types/` — TypeScript definitions
 - **Config**: `resources/js/config/` — Navigation, etc.

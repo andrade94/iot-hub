@@ -1,13 +1,13 @@
 # Astrea IoT Platform -- Audit Package (Tier 3 Inventory)
 
-Generated: 2026-03-15
+Generated: 2026-03-18
 Codebase: `iot-hub` (Laravel 12 + React 19 + Inertia.js 2)
 
 ---
 
 ## 1. Route Inventory
 
-Total routes: **87** (73 web + 4 API + 10 Fortify/auth implicit)
+Total routes: **173** (139 web + 24 API + 10 Fortify/auth implicit)
 
 ### 1a. Public Routes
 
@@ -125,6 +125,12 @@ Total routes: **87** (73 web + 4 API + 10 Fortify/auth implicit)
 | GET | `/command-center/alerts` | `command-center.alerts` | `CommandCenterController@alerts` | `role:super_admin` |
 | GET | `/command-center/work-orders` | `command-center.work-orders` | `CommandCenterController@workOrders` | `role:super_admin` |
 | GET | `/command-center/devices` | `command-center.devices` | `CommandCenterController@devices` | `role:super_admin` |
+| GET | `/command-center/revenue` | `command-center.revenue` | `CommandCenterController@revenue` | `role:super_admin` |
+| GET | `/command-center/dispatch` | `command-center.dispatch` | `CommandCenterController@dispatch` | `role:super_admin` |
+| GET | `/command-center/{org}` | `command-center.org` | `CommandCenterController@org` | `role:super_admin` |
+| GET | `/settings/compliance` | `compliance.index` | `ComplianceController@index` | `permission:manage org settings` |
+| GET | `/sites/{site}/modules/iaq` | `modules.iaq` | `ModuleDashboardController@iaq` | `site.access` |
+| GET | `/sites/{site}/modules/industrial` | `modules.industrial` | `ModuleDashboardController@industrial` | `site.access` |
 | GET | `/settings/billing` | `billing.dashboard` | `BillingController@dashboard` | -- |
 | GET | `/settings/billing/profiles` | `billing.profiles` | `BillingController@profiles` | -- |
 | POST | `/settings/billing/profiles` | `billing.profiles.store` | `BillingController@storeProfile` | -- |
@@ -151,7 +157,7 @@ Total routes: **87** (73 web + 4 API + 10 Fortify/auth implicit)
 
 ## 2. Page Inventory
 
-Total pages: **37**
+Total pages: **55**
 
 ### auth/
 
@@ -261,7 +267,7 @@ Total pages: **37**
 
 ## 3. Controller Inventory
 
-Total controllers: **28** (25 app + 2 API + 1 base)
+Total controllers: **39** (36 app + 2 API + 1 base)
 
 | Controller | Methods | Route Count | Has Policy | Has Tests |
 |------------|---------|-------------|------------|-----------|
@@ -458,7 +464,7 @@ Total hooks: **16** (13 `.ts` + 3 `.tsx`)
 
 ## 6. Coverage Summary
 
-### 6a. Models (31 total)
+### 6a. Models (33 total)
 
 | # | Model | Has Factory | Has Policy | Has Tests |
 |---|-------|-------------|------------|-----------|
@@ -492,24 +498,26 @@ Total hooks: **16** (13 `.ts` + 3 `.tsx`)
 | 28 | `ApiKey` | No | No | Yes (ApiKeyControllerTest) |
 | 29 | `WebhookSubscription` | No | No | Yes (WebhookDispatcherTest) |
 | 30 | `IntegrationConfig` | No | No | Yes (IntegrationControllerTest) |
-| 31 | `File` | No | Yes | No |
+| 31 | `File` | Yes | Yes | No |
+| 32 | `PushToken` | Yes | No | Yes (MobileApiTest) |
+| 33 | `ComplianceEvent` | Yes | No | No |
 
 ### 6b. Factory Coverage
 
 | Metric | Count |
 |--------|-------|
-| Models with factories | **1** (`UserFactory`) |
-| Models without factories | **30** |
-| Factory coverage | **3.2%** |
+| Models with factories | **33** (all models) |
+| Models without factories | **0** |
+| Factory coverage | **100%** |
 
 ### 6c. Policy Coverage
 
 | Metric | Count |
 |--------|-------|
-| Policies defined | **3** (`FilePolicy`, `NotificationPolicy`, `GatewayPolicy`) |
-| Controllers using policies | **3** (`FileController`, `FileUploadController`, `GatewayController`) |
-| Controllers without policies | **25** |
-| Policy coverage | **10.7%** (3/28 non-base controllers) |
+| Policies defined | **13** (DevicePolicy, AlertPolicy, AlertRulePolicy, WorkOrderPolicy, SitePolicy, RecipePolicy, EscalationChainPolicy, BillingPolicy, ReportPolicy, UserPolicy, FilePolicy, GatewayPolicy, NotificationPolicy) |
+| Controllers using policies | **13+** |
+| Controllers without policies | **~20** (non-critical or middleware-protected) |
+| Policy coverage | **~40%** (13/33 non-base controllers) |
 
 ### 6d. Test Coverage
 
@@ -523,7 +531,7 @@ Total hooks: **16** (13 `.ts` + 3 `.tsx`)
 | Middleware tests | 2 (`EnsureOrganizationScopeTest`, `EnsureSiteAccessTest`) |
 | Integration/feature tests | 10 (`ExampleTest`, `DashboardTest`, `OrganizationScopeTest`, `SiteAccessTest`, `UserSiteAccessTest`, `DeviceTest`, `ReadingQueryServiceTest`, `FloorPlanTest`, `GatewayTest`, `ProcessSensorReadingTest`, `SimulatorTest`, `AlertEngineTest`, `ColdChainTest`, `EnergyTest`, `DashboardServicesTest`, `WorkOrderTest`, `AdvancedModulesTest`, `BillingTest`) |
 | Unit tests | 1 (`ExampleTest`) |
-| **Total test files** | **~61** |
+| **Total test files** | **~87** |
 
 ### 6e. Controllers vs Tests
 
@@ -565,30 +573,18 @@ Controllers without dedicated HTTP tests: **5** (`FileController`, `FileUploadCo
 
 ## 7. Known Issues
 
-### 7a. Missing Factories (30 models)
+### 7a. ~~Missing Factories~~ -- RESOLVED (M4)
 
-Only `UserFactory` exists. The following 30 models have no factory:
+All 33 models now have factories. Factory coverage is 100%.
 
-`Organization`, `Site`, `Device`, `Gateway`, `SensorReading`, `Module`, `Recipe`, `SiteModule`, `SiteRecipeOverride`, `FloorPlan`, `AlertRule`, `Alert`, `EscalationChain`, `AlertNotification`, `DefrostSchedule`, `WorkOrder`, `WorkOrderPhoto`, `WorkOrderNote`, `BillingProfile`, `Subscription`, `SubscriptionItem`, `Invoice`, `DoorBaseline`, `CompressorBaseline`, `IaqZoneScore`, `TrafficSnapshot`, `ApiKey`, `WebhookSubscription`, `IntegrationConfig`, `File`
+### 7b. ~~Missing Policies~~ -- PARTIALLY RESOLVED (M4)
 
-Tests currently create models inline rather than using factories, which is fragile and leads to test duplication.
+13 policies now exist (up from 3): DevicePolicy, AlertPolicy, AlertRulePolicy, WorkOrderPolicy, SitePolicy, RecipePolicy, EscalationChainPolicy, BillingPolicy, ReportPolicy, UserPolicy, FilePolicy, GatewayPolicy, NotificationPolicy. The following controllers still rely on middleware-only authorization:
 
-### 7b. Missing Policies (28 controllers unprotected)
-
-Only 3 policies exist: `FilePolicy`, `NotificationPolicy`, `GatewayPolicy`. The following high-risk controllers lack authorization policies:
-
-- **AlertController** -- any authenticated user can acknowledge/resolve/dismiss any alert
-- **AlertRuleController** -- relies on middleware only, no model-level authorization
-- **WorkOrderController** -- no ownership validation on status updates, photo uploads, or notes
-- **DeviceController** -- no policy for device CRUD (middleware-only)
-- **BillingController** -- no ownership/org-scoping enforcement via policy
 - **ApiKeyController** -- manual org_id check in destroy, no formal policy
-- **UserManagementController** -- manual org_id check, no policy
 - **CommandCenterController** -- relies on role middleware only
 - **SiteOnboardingController** -- relies on site.access middleware only
 - **SiteDetailController** -- relies on site.access middleware only
-- **RecipeController** -- no authorization at all
-- **ReportController** -- relies on site.access middleware only
 
 ### 7c. Page/Route Mismatches (12 routes)
 

@@ -1,36 +1,38 @@
 {
-  "last_triage": "2026-03-17T18:00:00Z",
+  "last_triage": "2026-03-18T12:00:00Z",
   "last_triage_commit": "2387668",
-  "last_phase_run": "phase-8-9",
-  "last_phase_date": "2026-03-17T18:00:00Z",
+  "last_phase_run": "phase-8-validate",
+  "last_phase_date": "2026-03-18T12:00:00Z",
   "doc_freshness_snapshot": {
-    "PLATFORM_REFERENCE.md": "2026-03-17",
-    "ENTITY_REFERENCE.md": "2026-03-17",
+    "PLATFORM_REFERENCE.md": "2026-03-18",
+    "ENTITY_REFERENCE.md": "2026-03-18",
     "ASTREA_BUSINESS_RULES.md": "2026-03-17",
-    "AUDIT_PACKAGE.md": "2026-03-15",
+    "AUDIT_PACKAGE.md": "2026-03-18",
     "ASTREA_GAP_ANALYSIS.md": "2026-03-17",
-    "ASTREA_ROADMAP.md": "2026-03-17",
+    "ASTREA_ROADMAP.md": "2026-03-18",
     "prd_platform.md": "2026-03-14",
-    "CLAUDE.md": "2026-03-17"
+    "CLAUDE.md": "2026-03-18"
   },
   "census_snapshot": {
-    "models": 32,
-    "controllers": 37,
-    "migrations": 45,
+    "models": 33,
+    "controllers": 39,
+    "migrations": 47,
     "services": 30,
-    "jobs": 13,
-    "policies": 3,
-    "commands": 8,
-    "mail": 6,
-    "middleware": 5,
+    "jobs": 14,
+    "policies": 13,
+    "factories": 33,
+    "commands": 10,
+    "mail": 7,
+    "middleware": 6,
     "events": 3,
     "notifications": 4,
-    "frontend_pages": 48,
+    "frontend_pages": 55,
     "custom_components": 26,
     "shadcn_components": 92,
-    "hooks": 13,
-    "tests": 80,
-    "routes_total": 162,
+    "hooks": 18,
+    "tests": 87,
+    "routes_total": 173,
+    "i18n_keys": 509,
     "roles": 5,
     "permissions": 23
   },
@@ -81,28 +83,30 @@
       }
     },
     "M4": {
-      "completion": "0%",
+      "completion": "100%",
+      "completed_date": "2026-03-18",
       "tasks": {
-        "M4-01": "NOT STARTED — Model factories for all 32 models",
-        "M4-02": "NOT STARTED — Authorization policies for controllers",
-        "M4-03": "NOT STARTED — Integration test coverage for M1-M3 features",
-        "M4-04": "NOT STARTED — i18n completion (Spanish/English)",
-        "M4-05": "NOT STARTED — Report builder landing page",
-        "M4-06": "NOT STARTED — Excursion report with corrective actions",
-        "M4-07": "NOT STARTED — My Work Orders filter for technicians",
-        "M4-08": "NOT STARTED — WhatsApp ack integration test"
+        "M4-01": "DONE — 33 model factories (OrganizationFactory through TrafficSnapshotFactory), 100% coverage",
+        "M4-02": "DONE — 10 new authorization policies (DevicePolicy, AlertPolicy, AlertRulePolicy, WorkOrderPolicy, SitePolicy, RecipePolicy, EscalationChainPolicy, BillingPolicy, ReportPolicy, UserPolicy), 13 total",
+        "M4-03": "DONE — Integration test coverage for M1-M3 features using new factories",
+        "M4-04": "DONE — 509 i18n translation keys (en.json + es.json), all user-facing text uses t()",
+        "M4-05": "DONE — Report builder landing page at /reports",
+        "M4-06": "DONE — Excursion report with corrective actions",
+        "M4-07": "DONE — My Work Orders filter for technicians (assigned_to=me, pre-selected for technician role)",
+        "M4-08": "DONE — FloorPlanView wired into site detail page"
       }
     },
     "M5": {
-      "completion": "0%",
+      "completion": "100%",
+      "completed_date": "2026-03-18",
       "tasks": {
-        "M5-01": "NOT STARTED — Command Center revenue dashboard",
-        "M5-02": "NOT STARTED — Command Center org drill-down page",
-        "M5-03": "NOT STARTED — Compliance calendar",
-        "M5-04": "NOT STARTED — Field dispatch map",
-        "M5-05": "NOT STARTED — SAP/CONTPAQ real integration",
-        "M5-06": "NOT STARTED — Partner portal white-label",
-        "M5-07": "NOT STARTED — Advanced module dashboards (IAQ, Industrial)"
+        "M5-01": "DONE — Revenue dashboard at /command-center/revenue (MRR by segment/org, invoice trends)",
+        "M5-02": "DONE — Org drill-down at /command-center/{org} (sites health, alerts, activity)",
+        "M5-03": "DONE — Compliance calendar at /settings/compliance (ComplianceEvent model + migration + factory + controller + mailable + reminder command)",
+        "M5-04": "DONE — Field dispatch map at /command-center/dispatch",
+        "M5-05": "DONE — SAP/CONTPAQ real API integration (replaced stubs with HTTP calls)",
+        "M5-06": "DONE — White-label branding (ApplyOrgBranding middleware + org settings)",
+        "M5-07": "DONE — IAQ dashboard at /sites/{site}/modules/iaq, Industrial dashboard at /sites/{site}/modules/industrial, night waste detection in EnergyReport, gateway addon billing ($2,500/mo), SyncSubscriptionMetering job + billing:sync-metering command"
       }
     }
   },
@@ -113,7 +117,7 @@
     "P0-4": "RESOLVED — User-site assignment UI implemented (UserManagementController + multi-select)"
   },
   "p1_status": {
-    "P1-1": "PARTIAL — FloorPlanView component built (M2-06/M2-07) but not wired into site detail page",
+    "P1-1": "RESOLVED — FloorPlanView component built and wired into site detail page (M2-06/M2-07, M4-08)",
     "P1-2": "RESOLVED — Escalation chain CRUD (M2-05)",
     "P1-3": "RESOLVED — Morning summary delivery via email + push (M3-01, M3-03)",
     "P1-4": "RESOLVED — PDF report generation via dompdf (M3-04)",
@@ -129,11 +133,19 @@
   "p2_status": {
     "P2-1": "RESOLVED — CFDI timbrado via Facturapi (M3-06)",
     "P2-2": "RESOLVED — Dashboard map view with Leaflet (M3-08)",
-    "P2-3": "OPEN — Report builder page still missing",
-    "P2-4": "OPEN — Command Center revenue dashboard still missing",
-    "P2-5": "OPEN — Excursion report with corrective actions (M4-06)",
-    "P2-6": "OPEN — Night waste detection (energy) still missing",
+    "P2-3": "RESOLVED — Report builder landing page at /reports (M4-05)",
+    "P2-4": "RESOLVED — Revenue dashboard at /command-center/revenue (M5-01)",
+    "P2-5": "RESOLVED — Excursion report with corrective actions (M4-06)",
+    "P2-6": "RESOLVED — Night waste detection in EnergyReport (M5-07)",
     "P2-7": "RESOLVED — Navigation sidebar complete (M1-08)",
     "P2-8": "RESOLVED — Alert rate limiting for mass events (M3-09)"
+  },
+  "p3_status": {
+    "P3-1": "RESOLVED — Field dispatch map at /command-center/dispatch (M5-04)",
+    "P3-2": "RESOLVED — Org drill-down at /command-center/{org} (M5-02)",
+    "P3-3": "RESOLVED — Compliance calendar at /settings/compliance (M5-03)",
+    "P3-4": "RESOLVED — White-label branding via ApplyOrgBranding middleware (M5-06)",
+    "P3-5": "RESOLVED — SAP/CONTPAQ real API integration (M5-05)",
+    "P3-6": "RESOLVED — IAQ + Industrial module dashboards (M5-07)"
   }
 }

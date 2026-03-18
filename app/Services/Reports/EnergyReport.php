@@ -98,7 +98,7 @@ class EnergyReport
             ", [$device->id, $from, $to, $closingHour, $openingHour])?->total ?? 0;
 
             $totalKwh = (float) $dayKwh + (float) $nightKwh;
-            $nightPct = $totalKwh > 0 ? round(((float) $nightKwh / $totalKwh) * 100, 1) : 0;
+            $nightPct = $totalKwh > 0 ? round(((float) $nightKwh / $totalKwh) * 100, 1) : 0.0;
 
             $results[] = [
                 'device_name' => $device->name,
@@ -121,7 +121,7 @@ class EnergyReport
                 'total_night_kwh' => round($totalNight, 2),
                 'total_day_kwh' => round($totalDay, 2),
                 'night_cost_mxn' => $nightCost,
-                'night_pct' => ($totalDay + $totalNight) > 0 ? round($totalNight / ($totalDay + $totalNight) * 100, 1) : 0,
+                'night_pct' => ($totalDay + $totalNight) > 0 ? round($totalNight / ($totalDay + $totalNight) * 100, 1) : 0.0,
                 'operating_hours' => "{$openingHour}:00 - {$closingHour}:00",
             ],
         ];

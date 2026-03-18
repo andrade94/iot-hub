@@ -1,7 +1,7 @@
 # Entity Reference -- Astrea IoT Platform
 
 > Tier 3 Model Reference. Generated from source code in `app/Models/` and `database/migrations/`.
-> 32 models across 9 domains.
+> 33 models across 10 domains.
 
 ---
 
@@ -41,6 +41,8 @@
   - [CompressorBaseline](#compressorbaseline)
   - [IaqZoneScore](#iaqzonescore)
   - [TrafficSnapshot](#trafficsnapshot)
+- [Compliance](#compliance)
+  - [ComplianceEvent](#complianceevent)
 - [Integrations](#integrations)
   - [ApiKey](#apikey)
   - [WebhookSubscription](#webhooksubscription)
@@ -1077,6 +1079,53 @@ Logged fields: `status`, `cfdi_uuid`, `paid_at`, `payment_method`. Dirty-only, n
 
 ---
 
+## Compliance
+
+### ComplianceEvent
+
+**Model**: `App\Models\ComplianceEvent`
+**Table**: `compliance_events`
+**Migration**: `2026_03_17_000003_create_compliance_events_table.php`
+**Traits**: `HasFactory`
+
+**Purpose**: Tracks regulatory compliance events such as COFEPRIS audits, certificate renewals, equipment calibrations, inspections, and permit renewals. Used by the compliance calendar UI and email reminder commands.
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| site_id | foreignId | no | -- | -- | FK -> sites, cascade delete |
+| org_id | foreignId | no | -- | -- | FK -> organizations, cascade delete |
+| type | string | no | -- | -- | cofepris_audit, certificate_renewal, calibration, inspection, permit_renewal |
+| title | string | no | -- | -- | |
+| description | text | yes | -- | -- | |
+| due_date | date | no | -- | `date` | |
+| status | string | no | `'upcoming'` | -- | upcoming, overdue, completed, cancelled |
+| completed_at | date | yes | -- | `date` | |
+| completed_by | string | yes | -- | -- | |
+| reminders_sent | json | yes | -- | `array` | Tracks which reminders (30d, 7d, 1d) were sent |
+| created_at | timestamp | yes | -- | -- | |
+| updated_at | timestamp | yes | -- | -- | |
+
+#### Relations
+
+| Method | Type | Related Model | FK / Pivot |
+|--------|------|---------------|------------|
+| `site()` | belongsTo | Site | `site_id` |
+| `organization()` | belongsTo | Organization | `org_id` |
+
+#### Scopes
+
+| Scope | Filter |
+|-------|--------|
+| `scopeUpcoming` | `status = 'upcoming'` |
+| `scopeOverdue` | `status = 'overdue'` |
+| `scopeForSite` | `site_id = ?` |
+| `scopeForOrg` | `org_id = ?` |
+
+---
+
 ## Integrations
 
 ### ApiKey
@@ -1296,6 +1345,7 @@ Organization -< Site -< Gateway -< Device -< SensorReading
                   +--< DefrostSchedule
                   +--< IaqZoneScore
                   +--< TrafficSnapshot
+                  +--< ComplianceEvent
 ```
 
 ### Module / Recipe system
@@ -1328,6 +1378,13 @@ Organization -< BillingProfile -< Subscription -< SubscriptionItem -> Device
                        +-< Invoice
 Organization -< Subscription
 Organization -< Invoice
+```
+
+### Compliance (org + site scoped)
+
+```
+Organization -< ComplianceEvent
+Site -< ComplianceEvent
 ```
 
 ### Integrations (all org-scoped)

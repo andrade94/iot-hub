@@ -1,0 +1,11 @@
+[     274ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'total_organizations')
+    at at (http://iot-hub.test/build/assets/index-CZJvuKEU.js:1:1438)
+    at Iu (http://iot-hub.test/build/assets/app-CRJe6Pib.js:89:48181)
+    at yc (http://iot-hub.test/build/assets/app-CRJe6Pib.js:89:70990)
+    at Hm (http://iot-hub.test/build/assets/app-CRJe6Pib.js:89:81329)
+    at gg (http://iot-hub.test/build/assets/app-CRJe6Pib.js:89:117099)
+    at yE (http://iot-hub.test/build/assets/app-CRJe6Pib.js:89:116145)
+    at Pc (http://iot-hub.test/build/assets/app-CRJe6Pib.js:89:115977)
+    at cg (http://iot-hub.test/build/assets/app-CRJe6Pib.js:89:112764)
+    at Cg (http://iot-hub.test/build/assets/app-CRJe6Pib.js:89:124581)
+    at MessagePort.W (http://iot-hub.test/build/assets/app-CRJe6Pib.js:82:45867) @ http://iot-hub.test/build/assets/app-CRJe6Pib.js:88

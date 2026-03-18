@@ -143,4 +143,82 @@ class ChartDataService
             default => [now()->subHours(24), '5m'],
         };
     }
+
+    /**
+     * Get IAQ chart data (CO2, temperature, humidity) for a site.
+     *
+     * @return array<int, array{time: string, co2: float, temperature: float, humidity: float}>
+     */
+    public function getIaqChartData(int $siteId, string $period = '24h'): array
+    {
+        [$from] = $this->resolvePeriod($period);
+        $deviceIds = Device::where('site_id', $siteId)->pluck('id');
+
+        if ($deviceIds->isEmpty()) {
+            return [];
+        }
+
+        $driver = DB::getDriverName();
+        $dateFn = $driver === 'sqlite' ? "strftime('%Y-%m-%d %H:00', time)" : "date_trunc('hour', time)";
+
+        $rows = DB::select("
+            SELECT
+                {$dateFn} as time,
+                AVG(CASE WHEN metric = 'co2' THEN value END) as co2,
+                AVG(CASE WHEN metric = 'temperature' THEN value END) as temperature,
+                AVG(CASE WHEN metric = 'humidity' THEN value END) as humidity
+            FROM sensor_readings
+            WHERE device_id IN (".implode(',', $deviceIds->toArray()).")
+              AND time >= ?
+            GROUP BY {$dateFn}
+            ORDER BY time
+        ", [$from]);
+
+        return array_map(fn ($r) => [
+            'time' => $r->time,
+            'co2' => round((float) ($r->co2 ?? 0), 1),
+            'temperature' => round((float) ($r->temperature ?? 0), 1),
+            'humidity' => round((float) ($r->humidity ?? 0), 1),
+        ], $rows);
+    }
+
+    /**
+     * Get industrial chart data (vibration, current, pressure) for a site.
+     *
+     * @return array<int, array{time: string, vibration: float, current: float, pressure: float}>
+     */
+    public function getIndustrialChartData(int $siteId, string $period = '24h'): array
+    {
+        [$from] = $this->resolvePeriod($period);
+        $deviceIds = Device::where('site_id', $siteId)
+            ->whereIn('model', ['CT101', 'EM310-UDL', 'DS3604'])
+            ->pluck('id');
+
+        if ($deviceIds->isEmpty()) {
+            return [];
+        }
+
+        $driver = DB::getDriverName();
+        $dateFn = $driver === 'sqlite' ? "strftime('%Y-%m-%d %H:00', time)" : "date_trunc('hour', time)";
+
+        $rows = DB::select("
+            SELECT
+                {$dateFn} as time,
+                AVG(CASE WHEN metric = 'vibration' THEN value END) as vibration,
+                AVG(CASE WHEN metric = 'current' THEN value END) as current_val,
+                AVG(CASE WHEN metric = 'pressure' THEN value END) as pressure
+            FROM sensor_readings
+            WHERE device_id IN (".implode(',', $deviceIds->toArray()).")
+              AND time >= ?
+            GROUP BY {$dateFn}
+            ORDER BY time
+        ", [$from]);
+
+        return array_map(fn ($r) => [
+            'time' => $r->time,
+            'vibration' => round((float) ($r->vibration ?? 0), 2),
+            'current' => round((float) ($r->current_val ?? 0), 2),
+            'pressure' => round((float) ($r->pressure ?? 0), 2),
+        ], $rows);
+    }
 }

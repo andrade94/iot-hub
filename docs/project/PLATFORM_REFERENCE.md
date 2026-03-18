@@ -2,7 +2,7 @@
 
 > **Tier 3 Living Reference** -- for developers and AI assistants working on the codebase.
 > Generated from source code. Keep in sync with actual implementations.
-> Last updated: 2026-03-15
+> Last updated: 2026-03-18
 
 ---
 
@@ -76,28 +76,31 @@ Astrea is a **multi-tenant LoRaWAN operations platform** that bridges physical s
 ```
 app/
 ├── Http/
-│   ├── Controllers/          25 controllers (web + API)
-│   ├── Middleware/            EnsureOrganizationScope, EnsureSiteAccess, HandleInertiaRequests
+│   ├── Controllers/          39 controllers (web + API)
+│   ├── Middleware/            EnsureOrganizationScope, EnsureSiteAccess, ApplyOrgBranding, HandleInertiaRequests
 │   └── Requests/             Form request validation
-├── Models/                   31 Eloquent models
+├── Models/                   33 Eloquent models
 ├── Services/                 29 service classes across 9 domains
-├── Jobs/                     11 queued jobs
+├── Jobs/                     14 queued jobs
 ├── Events/                   3 broadcast events
 ├── Notifications/            SystemNotification, ActivityNotification
-├── Policies/                 FilePolicy, GatewayPolicy, NotificationPolicy
-└── Console/                  Artisan commands
+├── Policies/                 13 authorization policies
+├── Factories/                33 model factories
+├── Mail/                     7 mailables
+└── Console/                  10 Artisan commands
 ```
 
 ### Frontend (React + Inertia)
 
 ```
 resources/js/
-├── pages/                    37 Inertia page components
+├── pages/                    55 Inertia page components
 ├── components/               Custom + shadcn/ui (90+ components)
 │   └── ui/                   shadcn components (kebab-case)
 ├── layouts/                  AppLayout, AuthLayout, SettingsLayout
 ├── hooks/                    18 custom hooks
 ├── config/                   navigation.ts (sidebar structure)
+├── i18n/                     509 translation keys (en + es)
 ├── types/                    TypeScript definitions
 ├── utils/                    Utility functions
 └── lib/                      cn() class merging
@@ -154,7 +157,7 @@ Every page load receives these props via `HandleInertiaRequests`:
 
 ## 4. Database Schema
 
-31 Eloquent models organized by domain. All models listed with their fillable fields, casts, and relationships as defined in code.
+33 Eloquent models organized by domain. All models listed with their fillable fields, casts, and relationships as defined in code.
 
 ### Core Domain
 
@@ -1009,6 +1012,22 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | GET | `/command-center/alerts` | command-center.alerts | role:super_admin |
 | GET | `/command-center/work-orders` | command-center.work-orders | role:super_admin |
 | GET | `/command-center/devices` | command-center.devices | role:super_admin |
+| GET | `/command-center/revenue` | command-center.revenue | role:super_admin |
+| GET | `/command-center/dispatch` | command-center.dispatch | role:super_admin |
+| GET | `/command-center/{org}` | command-center.org | role:super_admin |
+
+#### Compliance Calendar
+
+| Method | URI | Name | Extra Middleware |
+|---|---|---|---|
+| GET | `/settings/compliance` | compliance.index | permission:manage org settings |
+
+#### Module Dashboards (`site.access`)
+
+| Method | URI | Name | Extra Middleware |
+|---|---|---|---|
+| GET | `/sites/{site}/modules/iaq` | modules.iaq | site.access |
+| GET | `/sites/{site}/modules/industrial` | modules.industrial | site.access |
 
 #### Billing
 
@@ -1095,7 +1114,7 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 
 ## 8. Frontend Pages
 
-37 Inertia page components organized by domain.
+55 Inertia page components organized by domain.
 
 ### Auth Pages
 
@@ -1153,6 +1172,19 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | Page | File Path | Inertia Render Path |
 |---|---|---|
 | Global Overview | `pages/command-center/index.tsx` | `command-center/index` |
+| Alerts (cross-org) | `pages/command-center/alerts.tsx` | `command-center/alerts` |
+| Work Orders (cross-org) | `pages/command-center/work-orders.tsx` | `command-center/work-orders` |
+| Devices (cross-org) | `pages/command-center/devices.tsx` | `command-center/devices` |
+| Revenue Dashboard | `pages/command-center/revenue.tsx` | `command-center/revenue` |
+| Org Drill-down | `pages/command-center/{org}.tsx` | `command-center/{org}` |
+| Field Dispatch Map | `pages/command-center/dispatch.tsx` | `command-center/dispatch` |
+
+### Module Dashboard Pages
+
+| Page | File Path | Inertia Render Path |
+|---|---|---|
+| IAQ Module | `pages/sites/{site}/modules/iaq.tsx` | `sites/{site}/modules/iaq` |
+| Industrial Module | `pages/sites/{site}/modules/industrial.tsx` | `sites/{site}/modules/industrial` |
 
 ### Settings Pages
 
@@ -1172,6 +1204,8 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | Billing Profiles | `pages/settings/billing/profiles.tsx` | `settings/billing/profiles` |
 | API Keys | `pages/settings/api-keys.tsx` | `settings/api-keys` |
 | Integrations | `pages/settings/integrations.tsx` | `settings/integrations` |
+| Compliance Calendar | `pages/settings/compliance.tsx` | `settings/compliance` |
+| Sites Index | `pages/settings/sites/index.tsx` | `settings/sites/index` |
 
 ### Partner Pages
 
@@ -1183,7 +1217,7 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 
 ## 9. Background Jobs
 
-11 queued jobs that handle the data pipeline, alert processing, and scheduled operations.
+14 queued jobs that handle the data pipeline, alert processing, and scheduled operations.
 
 ### Data Pipeline Jobs
 
