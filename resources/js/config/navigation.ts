@@ -65,6 +65,13 @@ export const navigation: NavGroup[] = [
                 requiredRole: 'super_admin',
             },
             {
+                title: 'Partner Portal',
+                href: '/partner',
+                icon: Building2,
+                tooltip: 'Partner management',
+                requiredRole: 'super_admin',
+            },
+            {
                 title: 'Work Orders',
                 href: '/work-orders',
                 icon: ClipboardList,
