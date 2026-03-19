@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -70,20 +71,22 @@ export default function SitesIndex({ sites, timezones }: Props) {
                         <h1 className="text-2xl font-bold tracking-tight">{t('Sites')}</h1>
                         <p className="text-sm text-muted-foreground">{sites.length} {t('site(s)')}</p>
                     </div>
-                    <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                        <DialogTrigger asChild>
-                            <Button><Plus className="mr-2 h-4 w-4" />{t('Create Site')}</Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-lg">
-                            <DialogHeader>
-                                <DialogTitle>{t('Create Site')}</DialogTitle>
-                            </DialogHeader>
-                            <SiteForm
-                                timezones={timezones}
-                                onSuccess={() => setShowCreate(false)}
-                            />
-                        </DialogContent>
-                    </Dialog>
+                    <Can permission="manage sites">
+                        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                            <DialogTrigger asChild>
+                                <Button><Plus className="mr-2 h-4 w-4" />{t('Create Site')}</Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-lg">
+                                <DialogHeader>
+                                    <DialogTitle>{t('Create Site')}</DialogTitle>
+                                </DialogHeader>
+                                <SiteForm
+                                    timezones={timezones}
+                                    onSuccess={() => setShowCreate(false)}
+                                />
+                            </DialogContent>
+                        </Dialog>
+                    </Can>
                 </div>
 
                 <Card className="flex-1">
@@ -123,33 +126,35 @@ export default function SitesIndex({ sites, timezones }: Props) {
                                         <TableCell className="text-muted-foreground">{site.device_count}</TableCell>
                                         <TableCell className="text-muted-foreground">{site.gateway_count}</TableCell>
                                         <TableCell>
-                                            <div className="flex gap-1">
-                                                <Dialog open={editSite?.id === site.id} onOpenChange={(open) => !open && setEditSite(null)}>
-                                                    <DialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon-sm" onClick={() => setEditSite(site)}>
-                                                            <Pencil className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                    </DialogTrigger>
-                                                    <DialogContent className="max-w-lg">
-                                                        <DialogHeader>
-                                                            <DialogTitle>{t('Edit Site')}</DialogTitle>
-                                                        </DialogHeader>
-                                                        <SiteForm
-                                                            site={site}
-                                                            timezones={timezones}
-                                                            onSuccess={() => setEditSite(null)}
-                                                        />
-                                                    </DialogContent>
-                                                </Dialog>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon-sm"
-                                                    className="text-destructive"
-                                                    onClick={() => setDeleteSite(site)}
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </Button>
-                                            </div>
+                                            <Can permission="manage sites">
+                                                <div className="flex gap-1">
+                                                    <Dialog open={editSite?.id === site.id} onOpenChange={(open) => !open && setEditSite(null)}>
+                                                        <DialogTrigger asChild>
+                                                            <Button variant="ghost" size="icon-sm" onClick={() => setEditSite(site)}>
+                                                                <Pencil className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="max-w-lg">
+                                                            <DialogHeader>
+                                                                <DialogTitle>{t('Edit Site')}</DialogTitle>
+                                                            </DialogHeader>
+                                                            <SiteForm
+                                                                site={site}
+                                                                timezones={timezones}
+                                                                onSuccess={() => setEditSite(null)}
+                                                            />
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        className="text-destructive"
+                                                        onClick={() => setDeleteSite(site)}
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </div>
+                                            </Can>
                                         </TableCell>
                                     </TableRow>
                                 ))

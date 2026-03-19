@@ -61,6 +61,7 @@ export const navigation: NavGroup[] = [
                 href: '/command-center',
                 icon: Monitor,
                 tooltip: 'Global operations view',
+                requiredRole: 'super_admin',
             },
             {
                 title: 'Work Orders',

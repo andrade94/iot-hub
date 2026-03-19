@@ -199,9 +199,7 @@ class CommandCenterController extends Controller
         $collectionRate = $totalInvoices > 0 ? round(($paidInvoices / $totalInvoices) * 100) : 0;
 
         // 6. Overdue invoices
-        $overdueCount = Invoice::where('status', 'draft')
-            ->where('created_at', '<', now()->subDays(30))
-            ->count();
+        $overdueCount = Invoice::where('status', 'overdue')->count();
 
         return Inertia::render('command-center/revenue', [
             'mrrBySegment' => $mrrBySegment,

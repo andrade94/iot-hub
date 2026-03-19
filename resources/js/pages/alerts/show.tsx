@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,18 +60,30 @@ export default function AlertShow({ alert }: Props) {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
-                        {alert.status === 'active' && (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    onClick={() =>
-                                        router.post(`/alerts/${alert.id}/acknowledge`, {}, { preserveScroll: true })
-                                    }
-                                >
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    {t('Acknowledge')}
-                                </Button>
+                    <Can permission="acknowledge alerts">
+                        <div className="flex gap-2">
+                            {alert.status === 'active' && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            router.post(`/alerts/${alert.id}/acknowledge`, {}, { preserveScroll: true })
+                                        }
+                                    >
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        {t('Acknowledge')}
+                                    </Button>
+                                    <Button
+                                        onClick={() =>
+                                            router.post(`/alerts/${alert.id}/resolve`, {}, { preserveScroll: true })
+                                        }
+                                    >
+                                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                                        {t('Resolve')}
+                                    </Button>
+                                </>
+                            )}
+                            {alert.status === 'acknowledged' && (
                                 <Button
                                     onClick={() =>
                                         router.post(`/alerts/${alert.id}/resolve`, {}, { preserveScroll: true })
@@ -79,19 +92,9 @@ export default function AlertShow({ alert }: Props) {
                                     <CheckCircle2 className="mr-2 h-4 w-4" />
                                     {t('Resolve')}
                                 </Button>
-                            </>
-                        )}
-                        {alert.status === 'acknowledged' && (
-                            <Button
-                                onClick={() =>
-                                    router.post(`/alerts/${alert.id}/resolve`, {}, { preserveScroll: true })
-                                }
-                            >
-                                <CheckCircle2 className="mr-2 h-4 w-4" />
-                                {t('Resolve')}
-                            </Button>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    </Can>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">

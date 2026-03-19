@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,24 +59,32 @@ export default function WorkOrderShow({ workOrder: wo }: Props) {
                     {/* Status actions */}
                     <div className="flex gap-2">
                         {wo.status === 'open' && (
-                            <Button variant="outline" onClick={() => updateStatus('assign')}>
-                                <User className="mr-2 h-4 w-4" />{t('Assign')}
-                            </Button>
+                            <Can permission="manage work orders">
+                                <Button variant="outline" onClick={() => updateStatus('assign')}>
+                                    <User className="mr-2 h-4 w-4" />{t('Assign')}
+                                </Button>
+                            </Can>
                         )}
                         {wo.status === 'assigned' && (
-                            <Button onClick={() => updateStatus('start')}>
-                                <Play className="mr-2 h-4 w-4" />{t('Start')}
-                            </Button>
+                            <Can permission="complete work orders">
+                                <Button onClick={() => updateStatus('start')}>
+                                    <Play className="mr-2 h-4 w-4" />{t('Start')}
+                                </Button>
+                            </Can>
                         )}
                         {wo.status === 'in_progress' && (
-                            <Button onClick={() => updateStatus('complete')}>
-                                <CheckCircle2 className="mr-2 h-4 w-4" />{t('Complete')}
-                            </Button>
+                            <Can permission="complete work orders">
+                                <Button onClick={() => updateStatus('complete')}>
+                                    <CheckCircle2 className="mr-2 h-4 w-4" />{t('Complete')}
+                                </Button>
+                            </Can>
                         )}
                         {wo.status !== 'completed' && wo.status !== 'cancelled' && (
-                            <Button variant="ghost" onClick={() => updateStatus('cancel')}>
-                                <XCircle className="mr-2 h-4 w-4" />{t('Cancel')}
-                            </Button>
+                            <Can permission="manage work orders">
+                                <Button variant="ghost" onClick={() => updateStatus('cancel')}>
+                                    <XCircle className="mr-2 h-4 w-4" />{t('Cancel')}
+                                </Button>
+                            </Can>
                         )}
                     </div>
                 </div>

@@ -1,7 +1,9 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
@@ -144,12 +146,16 @@ export default function Dashboard({ kpis, siteStats }: Props) {
                         <SiteMap sites={siteStats} onSiteClick={(id) => router.get(`/sites/${id}`)} />
                     )
                 ) : (
-                    <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-12 dark:border-sidebar-border">
-                        <div className="text-center">
-                            <MapPin className="mx-auto h-10 w-10 text-muted-foreground/50" />
-                            <p className="mt-3 text-muted-foreground">{t('No sites configured yet')}</p>
-                        </div>
-                    </div>
+                    <EmptyState
+                        icon={<MapPin className="h-5 w-5 text-muted-foreground" />}
+                        title={t('No sites yet')}
+                        description={t('Create your first site to start monitoring devices and receiving alerts')}
+                        action={
+                            <Button variant="outline" onClick={() => router.get('/settings/sites')}>
+                                {t('Go to Sites')}
+                            </Button>
+                        }
+                    />
                 )}
             </div>
         </AppLayout>

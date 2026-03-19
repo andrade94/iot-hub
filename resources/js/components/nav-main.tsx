@@ -20,7 +20,36 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { cn, resolveUrl } from '@/lib/utils';
-import { type NavGroup } from '@/types';
+import { type NavGroup, type NavItem } from '@/types';
+
+/**
+ * Filter nav items based on requiredRole and requiredPermission.
+ * Items without these fields are always shown.
+ */
+function filterNavItems(
+    items: NavItem[],
+    roles: string[],
+    permissions: string[],
+): NavItem[] {
+    return items.filter((item) => {
+        if (item.requiredRole && !roles.includes(item.requiredRole)) return false;
+        if (item.requiredPermission && !permissions.includes(item.requiredPermission)) return false;
+        return true;
+    });
+}
+
+function filterNavGroups(
+    groups: NavGroup[],
+    roles: string[],
+    permissions: string[],
+): NavGroup[] {
+    return groups
+        .map((group) => ({
+            ...group,
+            items: filterNavItems(group.items, roles, permissions),
+        }))
+        .filter((group) => group.items.length > 0);
+}
 
 // Accent colors for each section (light and dark mode compatible)
 const sectionAccents: Record<string, { color: string; bgColor: string; borderColor: string }> = {
@@ -290,9 +319,19 @@ function NavSection({ group, index }: NavSectionProps) {
 }
 
 export function NavMain({ groups }: { groups: NavGroup[] }) {
+    const { auth } = usePage<{
+        auth: { roles: string[]; permissions: string[] };
+    }>().props;
+
+    const filteredGroups = filterNavGroups(
+        groups,
+        auth.roles ?? [],
+        auth.permissions ?? [],
+    );
+
     return (
         <div className="flex flex-col gap-1 stagger-item" style={{ animationDelay: '100ms' }}>
-            {groups.map((group, index) => (
+            {filteredGroups.map((group, index) => (
                 <NavSection key={group.title} group={group} index={index} />
             ))}
         </div>

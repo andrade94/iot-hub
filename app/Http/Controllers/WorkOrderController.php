@@ -97,12 +97,16 @@ class WorkOrderController extends Controller
         $user = $request->user();
         $service = app(WorkOrderService::class);
 
-        match ($validated['status']) {
-            'assigned' => $workOrder->assign($validated['assigned_to'] ?? $user->id),
-            'in_progress' => $workOrder->start(),
-            'completed' => $service->complete($workOrder, $user->id),
-            'cancelled' => $workOrder->cancel(),
-        };
+        try {
+            match ($validated['status']) {
+                'assigned' => $workOrder->assign($validated['assigned_to'] ?? $user->id),
+                'in_progress' => $workOrder->start(),
+                'completed' => $service->complete($workOrder, $user->id),
+                'cancelled' => $workOrder->cancel(),
+            };
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Work order status updated.');
     }

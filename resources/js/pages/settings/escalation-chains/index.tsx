@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -90,24 +91,26 @@ export default function EscalationChainIndex({ chains, sites, users }: Props) {
                             {chains.length} {t('chain(s)')}
                         </p>
                     </div>
-                    <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="mr-2 h-4 w-4" />
-                                {t('Create Chain')}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle>{t('Create Escalation Chain')}</DialogTitle>
-                            </DialogHeader>
-                            <ChainForm
-                                sites={sites}
-                                users={users}
-                                onSuccess={() => setShowCreate(false)}
-                            />
-                        </DialogContent>
-                    </Dialog>
+                    <Can permission="manage alert rules">
+                        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                            <DialogTrigger asChild>
+                                <Button>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    {t('Create Chain')}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>{t('Create Escalation Chain')}</DialogTitle>
+                                </DialogHeader>
+                                <ChainForm
+                                    sites={sites}
+                                    users={users}
+                                    onSuccess={() => setShowCreate(false)}
+                                />
+                            </DialogContent>
+                        </Dialog>
+                    </Can>
                 </div>
 
                 <Card className="flex-1">
@@ -160,43 +163,45 @@ export default function EscalationChainIndex({ chains, sites, users }: Props) {
                                                 {formatDate(chain.created_at)}
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex justify-end gap-1">
-                                                    <Dialog
-                                                        open={editChain?.id === chain.id}
-                                                        onOpenChange={(open) => !open && setEditChain(null)}
-                                                    >
-                                                        <DialogTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon-sm"
-                                                                title={t('Edit')}
-                                                                onClick={() => setEditChain(chain)}
-                                                            >
-                                                                <Pencil className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                        </DialogTrigger>
-                                                        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                                                            <DialogHeader>
-                                                                <DialogTitle>{t('Edit Escalation Chain')}</DialogTitle>
-                                                            </DialogHeader>
-                                                            <ChainForm
-                                                                chain={chain}
-                                                                sites={sites}
-                                                                users={users}
-                                                                onSuccess={() => setEditChain(null)}
-                                                            />
-                                                        </DialogContent>
-                                                    </Dialog>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        className="text-destructive"
-                                                        title={t('Delete')}
-                                                        onClick={() => setDeleteChain(chain)}
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </div>
+                                                <Can permission="manage alert rules">
+                                                    <div className="flex justify-end gap-1">
+                                                        <Dialog
+                                                            open={editChain?.id === chain.id}
+                                                            onOpenChange={(open) => !open && setEditChain(null)}
+                                                        >
+                                                            <DialogTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon-sm"
+                                                                    title={t('Edit')}
+                                                                    onClick={() => setEditChain(chain)}
+                                                                >
+                                                                    <Pencil className="h-3.5 w-3.5" />
+                                                                </Button>
+                                                            </DialogTrigger>
+                                                            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                                                                <DialogHeader>
+                                                                    <DialogTitle>{t('Edit Escalation Chain')}</DialogTitle>
+                                                                </DialogHeader>
+                                                                <ChainForm
+                                                                    chain={chain}
+                                                                    sites={sites}
+                                                                    users={users}
+                                                                    onSuccess={() => setEditChain(null)}
+                                                                />
+                                                            </DialogContent>
+                                                        </Dialog>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon-sm"
+                                                            className="text-destructive"
+                                                            title={t('Delete')}
+                                                            onClick={() => setDeleteChain(chain)}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </Can>
                                             </TableCell>
                                         </TableRow>
                                     );

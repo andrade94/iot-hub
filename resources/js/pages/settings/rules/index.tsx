@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,12 +45,14 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                             {site.name} — {rules.length} {t('rule(s)')}, {activeCount} {t('active')}
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href={`/sites/${site.id}/rules/create`}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            {t('New Rule')}
-                        </Link>
-                    </Button>
+                    <Can permission="manage alert rules">
+                        <Button asChild>
+                            <Link href={`/sites/${site.id}/rules/create`}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                {t('New Rule')}
+                            </Link>
+                        </Button>
+                    </Can>
                 </div>
 
                 {/* Rules list */}
@@ -59,12 +62,14 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                         title={t('No alert rules configured')}
                         description={t('Create rules to automatically detect and alert on sensor anomalies')}
                         action={
-                            <Button asChild>
-                                <Link href={`/sites/${site.id}/rules/create`}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    {t('Create First Rule')}
-                                </Link>
-                            </Button>
+                            <Can permission="manage alert rules">
+                                <Button asChild>
+                                    <Link href={`/sites/${site.id}/rules/create`}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        {t('Create First Rule')}
+                                    </Link>
+                                </Button>
+                            </Can>
                         }
                     />
                 ) : (
@@ -106,7 +111,9 @@ function RuleCard({ rule, siteId }: { rule: AlertRule; siteId: number }) {
                         <Icon className="h-4 w-4" />
                         <CardTitle className="text-sm">{rule.name}</CardTitle>
                     </div>
-                    <Switch checked={rule.active} onCheckedChange={toggleActive} />
+                    <Can permission="manage alert rules">
+                        <Switch checked={rule.active} onCheckedChange={toggleActive} />
+                    </Can>
                 </div>
                 <CardDescription className="flex items-center gap-2">
                     <SeverityBadge severity={rule.severity} />
@@ -151,27 +158,29 @@ function RuleCard({ rule, siteId }: { rule: AlertRule; siteId: number }) {
                 </p>
 
                 {/* Actions */}
-                <div className="mt-3 flex justify-end gap-1">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.get(`/sites/${siteId}/rules/${rule.id}`)}
-                    >
-                        {t('Edit')}
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        className="text-destructive"
-                        onClick={() =>
-                            router.delete(`/sites/${siteId}/rules/${rule.id}`, {
-                                preserveScroll: true,
-                            })
-                        }
-                    >
-                        <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                </div>
+                <Can permission="manage alert rules">
+                    <div className="mt-3 flex justify-end gap-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.get(`/sites/${siteId}/rules/${rule.id}`)}
+                        >
+                            {t('Edit')}
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-destructive"
+                            onClick={() =>
+                                router.delete(`/sites/${siteId}/rules/${rule.id}`, {
+                                    preserveScroll: true,
+                                })
+                            }
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
+                </Can>
             </CardContent>
         </Card>
     );

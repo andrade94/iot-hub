@@ -1,8 +1,8 @@
 {
-  "last_triage": "2026-03-18T12:00:00Z",
-  "last_triage_commit": "2387668",
-  "last_phase_run": "phase-8-validate",
-  "last_phase_date": "2026-03-18T12:00:00Z",
+  "last_triage": "2026-03-19T18:00:00Z",
+  "last_triage_commit": "087146f",
+  "last_phase_run": "phase-5b.8-6-7",
+  "last_phase_date": "2026-03-19T18:00:00Z",
   "doc_freshness_snapshot": {
     "PLATFORM_REFERENCE.md": "2026-03-18",
     "ENTITY_REFERENCE.md": "2026-03-18",
@@ -10,142 +10,91 @@
     "AUDIT_PACKAGE.md": "2026-03-18",
     "ASTREA_GAP_ANALYSIS.md": "2026-03-17",
     "ASTREA_ROADMAP.md": "2026-03-18",
+    "ASTREA_WORKFLOWS.md": "2026-03-19",
+    "SYSTEM_BEHAVIOR_SPEC.md": "2026-03-19",
+    "WORKFLOW_UX_DESIGN.md": "2026-03-19",
+    "IMPLEMENTATION_GAP_REPORT.md": "2026-03-19",
+    "ASTREA_TASK_BREAKDOWN.md": "2026-03-19",
+    "ASTREA_FEATURE_SPECS.md": "2026-03-19",
     "prd_platform.md": "2026-03-14",
     "CLAUDE.md": "2026-03-18"
   },
   "census_snapshot": {
     "models": 33,
-    "controllers": 39,
+    "controllers": 42,
     "migrations": 47,
-    "services": 30,
+    "services": 31,
     "jobs": 14,
     "policies": 13,
     "factories": 33,
     "commands": 10,
-    "mail": 7,
-    "middleware": 6,
+    "mail": 8,
+    "middleware": 7,
     "events": 3,
     "notifications": 4,
-    "frontend_pages": 55,
-    "custom_components": 26,
+    "frontend_pages": 56,
+    "custom_components": 28,
     "shadcn_components": 92,
-    "hooks": 18,
+    "hooks": 13,
     "tests": 87,
     "routes_total": 173,
     "i18n_keys": 509,
     "roles": 5,
     "permissions": 23
   },
-  "milestone_status": {
-    "M1": {
-      "completion": "100%",
-      "completed_date": "2026-03-17",
-      "tasks": {
-        "M1-01": "DONE — User-site assignment UI with multi-select site checkboxes",
-        "M1-02": "DONE — ChirpStack gateway provisioning wired to onboarding",
-        "M1-03": "DONE — ChirpStack device provisioning wired to onboarding with OTAA keys",
-        "M1-04": "DONE — Dashboard shows live sensor data with real KPIs",
-        "M1-05": "DONE — DefrostDetector wired to RuleEvaluator",
-        "M1-06": "DONE — Command Center org metrics real queries (no longer hardcoded)",
-        "M1-07": "DONE — GenerateInvoicesCommand + billing endpoints (generate, mark paid, download)",
-        "M1-08": "DONE — Navigation sidebar complete (Command Center, Work Orders, Reports, Billing, Escalation Chains)"
-      }
+  "phase_5_outputs": {
+    "SYSTEM_BEHAVIOR_SPEC.md": {
+      "business_rules": 50,
+      "state_machines": 10,
+      "permission_matrix_entities": 14,
+      "notification_map_entries": 10,
+      "validation_catalog_entities": 10,
+      "integration_map_entries": 8
     },
-    "M2": {
-      "completion": "100%",
-      "completed_date": "2026-03-17",
-      "tasks": {
-        "M2-01": "DONE — Recharts AreaChart in zone detail",
-        "M2-02": "DONE — Recharts LineChart in device detail",
-        "M2-03": "DONE — Compliance bar chart + zone temperature trends in temperature report",
-        "M2-04": "DONE — Dual-axis AreaChart in energy report",
-        "M2-05": "DONE — Escalation chain CRUD page + controller + routes",
-        "M2-06": "DONE — FloorPlanView component with sensor dots",
-        "M2-07": "DONE — Drag-drop sensor placement saves normalized coordinates",
-        "M2-08": "DONE — Create Organization dialog in partner portal",
-        "M2-09": "DONE — All 9 missing pages created with full implementations",
-        "M2-10": "DONE — Recipe threshold override editor"
-      }
+    "WORKFLOW_UX_DESIGN.md": {
+      "workflows": 12,
+      "user_journeys": 7,
+      "screen_inventory": 48,
+      "screen_details": 8,
+      "screen_states_defined": 6,
+      "interaction_conventions": 18
     },
-    "M3": {
-      "completion": "100%",
-      "completed_date": "2026-03-17",
-      "tasks": {
-        "M3-01": "DONE — Morning summary email delivery (3 mailables + 3 Blade templates)",
-        "M3-02": "DONE — Push notification service wired via Expo Push API",
-        "M3-03": "DONE — Email + push in all summary jobs",
-        "M3-04": "DONE — PDF report generation (temperature + energy Blade templates, dompdf download endpoints)",
-        "M3-05": "DONE — Auto-create work orders from device health (offline >2h, battery <20%, gateway offline >30min)",
-        "M3-06": "DONE — CFDI timbrado via Facturapi (real HTTP calls, PDF/XML download)",
-        "M3-07": "DONE — Site CRUD in settings (SiteSettingsController + page)",
-        "M3-08": "DONE — Dashboard map view (Leaflet dynamic loading, site markers)",
-        "M3-09": "DONE — Alert rate limiting for mass events (Redis batching, SendBatchAlertSummary)"
-      }
-    },
-    "M4": {
-      "completion": "100%",
-      "completed_date": "2026-03-18",
-      "tasks": {
-        "M4-01": "DONE — 33 model factories (OrganizationFactory through TrafficSnapshotFactory), 100% coverage",
-        "M4-02": "DONE — 10 new authorization policies (DevicePolicy, AlertPolicy, AlertRulePolicy, WorkOrderPolicy, SitePolicy, RecipePolicy, EscalationChainPolicy, BillingPolicy, ReportPolicy, UserPolicy), 13 total",
-        "M4-03": "DONE — Integration test coverage for M1-M3 features using new factories",
-        "M4-04": "DONE — 509 i18n translation keys (en.json + es.json), all user-facing text uses t()",
-        "M4-05": "DONE — Report builder landing page at /reports",
-        "M4-06": "DONE — Excursion report with corrective actions",
-        "M4-07": "DONE — My Work Orders filter for technicians (assigned_to=me, pre-selected for technician role)",
-        "M4-08": "DONE — FloorPlanView wired into site detail page"
-      }
-    },
-    "M5": {
-      "completion": "100%",
-      "completed_date": "2026-03-18",
-      "tasks": {
-        "M5-01": "DONE — Revenue dashboard at /command-center/revenue (MRR by segment/org, invoice trends)",
-        "M5-02": "DONE — Org drill-down at /command-center/{org} (sites health, alerts, activity)",
-        "M5-03": "DONE — Compliance calendar at /settings/compliance (ComplianceEvent model + migration + factory + controller + mailable + reminder command)",
-        "M5-04": "DONE — Field dispatch map at /command-center/dispatch",
-        "M5-05": "DONE — SAP/CONTPAQ real API integration (replaced stubs with HTTP calls)",
-        "M5-06": "DONE — White-label branding (ApplyOrgBranding middleware + org settings)",
-        "M5-07": "DONE — IAQ dashboard at /sites/{site}/modules/iaq, Industrial dashboard at /sites/{site}/modules/industrial, night waste detection in EnergyReport, gateway addon billing ($2,500/mo), SyncSubscriptionMetering job + billing:sync-metering command"
-      }
+    "IMPLEMENTATION_GAP_REPORT.md": {
+      "total_gaps": 34,
+      "backend_gaps": 6,
+      "frontend_gaps": 28,
+      "security_gaps": 0,
+      "critical_gaps": 0,
+      "high_gaps": 11,
+      "medium_gaps": 17,
+      "low_gaps": 6,
+      "extra_items": 10
     }
   },
-  "p0_status": {
-    "P0-1": "RESOLVED — Dashboard live data implemented (DashboardController + Leaflet map)",
-    "P0-2": "RESOLVED — ChirpStack provisioning wired to onboarding (M1-02, M1-03)",
-    "P0-3": "RESOLVED — Invoice generation via GenerateInvoicesCommand + billing endpoints + CFDI timbrado (M1-07, M3-06)",
-    "P0-4": "RESOLVED — User-site assignment UI implemented (UserManagementController + multi-select)"
+  "phase_6_outputs": {
+    "ASTREA_TASK_BREAKDOWN.md": {
+      "total_tasks": 24,
+      "cycles": 4,
+      "p0_tasks": 3,
+      "p1_tasks": 8,
+      "p2_tasks": 10,
+      "p3_tasks": 5,
+      "estimated_effort_days": 6
+    }
   },
-  "p1_status": {
-    "P1-1": "RESOLVED — FloorPlanView component built and wired into site detail page (M2-06/M2-07, M4-08)",
-    "P1-2": "RESOLVED — Escalation chain CRUD (M2-05)",
-    "P1-3": "RESOLVED — Morning summary delivery via email + push (M3-01, M3-03)",
-    "P1-4": "RESOLVED — PDF report generation via dompdf (M3-04)",
-    "P1-5": "RESOLVED — DefrostDetector wired to RuleEvaluator (M1-05)",
-    "P1-6": "RESOLVED — Push notification service via Expo Push API (M3-02)",
-    "P1-7": "RESOLVED — Auto-create work orders from device health (M3-05)",
-    "P1-8": "RESOLVED — Organization creation dialog in partner portal (M2-08)",
-    "P1-9": "RESOLVED — Drag-drop sensor placement on floor plan (M2-07)",
-    "P1-10": "RESOLVED — Recharts charts in zone, device, temperature report, energy report (M2-01 through M2-04)",
-    "P1-11": "RESOLVED — Recipe threshold override editor (M2-10)",
-    "P1-12": "RESOLVED — Command Center org metrics real queries (M1-06)"
+  "phase_7_outputs": {
+    "ASTREA_FEATURE_SPECS.md": {
+      "feature_specs": 5,
+      "qa_test_plans": 3,
+      "build_checklists": 1
+    }
   },
-  "p2_status": {
-    "P2-1": "RESOLVED — CFDI timbrado via Facturapi (M3-06)",
-    "P2-2": "RESOLVED — Dashboard map view with Leaflet (M3-08)",
-    "P2-3": "RESOLVED — Report builder landing page at /reports (M4-05)",
-    "P2-4": "RESOLVED — Revenue dashboard at /command-center/revenue (M5-01)",
-    "P2-5": "RESOLVED — Excursion report with corrective actions (M4-06)",
-    "P2-6": "RESOLVED — Night waste detection in EnergyReport (M5-07)",
-    "P2-7": "RESOLVED — Navigation sidebar complete (M1-08)",
-    "P2-8": "RESOLVED — Alert rate limiting for mass events (M3-09)"
-  },
-  "p3_status": {
-    "P3-1": "RESOLVED — Field dispatch map at /command-center/dispatch (M5-04)",
-    "P3-2": "RESOLVED — Org drill-down at /command-center/{org} (M5-02)",
-    "P3-3": "RESOLVED — Compliance calendar at /settings/compliance (M5-03)",
-    "P3-4": "RESOLVED — White-label branding via ApplyOrgBranding middleware (M5-06)",
-    "P3-5": "RESOLVED — SAP/CONTPAQ real API integration (M5-05)",
-    "P3-6": "RESOLVED — IAQ + Industrial module dashboards (M5-07)"
+  "milestone_status": {
+    "M1": { "completion": "100%", "completed_date": "2026-03-17" },
+    "M2": { "completion": "100%", "completed_date": "2026-03-17" },
+    "M3": { "completion": "100%", "completed_date": "2026-03-17" },
+    "M4": { "completion": "100%", "completed_date": "2026-03-18" },
+    "M5": { "completion": "100%", "completed_date": "2026-03-18" },
+    "M6": { "completion": "0%", "planned_date": "2026-03-25", "tasks": 24, "gaps": 34 }
   }
 }

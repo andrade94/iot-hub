@@ -70,21 +70,33 @@ class AlertController extends Controller
 
     public function acknowledge(Request $request, Alert $alert)
     {
-        $alert->acknowledge($request->user()->id);
+        try {
+            $alert->acknowledge($request->user()->id);
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Alert acknowledged.');
     }
 
     public function resolve(Request $request, Alert $alert)
     {
-        $alert->resolve($request->user()->id, 'manual');
+        try {
+            $alert->resolve($request->user()->id, 'manual');
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Alert resolved.');
     }
 
     public function dismiss(Request $request, Alert $alert)
     {
-        $alert->dismiss($request->user()->id);
+        try {
+            $alert->dismiss($request->user()->id);
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Alert dismissed.');
     }

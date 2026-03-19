@@ -1,13 +1,15 @@
+import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, WorkOrder } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Filter, Wrench } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Plus, Wrench } from 'lucide-react';
 
 interface PaginatedWorkOrders {
     data: WorkOrder[];
@@ -48,6 +50,11 @@ export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Pr
                         <h1 className="text-2xl font-bold tracking-tight">{t('Work Orders')}</h1>
                         <p className="text-sm text-muted-foreground">{workOrders.total} {t('total')}</p>
                     </div>
+                    <Can permission="manage work orders">
+                        <Button onClick={() => router.get('/work-orders/create')}>
+                            <Plus className="mr-2 h-4 w-4" />{t('New Work Order')}
+                        </Button>
+                    </Can>
                 </div>
 
                 {/* Filters */}
@@ -113,9 +120,23 @@ export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Pr
                         <TableBody>
                             {workOrders.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="py-12 text-center">
-                                        <Wrench className="mx-auto h-8 w-8 text-muted-foreground/40" />
-                                        <p className="mt-2 text-sm text-muted-foreground">{t('No work orders found')}</p>
+                                    <TableCell colSpan={7} className="p-0">
+                                        <EmptyState
+                                            size="sm"
+                                            variant="muted"
+                                            icon={<Wrench className="h-5 w-5 text-muted-foreground" />}
+                                            title={filters.status || filters.priority || filters.type || filters.assigned
+                                                ? t('No work orders match these filters')
+                                                : t('No work orders yet')}
+                                            description={filters.status || filters.priority || filters.type || filters.assigned
+                                                ? t('Try adjusting your filters')
+                                                : t('Work orders are created automatically from alerts or manually by managers')}
+                                            action={filters.status || filters.priority || filters.type || filters.assigned ? (
+                                                <Button variant="outline" size="sm" onClick={() => router.get('/work-orders', {}, { preserveState: true, replace: true })}>
+                                                    {t('Clear filters')}
+                                                </Button>
+                                            ) : undefined}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ) : (

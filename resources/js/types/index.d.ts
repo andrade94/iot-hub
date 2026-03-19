@@ -25,6 +25,8 @@ export interface NavItem {
     items?: NavItem[];
     badge?: string;
     tooltip?: string;
+    requiredRole?: string;
+    requiredPermission?: string;
 }
 
 export interface Organization {

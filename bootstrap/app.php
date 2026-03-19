@@ -83,6 +83,19 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Corporate summaries for org_admins (daily at 8:00 AM)
         $schedule->job(new \App\Jobs\SendCorporateSummary)->dailyAt('08:00');
+
+        // Sync subscription metering (daily at 1:00 AM)
+        $schedule->command('billing:sync-metering')->dailyAt('01:00');
+
+        // Generate monthly invoices (1st of each month at 6:00 AM)
+        $schedule->command('billing:generate-invoices')->monthlyOn(1, '06:00');
+
+        // Mark overdue invoices (daily at 12:30 AM)
+        $schedule->command('billing:mark-overdue')->dailyAt('00:30');
+
+        // Send compliance reminders (daily at 7:00 AM)
+        $schedule->command('compliance:send-reminders')->dailyAt('07:00')
+            ->when(fn () => config('mail.mailer') !== 'log');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

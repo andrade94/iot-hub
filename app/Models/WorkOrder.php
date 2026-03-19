@@ -14,6 +14,21 @@ class WorkOrder extends Model
 {
     use HasFactory, LogsActivity;
 
+    /**
+     * SM-002: Allowed state transitions for the work order lifecycle.
+     */
+    protected static array $transitions = [
+        'open' => ['assigned', 'in_progress', 'cancelled'],
+        'assigned' => ['in_progress', 'cancelled'],
+        'in_progress' => ['completed', 'cancelled'],
+        // completed and cancelled are terminal states
+    ];
+
+    public function canTransitionTo(string $newStatus): bool
+    {
+        return in_array($newStatus, static::$transitions[$this->status] ?? []);
+    }
+
     protected $fillable = [
         'site_id',
         'alert_id',
@@ -93,6 +108,10 @@ class WorkOrder extends Model
 
     public function assign(int $userId): self
     {
+        if (! $this->canTransitionTo('assigned')) {
+            throw new \InvalidArgumentException("Cannot assign work order in '{$this->status}' status");
+        }
+
         $this->update([
             'assigned_to' => $userId,
             'status' => 'assigned',
@@ -103,6 +122,10 @@ class WorkOrder extends Model
 
     public function start(): self
     {
+        if (! $this->canTransitionTo('in_progress')) {
+            throw new \InvalidArgumentException("Cannot start work order in '{$this->status}' status");
+        }
+
         $this->update(['status' => 'in_progress']);
 
         return $this;
@@ -110,6 +133,10 @@ class WorkOrder extends Model
 
     public function complete(): self
     {
+        if (! $this->canTransitionTo('completed')) {
+            throw new \InvalidArgumentException("Cannot complete work order in '{$this->status}' status");
+        }
+
         $this->update(['status' => 'completed']);
 
         return $this;
@@ -117,6 +144,10 @@ class WorkOrder extends Model
 
     public function cancel(): self
     {
+        if (! $this->canTransitionTo('cancelled')) {
+            throw new \InvalidArgumentException("Cannot cancel work order in '{$this->status}' status");
+        }
+
         $this->update(['status' => 'cancelled']);
 
         return $this;

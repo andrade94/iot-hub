@@ -12,6 +12,20 @@ class Alert extends Model
 {
     use HasFactory;
 
+    /**
+     * SM-001: Allowed state transitions for the alert lifecycle.
+     */
+    protected static array $transitions = [
+        'active' => ['acknowledged', 'resolved', 'dismissed'],
+        'acknowledged' => ['resolved', 'dismissed'],
+        // resolved and dismissed are terminal states
+    ];
+
+    public function canTransitionTo(string $newStatus): bool
+    {
+        return in_array($newStatus, static::$transitions[$this->status] ?? []);
+    }
+
     protected $fillable = [
         'rule_id',
         'site_id',
@@ -63,6 +77,10 @@ class Alert extends Model
 
     public function acknowledge(int $userId): self
     {
+        if (! $this->canTransitionTo('acknowledged')) {
+            throw new \InvalidArgumentException("Cannot acknowledge alert in '{$this->status}' status");
+        }
+
         $this->update([
             'status' => 'acknowledged',
             'acknowledged_at' => now(),
@@ -74,6 +92,10 @@ class Alert extends Model
 
     public function resolve(?int $userId, string $type = 'manual'): self
     {
+        if (! $this->canTransitionTo('resolved')) {
+            throw new \InvalidArgumentException("Cannot resolve alert in '{$this->status}' status");
+        }
+
         $this->update([
             'status' => 'resolved',
             'resolved_at' => now(),
@@ -86,6 +108,10 @@ class Alert extends Model
 
     public function dismiss(int $userId): self
     {
+        if (! $this->canTransitionTo('dismissed')) {
+            throw new \InvalidArgumentException("Cannot dismiss alert in '{$this->status}' status");
+        }
+
         $this->update([
             'status' => 'dismissed',
             'resolved_at' => now(),

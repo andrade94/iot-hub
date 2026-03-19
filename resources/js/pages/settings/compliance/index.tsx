@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -112,24 +113,26 @@ export default function ComplianceIndex({ events, sites, types }: Props) {
                             {totalCount} {t('event(s)')}
                         </p>
                     </div>
-                    <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="mr-2 h-4 w-4" />
-                                {t('Add Event')}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle>{t('Create Compliance Event')}</DialogTitle>
-                            </DialogHeader>
-                            <EventForm
-                                sites={sites}
-                                types={types}
-                                onSuccess={() => setShowCreate(false)}
-                            />
-                        </DialogContent>
-                    </Dialog>
+                    <Can permission="manage org settings">
+                        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                            <DialogTrigger asChild>
+                                <Button>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    {t('Add Event')}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>{t('Create Compliance Event')}</DialogTitle>
+                                </DialogHeader>
+                                <EventForm
+                                    sites={sites}
+                                    types={types}
+                                    onSuccess={() => setShowCreate(false)}
+                                />
+                            </DialogContent>
+                        </Dialog>
+                    </Can>
                 </div>
 
                 {/* Filters */}
@@ -271,19 +274,21 @@ function EventCard({
                 <Badge variant={STATUS_BADGE_VARIANTS[event.status] ?? 'outline'} className="text-xs">
                     {event.status}
                 </Badge>
-                <div className="flex gap-1">
-                    {event.status !== 'completed' && event.status !== 'cancelled' && (
-                        <Button variant="ghost" size="icon-sm" title="Complete" onClick={onComplete}>
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <Can permission="manage org settings">
+                    <div className="flex gap-1">
+                        {event.status !== 'completed' && event.status !== 'cancelled' && (
+                            <Button variant="ghost" size="icon-sm" title="Complete" onClick={onComplete}>
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                            </Button>
+                        )}
+                        <Button variant="ghost" size="icon-sm" title="Edit" onClick={onEdit}>
+                            <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                    )}
-                    <Button variant="ghost" size="icon-sm" title="Edit" onClick={onEdit}>
-                        <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon-sm" className="text-destructive" title="Delete" onClick={onDelete}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                </div>
+                        <Button variant="ghost" size="icon-sm" className="text-destructive" title="Delete" onClick={onDelete}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
+                </Can>
             </CardContent>
         </Card>
     );

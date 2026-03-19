@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -76,21 +77,23 @@ export default function UsersIndex({ users, sites, roles }: Props) {
                         <h1 className="text-2xl font-bold tracking-tight">{t('Users')}</h1>
                         <p className="text-sm text-muted-foreground">{users.length} {t('user(s)')}</p>
                     </div>
-                    <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                        <DialogTrigger asChild>
-                            <Button><Plus className="mr-2 h-4 w-4" />{t('Add User')}</Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-lg">
-                            <DialogHeader>
-                                <DialogTitle>{t('Add User')}</DialogTitle>
-                            </DialogHeader>
-                            <UserForm
-                                sites={sites}
-                                roles={roles}
-                                onSuccess={() => setShowCreate(false)}
-                            />
-                        </DialogContent>
-                    </Dialog>
+                    <Can permission="manage users">
+                        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                            <DialogTrigger asChild>
+                                <Button><Plus className="mr-2 h-4 w-4" />{t('Add User')}</Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-lg">
+                                <DialogHeader>
+                                    <DialogTitle>{t('Add User')}</DialogTitle>
+                                </DialogHeader>
+                                <UserForm
+                                    sites={sites}
+                                    roles={roles}
+                                    onSuccess={() => setShowCreate(false)}
+                                />
+                            </DialogContent>
+                        </Dialog>
+                    </Can>
                 </div>
 
                 <Card className="flex-1">
@@ -140,34 +143,36 @@ export default function UsersIndex({ users, sites, roles }: Props) {
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex gap-1">
-                                                <Dialog open={editUser?.id === user.id} onOpenChange={(open) => !open && setEditUser(null)}>
-                                                    <DialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon-sm" onClick={() => setEditUser(user)}>
-                                                            <Pencil className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                    </DialogTrigger>
-                                                    <DialogContent className="max-w-lg">
-                                                        <DialogHeader>
-                                                            <DialogTitle>{t('Edit User')}</DialogTitle>
-                                                        </DialogHeader>
-                                                        <UserForm
-                                                            user={user}
-                                                            sites={sites}
-                                                            roles={roles}
-                                                            onSuccess={() => setEditUser(null)}
-                                                        />
-                                                    </DialogContent>
-                                                </Dialog>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon-sm"
-                                                    className="text-destructive"
-                                                    onClick={() => setDeleteUser(user)}
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </Button>
-                                            </div>
+                                            <Can permission="manage users">
+                                                <div className="flex gap-1">
+                                                    <Dialog open={editUser?.id === user.id} onOpenChange={(open) => !open && setEditUser(null)}>
+                                                        <DialogTrigger asChild>
+                                                            <Button variant="ghost" size="icon-sm" onClick={() => setEditUser(user)}>
+                                                                <Pencil className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="max-w-lg">
+                                                            <DialogHeader>
+                                                                <DialogTitle>{t('Edit User')}</DialogTitle>
+                                                            </DialogHeader>
+                                                            <UserForm
+                                                                user={user}
+                                                                sites={sites}
+                                                                roles={roles}
+                                                                onSuccess={() => setEditUser(null)}
+                                                            />
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        className="text-destructive"
+                                                        onClick={() => setDeleteUser(user)}
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </div>
+                                            </Can>
                                         </TableCell>
                                     </TableRow>
                                 ))

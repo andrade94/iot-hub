@@ -34,6 +34,24 @@ class SendComplianceRemindersCommand extends Command
         $dryRun = $this->option('dry-run');
         $sentCount = 0;
 
+        // SM-006: Mark upcoming events as overdue when due_date has passed
+        $overdueEvents = ComplianceEvent::upcoming()
+            ->whereDate('due_date', '<', now()->startOfDay())
+            ->get();
+
+        if ($overdueEvents->isNotEmpty()) {
+            if ($dryRun) {
+                $this->warn("Would mark {$overdueEvents->count()} event(s) as overdue.");
+            } else {
+                foreach ($overdueEvents as $event) {
+                    $event->update(['status' => 'overdue']);
+                    $this->line("  Marked overdue: '{$event->title}' (due {$event->due_date->format('Y-m-d')})");
+                }
+                $this->info("Marked {$overdueEvents->count()} event(s) as overdue.");
+            }
+            $this->newLine();
+        }
+
         $this->info('Checking compliance events for reminders...');
 
         foreach (self::REMINDER_DAYS as $daysBefore) {

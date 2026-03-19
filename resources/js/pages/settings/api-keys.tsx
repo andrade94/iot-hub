@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,9 +49,11 @@ export default function ApiKeysPage({ apiKeys, newKey }: Props) {
                         <h1 className="text-2xl font-bold tracking-tight">{t('API Keys')}</h1>
                         <p className="text-sm text-muted-foreground">{apiKeys.length} {t('key(s)')}</p>
                     </div>
-                    <Button onClick={() => setShowForm(!showForm)}>
-                        <Plus className="mr-2 h-4 w-4" />{t('New Key')}
-                    </Button>
+                    <Can permission="manage org settings">
+                        <Button onClick={() => setShowForm(!showForm)}>
+                            <Plus className="mr-2 h-4 w-4" />{t('New Key')}
+                        </Button>
+                    </Can>
                 </div>
 
                 {/* Newly created key */}
@@ -132,12 +135,14 @@ export default function ApiKeysPage({ apiKeys, newKey }: Props) {
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
-                                            <Button
-                                                variant="ghost" size="icon-sm" className="text-destructive"
-                                                onClick={() => router.delete(`/settings/api-keys/${key.id}`, { preserveScroll: true })}
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </Button>
+                                            <Can permission="manage org settings">
+                                                <Button
+                                                    variant="ghost" size="icon-sm" className="text-destructive"
+                                                    onClick={() => router.delete(`/settings/api-keys/${key.id}`, { preserveScroll: true })}
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </Can>
                                         </TableCell>
                                     </TableRow>
                                 ))

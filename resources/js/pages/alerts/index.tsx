@@ -1,8 +1,11 @@
+import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -194,11 +197,23 @@ export default function AlertIndex({ alerts, filters }: Props) {
                         <TableBody>
                             {alerts.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="py-12 text-center">
-                                        <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-400" />
-                                        <p className="mt-2 text-sm text-muted-foreground">
-                                            {t('No alerts matching filters')}
-                                        </p>
+                                    <TableCell colSpan={7} className="p-0">
+                                        <EmptyState
+                                            size="sm"
+                                            variant="muted"
+                                            icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+                                            title={filters.severity || filters.status || filters.from
+                                                ? t('No alerts match these filters')
+                                                : t('All clear — no alerts')}
+                                            description={filters.severity || filters.status || filters.from
+                                                ? t('Try adjusting your filters to see more results')
+                                                : t('Your devices are operating within normal thresholds')}
+                                            action={filters.severity || filters.status || filters.from ? (
+                                                <Button variant="outline" size="sm" onClick={() => router.get('/alerts', {}, { preserveState: true, replace: true })}>
+                                                    {t('Clear filters')}
+                                                </Button>
+                                            ) : undefined}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -249,7 +264,7 @@ export default function AlertIndex({ alerts, filters }: Props) {
                                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                             <div className="flex justify-end gap-1">
                                                 {alert.status === 'active' && (
-                                                    <>
+                                                    <Can permission="acknowledge alerts">
                                                         <Button
                                                             variant="ghost"
                                                             size="icon-sm"
@@ -270,31 +285,35 @@ export default function AlertIndex({ alerts, filters }: Props) {
                                                         >
                                                             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                                                         </Button>
-                                                    </>
+                                                    </Can>
                                                 )}
                                                 {alert.status === 'acknowledged' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        title={t('Resolve')}
-                                                        onClick={() =>
-                                                            router.post(`/alerts/${alert.id}/resolve`, {}, { preserveScroll: true })
-                                                        }
-                                                    >
-                                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                                                    </Button>
+                                                    <Can permission="acknowledge alerts">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon-sm"
+                                                            title={t('Resolve')}
+                                                            onClick={() =>
+                                                                router.post(`/alerts/${alert.id}/resolve`, {}, { preserveScroll: true })
+                                                            }
+                                                        >
+                                                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                                        </Button>
+                                                    </Can>
                                                 )}
                                                 {(alert.status === 'active' || alert.status === 'acknowledged') && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        title={t('Dismiss')}
-                                                        onClick={() =>
-                                                            router.post(`/alerts/${alert.id}/dismiss`, {}, { preserveScroll: true })
-                                                        }
-                                                    >
-                                                        <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                                                    </Button>
+                                                    <Can permission="manage alert rules">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon-sm"
+                                                            title={t('Dismiss')}
+                                                            onClick={() =>
+                                                                router.post(`/alerts/${alert.id}/dismiss`, {}, { preserveScroll: true })
+                                                            }
+                                                        >
+                                                            <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                                                        </Button>
+                                                    </Can>
                                                 )}
                                             </div>
                                         </TableCell>
