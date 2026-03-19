@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astrea IoT Platform — Operational Workflows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=Fragment+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c1222;--surface:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);
+  --text:#e2e8f0;--text-dim:#64748b;--text-muted:#475569;
+  --teal:#0891b2;--amber:#d97706;--emerald:#059669;--rose:#be123c;
+  --teal-bg:rgba(8,145,178,0.12);--amber-bg:rgba(217,119,6,0.12);
+  --emerald-bg:rgba(5,150,105,0.12);--rose-bg:rgba(190,18,60,0.12);
+  --font-display:'Bricolage Grotesque',sans-serif;
+  --font-mono:'Fragment Mono',monospace;
+  --sidebar-w:260px;
+}
+html{scroll-behavior:smooth;scroll-padding-top:2rem}
+body{
+  font-family:var(--font-display);color:var(--text);
+  background:var(--bg);line-height:1.6;
+  background-image:radial-gradient(rgba(255,255,255,0.035) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+
+/* Sidebar */
+.sidebar{
+  position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;
+  background:rgba(12,18,34,0.95);border-right:1px solid var(--border);
+  padding:1.5rem 1rem;overflow-y:auto;z-index:100;
+  backdrop-filter:blur(12px);
+}
+.sidebar h2{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:1rem;font-family:var(--font-mono)}
+.sidebar a{
+  display:flex;align-items:center;gap:.6rem;padding:.5rem .7rem;
+  border-radius:6px;color:var(--text-dim);text-decoration:none;
+  font-size:.82rem;transition:all .15s;margin-bottom:2px;
+}
+.sidebar a:hover{background:var(--surface);color:var(--text)}
+.sidebar a .num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:4px;font-size:.7rem;
+  font-family:var(--font-mono);flex-shrink:0;font-weight:600;
+}
+.sidebar a[data-domain="onboarding"] .num{background:var(--teal-bg);color:var(--teal)}
+.sidebar a[data-domain="alerts"] .num{background:var(--rose-bg);color:var(--rose)}
+.sidebar a[data-domain="billing"] .num{background:var(--amber-bg);color:var(--amber)}
+.sidebar a[data-domain="monitoring"] .num{background:var(--emerald-bg);color:var(--emerald)}
+
+.main{margin-left:var(--sidebar-w);padding:2rem 2.5rem 4rem}
+
+/* Hero */
+.hero{text-align:center;padding:3rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem}
+.hero h1{font-size:2.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.3rem}
+.hero h1 span{color:var(--teal)}
+.hero .sub{color:var(--text-dim);font-size:1rem;margin-bottom:1.5rem}
+.kpi-row{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+.kpi{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:.6rem 1.2rem;font-family:var(--font-mono);font-size:.8rem;
+}
+.kpi strong{color:var(--teal);font-size:1.1rem;margin-right:.3rem}
+
+/* Sections */
+.wf-section{margin-bottom:3.5rem;opacity:0;transform:translateY(20px);animation:fadeUp .5s ease forwards}
+.wf-section:nth-child(2){animation-delay:.05s}
+.wf-section:nth-child(3){animation-delay:.1s}
+.wf-section:nth-child(4){animation-delay:.15s}
+.wf-section:nth-child(5){animation-delay:.2s}
+.wf-section:nth-child(6){animation-delay:.25s}
+.wf-section:nth-child(7){animation-delay:.3s}
+.wf-section:nth-child(8){animation-delay:.35s}
+.wf-section:nth-child(9){animation-delay:.4s}
+.wf-section:nth-child(10){animation-delay:.45s}
+.wf-section:nth-child(11){animation-delay:.5s}
+.wf-section:nth-child(12){animation-delay:.55s}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+
+.section-header{display:flex;align-items:center;gap:.8rem;margin-bottom:1.5rem}
+.section-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:8px;font-family:var(--font-mono);
+  font-size:.9rem;font-weight:700;flex-shrink:0;
+}
+.section-header h2{font-size:1.35rem;font-weight:700}
+
+.domain-onboarding .section-num{background:var(--teal-bg);color:var(--teal)}
+.domain-onboarding .section-header h2{color:var(--teal)}
+.domain-alerts .section-num{background:var(--rose-bg);color:var(--rose)}
+.domain-alerts .section-header h2{color:var(--rose)}
+.domain-billing .section-num{background:var(--amber-bg);color:var(--amber)}
+.domain-billing .section-header h2{color:var(--amber)}
+.domain-monitoring .section-num{background:var(--emerald-bg);color:var(--emerald)}
+.domain-monitoring .section-header h2{color:var(--emerald)}
+
+/* Flow */
+.flow{display:flex;flex-wrap:wrap;gap:0;align-items:flex-start;padding:.5rem 0}
+.step-wrap{display:flex;align-items:center}
+.step{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:.85rem 1rem;width:195px;min-height:90px;position:relative;
+  transition:border-color .2s,box-shadow .2s;
+}
+.step:hover{border-color:rgba(255,255,255,0.15);box-shadow:0 0 20px rgba(8,145,178,0.08)}
+.role-badge{
+  display:inline-block;font-family:var(--font-mono);font-size:.6rem;
+  padding:.15rem .45rem;border-radius:4px;margin-bottom:.4rem;
+  text-transform:uppercase;letter-spacing:.05em;
+}
+.role-system{background:rgba(99,102,241,0.15);color:#818cf8}
+.role-admin{background:var(--teal-bg);color:var(--teal)}
+.role-user{background:var(--emerald-bg);color:var(--emerald)}
+.role-auto{background:var(--amber-bg);color:var(--amber)}
+.role-tech{background:rgba(168,85,247,0.15);color:#a855f7}
+.step .action{font-size:.78rem;font-weight:600;line-height:1.35;margin-bottom:.25rem}
+.step .side-effect{font-size:.68rem;color:var(--text-dim);line-height:1.3;font-family:var(--font-mono)}
+
+.arrow{
+  display:flex;align-items:center;justify-content:center;
+  width:32px;flex-shrink:0;color:var(--text-muted);
+}
+.arrow svg{width:20px;height:20px}
+
+/* Branch connector */
+.branch{
+  display:flex;flex-direction:column;gap:.5rem;
+  border-left:2px dashed var(--border);padding-left:1rem;margin-left:1rem;
+  margin-top:.5rem;margin-bottom:.5rem;
+}
+.branch-label{
+  font-family:var(--font-mono);font-size:.65rem;color:var(--text-dim);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem;
+}
+
+/* Details */
+details{
+  margin-top:1rem;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;
+}
+details summary{
+  padding:.6rem 1rem;font-family:var(--font-mono);font-size:.75rem;
+  color:var(--text-dim);cursor:pointer;user-select:none;
+  list-style:none;display:flex;align-items:center;gap:.5rem;
+}
+details summary::before{content:">";transition:transform .2s;display:inline-block;font-size:.7rem}
+details[open] summary::before{transform:rotate(90deg)}
+details .file-list{padding:.5rem 1rem .8rem;font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);line-height:1.8}
+details .file-list code{color:var(--teal);background:var(--teal-bg);padding:.1rem .35rem;border-radius:3px;font-size:.7rem}
+
+/* Footer */
+.footer{
+  text-align:center;padding:2.5rem 0 1.5rem;border-top:1px solid var(--border);
+  margin-top:2rem;color:var(--text-dim);font-family:var(--font-mono);font-size:.75rem;
+}
+
+/* Mobile nav */
+.mobile-nav{display:none;position:sticky;top:0;z-index:100;background:rgba(12,18,34,0.95);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);
+  overflow-x:auto;white-space:nowrap;padding:.6rem 1rem;-webkit-overflow-scrolling:touch}
+.mobile-nav a{
+  display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .65rem;
+  border-radius:5px;color:var(--text-dim);text-decoration:none;
+  font-size:.72rem;font-family:var(--font-mono);flex-shrink:0;
+}
+.mobile-nav a:hover{background:var(--surface);color:var(--text)}
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .mobile-nav{display:flex;gap:.3rem}
+  .main{margin-left:0;padding:1.2rem 1rem 3rem}
+  .hero h1{font-size:1.5rem}
+  .flow{flex-direction:column;align-items:stretch}
+  .step-wrap{flex-direction:column}
+  .step{width:100%}
+  .arrow{transform:rotate(90deg);width:auto;height:28px}
+  .kpi-row{gap:.5rem}
+  .kpi{padding:.4rem .7rem;font-size:.7rem}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar TOC (desktop) -->
+<nav class="sidebar">
+  <h2>Workflows</h2>
+  <a href="#wf1" data-domain="onboarding"><span class="num">01</span>Client Onboarding</a>
+  <a href="#wf2" data-domain="monitoring"><span class="num">02</span>Sensor Data Pipeline</a>
+  <a href="#wf3" data-domain="alerts"><span class="num">03</span>Alert Lifecycle</a>
+  <a href="#wf4" data-domain="monitoring"><span class="num">04</span>Work Order Lifecycle</a>
+  <a href="#wf5" data-domain="monitoring"><span class="num">05</span>Morning Summaries</a>
+  <a href="#wf6" data-domain="monitoring"><span class="num">06</span>Reporting &amp; PDF Export</a>
+  <a href="#wf7" data-domain="billing"><span class="num">07</span>Billing Cycle</a>
+  <a href="#wf8" data-domain="monitoring"><span class="num">08</span>Compliance Calendar</a>
+  <a href="#wf9" data-domain="onboarding"><span class="num">09</span>User &amp; Access Mgmt</a>
+  <a href="#wf10" data-domain="billing"><span class="num">10</span>Integration Export</a>
+  <a href="#wf11" data-domain="onboarding"><span class="num">11</span>Module &amp; Recipes</a>
+  <a href="#wf12" data-domain="onboarding"><span class="num">12</span>White-Label Branding</a>
+</nav>
+
+<!-- Mobile nav -->
+<nav class="mobile-nav">
+  <a href="#wf1">01 Onboarding</a><a href="#wf2">02 Pipeline</a><a href="#wf3">03 Alerts</a>
+  <a href="#wf4">04 Work Orders</a><a href="#wf5">05 Summaries</a><a href="#wf6">06 Reports</a>
+  <a href="#wf7">07 Billing</a><a href="#wf8">08 Compliance</a><a href="#wf9">09 Users</a>
+  <a href="#wf10">10 Export</a><a href="#wf11">11 Modules</a><a href="#wf12">12 Branding</a>
+</nav>
+
+<div class="main">
+
+<!-- Hero -->
+<header class="hero">
+  <h1>Astrea IoT Platform <span>— Operational Workflows</span></h1>
+  <p class="sub">End-to-end process documentation for all 12 core operational flows</p>
+  <div class="kpi-row">
+    <div class="kpi"><strong>173</strong> Routes</div>
+    <div class="kpi"><strong>55</strong> Pages</div>
+    <div class="kpi"><strong>39</strong> Controllers</div>
+    <div class="kpi"><strong>14</strong> Jobs</div>
+  </div>
+</header>
+
+<!-- ═══════════════ WF 1: CLIENT ONBOARDING ═══════════════ -->
+<section id="wf1" class="wf-section domain-onboarding">
+  <div class="section-header"><span class="section-num">01</span><h2>Client Onboarding</h2></div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Super Admin</span>
+        <div class="action">Create Organization</div>
+        <div class="side-effect">auto-creates Subscription + BillingProfile</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Super Admin</span>
+        <div class="action">Create Org Admin User</div>
+        <div class="side-effect">role assignment + org binding</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">Org Admin</span>
+        <div class="action">Create Sites</div>
+        <div class="side-effect">name, address, lat/lng, timezone</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">Org Admin</span>
+        <div class="action">Wizard Step 1: Gateway</div>
+        <div class="side-effect">ChirpStack provision</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">Org Admin</span>
+        <div class="action">Step 2: Devices</div>
+        <div class="side-effect">provision + recipe auto-rules</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">Org Admin</span>
+        <div class="action">Step 3: Floor Plans</div>
+        <div class="side-effect">optional image upload</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">Org Admin</span>
+        <div class="action">Step 4: Modules</div>
+        <div class="side-effect">activate + auto-create AlertRules</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">Org Admin</span>
+        <div class="action">Step 5: Review</div>
+        <div class="side-effect">escalation chain check + warnings</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">System</span>
+        <div class="action">Complete</div>
+        <div class="side-effect">status = active</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>PartnerController</code> <code>UserManagementController</code> <code>SiteOnboardingController</code> <code>RecipeApplicationService</code> <code>DeviceProvisioner</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 2: SENSOR DATA PIPELINE ═══════════════ -->
+<section id="wf2" class="wf-section domain-monitoring">
+  <div class="section-header"><span class="section-num">02</span><h2>Sensor Data Pipeline</h2></div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Hardware</span>
+        <div class="action">Physical Sensor</div>
+        <div class="side-effect">EM300-TH, CT101, WS301, GS101, EM300-PT, EM310-UDL, AM307</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Radio</span>
+        <div class="action">LoRaWAN Transmission</div>
+        <div class="side-effect">868/915 MHz radio uplink</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Server</span>
+        <div class="action">ChirpStack Server</div>
+        <div class="side-effect">MQTT publish to topic</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">MqttListener</div>
+        <div class="side-effect">subscribes to MQTT topic</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Job</span>
+        <div class="action">ProcessSensorReading</div>
+        <div class="side-effect">queued job dispatched</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">DecoderFactory</div>
+        <div class="side-effect">7 sensor models decoded</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">ReadingStorageService</div>
+        <div class="side-effect">DB + Redis cache + device status</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Job</span>
+        <div class="action">EvaluateAlertRules</div>
+        <div class="side-effect">dispatch to rules engine</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Broadcast</span>
+        <div class="action">SensorReadingReceived</div>
+        <div class="side-effect">Reverb WebSocket push</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>MqttListener</code> <code>ProcessSensorReading</code> <code>DecoderFactory</code> <code>MilesightDecoder</code> <code>ReadingStorageService</code> <code>EvaluateAlertRules</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 3: ALERT LIFECYCLE ═══════════════ -->
+<section id="wf3" class="wf-section domain-alerts">
+  <div class="section-header"><span class="section-num">03</span><h2>Alert Lifecycle</h2></div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Job</span>
+        <div class="action">EvaluateAlertRules</div>
+        <div class="side-effect">loads active rules for device</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">RuleEvaluator</div>
+        <div class="side-effect">check value vs threshold per condition</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">DefrostDetector</div>
+        <div class="side-effect">shouldSuppressAlert (cold chain)</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Redis</span>
+        <div class="action">Duration Timer</div>
+        <div class="side-effect">track breach + cooldown check</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">System</span>
+        <div class="action">Create Alert Record</div>
+        <div class="side-effect">persisted to database</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">AlertRouter.route()</div>
+        <div class="side-effect">mass event check: >5 in 10min = batch</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">EscalationChain</div>
+        <div class="side-effect">L1 immediate, L2+ delayed EscalateAlert</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Channels</span>
+        <div class="action">SendAlertNotification</div>
+        <div class="side-effect">WhatsApp (Twilio) + Push (Expo) + Email</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">User</span>
+        <div class="action">Acknowledge / Auto-Resolve</div>
+        <div class="side-effect">ack via UI or WhatsApp reply; auto after 2 normal readings</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>RuleEvaluator</code> <code>DefrostDetector</code> <code>AlertRouter</code> <code>EscalationService</code> <code>SendAlertNotification</code> <code>SendBatchAlertSummary</code> <code>EscalateAlert</code> <code>TwilioService</code> <code>PushNotificationService</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 4: WORK ORDER LIFECYCLE ═══════════════ -->
+<section id="wf4" class="wf-section domain-monitoring">
+  <div class="section-header"><span class="section-num">04</span><h2>Work Order Lifecycle</h2></div>
+
+  <p style="font-size:.78rem;color:var(--text-dim);margin-bottom:.8rem;font-family:var(--font-mono)">Two entry paths: automatic (device health) and manual (UI).</p>
+
+  <div style="margin-bottom:1.2rem">
+    <div class="branch-label">Path A &mdash; Automatic</div>
+    <div class="flow">
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Scheduled Job</span>
+          <div class="action">CheckDeviceHealth</div>
+          <div class="side-effect">offline >2h / battery <20% / gateway >30min</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Job</span>
+          <div class="action">CreateWorkOrder</div>
+          <div class="side-effect">dispatchIfNotDuplicate (checks existing open WOs)</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1.2rem">
+    <div class="branch-label">Path B &mdash; Manual</div>
+    <div class="flow">
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-admin">Admin / Manager</span>
+          <div class="action">WorkOrderController.store</div>
+          <div class="side-effect">created via command center UI</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="branch-label">Shared Flow</div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">System</span>
+        <div class="action">WorkOrder Created</div>
+        <div class="side-effect">status = open</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Admin</span>
+        <div class="action">Assign Technician</div>
+        <div class="side-effect">notification sent</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-tech">Technician</span>
+        <div class="action">In Progress</div>
+        <div class="side-effect">add photos + notes</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-tech">Technician</span>
+        <div class="action">Complete</div>
+        <div class="side-effect">WorkOrderService auto-resolves linked alert</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>CheckDeviceHealth</code> <code>CreateWorkOrder</code> <code>WorkOrderController</code> <code>WorkOrderService</code> <code>SendWorkOrderNotification</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 5: MORNING SUMMARIES ═══════════════ -->
+<section id="wf5" class="wf-section domain-monitoring">
+  <div class="section-header"><span class="section-num">05</span><h2>Morning Summaries</h2></div>
+
+  <p style="font-size:.78rem;color:var(--text-dim);margin-bottom:.8rem;font-family:var(--font-mono)">Three scheduled summary types, all dispatched every minute.</p>
+
+  <div style="margin-bottom:1.2rem">
+    <div class="branch-label">Store Summary</div>
+    <div class="flow">
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Scheduler</span>
+          <div class="action">SendMorningSummary</div>
+          <div class="side-effect">check site.opening_hour in local TZ</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Service</span>
+          <div class="action">generateStoreSummary</div>
+          <div class="side-effect">MorningSummaryService</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Notify</span>
+          <div class="action">Push + Email</div>
+          <div class="side-effect">all site users + org_admins</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1.2rem">
+    <div class="branch-label">Regional Summary</div>
+    <div class="flow">
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Scheduler</span>
+          <div class="action">SendRegionalSummary</div>
+          <div class="side-effect">30min after earliest site opening</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Service</span>
+          <div class="action">generateRegionalSummary</div>
+          <div class="side-effect">aggregate across sites</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Notify</span>
+          <div class="action">Push + Email</div>
+          <div class="side-effect">site_managers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1.2rem">
+    <div class="branch-label">Corporate Summary</div>
+    <div class="flow">
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Scheduler</span>
+          <div class="action">SendCorporateSummary</div>
+          <div class="side-effect">8:00 AM daily</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Service</span>
+          <div class="action">generateCorporateSummary</div>
+          <div class="side-effect">org-wide metrics</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Notify</span>
+          <div class="action">Push + Email</div>
+          <div class="side-effect">org_admins</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>SendMorningSummary</code> <code>SendRegionalSummary</code> <code>SendCorporateSummary</code> <code>MorningSummaryService</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 6: REPORTING & PDF EXPORT ═══════════════ -->
+<section id="wf6" class="wf-section domain-monitoring">
+  <div class="section-header"><span class="section-num">06</span><h2>Reporting &amp; PDF Export</h2></div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">User</span>
+        <div class="action">Visit /reports</div>
+        <div class="side-effect">Report Builder page</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">User</span>
+        <div class="action">Select Report Type</div>
+        <div class="side-effect">Temperature / Energy / Summary</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">User</span>
+        <div class="action">Configure Parameters</div>
+        <div class="side-effect">site + date range selection</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Controller</span>
+        <div class="action">Generate Report Data</div>
+        <div class="side-effect">ReportController queries readings</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Frontend</span>
+        <div class="action">Recharts Render</div>
+        <div class="side-effect">BarChart / AreaChart / LineChart</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Server</span>
+        <div class="action">dompdf Render</div>
+        <div class="side-effect">Blade template to PDF</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">User</span>
+        <div class="action">Download PDF</div>
+        <div class="side-effect">browser download</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>ReportController</code> <code>TemperatureReport</code> <code>EnergyReport</code> <code>MorningSummaryService</code> <code>ChartDataService</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 7: BILLING CYCLE ═══════════════ -->
+<section id="wf7" class="wf-section domain-billing">
+  <div class="section-header"><span class="section-num">07</span><h2>Billing Cycle</h2></div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">System</span>
+        <div class="action">Org Created</div>
+        <div class="side-effect">auto BillingProfile (RFC) + Subscription ($500 MXN base)</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Command</span>
+        <div class="action">billing:sync-metering</div>
+        <div class="side-effect">SyncSubscriptionMetering job</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Job</span>
+        <div class="action">Sync Metering</div>
+        <div class="side-effect">add devices at model pricing, remove inactive</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Command</span>
+        <div class="action">billing:generate-invoices</div>
+        <div class="side-effect">InvoiceService.generateInvoice</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">Calculate Total</div>
+        <div class="side-effect">subtotal + 16% IVA + gateway addons ($2,500/mo)</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">FacturapiService</div>
+        <div class="side-effect">createCfdi POST to Facturapi API</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">System</span>
+        <div class="action">Invoice Sent</div>
+        <div class="side-effect">status = sent</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Admin</span>
+        <div class="action">Mark Paid</div>
+        <div class="side-effect">SPEI / cash / card</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-user">User</span>
+        <div class="action">Download PDF/XML</div>
+        <div class="side-effect">from Facturapi</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>PartnerController</code> <code>SubscriptionService</code> <code>SyncSubscriptionMetering</code> <code>InvoiceService</code> <code>FacturapiService</code> <code>BillingController</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 8: COMPLIANCE CALENDAR ═══════════════ -->
+<section id="wf8" class="wf-section domain-monitoring">
+  <div class="section-header"><span class="section-num">08</span><h2>Compliance Calendar</h2></div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Org Admin</span>
+        <div class="action">Create Event</div>
+        <div class="side-effect">cofepris_audit / certificate / calibration / inspection / permit</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">System</span>
+        <div class="action">Event Stored</div>
+        <div class="side-effect">status = upcoming, due_date set</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Daily Command</span>
+        <div class="action">compliance:send-reminders</div>
+        <div class="side-effect">finds events due in 30/7/1 days</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Dedup</span>
+        <div class="action">Check reminders_sent</div>
+        <div class="side-effect">array dedup per milestone</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Mail</span>
+        <div class="action">ComplianceReminderMail</div>
+        <div class="side-effect">emails org_admins</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Org Admin</span>
+        <div class="action">Mark Complete</div>
+        <div class="side-effect">completed_at + completed_by recorded</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>ComplianceCalendarController</code> <code>SendComplianceRemindersCommand</code> <code>ComplianceReminderMail</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 9: USER & ACCESS MANAGEMENT ═══════════════ -->
+<section id="wf9" class="wf-section domain-onboarding">
+  <div class="section-header"><span class="section-num">09</span><h2>User &amp; Access Management</h2></div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Admin</span>
+        <div class="action">Create User</div>
+        <div class="side-effect">name, email, password, phone, whatsapp</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Admin</span>
+        <div class="action">Assign Role</div>
+        <div class="side-effect">super_admin / org_admin / site_manager / site_viewer / technician</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Admin</span>
+        <div class="action">Assign Site Access</div>
+        <div class="side-effect">user_sites pivot with assigned_at</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Admin</span>
+        <div class="action">Toggle App Access</div>
+        <div class="side-effect">has_app_access flag for mobile API</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">System</span>
+        <div class="action">Permissions Enforced</div>
+        <div class="side-effect">23 permissions, 9 categories, 13 policies (Spatie)</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>UserManagementController</code> <code>RolesAndPermissionsSeeder</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 10: INTEGRATION EXPORT ═══════════════ -->
+<section id="wf10" class="wf-section domain-billing">
+  <div class="section-header"><span class="section-num">10</span><h2>Integration Export (SAP / CONTPAQ)</h2></div>
+
+  <p style="font-size:.78rem;color:var(--text-dim);margin-bottom:.8rem;font-family:var(--font-mono)">Two ERP targets with parallel export paths.</p>
+
+  <div style="margin-bottom:1.2rem">
+    <div class="branch-label">SAP Export</div>
+    <div class="flow">
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-admin">Admin</span>
+          <div class="action">Trigger SAP Export</div>
+          <div class="side-effect">IntegrationController</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Service</span>
+          <div class="action">SapExportService</div>
+          <div class="side-effect">POST /invoices + /journal-entries + CSV readings</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-system">System</span>
+          <div class="action">Audit + Update</div>
+          <div class="side-effect">store audit JSON, update last_export_at</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1.2rem">
+    <div class="branch-label">CONTPAQ Export</div>
+    <div class="flow">
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-admin">Admin</span>
+          <div class="action">Trigger CONTPAQ Export</div>
+          <div class="side-effect">IntegrationController</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-auto">Service</span>
+          <div class="action">ContpaqExportService</div>
+          <div class="side-effect">POST /documentos/importar + /catalogo/sincronizar + CSV</div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="step-wrap">
+        <div class="step">
+          <span class="role-badge role-system">System</span>
+          <div class="action">Audit + Update</div>
+          <div class="side-effect">graceful failure if not configured</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>SapExportService</code> <code>ContpaqExportService</code> <code>IntegrationController</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 11: MODULE SYSTEM & RECIPE AUTOMATION ═══════════════ -->
+<section id="wf11" class="wf-section domain-onboarding">
+  <div class="section-header"><span class="section-num">11</span><h2>Module System &amp; Recipe Automation</h2></div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Admin</span>
+        <div class="action">Activate Module</div>
+        <div class="side-effect">ModuleController.toggle or onboarding step 4</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">System</span>
+        <div class="action">site_modules Pivot</div>
+        <div class="side-effect">created with activated_at timestamp</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">applyModuleRecipes</div>
+        <div class="side-effect">RecipeApplicationService</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">Match Recipes to Devices</div>
+        <div class="side-effect">recipe.sensor_model vs device.model</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">Create AlertRules</div>
+        <div class="side-effect">conditions JSON, cooldown=15min, idempotent</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Middleware</span>
+        <div class="action">EnsureModuleActive</div>
+        <div class="side-effect">guards module dashboard access</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Admin</span>
+        <div class="action">Deactivation</div>
+        <div class="side-effect">removeModuleRules deletes auto-created rules</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>ModuleController</code> <code>RecipeApplicationService</code> <code>EnsureModuleActive</code>
+    </div>
+  </details>
+</section>
+
+<!-- ═══════════════ WF 12: WHITE-LABEL BRANDING ═══════════════ -->
+<section id="wf12" class="wf-section domain-onboarding">
+  <div class="section-header"><span class="section-num">12</span><h2>White-Label Branding</h2></div>
+  <div class="flow">
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Org Admin</span>
+        <div class="action">Edit Org Settings</div>
+        <div class="side-effect">organization settings page</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Org Admin</span>
+        <div class="action">Set Branding JSON</div>
+        <div class="side-effect">primary_color, secondary_color, accent_color, font_family</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-admin">Org Admin</span>
+        <div class="action">Upload Logo</div>
+        <div class="side-effect">logo URL stored</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Middleware</span>
+        <div class="action">ApplyOrgBranding</div>
+        <div class="side-effect">runs on every request</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-auto">Service</span>
+        <div class="action">Build CSS Properties</div>
+        <div class="side-effect">--brand-primary, --brand-secondary, --brand-accent, --brand-font</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Inertia</span>
+        <div class="action">Share Props</div>
+        <div class="side-effect">branding + org_logo_url as shared data</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 20 20"><path d="M6 10h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="step-wrap">
+      <div class="step">
+        <span class="role-badge role-system">Frontend</span>
+        <div class="action">Apply CSS Variables</div>
+        <div class="side-effect">login, sidebar, report headers reflect branding</div>
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>File References</summary>
+    <div class="file-list">
+      <code>OrganizationSettingsController</code> <code>ApplyOrgBranding</code>
+    </div>
+  </details>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  Generated from codebase analysis &mdash; 173 routes, 39 controllers, 33 models, 14 jobs, 13 policies
+</footer>
+
+</div>
+
+<script>
+// Staggered fade-in on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.animationPlayState = 'running';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.wf-section').forEach((s, i) => {
+  s.style.animationDelay = `${i * 0.07}s`;
+  s.style.animationPlayState = 'paused';
+  observer.observe(s);
+});
+
+// Active sidebar link
+const sections = document.querySelectorAll('.wf-section');
+const sidebarLinks = document.querySelectorAll('.sidebar a');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      sidebarLinks.forEach(l => l.style.background = 'transparent');
+      const active = document.querySelector(`.sidebar a[href="#${entry.target.id}"]`);
+      if (active) {
+        active.style.background = 'var(--surface)';
+        active.style.color = 'var(--text)';
+      }
+    }
+  });
+}, { threshold: 0.3, rootMargin: '-10% 0px -60% 0px' });
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
