@@ -95,6 +95,6 @@
     "M3": { "completion": "100%", "completed_date": "2026-03-17" },
     "M4": { "completion": "100%", "completed_date": "2026-03-18" },
     "M5": { "completion": "100%", "completed_date": "2026-03-18" },
-    "M6": { "completion": "0%", "planned_date": "2026-03-25", "tasks": 24, "gaps": 34 }
+    "M6": { "completion": "75%", "started_date": "2026-03-19", "tasks_done": 22, "tasks_total": 24, "gaps_resolved": 25, "gaps_remaining": 9 }
   }
 }

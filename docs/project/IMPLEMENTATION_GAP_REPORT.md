@@ -372,4 +372,47 @@
 
 ---
 
+## Progress Since Last Report
+
+**Previous report:** 2026-03-19 (first generation) | **This update:** 2026-03-19 (M6 Cycles 1-3)
+
+| Metric | Previous | Current | Delta |
+|---|---|---|---|
+| Total gaps | 34 | 9 | -25 resolved |
+| SECURITY | 0 | 0 | — |
+| CRITICAL | 0 | 0 | — |
+| HIGH | 11 | 0 | -11 (all fixed) |
+| MEDIUM | 17 | 6 | -11 |
+| LOW | 6 | 3 | -3 |
+| EXTRA | 10 | 10 | 0 (spec update pending) |
+
+### Resolved This Cycle (M6 Cycles 1-3)
+
+**Backend (6/6 resolved):**
+- BR-024: `billing:generate-invoices` → SCHEDULED (monthly 1st at 06:00)
+- BR-027/SM-003: Invoice overdue transition → IMPLEMENTED (`MarkOverdueInvoicesCommand` daily at 00:30)
+- BR-038/NT-006: `compliance:send-reminders` → SCHEDULED (daily at 07:00)
+- SM-006: Compliance event overdue transition → IMPLEMENTED (in `SendComplianceRemindersCommand`)
+- SM-001: Alert state transition guards → IMPLEMENTED (`canTransitionTo()` + controller try-catch)
+- SM-002: WorkOrder state transition guards → IMPLEMENTED (`canTransitionTo()` + controller try-catch)
+- `billing:sync-metering` → SCHEDULED (daily at 01:00)
+- CC overdue count → FIXED (queries `status='overdue'` now)
+
+**Frontend (19/28 resolved):**
+- PM-001 role checks: `Can`/`HasRole` wrappers → IMPLEMENTED on alerts, work orders, 6 settings pages
+- PM-001 nav visibility: Command Center → IMPLEMENTED via `requiredRole` filter in `NavMain`
+- EmptyState: alerts index, work orders index, dashboard → IMPLEMENTED
+- VL-001 through VL-010: Zod schemas → CREATED in `utils/schemas.ts` (not yet wired to forms)
+- BR-014 defrost suppression: verified ALREADY COMPLETE (was incorrectly classified as PARTIAL)
+
+### Remaining Gaps (9)
+
+| Type | Count | Items |
+|---|---|---|
+| MISSING | 4 | Skeleton loading on 10 pages, i18n sweep pending, mobile responsive audit |
+| PARTIAL | 5 | Zod schemas created but not yet wired to form-rhf in pages, EmptyState on 7 more pages |
+| EXTRA | 10 | Spec update for undocumented features (M6-004 — deferred to Cycle 4) |
+
+---
+
 *This report is a point-in-time snapshot. Regenerate after each build cycle via Phase 8 or re-run Phase 5b.8.*

@@ -25,15 +25,22 @@
 
 **Completion estimate:** ~98% of the way to a sellable product. All milestones (M1-M5) complete. Remaining work is integration testing against production ChirpStack/Facturapi and final QA polish.
 
-### Progress Update (2026-03-18)
+### Progress Update (2026-03-19)
 
 - **M1: Foundation Fixes** -- 8/8 DONE (100%)
 - **M2: Core Feature Completion** -- 10/10 DONE (100%)
 - **M3: Operational Maturity** -- 9/9 DONE (100%)
 - **M4: Polish & Testing** -- 8/8 DONE (100%) -- Completed 2026-03-18
 - **M5: Competitive Features** -- 7/7 DONE (100%) -- Completed 2026-03-18
+- **M6: Production Readiness** -- 24 tasks, Cycles 1-3 DONE -- Started 2026-03-19
+  - Cycle 1: Schedule billing/compliance commands, invoice overdue, CC fix (4/4 DONE)
+  - Cycle 2: Role-based UI visibility, empty states, state transition guards (8/8 DONE)
+  - Cycle 3: Zod schemas, compliance overdue, defrost verified (10/10 DONE)
+  - Cycle 4: i18n sweep, mobile audit, gap report refresh (IN PROGRESS)
 
-**Codebase census:** 39 controllers, 33 models, 47 migrations, 33 factories, 13 policies, 14 jobs, 10 commands, 7 mailables, 55 frontend pages, 87 tests, 173 routes, 509 i18n keys.
+**Codebase census:** 42 controllers, 33 models, 47 migrations, 33 factories, 13 policies, 14 jobs, 11 commands, 8 mailables, 56 frontend pages, 87 tests, 173 routes, 509 i18n keys.
+
+**Gap report:** 34 gaps → 9 remaining (25 resolved in M6 Cycles 1-3). See `IMPLEMENTATION_GAP_REPORT.md`.
 
 ### Biggest Risks (Updated)
 

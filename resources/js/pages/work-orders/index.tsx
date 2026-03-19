@@ -172,8 +172,7 @@ export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Pr
 }
 
 function TypeBadge({ type }: { type: string }) {
-    const labels: Record<string, string> = { battery_replace: 'Battery', sensor_replace: 'Sensor', maintenance: 'Maint.', inspection: 'Inspect', install: 'Install' };
-    return <Badge variant="outline" className="text-xs">{labels[type] ?? type}</Badge>;
+    return <Badge variant="outline" className="text-xs">{type.replace('_', ' ')}</Badge>;
 }
 
 function PriorityBadge({ priority }: { priority: string }) {
