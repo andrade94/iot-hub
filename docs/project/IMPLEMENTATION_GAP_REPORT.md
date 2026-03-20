@@ -118,7 +118,7 @@
 | VL-009 Escalation Chain | 3 fields, complex JSON levels | Inline validation in controller | No client-side validation | PARTIAL — server-only |
 | VL-010 User | 5 fields, unique email | Inline validation in controller | No client-side validation | PARTIAL — server-only |
 
-**Note:** Backend validation is complete via inline `$request->validate()`. No `FormRequest` classes exist — all 10 entity validations are inline. Functional but harder to test/reuse. Frontend has zero Zod schemas and `form-rhf` is unused despite being available.
+**Note:** Backend validation is complete via inline `$request->validate()`. No `FormRequest` classes exist — all 10 entity validations are inline. Functional but harder to test/reuse. Frontend Zod schemas exist in `utils/schemas.ts` and should be used with the `useValidatedForm` hook (Inertia `useForm` + Zod pre-submit validation). The `form-rhf` component is reserved for genuinely complex forms (dynamic field arrays, deeply nested objects) — standard forms should NOT migrate to react-hook-form.
 
 ### Integrations (from Phase 5f)
 
@@ -420,7 +420,7 @@
 
 | Type | Count | Items |
 |---|---|---|
-| PARTIAL | 1 | Zod schemas exist but not yet wired to form-rhf in page forms (incremental migration) |
+| PARTIAL | 1 | Zod schemas exist but not yet wired via `useValidatedForm` hook in page forms (2-line change per form) |
 | DEFERRED | 1 | Mobile responsive audit (manual testing task, not a code gap) |
 
 ---
