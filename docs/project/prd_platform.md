@@ -1471,6 +1471,14 @@ The mobile app is the **daily monitoring interface** for store-level and regiona
   - When resolved: "End Outage" → resume normal monitoring, send summary of what was missed
   - Without this: ChirpStack 1-hour outage = hundreds of false work orders across all clients
 
+- [ ] **LFPDPPP Consent Tracking**
+  - Mexican data protection law requires proof of privacy policy acceptance
+  - New fields on User: `privacy_accepted_at`, `privacy_policy_version`
+  - On first login (or account creation): show privacy policy → require acceptance → store timestamp + version
+  - On policy update: re-prompt acceptance on next login
+  - Export includes consent records as part of data portability (Phase 10 data export)
+  - Minimal effort but legally required for B2B platforms processing personal data
+
 - [ ] **Sensor Data Sanity Checks**
   - Sensors occasionally send physically impossible values (e.g., 500°C from EM300-TH rated -40 to 85°C)
   - New config: per-model valid ranges (EM300-TH: -40 to 85°C, CT101: 0 to 100A, etc.)
@@ -1600,12 +1608,70 @@ The mobile app is the **daily monitoring interface** for store-level and regiona
   - Use case: client calls "something went wrong at Store X last Tuesday" → open timeline → see everything in one view
   - Filterable by: date range, event type, zone, device
 
-- [ ] **site_viewer "Request Maintenance" Button**
+- [ ] **site_viewer "Request Maintenance" Button + Request Status Tracking**
   - On Site Detail page: "Request Help" button visible to site_viewer role
   - Opens simple form: description (textarea) + priority (select) + optional photo
   - Creates a work order with type=maintenance, assigned to org_admin (who then assigns to tech)
   - Bridges the gap: gerente sees a problem but currently can't take action beyond acknowledging
   - Different from full WO creation (which requires manage work orders permission) — this is a simplified "help request"
+  - **Status tracking:** site_viewer can see "My Requests" section on Site Detail — shows their submitted requests with current status (open/assigned/in_progress/completed). Without this, they submit a request into a void and never know if anyone responded.
+
+- [ ] **Post-Onboarding Configuration Checklist**
+  - After site onboarding completes, show org_admin a "Setup Checklist" banner on the site page:
+    - ✅ Gateway registered
+    - ✅ Devices provisioned
+    - ✅ Modules activated
+    - ⬜ Escalation chain configured (link to settings)
+    - ⬜ Users assigned to site (link to settings)
+    - ⬜ Report schedule configured (link to settings)
+    - ⬜ Alert rules reviewed (link to settings)
+  - Progress indicator: "Site is 60% configured — 3 items remaining"
+  - Dismissable after all items completed (or manually by org_admin)
+  - Prevents: org_admin skips escalation chain setup → alerts fire but nobody receives them → "system doesn't work" → churn within first week
+  - Also useful for new org_admins taking over from previous person — shows what's configured and what's missing
+
+- [ ] **Invoice Cancellation + CFDI Cancel**
+  - When an invoice is generated incorrectly (wrong period, wrong amount, wrong billing profile):
+  - New action on invoice row: "Cancel" button (org_admin or super_admin)
+  - Flow: Cancel invoice → Facturapi API: cancel CFDI → invoice status: paid/sent → cancelled
+  - SAT requires: cancellation reason code (01=with related doc, 02=without, 03=not executed, 04=related to global)
+  - New invoice status: `cancelled` added to SM-003 lifecycle
+  - Cancelled invoices remain visible (greyed out) for audit trail but excluded from revenue calculations
+  - Via Facturapi: `DELETE /api/v3/invoices/{id}` with cancellation motivo
+
+- [ ] **Technician Floor Plan Access**
+  - Technician role can view floor plans on Site Detail page (read-only)
+  - Shows device locations as colored dots — essential for physically locating sensors
+  - Use case: tech arrives at store, needs to find "Sensor #7 in the walk-in cooler" — floor plan shows exactly where it is
+  - Mobile-first: floor plan should be viewable in the mobile app with pinch-to-zoom
+  - Currently: floor plan is visible to all roles on Site Detail, but technician PRD description doesn't explicitly include it. This confirms it should be accessible.
+
+- [ ] **Technician Workload View for Managers**
+  - On Work Orders Index page: "Team Workload" card or view for site_manager / org_admin
+  - Shows: each technician with their open work order count, grouped by priority
+  - Example: "Juan: 5 open (1 urgent, 2 high, 2 medium) | Maria: 2 open (2 medium)"
+  - Helps managers assign new work orders to the least-loaded technician
+  - Also useful on CC Dispatch page for super_admin
+  - Without this: managers assign blindly → some techs overloaded, others idle
+
+- [ ] **Subscription Plan Changes (Upgrade/Downgrade)**
+  - Flow: org_admin requests plan change → super_admin approves → subscription updated
+  - Upgrade (starter→enterprise): immediate effect, prorated billing for current period
+  - Downgrade (enterprise→standard): effective at next billing period
+  - Changes reflected in: billing dashboard, invoice generation, feature access
+  - Activity log: "Subscription changed from starter to enterprise by [super_admin]"
+
+- [ ] **Organization Suspend vs Archive**
+  - Two distinct org states beyond active:
+  - **Suspended** (non-payment): monitoring continues but with warning banner, no new sites, no config changes. Reversed when payment received.
+  - **Archived** (departed client): monitoring stops, data retained for offboarding period (12 months), then eligible for deletion
+  - Currently: only active/onboarding states. No explicit suspension for non-payment.
+
+- [ ] **Configuration Summary / System Overview**
+  - New section on Organization Settings or Dashboard: "Your Setup at a Glance"
+  - Shows: sites count + status, total devices + health, active modules, alert rules count, escalation chains count, users by role, subscription plan
+  - Useful for: new org_admins taking over, Astrea support calls ("let me pull up your config"), annual reviews
+  - Not a separate page — a card/section on an existing page
 
 - [ ] **Payment Reminders & Dunning**
   - Automated email when invoice becomes overdue (at 7, 14, 30 days)
@@ -1914,9 +1980,17 @@ php artisan mqtt:listen     # MQTT listener (custom command)
 
 | # | Question | Options | Context |
 |---|---|---|---|
-| 55 | NOM-072 (pharma) features? | Stricter temp requirements, dual-sensor validation, gap detection (<15 min) | Pharmacies have different rules than food. Need customer validation. |
-| 56 | Predictive analytics scope? | Battery prediction (easy) vs compressor failure (hard) vs full ML pipeline | Start with heuristic-based (like defrost detection), ML later. |
-| 57 | Partner/reseller model? | Revenue share % vs flat fee per client? | Depends on go-to-market strategy. Decide when first partner opportunity arises. |
+| 55 | Consent tracking? | **Privacy policy acceptance timestamp per user.** Re-prompt on policy updates. Required by LFPDPPP for B2B platforms. | 2026-03-19 |
+| 56 | Post-onboarding checklist? | **Configuration progress banner on site page.** Shows remaining setup steps (escalation, users, reports, rules). Dismissable. Prevents "system doesn't work" churn. | 2026-03-19 |
+| 57 | Invoice cancellation? | **Via Facturapi cancel API.** SAT requires cancellation reason code. Status: cancelled (greyed out, excluded from revenue). | 2026-03-19 |
+| 58 | Tech floor plan access? | **Read-only on Site Detail.** Essential for physically locating sensors. Mobile-first with pinch-to-zoom. | 2026-03-19 |
+| 59 | Tech workload visibility? | **Team Workload card on WO Index.** Shows open WO count per technician by priority. Prevents blind assignment. | 2026-03-19 |
+| 60 | Org suspend vs archive? | **Two states: Suspended (non-payment, monitoring continues with banner) vs Archived (departed, data retained 12 months).** | 2026-03-19 |
+| 61 | Maintenance request status? | **site_viewer sees "My Requests" on Site Detail.** Shows their submitted WOs with status. Without this, requests go into a void. | 2026-03-19 |
+
+| 62 | NOM-072 (pharma) features? | Stricter temp requirements, dual-sensor validation, gap detection (<15 min) | Pharmacies have different rules than food. Need customer validation. |
+| 63 | Predictive analytics scope? | Battery prediction (easy) vs compressor failure (hard) vs full ML pipeline | Start with heuristic-based (like defrost detection), ML later. |
+| 64 | Partner/reseller model? | Revenue share % vs flat fee per client? | Depends on go-to-market strategy. Decide when first partner opportunity arises. |
 
 ---
 
