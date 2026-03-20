@@ -70,6 +70,8 @@ class AlertController extends Controller
 
     public function acknowledge(Request $request, Alert $alert)
     {
+        $this->authorize('acknowledge', $alert);
+
         try {
             $alert->acknowledge($request->user()->id);
         } catch (\InvalidArgumentException $e) {
@@ -81,6 +83,8 @@ class AlertController extends Controller
 
     public function resolve(Request $request, Alert $alert)
     {
+        $this->authorize('resolve', $alert);
+
         try {
             $alert->resolve($request->user()->id, 'manual');
         } catch (\InvalidArgumentException $e) {
@@ -92,6 +96,8 @@ class AlertController extends Controller
 
     public function dismiss(Request $request, Alert $alert)
     {
+        $this->authorize('dismiss', $alert);
+
         try {
             $alert->dismiss($request->user()->id);
         } catch (\InvalidArgumentException $e) {

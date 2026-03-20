@@ -15,7 +15,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, EscalationChain, EscalationLevel } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import { useValidatedForm } from '@/hooks/use-validated-form';
+import { escalationChainSchema } from '@/utils/schemas';
+import { Head, router } from '@inertiajs/react';
 import { GitBranch, Link2, Mail, Pencil, Plus, Smartphone, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -246,7 +248,7 @@ function ChainForm({
     const { t } = useLang();
     const isEdit = !!chain;
 
-    const form = useForm({
+    const form = useValidatedForm(escalationChainSchema, {
         name: chain?.name ?? '',
         site_id: chain?.site_id?.toString() ?? '',
         levels: chain?.levels ?? [createEmptyLevel(1)],
@@ -254,6 +256,7 @@ function ChainForm({
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (!form.validate()) return;
 
         form.transform((data) => ({
             ...data,
@@ -281,15 +284,17 @@ function ChainForm({
         form.setData('levels', [...form.data.levels, createEmptyLevel(nextNumber)]);
     }
 
+    type LevelData = (typeof form.data.levels)[number];
+
     function removeLevel(index: number) {
         const updated = form.data.levels
-            .filter((_, i) => i !== index)
-            .map((level, i) => ({ ...level, level: i + 1 }));
+            .filter((_: LevelData, i: number) => i !== index)
+            .map((level: LevelData, i: number) => ({ ...level, level: i + 1 }));
         form.setData('levels', updated);
     }
 
     function updateLevel(index: number, field: keyof EscalationLevel, value: unknown) {
-        const updated = form.data.levels.map((level, i) => {
+        const updated = form.data.levels.map((level: LevelData, i: number) => {
             if (i !== index) return level;
             return { ...level, [field]: value };
         });
@@ -300,7 +305,7 @@ function ChainForm({
         const level = form.data.levels[levelIndex];
         const currentIds = level.user_ids;
         const updatedIds = currentIds.includes(userId)
-            ? currentIds.filter((id) => id !== userId)
+            ? currentIds.filter((id: number) => id !== userId)
             : [...currentIds, userId];
         updateLevel(levelIndex, 'user_ids', updatedIds);
     }
@@ -309,7 +314,7 @@ function ChainForm({
         const level = form.data.levels[levelIndex];
         const currentChannels = level.channels;
         const updatedChannels = currentChannels.includes(channel)
-            ? currentChannels.filter((ch) => ch !== channel)
+            ? currentChannels.filter((ch: string) => ch !== channel)
             : [...currentChannels, channel];
         updateLevel(levelIndex, 'channels', updatedChannels);
     }
@@ -359,7 +364,7 @@ function ChainForm({
                     </Button>
                 </div>
 
-                {form.data.levels.map((level, index) => (
+                {form.data.levels.map((level: LevelData, index: number) => (
                     <LevelBuilder
                         key={index}
                         level={level}

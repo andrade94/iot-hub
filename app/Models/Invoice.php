@@ -13,6 +13,21 @@ class Invoice extends Model
 {
     use HasFactory, LogsActivity;
 
+    /**
+     * SM-003: Allowed state transitions for the invoice lifecycle.
+     */
+    protected static array $transitions = [
+        'draft' => ['sent', 'paid'],
+        'sent' => ['paid', 'overdue'],
+        'overdue' => ['paid'],
+        // paid is a terminal state
+    ];
+
+    public function canTransitionTo(string $newStatus): bool
+    {
+        return in_array($newStatus, static::$transitions[$this->status] ?? []);
+    }
+
     protected $fillable = [
         'org_id',
         'billing_profile_id',

@@ -27,6 +27,11 @@ class AlertPolicy
         return $user->hasPermissionTo('acknowledge alerts');
     }
 
+    public function dismiss(User $user, Alert $alert): bool
+    {
+        return $user->hasPermissionTo('manage alert rules');
+    }
+
     public function delete(User $user, Alert $alert): bool
     {
         return $user->hasPermissionTo('manage alert rules');

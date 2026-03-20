@@ -2,7 +2,7 @@
 
 > **Tier 3 Living Reference** -- for developers and AI assistants working on the codebase.
 > Generated from source code. Keep in sync with actual implementations.
-> Last updated: 2026-03-18
+> Last updated: 2026-03-19
 
 ---
 

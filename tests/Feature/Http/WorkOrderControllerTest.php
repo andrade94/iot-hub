@@ -102,7 +102,7 @@ test('create work order fails without required fields', function () {
 });
 
 test('work order status can be updated to assigned', function () {
-    $wo = WorkOrder::create(['site_id' => $this->site->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'medium']);
+    $wo = WorkOrder::create(['site_id' => $this->site->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'medium', 'status' => 'open']);
 
     $this->actingAs($this->user)
         ->put(route('work-orders.update-status', $wo), [
@@ -115,7 +115,7 @@ test('work order status can be updated to assigned', function () {
 });
 
 test('work order status can be updated to in_progress', function () {
-    $wo = WorkOrder::create(['site_id' => $this->site->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'medium']);
+    $wo = WorkOrder::create(['site_id' => $this->site->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'medium', 'status' => 'open']);
     $wo->assign($this->user->id);
 
     $this->actingAs($this->user)
@@ -126,7 +126,7 @@ test('work order status can be updated to in_progress', function () {
 });
 
 test('work order status can be updated to completed', function () {
-    $wo = WorkOrder::create(['site_id' => $this->site->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'medium']);
+    $wo = WorkOrder::create(['site_id' => $this->site->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'medium', 'status' => 'open']);
     $wo->assign($this->user->id);
     $wo->start();
 
@@ -154,7 +154,7 @@ test('completing work order auto-resolves linked alert', function () {
         'triggered_at' => now(),
     ]);
 
-    $wo = WorkOrder::create(['site_id' => $this->site->id, 'alert_id' => $alert->id, 'device_id' => $this->device->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'high']);
+    $wo = WorkOrder::create(['site_id' => $this->site->id, 'alert_id' => $alert->id, 'device_id' => $this->device->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'high', 'status' => 'open']);
     $wo->assign($this->user->id);
     $wo->start();
 

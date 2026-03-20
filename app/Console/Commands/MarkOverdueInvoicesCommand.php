@@ -47,6 +47,10 @@ class MarkOverdueInvoicesCommand extends Command
             if ($dryRun) {
                 $this->line("  → {$orgName} — Invoice #{$invoice->id} (period: {$invoice->period})");
             } else {
+                if (! $invoice->canTransitionTo('overdue')) {
+                    $this->warn("  ✗ {$orgName} — Invoice #{$invoice->id} cannot transition to overdue from '{$invoice->status}'");
+                    continue;
+                }
                 $invoice->update(['status' => 'overdue']);
                 $this->line("  ✓ {$orgName} — Invoice #{$invoice->id} marked overdue");
             }

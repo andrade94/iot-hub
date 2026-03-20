@@ -154,13 +154,12 @@ export const alertRuleSchema = z.object({
 export type AlertRuleFormData = z.infer<typeof alertRuleSchema>;
 
 // ── Escalation Chain Form ─────────────────────────────────────────
-// Note: this is a complex form with dynamic arrays — consider form-rhf
-// if field-level control is needed. Schema provided for reference.
 
 const CHANNELS = ['push', 'email', 'whatsapp'] as const;
 
 export const escalationChainSchema = z.object({
     name: z.string().min(1, 'Required').max(255),
+    site_id: z.string().min(1, 'Required'),
     levels: z
         .array(
             z.object({

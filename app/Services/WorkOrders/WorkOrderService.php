@@ -21,6 +21,7 @@ class WorkOrderService
             'type' => $type,
             'title' => 'WO: ' . ($alert->rule?->name ?? 'Alert') . ' — ' . ($alert->device?->name ?? 'Unknown device'),
             'priority' => $priority,
+            'status' => 'open',
         ]);
 
         Log::info('Work order created from alert', [
@@ -43,6 +44,7 @@ class WorkOrderService
             'type' => $type,
             'title' => $title,
             'priority' => $priority,
+            'status' => 'open',
         ]);
 
         Log::info('Work order created from trigger', [

@@ -32,6 +32,10 @@ class InvoiceService
      */
     public function markPaid(Invoice $invoice, string $method): Invoice
     {
+        if (! $invoice->canTransitionTo('paid')) {
+            throw new \InvalidArgumentException("Cannot mark invoice as paid in '{$invoice->status}' status");
+        }
+
         $invoice->update([
             'status' => 'paid',
             'paid_at' => now(),
