@@ -80,12 +80,12 @@ php artisan db:seed              # Seed without resetting
 ## Architecture
 
 ### Backend (Laravel)
-- **Routes**: `routes/web.php` (main), `routes/settings.php` (settings, compliance, module dashboards), `routes/api.php` (mobile API) — 173 total routes
+- **Routes**: `routes/web.php` (main), `routes/settings.php` (settings, compliance, module dashboards), `routes/api.php` (mobile API) — ~195 total routes
 - **Controllers**: `app/Http/Controllers/`
-- **Models**: `app/Models/` — 33 models (User, Organization, Site, Device, Gateway, Alert, WorkOrder, ComplianceEvent, etc.)
-- **Policies**: `app/Policies/` — 13 policies (DevicePolicy, AlertPolicy, AlertRulePolicy, WorkOrderPolicy, SitePolicy, RecipePolicy, EscalationChainPolicy, BillingPolicy, ReportPolicy, UserPolicy, FilePolicy, GatewayPolicy, NotificationPolicy)
-- **Services**: `app/Services/` — Business logic layer
-- **Notifications**: `app/Notifications/` — SystemNotification, ActivityNotification
+- **Models**: `app/Models/` — 40 models (User, Organization, Site, Device, Gateway, Alert, WorkOrder, ComplianceEvent, CorrectiveAction, MaintenanceWindow, OutageDeclaration, DataExport, ReportSchedule, SiteTemplate, DeviceAnomaly, etc.)
+- **Policies**: `app/Policies/` — 14 policies (DevicePolicy, AlertPolicy, AlertRulePolicy, WorkOrderPolicy, SitePolicy, RecipePolicy, EscalationChainPolicy, BillingPolicy, ReportPolicy, UserPolicy, FilePolicy, GatewayPolicy, NotificationPolicy, CorrectiveActionPolicy)
+- **Services**: `app/Services/` — Business logic layer (SanityCheckService, MassOfflineDetector, AlertAnalyticsService, DeviceReplacementService, SiteTemplateService, etc.)
+- **Notifications**: `app/Notifications/` — SystemNotification, ActivityNotification, PlatformOutageAlert, ExportReadyNotification, WelcomeNotification
 - **Migrations**: `database/migrations/` (SQLite by default, in-memory for tests)
 
 ### Frontend (React + Inertia)
@@ -108,6 +108,7 @@ The `HandleInertiaRequests` middleware shares these props on every page load:
 - `notifications` / `unreadNotificationsCount` — Latest 10 database notifications
 - `sidebarOpen` — Navigation state (from cookie)
 - `locale` — Current language (`en`/`es`)
+- `active_outage` — Current outage declaration (if any) for dashboard banner
 
 ### Auth & Permissions
 
@@ -115,7 +116,7 @@ The `HandleInertiaRequests` middleware shares these props on every page load:
 
 **Spatie Laravel Permission** manages roles/permissions:
 - Roles: `super_admin`, `org_admin`, `site_manager`, `site_viewer`, `technician`
-- 23 permissions across organizations, sites, devices, alerts, users, reports, work orders, settings
+- 29 permissions across organizations, sites, devices, alerts, users, reports, work orders, settings, corrective actions, maintenance, analytics, templates, export
 - Check with `$user->hasRole('org_admin')` or `$user->hasPermissionTo('manage devices')`
 - Gate checks in policies, middleware-based route protection
 
