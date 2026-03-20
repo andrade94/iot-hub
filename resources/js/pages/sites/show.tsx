@@ -1,7 +1,9 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { Alert, BreadcrumbItem, Device, FloorPlan, Site, SiteKPIs, ZoneSummary } from '@/types';
@@ -141,16 +143,17 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans }
                     <div className="space-y-4">
                         <h2 className="text-lg font-semibold">{t('Zones')}</h2>
                         {zones.length === 0 ? (
-                            <Card>
-                                <CardContent className="flex items-center justify-center py-12">
-                                    <div className="text-center">
-                                        <MapPin className="mx-auto h-8 w-8 text-muted-foreground/40" />
-                                        <p className="mt-2 text-sm text-muted-foreground">
-                                            {t('No zones configured')}
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <EmptyState
+                                size="sm"
+                                icon={<Cpu className="h-5 w-5 text-muted-foreground" />}
+                                title={t('No devices yet')}
+                                description={t('Add devices to this site to start monitoring')}
+                                action={
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href={`/sites/${site.id}/devices`}>{t('Manage Devices')}</Link>
+                                    </Button>
+                                }
+                            />
                         ) : (
                             <div className="grid gap-3 sm:grid-cols-2">
                                 {zones.map((zone) => (
@@ -301,4 +304,99 @@ function SeverityDot({ severity }: { severity: string }) {
         low: 'bg-blue-400',
     };
     return <span className={`h-2.5 w-2.5 rounded-full ${colors[severity] ?? 'bg-zinc-400'}`} />;
+}
+
+export function SiteShowSkeleton() {
+    return (
+        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                </div>
+                <div className="flex gap-2">
+                    <Skeleton className="h-9 w-24" />
+                    <Skeleton className="h-9 w-28" />
+                </div>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <Card key={i}>
+                        <CardContent className="flex items-center gap-3 p-4">
+                            <Skeleton className="h-4 w-4 rounded" />
+                            <div className="space-y-1">
+                                <Skeleton className="h-7 w-12" />
+                                <Skeleton className="h-3 w-20" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            {/* Health bar */}
+            <Card>
+                <CardContent className="flex items-center gap-4 p-4">
+                    <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-4 w-10" />
+                        </div>
+                        <Skeleton className="h-2 w-full" />
+                    </div>
+                    <Skeleton className="h-3 w-20" />
+                </CardContent>
+            </Card>
+
+            {/* Zones grid */}
+            <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_320px]">
+                <div className="space-y-4">
+                    <Skeleton className="h-6 w-16" />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <Card key={i}>
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-5 w-12" />
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="h-4 w-4" />
+                                        <div className="flex-1 space-y-1">
+                                            <Skeleton className="h-5 w-16" />
+                                            <Skeleton className="h-3 w-28" />
+                                        </div>
+                                    </div>
+                                    <Skeleton className="h-1.5 w-full" />
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Alerts sidebar */}
+                <div className="space-y-4">
+                    <Skeleton className="h-6 w-28" />
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <Card key={i}>
+                            <CardContent className="p-3 space-y-2">
+                                <div className="flex items-start justify-between">
+                                    <div className="space-y-1">
+                                        <Skeleton className="h-4 w-32" />
+                                        <Skeleton className="h-3 w-20" />
+                                    </div>
+                                    <Skeleton className="h-2.5 w-2.5 rounded-full" />
+                                </div>
+                                <Skeleton className="h-3 w-24" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
 }

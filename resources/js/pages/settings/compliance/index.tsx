@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -180,12 +182,11 @@ export default function ComplianceIndex({ events, sites, types }: Props) {
 
                 {/* Events grouped by month */}
                 {Object.keys(filteredEvents).length === 0 ? (
-                    <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-12 dark:border-sidebar-border">
-                        <div className="text-center">
-                            <CalendarCheck className="mx-auto h-10 w-10 text-muted-foreground/50" />
-                            <p className="mt-3 text-muted-foreground">{t('No compliance events scheduled')}</p>
-                        </div>
-                    </div>
+                    <EmptyState
+                        icon={<CalendarCheck className="h-5 w-5 text-muted-foreground" />}
+                        title={t('No compliance events scheduled')}
+                        description={t('Create a compliance event to track audits, certifications, and inspections')}
+                    />
                 ) : (
                     <div className="space-y-6">
                         {Object.entries(filteredEvents).map(([month, monthEvents]) => (
@@ -426,5 +427,59 @@ function EventForm({
                 {isEdit ? t('Update Event') : t('Create Event')}
             </Button>
         </form>
+    );
+}
+
+export function ComplianceSkeleton() {
+    return (
+        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-9 w-28" />
+            </div>
+
+            {/* Filters */}
+            <Card>
+                <CardContent className="flex flex-wrap items-center gap-3 p-4">
+                    <Skeleton className="h-9 w-[180px]" />
+                    <Skeleton className="h-9 w-[180px]" />
+                    <Skeleton className="h-9 w-[180px]" />
+                </CardContent>
+            </Card>
+
+            {/* Month groups */}
+            {Array.from({ length: 2 }).map((_, monthIdx) => (
+                <div key={monthIdx} className="space-y-3">
+                    <Skeleton className="h-6 w-36" />
+                    <div className="space-y-2">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                            <Card key={i}>
+                                <CardContent className="flex items-center gap-4 p-4">
+                                    <Skeleton className="h-5 w-24" />
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                        <Skeleton className="h-4 w-40" />
+                                        <Skeleton className="h-3 w-24" />
+                                    </div>
+                                    <div className="space-y-1 text-right">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-3 w-16" />
+                                    </div>
+                                    <Skeleton className="h-5 w-16" />
+                                    <div className="flex gap-1">
+                                        <Skeleton className="h-7 w-7 rounded-md" />
+                                        <Skeleton className="h-7 w-7 rounded-md" />
+                                        <Skeleton className="h-7 w-7 rounded-md" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
     );
 }

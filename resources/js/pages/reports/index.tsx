@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -172,5 +173,57 @@ function ReportCard({ report, sites }: { report: ReportType; sites: SiteOption[]
                 </div>
             </CardContent>
         </Card>
+    );
+}
+
+export function ReportsIndexSkeleton() {
+    return (
+        <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+            {/* Header */}
+            <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                    <Skeleton className="h-6 w-6 rounded" />
+                    <Skeleton className="h-8 w-24" />
+                </div>
+                <Skeleton className="h-4 w-80" />
+            </div>
+
+            {/* Report cards */}
+            <div className="grid gap-6 lg:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i} className="flex flex-col">
+                        <CardHeader>
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-6 w-6 rounded" />
+                                <Skeleton className="h-5 w-40" />
+                            </div>
+                            <Skeleton className="h-3 w-full" />
+                            <Skeleton className="h-3 w-3/4" />
+                        </CardHeader>
+                        <CardContent className="flex flex-1 flex-col gap-4">
+                            <div className="grid gap-2">
+                                <Skeleton className="h-3 w-8" />
+                                <Skeleton className="h-9 w-full" />
+                            </div>
+                            {i < 2 && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid gap-2">
+                                        <Skeleton className="h-3 w-10" />
+                                        <Skeleton className="h-9 w-full" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Skeleton className="h-3 w-6" />
+                                        <Skeleton className="h-9 w-full" />
+                                    </div>
+                                </div>
+                            )}
+                            <div className="mt-auto pt-2">
+                                <Skeleton className="h-9 w-full" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
     );
 }

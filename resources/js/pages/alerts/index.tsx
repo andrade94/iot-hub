@@ -400,9 +400,38 @@ function formatTimeAgo(dateStr: string): string {
     const diff = Date.now() - new Date(dateStr).getTime();
     const minutes = Math.floor(diff / 60000);
     if (minutes < 1) return 'just now';
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return `${hours}h`;
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    return `${days}d`;
+}
+
+export function AlertIndexSkeleton() {
+    return (
+        <div className="flex flex-col gap-4 p-4 md:p-6">
+            <Skeleton className="h-7 w-32" />
+            <Card><CardContent className="p-3"><div className="flex gap-3"><Skeleton className="h-9 w-[130px]" /><Skeleton className="h-9 w-[150px]" /><Skeleton className="h-9 w-[140px]" /></div></CardContent></Card>
+            <Card>
+                <Table>
+                    <TableHeader><TableRow>
+                        {['w-[100px]','','','','','','text-right'].map((c, i) => <TableHead key={i} className={c}><Skeleton className="h-3 w-16" /></TableHead>)}
+                    </TableRow></TableHeader>
+                    <TableBody>
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-24" /><Skeleton className="mt-1 h-3 w-16" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-20 font-mono" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-3 w-12" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="ml-auto h-7 w-16" /></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </Card>
+        </div>
+    );
 }

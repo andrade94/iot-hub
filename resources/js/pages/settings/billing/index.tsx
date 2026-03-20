@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -77,7 +79,14 @@ export default function BillingDashboard({ subscription, invoices, monthlyTotal 
                                 </div>
                             </div>
                         ) : (
-                            <p className="py-4 text-center text-sm text-muted-foreground">{t('No active subscription')}</p>
+                            <EmptyState
+                                size="sm"
+                                variant="muted"
+                                className="border-0"
+                                icon={<CreditCard className="h-5 w-5 text-muted-foreground" />}
+                                title={t('No active subscription')}
+                                description={t('Contact your account manager to set up billing')}
+                            />
                         )}
                     </CardContent>
                 </Card>
@@ -104,7 +113,16 @@ export default function BillingDashboard({ subscription, invoices, monthlyTotal 
                         <TableBody>
                             {invoices.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">{t('No invoices yet')}</TableCell>
+                                    <TableCell colSpan={6} className="py-0">
+                                        <EmptyState
+                                            size="sm"
+                                            variant="muted"
+                                            className="border-0"
+                                            icon={<FileText className="h-5 w-5 text-muted-foreground" />}
+                                            title={t('No invoices yet')}
+                                            description={t('Invoices will appear here once billing is active')}
+                                        />
+                                    </TableCell>
                                 </TableRow>
                             ) : (
                                 invoices.map((inv) => (
@@ -133,4 +151,79 @@ export default function BillingDashboard({ subscription, invoices, monthlyTotal 
 function InvoiceStatusBadge({ status }: { status: string }) {
     const v: Record<string, 'success' | 'warning' | 'destructive' | 'outline'> = { paid: 'success', sent: 'warning', overdue: 'destructive', draft: 'outline' };
     return <Badge variant={v[status] ?? 'outline'} className="text-xs">{status}</Badge>;
+}
+
+export function BillingSkeleton() {
+    return (
+        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-4 w-44" />
+                </div>
+                <Skeleton className="h-9 w-36" />
+            </div>
+
+            {/* Subscription card */}
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-5 rounded" />
+                        <Skeleton className="h-5 w-28" />
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-4 sm:grid-cols-4">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="space-y-1">
+                                <Skeleton className="h-3 w-16" />
+                                <Skeleton className="h-7 w-20" />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-4 flex items-center gap-3">
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-3 w-28" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Invoices table */}
+            <Card className="flex-1">
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-4 rounded" />
+                        <Skeleton className="h-5 w-20" />
+                    </div>
+                    <Skeleton className="h-3 w-24" />
+                </CardHeader>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-16" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-8" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-12" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-10" /></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-14" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-14" /></TableCell>
+                                <TableCell><Skeleton className="h-3 w-20" /></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </Card>
+        </div>
+    );
 }

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
@@ -331,5 +332,57 @@ function UserForm({
                 {isEdit ? t('Update User') : t('Create User')}
             </Button>
         </form>
+    );
+}
+
+export function UsersIndexSkeleton() {
+    return (
+        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-9 w-28" />
+            </div>
+
+            <Card className="flex-1">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead><Skeleton className="h-3 w-12" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-12" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-10" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-10" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-20" /></TableHead>
+                            <TableHead />
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                                <TableCell>
+                                    <div className="flex gap-1">
+                                        <Skeleton className="h-5 w-16" />
+                                        <Skeleton className="h-5 w-16" />
+                                    </div>
+                                </TableCell>
+                                <TableCell><Skeleton className="h-5 w-10" /></TableCell>
+                                <TableCell>
+                                    <div className="flex gap-1">
+                                        <Skeleton className="h-7 w-7 rounded-md" />
+                                        <Skeleton className="h-7 w-7 rounded-md" />
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </Card>
+        </div>
     );
 }

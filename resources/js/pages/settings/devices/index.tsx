@@ -1,9 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -197,11 +199,15 @@ export default function DeviceIndex({ site, devices, zones, filters }: Props) {
                         <TableBody>
                             {devices.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="py-12 text-center">
-                                        <Cpu className="mx-auto h-8 w-8 text-muted-foreground/40" />
-                                        <p className="mt-2 text-sm text-muted-foreground">
-                                            {t('No devices found')}
-                                        </p>
+                                    <TableCell colSpan={8} className="py-0">
+                                        <EmptyState
+                                            size="sm"
+                                            variant="muted"
+                                            className="border-0"
+                                            icon={<Cpu className="h-5 w-5 text-muted-foreground" />}
+                                            title={t('No devices')}
+                                            description={t('Add devices to this site to start monitoring')}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -384,4 +390,93 @@ function formatTimeAgo(dateStr: string): string {
     if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
     return `${days}d ago`;
+}
+
+export function DevicesIndexSkeleton() {
+    return (
+        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+            {/* Header */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-4 w-40" />
+                </div>
+                <Skeleton className="h-9 w-28" />
+            </div>
+
+            {/* Stats bar */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-lg border p-3">
+                        <Skeleton className="h-4 w-4 rounded" />
+                        <div className="space-y-1">
+                            <Skeleton className="h-6 w-10" />
+                            <Skeleton className="h-3 w-16" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Filters */}
+            <Card>
+                <CardContent className="p-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <Skeleton className="h-9 flex-1" />
+                        <div className="flex gap-2">
+                            <Skeleton className="h-9 w-[140px]" />
+                            <Skeleton className="h-9 w-[140px]" />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Device Table */}
+            <Card className="flex-1">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-12" /></TableHead>
+                            <TableHead className="hidden md:table-cell"><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-10" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead className="hidden lg:table-cell"><Skeleton className="h-3 w-12" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-16" /></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="h-2 w-2 rounded-full" />
+                                        <Skeleton className="h-4 w-28" />
+                                    </div>
+                                </TableCell>
+                                <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                                <TableCell className="hidden md:table-cell"><Skeleton className="h-3 w-32" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="h-4 w-4" />
+                                        <Skeleton className="h-1.5 w-12" />
+                                        <Skeleton className="h-3 w-8" />
+                                    </div>
+                                </TableCell>
+                                <TableCell className="hidden lg:table-cell">
+                                    <div className="flex items-center gap-1.5">
+                                        <Skeleton className="h-3.5 w-3.5" />
+                                        <Skeleton className="h-3 w-16" />
+                                    </div>
+                                </TableCell>
+                                <TableCell><Skeleton className="h-3 w-12" /></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </Card>
+        </div>
+    );
 }

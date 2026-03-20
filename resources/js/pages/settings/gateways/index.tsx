@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
@@ -93,9 +95,15 @@ export default function GatewayIndex({ site, gateways }: Props) {
                         <TableBody>
                             {gateways.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="py-12 text-center">
-                                        <Router className="mx-auto h-8 w-8 text-muted-foreground/40" />
-                                        <p className="mt-2 text-sm text-muted-foreground">{t('No gateways registered')}</p>
+                                    <TableCell colSpan={6} className="py-0">
+                                        <EmptyState
+                                            size="sm"
+                                            variant="muted"
+                                            className="border-0"
+                                            icon={<Router className="h-5 w-5 text-muted-foreground" />}
+                                            title={t('No gateways')}
+                                            description={t('Register a gateway to connect your sensors')}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -248,4 +256,51 @@ function GatewayStatusBadge({ status }: { status: string }) {
         registered: 'outline',
     };
     return <Badge variant={variants[status] ?? 'outline'} className="text-xs">{status}</Badge>;
+}
+
+export function GatewaysSkeleton() {
+    return (
+        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+            {/* Header */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-28" />
+                    <Skeleton className="h-4 w-40" />
+                </div>
+                <Skeleton className="h-9 w-32" />
+            </div>
+
+            <Card className="flex-1">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead><Skeleton className="h-3 w-12" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-16" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-10" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                <TableCell><Skeleton className="h-3 w-36" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                <TableCell className="text-right">
+                                    <div className="flex justify-end gap-1">
+                                        <Skeleton className="h-7 w-7 rounded-md" />
+                                        <Skeleton className="h-7 w-7 rounded-md" />
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </Card>
+        </div>
+    );
 }

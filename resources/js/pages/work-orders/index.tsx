@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -183,4 +184,33 @@ function PriorityBadge({ priority }: { priority: string }) {
 function StatusBadge({ status }: { status: string }) {
     const v: Record<string, 'destructive' | 'warning' | 'success' | 'info' | 'outline'> = { open: 'destructive', assigned: 'warning', in_progress: 'info', completed: 'success', cancelled: 'outline' };
     return <Badge variant={v[status] ?? 'outline'} className="text-xs">{status.replace('_', ' ')}</Badge>;
+}
+
+export function WorkOrderIndexSkeleton() {
+    return (
+        <div className="flex flex-col gap-4 p-4 md:p-6">
+            <div className="flex items-center justify-between"><Skeleton className="h-7 w-36" /><Skeleton className="h-9 w-40" /></div>
+            <Card><CardContent className="flex gap-3 p-3"><Skeleton className="h-9 w-32" /><Skeleton className="h-9 w-[140px]" /><Skeleton className="h-9 w-[130px]" /></CardContent></Card>
+            <Card>
+                <Table>
+                    <TableHeader><TableRow>
+                        {Array.from({ length: 7 }).map((_, i) => <TableHead key={i}><Skeleton className="h-3 w-16" /></TableHead>)}
+                    </TableRow></TableHeader>
+                    <TableBody>
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                                <TableCell><Skeleton className="h-3 w-16" /></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </Card>
+        </div>
+    );
 }

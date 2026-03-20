@@ -1,7 +1,9 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -103,6 +105,20 @@ export default function CommandCenterIndex({ kpis, organizations }: Props) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
+                            {organizations.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="py-0">
+                                        <EmptyState
+                                            size="sm"
+                                            variant="muted"
+                                            className="border-0"
+                                            icon={<Building2 className="h-5 w-5 text-muted-foreground" />}
+                                            title={t('No organizations')}
+                                            description={t('Create your first organization from the Partner Portal')}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            ) : null}
                             {organizations.map((org) => {
                                 const healthPct = org.device_count > 0 ? Math.round((org.online_count / org.device_count) * 100) : 0;
                                 return (
@@ -147,5 +163,91 @@ function KPICard({ icon, label, value, accent }: { icon: React.ReactNode; label:
                 </div>
             </CardContent>
         </Card>
+    );
+}
+
+export function CommandCenterSkeleton() {
+    return (
+        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+            {/* Header */}
+            <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-40" />
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <Card key={i}>
+                        <CardContent className="flex items-center gap-3 p-4">
+                            <Skeleton className="h-4 w-4 rounded" />
+                            <div className="space-y-1">
+                                <Skeleton className="h-7 w-12" />
+                                <Skeleton className="h-3 w-20" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            {/* Health bar */}
+            <Card>
+                <CardContent className="flex items-center gap-4 p-4">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <div className="flex-1 space-y-2">
+                        <div className="flex justify-between">
+                            <Skeleton className="h-4 w-28" />
+                            <Skeleton className="h-4 w-10" />
+                        </div>
+                        <Skeleton className="h-2 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Quick nav */}
+            <div className="flex gap-2">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-28" />
+                <Skeleton className="h-8 w-28" />
+            </div>
+
+            {/* Organizations table */}
+            <Card className="flex-1">
+                <CardHeader>
+                    <Skeleton className="h-5 w-28" />
+                </CardHeader>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead><Skeleton className="h-3 w-24" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-16" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-12" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-10" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-14" /></TableHead>
+                            <TableHead><Skeleton className="h-3 w-12" /></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="h-4 w-8" />
+                                        <Skeleton className="h-1.5 w-12" />
+                                    </div>
+                                </TableCell>
+                                <TableCell><Skeleton className="h-5 w-8" /></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </Card>
+        </div>
     );
 }
