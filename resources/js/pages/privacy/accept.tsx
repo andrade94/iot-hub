@@ -37,7 +37,7 @@ export default function PrivacyAccept({ version }: Props) {
                                 {t('Your data is stored securely and is accessible only to authorized personnel within your organization. You have the right to access, rectify, cancel, or oppose the processing of your personal data (ARCO rights).')}
                             </p>
                             <p>
-                                {t('For data portability requests or questions about our privacy practices, contact your organization administrator or email privacy@astrea.io.')}
+                                {t('For data portability requests or questions about our privacy practices, contact your organization administrator or email privacy@example.com.')}
                             </p>
                         </div>
                     </CardContent>

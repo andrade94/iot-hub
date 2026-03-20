@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
         // Super Admin — no org
         $superAdmin = User::create([
             'name' => 'Astrea Super Admin',
-            'email' => 'super@astrea.io',
+            'email' => 'super@example.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
         ]);
@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
         // Org Admin — org 1
         $orgAdmin = User::create([
             'name' => 'Admin Cadena Frio',
-            'email' => 'admin@cadenademo.com',
+            'email' => 'admin@example.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'org_id' => $org1->id,
@@ -37,7 +37,7 @@ class UserSeeder extends Seeder
         // Site Manager — org 1, sites 1 & 2
         $manager = User::create([
             'name' => 'Manager Norte-Centro',
-            'email' => 'manager@cadenademo.com',
+            'email' => 'manager@example.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'org_id' => $org1->id,
@@ -51,7 +51,7 @@ class UserSeeder extends Seeder
         // Site Viewer — org 1, site 1 only
         $viewer = User::create([
             'name' => 'Viewer Norte',
-            'email' => 'viewer@cadenademo.com',
+            'email' => 'viewer@example.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'org_id' => $org1->id,
@@ -64,7 +64,7 @@ class UserSeeder extends Seeder
         // Technician — org 1, all 3 sites
         $tech = User::create([
             'name' => 'Técnico Campo',
-            'email' => 'tech@cadenademo.com',
+            'email' => 'tech@example.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'org_id' => $org1->id,
@@ -75,10 +75,10 @@ class UserSeeder extends Seeder
         );
 
         $this->command->info('✓ Created 5 IoT test users');
-        $this->command->info('  Super Admin: super@astrea.io / password');
-        $this->command->info('  Org Admin: admin@cadenademo.com / password');
-        $this->command->info('  Site Manager: manager@cadenademo.com / password');
-        $this->command->info('  Site Viewer: viewer@cadenademo.com / password');
-        $this->command->info('  Technician: tech@cadenademo.com / password');
+        $this->command->info('  Super Admin: super@example.com / password');
+        $this->command->info('  Org Admin: admin@example.com / password');
+        $this->command->info('  Site Manager: manager@example.com / password');
+        $this->command->info('  Site Viewer: viewer@example.com / password');
+        $this->command->info('  Technician: tech@example.com / password');
     }
 }

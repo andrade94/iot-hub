@@ -29,11 +29,11 @@ class Phase10DemoSeeder extends Seeder
             return;
         }
 
-        $admin = User::where('email', 'admin@cadenademo.com')->first();
-        $manager = User::where('email', 'manager@cadenademo.com')->first();
-        $viewer = User::where('email', 'viewer@cadenademo.com')->first();
-        $tech = User::where('email', 'tech@cadenademo.com')->first();
-        $superAdmin = User::where('email', 'super@astrea.io')->first();
+        $admin = User::where('email', 'admin@example.com')->first();
+        $manager = User::where('email', 'manager@example.com')->first();
+        $viewer = User::where('email', 'viewer@example.com')->first();
+        $tech = User::where('email', 'tech@example.com')->first();
+        $superAdmin = User::where('email', 'super@example.com')->first();
 
         if (! $admin || ! $manager) {
             $this->command->warn('Demo users not found — run UserSeeder first.');

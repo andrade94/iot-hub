@@ -71,11 +71,11 @@ php artisan db:seed              # Seed without resetting
 
 | Email | Password | Role |
 |-------|----------|------|
-| `super@astrea.io` | `password` | super_admin |
-| `admin@cadenademo.com` | `password` | org_admin |
-| `manager@cadenademo.com` | `password` | site_manager |
-| `viewer@cadenademo.com` | `password` | site_viewer |
-| `tech@cadenademo.com` | `password` | technician |
+| `super@example.com` | `password` | super_admin |
+| `admin@example.com` | `password` | org_admin |
+| `manager@example.com` | `password` | site_manager |
+| `viewer@example.com` | `password` | site_viewer |
+| `tech@example.com` | `password` | technician |
 
 ## Architecture
 
