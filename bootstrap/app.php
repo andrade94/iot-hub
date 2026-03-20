@@ -82,6 +82,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // Send scheduled reports (daily at 6:00 AM)
         $schedule->job(new \App\Jobs\SendScheduledReports)->dailyAt('06:00');
 
+        // Clean up expired data exports (daily at 3:00 AM)
+        $schedule->call(function () {
+            \App\Models\DataExport::where('status', 'completed')
+                ->where('expires_at', '<', now())
+                ->each(function ($export) {
+                    if ($export->file_path) {
+                        \Illuminate\Support\Facades\Storage::disk('local')->delete($export->file_path);
+                    }
+                    $export->update(['status' => 'expired', 'file_path' => null]);
+                });
+        })->dailyAt('03:00');
+
         // Morning summaries (runs every minute, timezone-aware)
         $schedule->job(new \App\Jobs\SendMorningSummary)->everyMinute();
 

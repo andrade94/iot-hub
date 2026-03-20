@@ -31,6 +31,11 @@ class RuleEvaluator
             return;
         }
 
+        // Maintenance window suppression (BR-073): check once per device, not per rule
+        if (MaintenanceWindow::isActiveForZone($device->site_id, $device->zone, $device->site?->timezone)) {
+            return;
+        }
+
         $rules = AlertRule::active()
             ->where(function ($q) use ($device) {
                 $q->where('site_id', $device->site_id)
@@ -51,11 +56,6 @@ class RuleEvaluator
      */
     protected function evaluateRule(AlertRule $rule, Device $device, array $readings): void
     {
-        // Maintenance window suppression (BR-073): skip evaluation during scheduled downtime
-        if (MaintenanceWindow::isActiveForZone($device->site_id, $device->zone, $device->site?->timezone)) {
-            return;
-        }
-
         $conditions = $rule->conditions;
         if (! is_array($conditions) || empty($conditions)) {
             return;

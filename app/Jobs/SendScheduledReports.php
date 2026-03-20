@@ -22,7 +22,9 @@ class SendScheduledReports implements ShouldQueue
         foreach ($schedules as $schedule) {
             try {
                 $this->sendReport($schedule);
+                $schedule->update(['last_sent_at' => now(), 'last_error' => null]);
             } catch (\Throwable $e) {
+                $schedule->update(['last_error' => $e->getMessage()]);
                 Log::error('SendScheduledReports: failed to send', [
                     'schedule_id' => $schedule->id,
                     'type' => $schedule->type,
