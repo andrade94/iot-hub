@@ -1,12 +1,12 @@
 # PRD — Astrea IoT Platform
 
 > Product Requirements Document
-> **Status:** v2.0
+> **Status:** v3.0
 > **Stack:** Laravel 12 + Inertia.js + React + shadcn/ui + PostgreSQL + TimescaleDB
 > **Mobile:** Expo (React Native) — Phase 2
 > **Network Server:** ChirpStack Cloud
 > **Deploy:** Laravel Forge | **Dev:** Laravel Herd
-> **Date:** 2025-03-14 | **Updated:** 2025-03-14
+> **Date:** 2025-03-14 | **Updated:** 2026-03-19
 
 ---
 
@@ -1393,6 +1393,249 @@ The mobile app is the **daily monitoring interface** for store-level and regiona
 - [ ] Partner portal (white-label)
 - [ ] API pública (REST, documented)
 
+### Phase 10: Operational Completeness (Pre-Launch — Critical)
+
+> These features close the gap between "monitoring tool" and "operational platform." The detection side is strong; these complete the resolve → prove compliance loop.
+
+- [ ] **Corrective Action Workflow (WF-013)**
+  - When a temperature excursion or critical alert occurs, COFEPRIS auditors ask: "What did you DO about it?"
+  - New table: `corrective_actions` (id, alert_id, site_id, action_taken, taken_by, taken_at, verified_by, verified_at, notes)
+  - Flow: Alert triggers → system prompts for corrective action → site_viewer/site_manager logs what they did → appears in compliance report
+  - Inline section on Alert Detail page: "Corrective Action" form (textarea + submit)
+  - Compliance report PDF includes: excursion timestamp, duration, corrective action taken, who, when
+  - Required for: COFEPRIS audits, NOM-251 compliance, insurance claims
+  - Without this: clients fail audits → blame Astrea → churn
+
+- [ ] **Device Replacement Flow**
+  - Sensors die. Batteries run out permanently. This is a weekly event at scale (>20 sites).
+  - New endpoint: `POST /devices/{device}/replace` with `{new_dev_eui, new_app_key, new_model?}`
+  - UI flow (web + mobile): Select device to replace → enter new dev_eui → system auto-transfers: zone, floor plan position (x/y), recipe assignment, alert rule bindings
+  - Old device: status → `replaced`, `replaced_at`, `replaced_by_device_id` set
+  - New device: inherits all config, starts with status `pending` → provisions in ChirpStack → `active` on first reading
+  - History: old device's readings preserved under old dev_eui. New device starts clean.
+  - Activity log: "Device X replaced by Device Y by Technician Z"
+
+- [ ] **Client Data Export & Offboarding**
+  - LFPDPPP (Mexican data protection law) requires data portability on request
+  - New endpoint: `GET /settings/export-data` (org_admin) — generates a ZIP with:
+    - All sensor readings (CSV, chunked by month)
+    - All alerts with corrective actions (CSV)
+    - All work orders with photos (ZIP subfolder)
+    - All compliance events (CSV)
+    - User list (CSV, excluding passwords)
+    - Invoice history (PDF copies)
+  - Async job: `ExportOrganizationData` — generates in background, emails download link when ready
+  - Offboarding workflow: org_admin requests export → super_admin deactivates subscription → data archived (not deleted) for retention period → hard delete after 12 months
+
+- [ ] **Alert Analytics & Tuning Dashboard**
+  - Alert fatigue is the #1 reason IoT monitoring projects fail. Clients need visibility into alert patterns.
+  - New page: `/analytics/alerts` (org_admin, site_manager)
+  - Content:
+    - Top 10 noisiest rules (most alerts/week) with "tune" link
+    - Dismissal rate by rule (high dismissal = noisy rule → needs threshold adjustment)
+    - Average response time by site (time from alert → acknowledge)
+    - Alert trend over 30/90 days (increasing = problem, decreasing = stable)
+    - Alert resolution breakdown: auto-resolved vs manual vs work order vs dismissed
+    - "Suggested tuning" recommendations: "Rule X fires 50x/week — consider raising threshold by 2°C"
+  - This page directly reduces alert fatigue and prevents churn
+
+- [ ] **Scheduled / Automated Report Delivery**
+  - Compliance requires regular reports without manual action
+  - New table: `report_schedules` (id, site_id, org_id, type, frequency, day_of_week, time, recipients_json, active)
+  - Types: temperature_compliance, energy_summary, alert_summary, executive_overview
+  - Frequencies: daily, weekly, monthly
+  - Job: `SendScheduledReports` — runs daily, checks schedules, generates + emails PDF
+  - Settings UI: `/settings/report-schedules` — configure per-site or org-wide delivery
+  - Default schedule on site activation: weekly temperature compliance report to org_admin every Monday 8am
+
+- [ ] **Maintenance Window / Scheduled Downtime per Site**
+  - Sites have scheduled maintenance: "Walk-in cooler cleaned every Tuesday 2-4pm" or "Defrost cycle test Wednesday 6am"
+  - New table: `maintenance_windows` (id, site_id, zone, title, recurrence_rule, start_time, duration_minutes, suppress_alerts, created_by)
+  - During window: suppress alerts for affected zone (similar to defrost suppression but user-defined)
+  - Activity log: "Maintenance window active: Walk-in Cooler cleaning 2-4pm"
+  - Without this: every scheduled maintenance generates false alerts → alert fatigue → people ignore real alerts
+  - Different from user quiet hours (per-user) — this is per-SITE, per-ZONE scheduled downtime
+
+- [ ] **Sensor Data Sanity Checks**
+  - Sensors occasionally send physically impossible values (e.g., 500°C from EM300-TH rated -40 to 85°C)
+  - New config: per-model valid ranges (EM300-TH: -40 to 85°C, CT101: 0 to 100A, etc.)
+  - Pipeline behavior: if reading outside valid range → discard reading, log anomaly, do NOT store in TimescaleDB, do NOT trigger alerts
+  - Anomaly counter: if device sends 5+ invalid readings in 1 hour → create alert "Sensor X sending invalid data — possible hardware failure"
+  - Without this: garbage data triggers false alerts, corrupts reports, destroys client trust
+
+- [ ] **Mobile API for Phase 10 Features**
+  - Phase 10 features are mobile-first workflows (done on-site by gerente/technician):
+    - Corrective actions → mobile API endpoint + mobile screen
+    - Temperature verification checklist → mobile-first flow
+    - Device replacement → mobile scan + register flow
+    - Alert snooze → mobile alert detail button
+  - Update `routes/api.php` and `MOBILE_APP_PRD.md` to include Phase 10 endpoints
+  - All Phase 10 features must work on both web AND mobile
+
+- [ ] **Site Template Cloning**
+  - At scale (50+ stores for a chain), configuring each site from scratch is a bottleneck
+  - New table: `site_templates` (id, org_id, name, modules, zone_config, recipes, escalation_structure, created_by)
+  - Flow: Configure a "golden" site → Save as Template → On new site onboarding, select template → pre-fills: modules, zone names, recipe assignments, escalation chain structure
+  - Technician only needs to: register gateway serial + scan dev_euis + place on floor plan
+  - Reduces onboarding from ~30 min to ~10 min per site
+  - Critical for enterprise deals (OXXO, 7-Eleven, Walmart) where onboarding 50+ sites/month
+
+### Phase 11: Operational Excellence (Post-Launch — Within 90 Days)
+
+- [ ] **Site Comparison & Ranking Page**
+  - New page: `/sites/compare` (site_manager, org_admin)
+  - Rank sites by: compliance %, alert count, average response time, device uptime, energy cost
+  - Side-by-side comparison of 2-5 selected sites
+  - Regional manager's core question: "Which of my 15 sites is performing worst?"
+  - Exportable as PDF for regional meetings
+
+- [ ] **Daily Temperature Verification Checklist**
+  - Gerente de tienda does a manual walk-through 3x/day checking physical thermometers
+  - New table: `verification_logs` (id, site_id, user_id, zone, reading_value, sensor_agrees, notes, verified_at)
+  - New page section on Site Detail: "Daily Verification" card
+  - Mobile-first flow: Select zone → enter manual reading → system compares with sensor value → log discrepancy if >2°C → submit with digital signature
+  - Appears in compliance reports: "Manual verification performed 3x/day by [Gerente Name]"
+  - Required by: COFEPRIS, NOM-251, some insurance policies
+
+- [ ] **Alert Snooze & Quiet Hours**
+  - Per-user settings: quiet hours (e.g., 11pm-6am for site_viewer)
+  - During quiet hours: LOW/MEDIUM alerts suppressed (queued, delivered at wake time). CRITICAL/HIGH still delivered immediately.
+  - Per-alert snooze: "I know about this, remind me in 2 hours" button on Alert Detail
+  - Prevents: people blocking the WhatsApp number → alerts stop working entirely
+
+- [ ] **SLA & KPI Dashboard for org_admin**
+  - New page: `/analytics/performance` (org_admin)
+  - Metrics: average alert response time (target: <15 min), alerts resolved within SLA %, device uptime %, sensor coverage (% of zones monitored), compliance score per site
+  - Trend over 30/90/365 days
+  - Exportable as "ROI Report" PDF — org_admin shows to their board to justify the IoT investment
+  - Without this: client can't prove value → cancels at contract renewal
+
+- [ ] **User Deactivation & Responsibility Transfer**
+  - When a user leaves the organization (technician quits, manager transfers):
+  - Deactivate (not delete): block login, keep all audit trail records
+  - Auto-reassign: open work orders reassigned to manager or unassigned
+  - Escalation chains: remove user from all levels, notify org_admin of gaps
+  - Activity log: "User X deactivated by Y, Z work orders reassigned"
+  - LFPDPPP compliance: data retained for audit but user cannot access system
+
+- [ ] **Payment Reminders & Dunning**
+  - Automated email when invoice becomes overdue (at 7, 14, 30 days)
+  - Dunning escalation: org_admin → super_admin notified at 30 days overdue
+  - Option to pause monitoring (with warning banner) for invoices >60 days overdue
+  - No auto-deletion of data — just reduce service level until payment received
+
+- [ ] **Platform Status Page**
+  - At scale (50+ clients relying on this for food safety), outage communication is essential
+  - Options: StatusPage.io, Instatus, or self-hosted
+  - Content: real-time status of: web app, mobile API, MQTT pipeline, WhatsApp delivery, push notifications
+  - Incident communication: "MQTT pipeline delayed 5 min due to ChirpStack maintenance — alerts may be delayed"
+  - Subscribe: org_admin can subscribe to status updates via email
+  - Link in app footer and login page
+
+- [ ] **Complemento de Pago (CFDI Payment Complement)**
+  - Mexican tax law (SAT) requires a separate CFDI when payment is received for a previously timbrado invoice
+  - Flow: Invoice sent (CFDI timbrado) → Client pays via SPEI → org_admin marks paid → system generates Complemento de Pago CFDI → delivers to client
+  - Via Facturapi API: `POST /api/v3/invoices/{id}/payment` complement
+  - Without this: clients' accountants complain → friction → churn
+
+### Phase 12: Competitive Advantage (Quarter 2+)
+
+- [ ] **Sensor Data Gap Detection (NOM-072 Compliance)**
+  - NOM-072 (pharmacies) requires continuous monitoring with no gaps >15 minutes
+  - Detect and report gaps: "Device X had no readings between 2:30am-4:15am"
+  - Different from "device offline" (health monitoring) — this is "was there a monitoring gap that affects compliance?"
+  - New section in compliance reports: "Monitoring Gaps" table with device, gap start, gap end, duration
+  - Alert: if gap >15 min on a device in a NOM-072 site → flag as compliance gap
+  - Required for: pharmacy temp monitoring, sensitive medication storage
+
+- [ ] **Probe Calibration Management**
+  - New table: `calibration_records` (id, device_id, calibrated_at, next_calibration_at, certificate_path, calibrated_by, method)
+  - Track when each sensor was last calibrated (annual requirement for food safety)
+  - Alert when calibration expires (30/7/1 day reminders, same as compliance events)
+  - Upload calibration certificate PDF
+  - Show calibration status on device detail page
+  - Competitors (Testo, ComplianceMate) have this — it's a sales differentiator
+
+- [ ] **Audit Mode — One-Click Compliance View**
+  - "Inspector is here" button on Site Detail → opens full-screen compliance view:
+  - Last 90 days of temperature data per zone (continuous log)
+  - All excursions with corrective actions taken
+  - All verification logs (manual checks)
+  - Calibration certificates for all sensors
+  - Exportable as single PDF package
+  - Time from "inspector arrives" to "documentation ready" should be <2 minutes
+
+- [ ] **Cross-Site Comparison Report**
+  - PDF report comparing N sites over a date range
+  - Metrics: compliance %, alert count, response time, energy cost, device uptime
+  - Useful for: regional meetings, board presentations, multi-franchise operations
+
+- [ ] **Predictive Analytics**
+  - Battery life prediction: based on drain rate, predict replacement date per device
+  - Compressor failure prediction: CT101 current trend analysis → early warning 2-4 weeks before failure
+  - Temperature drift detection: slow upward drift over weeks = seal degradation or refrigerant leak
+  - Door pattern anomalies: "Store opened walk-in 3x more than usual" = possible process issue or theft
+
+- [ ] **Batch Site Onboarding (CSV/Excel Import)**
+  - Upload CSV with: site_name, address, lat, lng, timezone, opening_hour, template_name
+  - System creates all sites, applies templates, generates gateway/device registration sheets
+  - For enterprise deals onboarding 50+ sites simultaneously
+
+- [ ] **Insurance Documentation Export**
+  - When product loss occurs due to temperature failure:
+  - Export package: sensor data proving temp excursion, timestamp, duration, corrective actions attempted, photos from work orders
+  - Formatted for insurance claim submission
+  - Competitive feature: Sensitech offers this
+
+### Phase 13: Platform & Scale (Quarter 3+)
+
+- [ ] **Public REST API with Developer Documentation**
+  - Versioned API (v1) with OpenAPI/Swagger docs
+  - Endpoints: readings, alerts, devices, sites (read-only for most clients)
+  - API key authentication (existing `api_keys` table)
+  - Rate limiting per key
+  - Webhook subscriptions: client registers URL → receives real-time alert/reading events
+  - Use case: client integrates Astrea data into their own BI tools (Looker, PowerBI, Tableau)
+
+- [ ] **Custom Webhook Subscriptions**
+  - New table: `webhook_subscriptions` already exists — extend with event type filtering
+  - Events: alert.created, alert.resolved, reading.received, device.offline, work_order.completed
+  - Payload: JSON with relevant data
+  - Client-managed via Settings > Integrations or API
+
+- [ ] **Multi-Currency Support**
+  - Currently hardcoded to MXN
+  - Add: `currency` field to Organization
+  - Support: MXN, USD, COP, BRL (Latin America expansion)
+  - Invoice generation respects org currency
+  - Energy cost calculator uses local tariff
+
+- [ ] **Reseller / Partner Portal**
+  - Allow third-party companies to resell Astrea under their brand
+  - Partner-level access: manage their own clients (subset of super_admin)
+  - Revenue share tracking: partner earns X% of their clients' MRR
+  - White-label depth: custom domain, custom email sender, "powered by" toggle
+
+- [ ] **Digital Signatures on Compliance Documents**
+  - e.firma (SAT) or advanced electronic signature on:
+  - Temperature compliance reports
+  - Corrective action records
+  - Verification logs
+  - Legal weight for COFEPRIS audits
+  - Differentiator vs competitors who only offer unsigned PDFs
+
+- [ ] **Anonymized Benchmark Data**
+  - Opt-in: "Compare my metrics against similar operations"
+  - Cross-client anonymized data: "Your walk-in cooler uses 15% more energy than similar coolers in your segment"
+  - Valuable for: energy efficiency consulting, operational improvement recommendations
+  - Competitive moat: only possible with sufficient client base (50+ orgs)
+
+- [ ] **Custom Dashboard Builder**
+  - org_admin creates their own KPI views
+  - Drag-drop widgets: stat cards, charts, tables, maps
+  - Save as named dashboards, share with roles
+  - Use case: each client's operations director cares about different metrics
+
 ---
 
 ## 19. Non-Functional Requirements
@@ -1552,10 +1795,29 @@ php artisan mqtt:listen     # MQTT listener (custom command)
 | 31 | DO Spaces backup? | **Versioning on bucket** (enable later). For now, standard backups are enough. | 2025-03-14 |
 | 32 | Billing profiles? | **Multiple per org.** `billing_profiles` table with RFC, razón social, régimen fiscal. Client chooses which entity to invoice per subscription. | 2025-03-14 |
 
+| 33 | Corrective actions? | **Mandatory for compliance.** Inline on Alert Detail + included in compliance PDF. COFEPRIS requires documented response to every excursion. | 2026-03-19 |
+| 34 | Device replacement flow? | **Transfer config, archive old device.** New device inherits zone, floor position, recipe, alert rules. History stays with old dev_eui. | 2026-03-19 |
+| 35 | Client data export? | **ZIP with CSVs + PDFs.** Async job, email download link. Required by LFPDPPP (Mexican data privacy). | 2026-03-19 |
+| 36 | Alert fatigue? | **Alert analytics dashboard.** Show noisiest rules, dismissal rates, suggest tuning. #1 anti-churn feature. | 2026-03-19 |
+| 37 | Report automation? | **Scheduled delivery.** Weekly compliance PDF auto-emailed. Default schedule created on site activation. | 2026-03-19 |
+| 38 | Site templates? | **Clone golden site config.** Modules, zones, recipes, escalation structure. Reduces onboarding from 30 min to 10 min. Critical for enterprise (50+ sites). | 2026-03-19 |
+| 39 | Complemento de pago? | **Via Facturapi.** SAT requires separate CFDI when payment received. Without it, client's accountant complains. | 2026-03-19 |
+| 40 | Quiet hours? | **Per-user setting.** LOW/MEDIUM suppressed during quiet hours, CRITICAL/HIGH always delivered. Prevents people blocking WhatsApp. | 2026-03-19 |
+| 41 | Audit mode? | **One-click full compliance view.** 90 days of data + excursions + corrective actions + calibration certs in single PDF. Target: <2 min from inspector arrival to docs ready. | 2026-03-19 |
+| 42 | Public API? | **Phase 13.** Versioned REST API with OpenAPI docs, webhook subscriptions, API key auth. Enables client BI integration. | 2026-03-19 |
+
+| 46 | Maintenance windows? | **Per-site, per-zone scheduled downtime.** Suppress alerts during known maintenance. Different from user quiet hours. | 2026-03-19 |
+| 47 | Data sanity checks? | **Per-model valid ranges.** Discard physically impossible readings, log anomaly, alert after 5+ invalid readings. | 2026-03-19 |
+| 48 | Gap detection? | **Flag monitoring gaps >15 min.** Required for NOM-072 (pharma). Include in compliance reports. | 2026-03-19 |
+
 ### Still Open
 
-No open decisions. All resolved.
+| # | Question | Options | Context |
+|---|---|---|---|
+| 43 | NOM-072 (pharma) features? | Stricter temp requirements, dual-sensor validation, gap detection (<15 min) | Pharmacies have different rules than food. Need customer validation. |
+| 44 | Predictive analytics scope? | Battery prediction (easy) vs compressor failure (hard) vs full ML pipeline | Start with heuristic-based (like defrost detection), ML later. |
+| 45 | Partner/reseller model? | Revenue share % vs flat fee per client? | Depends on go-to-market strategy. Decide when first partner opportunity arises. |
 
 ---
 
-*Astrea Technologies — PRD Platform v2.0 — Laravel 12 + Inertia + React + shadcn + Expo — Confidencial*
+*Astrea Technologies — PRD Platform v3.0 — Laravel 12 + Inertia + React + shadcn + Expo — Confidencial*
