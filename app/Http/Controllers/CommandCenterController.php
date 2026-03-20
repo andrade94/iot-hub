@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Alert;
+use App\Models\AlertNotification;
 use App\Models\Device;
 use App\Models\Invoice;
 use App\Models\Organization;
+use App\Models\OutageDeclaration;
 use App\Models\Site;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\WorkOrder;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\Activitylog\Models\Activity;
 
@@ -61,7 +64,30 @@ class CommandCenterController extends Controller
                 'active_alerts' => $activeAlerts,
                 'open_work_orders' => $openWorkOrders,
             ],
+            'deliveryHealth' => $this->getDeliveryHealth(),
         ]);
+    }
+
+    /**
+     * Get alert delivery health metrics (24h) for Command Center (BR-094-095).
+     */
+    private function getDeliveryHealth(): array
+    {
+        $since = now()->subDay();
+
+        $channels = ['whatsapp', 'push', 'email'];
+        $health = [];
+
+        foreach ($channels as $channel) {
+            $query = AlertNotification::where('channel', $channel)->where('created_at', '>=', $since);
+            $health[$channel] = [
+                'sent' => (clone $query)->where('status', 'sent')->count(),
+                'delivered' => (clone $query)->where('status', 'delivered')->count(),
+                'failed' => (clone $query)->where('status', 'failed')->count(),
+            ];
+        }
+
+        return $health;
     }
 
     public function alerts()
@@ -251,5 +277,37 @@ class CommandCenterController extends Controller
             'recentActivity' => $recentActivity,
             'mrr' => round($mrr, 2),
         ]);
+    }
+
+    /**
+     * Declare upstream outage — suppresses all offline alerts platform-wide (BR-080).
+     */
+    public function declareOutage(Request $request)
+    {
+        $validated = $request->validate([
+            'reason' => 'required|string|min:5|max:500',
+            'affected_services' => 'required|array|min:1',
+            'affected_services.*' => 'string|in:chirpstack,twilio,mqtt,redis,database,other',
+        ]);
+
+        OutageDeclaration::create([
+            ...$validated,
+            'status' => 'active',
+            'declared_by' => $request->user()->id,
+            'declared_at' => now(),
+        ]);
+
+        return back()->with('success', 'Outage declared. All offline alerts suppressed platform-wide.');
+    }
+
+    /**
+     * Resolve active outage — resume normal monitoring (BR-081).
+     */
+    public function resolveOutage(Request $request)
+    {
+        $outage = OutageDeclaration::where('status', 'active')->firstOrFail();
+        $outage->resolve($request->user()->id);
+
+        return back()->with('success', 'Outage resolved. Normal monitoring resumed.');
     }
 }

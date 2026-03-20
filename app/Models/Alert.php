@@ -75,6 +75,11 @@ class Alert extends Model
         return $this->hasMany(AlertNotification::class);
     }
 
+    public function correctiveActions(): HasMany
+    {
+        return $this->hasMany(CorrectiveAction::class);
+    }
+
     public function acknowledge(int $userId): self
     {
         if (! $this->canTransitionTo('acknowledged')) {

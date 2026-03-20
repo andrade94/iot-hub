@@ -2,7 +2,7 @@
 
 > **Tier 3 Living Reference** -- for developers and AI assistants working on the codebase.
 > Generated from source code. Keep in sync with actual implementations.
-> Last updated: 2026-03-19
+> Last updated: 2026-03-20 (Phase 8 — Phase 10 COMPLETE, all 17 features built)
 
 ---
 
@@ -79,7 +79,7 @@ app/
 │   ├── Controllers/          39 controllers (web + API)
 │   ├── Middleware/            EnsureOrganizationScope, EnsureSiteAccess, ApplyOrgBranding, HandleInertiaRequests
 │   └── Requests/             Form request validation
-├── Models/                   33 Eloquent models
+├── Models/                   40 Eloquent models
 ├── Services/                 29 service classes across 9 domains
 ├── Jobs/                     14 queued jobs
 ├── Events/                   3 broadcast events
@@ -157,7 +157,7 @@ Every page load receives these props via `HandleInertiaRequests`:
 
 ## 4. Database Schema
 
-33 Eloquent models organized by domain. All models listed with their fillable fields, casts, and relationships as defined in code.
+40 Eloquent models organized by domain. Phase 10 added: CorrectiveAction, DeviceAnomaly (S1), MaintenanceWindow, OutageDeclaration (S2), ReportSchedule, DataExport, SiteTemplate (S3).
 
 ### Core Domain
 
@@ -717,7 +717,7 @@ Configuration for ERP/accounting integrations (SAP, CONTPAQ).
 
 ## 5. Roles & Permissions
 
-5 roles with 23 permissions managed by Spatie Laravel Permission.
+5 roles with 29 permissions managed by Spatie Laravel Permission. Phase 10 added 7 permissions: `log corrective actions`, `verify corrective actions`, `manage maintenance windows`, `view alert analytics`, `manage report schedules`, `manage site templates`, `export organization data`.
 
 ### Permission Matrix
 

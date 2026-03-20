@@ -67,6 +67,8 @@ return [
 
     'timezone' => 'UTC',
 
+    'privacy_policy_version' => env('PRIVACY_POLICY_VERSION', '1.0'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

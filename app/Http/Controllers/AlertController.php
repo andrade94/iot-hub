@@ -61,6 +61,8 @@ class AlertController extends Controller
             'rule',
             'notifications.user',
             'resolvedByUser',
+            'correctiveActions.takenByUser',
+            'correctiveActions.verifiedByUser',
         ]);
 
         return Inertia::render('alerts/show', [

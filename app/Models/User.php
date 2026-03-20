@@ -29,6 +29,8 @@ class User extends Authenticatable
         'whatsapp_phone',
         'has_app_access',
         'escalation_level',
+        'privacy_accepted_at',
+        'privacy_policy_version',
     ];
 
     protected $hidden = [

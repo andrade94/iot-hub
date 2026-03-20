@@ -77,6 +77,8 @@ function createUserWithRole(string $role, ?\App\Models\Organization $org = null)
 {
     $user = \App\Models\User::factory()->create([
         'org_id' => $org?->id,
+        'privacy_accepted_at' => now(),
+        'privacy_policy_version' => config('app.privacy_policy_version', '1.0'),
     ]);
     $user->assignRole($role);
 

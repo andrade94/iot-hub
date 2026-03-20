@@ -695,3 +695,552 @@ The following pages exist in the codebase but were not captured in the original 
 | Report Summary | `resources/js/pages/reports/summary.tsx` | WF-006 | Aggregated report summary view for site/org-level reporting |
 | Module Settings | `resources/js/pages/settings/modules.tsx` | WF-011 | Module activation/deactivation configuration per site |
 | Billing Profiles | `resources/js/pages/settings/billing/profiles.tsx` | WF-007 | Manage organization billing profiles (RFC, razon_social, regimen_fiscal) for CFDI generation |
+
+---
+
+# Phase 10: Operational Completeness — System Behavior Spec
+
+> **Scope:** 17 pre-launch features closing the gap between "monitoring tool" and "operational platform."
+> **Generated:** 2026-03-19 | Phase 5 --focus phase-10
+> **Themes:** Compliance & Audit Loop | Operational Reliability | UX at Scale
+
+---
+
+## 1. Business Rules — Phase 10 (BR-055 → BR-096)
+
+### 1.9 Corrective Action Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-055 | Temperature excursion or critical alert requires corrective action before compliance report inclusion | CRITICAL | WF-013 | `CorrectiveActionController`, `TemperatureReport` | IMPLEMENTED |
+| BR-056 | Corrective action must record: action_taken (text), taken_by (user), taken_at (timestamp) | HIGH | WF-013 | `CorrectiveAction` model, `StoreCorrectiveActionRequest` | IMPLEMENTED |
+| BR-057 | Corrective action verification must be by a different user than who logged it | HIGH | WF-013 | `CorrectiveActionController::verify()` guard, `CorrectiveActionPolicy::verify()` | IMPLEMENTED |
+| BR-058 | Compliance report PDF includes: excursion timestamp, duration, corrective action taken, who, when | CRITICAL | WF-013, WF-006 | `TemperatureReport::generatePdf()` | PARTIAL (model + UI done, PDF template pending) |
+
+### 1.10 Device Replacement Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-059 | Device replacement auto-transfers: zone, floor plan position (x/y), recipe assignment, alert rule bindings from old device to new device | CRITICAL | WF-014 | `DeviceReplacementService::replace()` | IMPLEMENTED |
+| BR-060 | Old device status set to `replaced`; sets `replaced_at` and `replaced_by_device_id` | HIGH | WF-014 | `DeviceReplacementService::replace()` | IMPLEMENTED |
+| BR-061 | New device inherits all config, starts with status `pending` → provisions in ChirpStack → `active` on first reading | HIGH | WF-014 | `DeviceReplacementService` + `ReadingStorageService` auto-activate | IMPLEMENTED |
+| BR-062 | Old device readings preserved under old dev_eui; new device starts clean history | HIGH | WF-014 | Separate device records (by design) | IMPLEMENTED |
+| BR-063 | Activity log: "Device X replaced by Device Y by User Z" | MEDIUM | WF-014 | `DeviceReplacementService` → `activity()` | IMPLEMENTED |
+
+### 1.11 Data Export & Offboarding Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-064 | Organization data export generates ZIP: sensor readings (CSV), alerts (CSV), user list (CSV, excl passwords) | CRITICAL | WF-015 | `ExportOrganizationData` job | IMPLEMENTED |
+| BR-065 | Export is async; emails download link when ready with 48h expiry | HIGH | WF-015 | `ExportOrganizationData` → `ExportReadyNotification` | IMPLEMENTED |
+| BR-066 | Offboarding workflow: org_admin requests export → super_admin deactivates subscription → data archived → hard delete after 12 months | HIGH | WF-015 | `OffboardingService` | PARTIAL (export works, full offboarding flow not yet wired) |
+
+### 1.12 Alert Analytics & Tuning Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-067 | Alert analytics aggregates: top 10 noisiest rules, dismissal rate, avg response time, 30/90 day trends, resolution breakdown | HIGH | WF-016 | `AlertAnalyticsService` (getSummary, getNoisiestRules, getTrend, getResolutionBreakdown) | IMPLEMENTED |
+| BR-068 | "Suggested tuning" recommendation generated when a rule fires >50x/week | MEDIUM | WF-016 | `AlertAnalyticsService::getSuggestedTuning()` | IMPLEMENTED |
+
+### 1.13 Scheduled Report Delivery Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-069 | Report schedule runs daily job, checks all active schedules, generates + emails to recipients_json | HIGH | WF-017 | `SendScheduledReports` job (daily at 06:00) | IMPLEMENTED |
+| BR-070 | Report types: temperature_compliance, energy_summary, alert_summary, executive_overview | HIGH | WF-017 | `ReportSchedule::TYPES` constant | IMPLEMENTED |
+| BR-071 | Frequencies: daily, weekly, monthly — weekly runs on configured day_of_week, monthly on 1st | MEDIUM | WF-017 | `ReportSchedule::shouldFireToday()` | IMPLEMENTED |
+| BR-072 | Default schedule on site activation: weekly temperature_compliance to org_admin every Monday 08:00 | MEDIUM | WF-017, WF-001 | `SiteOnboardingController::complete()` | NOT IMPLEMENTED (manual creation only) |
+
+### 1.14 Maintenance Window Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-073 | During active maintenance window, suppress ALL alerts for the affected zone at that site | CRITICAL | WF-018 | `RuleEvaluator::evaluateRule()` → `MaintenanceWindow::isActiveForZone()` | IMPLEMENTED |
+| BR-074 | Maintenance windows support recurrence (once, daily, weekly, monthly) | MEDIUM | WF-018 | `MaintenanceWindow::isActiveNow()` recurrence logic | IMPLEMENTED |
+| BR-075 | Activity log entry when maintenance window changes | LOW | WF-018 | `MaintenanceWindow` LogsActivity trait | IMPLEMENTED |
+| BR-076 | Maintenance windows are per-SITE, per-ZONE — different from per-user quiet hours | HIGH | WF-018 | `MaintenanceWindow` model (site_id + zone fields) | IMPLEMENTED |
+
+### 1.15 Mass Offline Detection Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-077 | If >50% of devices at a site go offline within 5 minutes → create ONE site-level alert, suppress individual device offline work orders | CRITICAL | WF-019 | `CheckDeviceHealth` → `MassOfflineDetector::check()` | IMPLEMENTED |
+| BR-078 | Check gateway status first: if gateway offline → "Gateway offline" alert (not individual device alerts) | HIGH | WF-019 | `MassOfflineDetector::isGatewayOffline()` | IMPLEMENTED |
+| BR-079 | Cross-site pattern: >3 sites go offline simultaneously → "Upstream outage" alert to super_admin only | HIGH | WF-019, WF-020 | `MassOfflineDetector::checkCrossSitePattern()` | PARTIAL (method exists, not wired to auto-trigger) |
+
+### 1.16 Upstream Outage Declaration Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-080 | While outage is active: suppress ALL offline alerts platform-wide, show banner on all dashboards | CRITICAL | WF-020 | `OutageDeclaration::isActive()` in `RuleEvaluator` + `CheckDeviceHealth` + `HandleInertiaRequests` | IMPLEMENTED |
+| BR-081 | When outage ended: resume normal monitoring, send summary of missed alerts during outage window | HIGH | WF-020 | `OutageDeclaration::resolve()` resumes monitoring; missed alert summary NOT YET IMPLEMENTED | PARTIAL |
+| BR-082 | Only super_admin can declare and end outages | CRITICAL | WF-020 | `CommandCenterController` routes gated by `role:super_admin` middleware | IMPLEMENTED |
+
+### 1.17 LFPDPPP Consent Tracking Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-083 | First login or account creation requires privacy policy acceptance — store `privacy_accepted_at` + `privacy_policy_version` on User | CRITICAL | WF-021 | `EnsurePrivacyConsent` middleware, User model | IMPLEMENTED |
+| BR-084 | On policy version update: re-prompt acceptance on next login (compare stored version vs current) | HIGH | WF-021 | `EnsurePrivacyConsent` middleware (compares `privacy_policy_version` vs `config('app.privacy_policy_version')`) | IMPLEMENTED |
+| BR-085 | Data export (BR-064) includes consent records as part of LFPDPPP data portability | MEDIUM | WF-015, WF-021 | `ExportOrganizationData` exports users with timestamps | IMPLEMENTED |
+
+### 1.18 Sensor Data Sanity Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-086 | Per-model valid ranges enforced before storage: EM300-TH: -40 to 85°C; CT101: 0 to 100A; WS301: open/close only; AM307: CO2 0-5000ppm, PM2.5 0-1000μg/m³; VS121: 0-500 count | CRITICAL | WF-002 | `SanityCheckService::validate()`, called in `ProcessSensorReading` | IMPLEMENTED |
+| BR-087 | Reading outside valid range → discard reading, log anomaly to `device_anomalies` table, do NOT store in sensor_readings, do NOT trigger alerts | CRITICAL | WF-002 | `SanityCheckService`, `ReadingStorageService` | IMPLEMENTED |
+| BR-088 | 5+ invalid readings from same device in 1 hour → create alert "Sensor X sending invalid data — possible hardware failure" | HIGH | WF-002 | `SanityCheckService::checkAnomalyThreshold()` | IMPLEMENTED |
+
+### 1.19 Site Template Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-089 | Template captures: activated modules, zone_config, recipe assignments, escalation chain structure | HIGH | WF-022 | `SiteTemplateService::capture()` | IMPLEMENTED |
+| BR-090 | On clone: pre-fills modules, zone names, recipe assignments, escalation chain structure on new site | HIGH | WF-022, WF-001 | `SiteTemplateService::applyToSite()` | IMPLEMENTED |
+| BR-091 | Technician only needs: register gateway serial + scan dev_euis + place on floor plan (template handles rest) | MEDIUM | WF-022 | `SiteOnboardingController` template integration | PARTIAL (service ready, onboarding wizard not yet integrated) |
+
+### 1.20 Health Check & Platform Monitoring Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-092 | `GET /health` returns JSON: db_connection (bool), redis_connection (bool), queue_depth (int), last_mqtt_reading_at (timestamp) | HIGH | WF-023 | `HealthCheckController::__invoke()` | IMPLEMENTED |
+| BR-093 | If any health check fails → external monitoring service receives non-200 response | HIGH | WF-023 | `HealthCheckController` (HTTP 503 when degraded) | IMPLEMENTED |
+
+### 1.21 Alert Delivery Monitoring Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-094 | Track WhatsApp sent/delivered/failed (24h), Push sent/delivered/failed (24h), Email bounce rate per org | HIGH | WF-024 | `CommandCenterController::getDeliveryHealth()` queries `AlertNotification` | IMPLEMENTED |
+| BR-095 | Per-org breakdown: which clients have delivery issues — surface in Command Center | MEDIUM | WF-024 | `CommandCenterController::index()` returns `deliveryHealth` prop | IMPLEMENTED (platform-wide; per-org breakdown deferred) |
+
+### 1.22 Duplicate Reading Protection Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-096 | Unique constraint on `(device_id, time, metric)` in sensor_readings table; use `INSERT ... ON CONFLICT DO NOTHING` | CRITICAL | WF-002 | Migration `2026_03_20_000001` + `ReadingStorageService::insertOrIgnore()` | IMPLEMENTED |
+
+### 1.23 Zero Readings Detection Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-097 | Scheduled check every 5 minutes: "Were ANY readings received platform-wide in last 10 minutes?" | CRITICAL | WF-025 | `DetectPlatformOutage` job (everyFiveMinutes in scheduler) | IMPLEMENTED |
+| BR-098 | If zero readings → immediate alert to super_admin: "No sensor data received in 10 minutes — possible MQTT/ChirpStack outage" | CRITICAL | WF-025 | `DetectPlatformOutage` → `PlatformOutageAlert` notification (Redis dedup) | IMPLEMENTED |
+
+### 1.24 Dashboard Action Cards Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-099 | Dashboard "Needs Attention" section displays: unacknowledged alerts count, overdue work orders count, critical battery sensors count — each with direct link to filtered view | MEDIUM | WF-026 | `DashboardController` returns `actionCards` prop | IMPLEMENTED |
+| BR-100 | Action cards are role-aware: site_viewer sees alerts only; technician sees alerts + work orders; site_manager+ sees all three | MEDIUM | WF-026 | Cards rendered client-side, scoped by accessible sites | IMPLEMENTED |
+
+---
+
+## 2. State Machines — Phase 10 (SM-011 → SM-014)
+
+### SM-011: Corrective Action Lifecycle
+
+```
+  ┌────────┐  verify (different user)  ┌──────────┐
+  │ logged │──────────────────────────►│ verified  │
+  └────────┘                           └──────────┘
+```
+
+| From | To | Trigger | Actor | Guard | Side Effects |
+|---|---|---|---|---|---|
+| logged | verified | Verify action | site_manager, org_admin | Must be different user than taken_by (BR-057) | Sets verified_by, verified_at; included in compliance report |
+| verified | — | TERMINAL | — | — | — |
+
+**Notes:**
+- Simple two-state lifecycle. Corrective actions cannot be deleted once logged (audit trail).
+- Unverified actions appear with ⚠️ warning in compliance reports.
+
+### SM-012: Data Export Lifecycle
+
+```
+  ┌────────┐  job starts  ┌────────────┐  success  ┌───────────┐  48h  ┌─────────┐
+  │ queued │────────────►│ processing  │─────────►│ completed  │─────►│ expired │
+  └────────┘              └─────┬──────┘           └───────────┘      └─────────┘
+                                │ error
+                           ┌────▼───┐
+                           │ failed │
+                           └────────┘
+```
+
+| From | To | Trigger | Actor | Guard | Side Effects |
+|---|---|---|---|---|---|
+| queued | processing | Job starts execution | System (`ExportOrganizationData` job) | — | — |
+| processing | completed | All files generated, ZIP created | System | ZIP file exists on disk | NT-013 (Export Ready email with download link) |
+| processing | failed | Exception during generation | System | — | Log error, notify requesting user |
+| completed | expired | 48 hours after completion | System (scheduled cleanup) | `completed_at + 48h < now` | Delete ZIP file from storage |
+| failed | queued | Manual retry | org_admin | Max 3 retries | Reset attempt counter |
+
+### SM-013: Outage Declaration Lifecycle
+
+```
+  ┌──────────┐  end outage  ┌──────────┐
+  │  active  │─────────────►│ resolved │
+  └──────────┘              └──────────┘
+```
+
+| From | To | Trigger | Actor | Guard | Side Effects |
+|---|---|---|---|---|---|
+| (none) | active | Declare outage | super_admin | `access command center` permission | NT-016 (banner to all orgs), suppress all offline alerts (BR-080) |
+| active | resolved | End outage | super_admin | `access command center` permission | NT-017 (resume notification + missed alert summary), resume monitoring (BR-081) |
+| resolved | — | TERMINAL | — | — | — |
+
+**Notes:**
+- Only one outage can be active at a time (enforced by unique constraint on `status='active'`).
+- `declared_at`, `declared_by`, `resolved_at`, `resolved_by`, `reason` (text), `affected_services` (JSON).
+
+### SM-004 Extension: Device `replaced` State
+
+```
+  ┌─────────┐  provisioned   ┌────────┐  no readings >15min  ┌─────────┐
+  │ pending │───────────────►│ active  │◄───────────────────►│ offline │
+  └─────────┘                └───┬────┘  new reading arrives  └────┬────┘
+                                 │                                 │
+                          replace│                          replace │
+                                 ▼                                 ▼
+                            ┌──────────┐
+                            │ replaced  │  ← TERMINAL (new)
+                            └──────────┘
+```
+
+| From | To | Trigger | Actor | Guard | Side Effects |
+|---|---|---|---|---|---|
+| active | replaced | Device replacement | technician, site_manager, org_admin | `manage devices` permission, new_dev_eui provided | Transfer config (BR-059), set replaced_at/replaced_by_device_id (BR-060), log activity (BR-063) |
+| offline | replaced | Device replacement | technician, site_manager, org_admin | Same as above | Same as above |
+| replaced | — | TERMINAL | — | — | Readings preserved, device hidden from active views |
+
+---
+
+## 3. Permission Matrix — Phase 10 (PM-004)
+
+### PM-004: Phase 10 Entity-Level Access Control
+
+| Action | Entity | super_admin | org_admin | site_manager | site_viewer | technician | Scope |
+|---|---|:---:|:---:|:---:|:---:|:---:|---|
+| **Log corrective action** | CorrectiveAction | ✅ | ✅ | ✅ | ✅ | ✅ | Site |
+| **Verify corrective action** | CorrectiveAction | ✅ | ✅ | ✅ | | | Site (different user than logger, BR-057) |
+| **Replace device** | Device | ✅ | ✅ | ✅ | | ✅ | Site (`manage devices` or `complete work orders`) |
+| **Trigger data export** | DataExport | ✅ | ✅ | | | | Org (`manage org settings`) |
+| **View alert analytics** | AlertAnalytics | ✅ | ✅ | ✅ | | | Org/Site |
+| **Configure report schedules** | ReportSchedule | ✅ | ✅ | | | | Org (`manage org settings`) |
+| **CRUD maintenance windows** | MaintenanceWindow | ✅ | ✅ | ✅ | | | Site (`manage sites`) |
+| **Declare/end outage** | OutageDeclaration | ✅ | | | | | Global (`access command center`) |
+| **Create/manage site templates** | SiteTemplate | ✅ | ✅ | | | | Org (`manage org settings`) |
+| **Use site template (onboarding)** | SiteTemplate | ✅ | ✅ | ✅ | | | Org (`onboard sites`) |
+| **View health check** | HealthCheck | ✅ | | | | | Global (`access command center`) |
+| **View delivery monitoring** | AlertDeliveryMonitoring | ✅ | | | | | Global (`access command center`) |
+| **View dashboard action cards** | DashboardActionCards | ✅ | ✅ | ✅ | ✅ | ✅ | Site (filtered by role permissions) |
+
+### New Permissions Required
+
+| Permission | Description | Assigned To |
+|---|---|---|
+| `log corrective actions` | Log corrective actions on alerts | super_admin, org_admin, site_manager, site_viewer, technician |
+| `verify corrective actions` | Verify another user's corrective action | super_admin, org_admin, site_manager |
+| `manage report schedules` | Configure automated report delivery | super_admin, org_admin |
+| `manage maintenance windows` | CRUD maintenance windows per site/zone | super_admin, org_admin, site_manager |
+| `manage site templates` | Create and manage site configuration templates | super_admin, org_admin |
+| `export organization data` | Trigger LFPDPPP data export | super_admin, org_admin |
+| `view alert analytics` | View alert tuning dashboard | super_admin, org_admin, site_manager |
+
+**Note:** `access command center` (existing) gates: outage declaration, health check, delivery monitoring.
+**Note:** `manage devices` (existing) gates: device replacement flow.
+
+---
+
+## 4. Notification & Communication Map — Phase 10 (NT-012 → NT-020)
+
+### NT-012: Corrective Action Reminder
+
+| Field | Value |
+|---|---|
+| Event | Critical/high alert excursion with no corrective action logged after 2 hours |
+| Trigger | `SendCorrectiveActionReminder` job (runs hourly, checks unresolved excursions) |
+| Recipients | Site users with `log corrective actions` permission |
+| Channels | Push + In-app |
+| Timing | 2 hours after excursion, repeat every 4 hours until logged |
+| Content | "Alert [name] at [site] requires corrective action for compliance — [X] hours since excursion" |
+| Workflows | WF-013 |
+| Status | NOT IMPLEMENTED |
+
+### NT-013: Data Export Ready
+
+| Field | Value |
+|---|---|
+| Event | Organization data export ZIP completed |
+| Trigger | `ExportOrganizationData` job completion |
+| Recipients | Requesting org_admin |
+| Channels | Email + In-app (database) |
+| Timing | Immediate upon completion |
+| Content | Download link (48h expiry), file size, record counts per category |
+| Workflows | WF-015 |
+| Status | PARTIAL (ExportReadyNotification class exists, job does not) |
+
+### NT-014: Scheduled Report Delivery
+
+| Field | Value |
+|---|---|
+| Event | Scheduled report time reached |
+| Trigger | `SendScheduledReports` job (runs daily, checks all active schedules) |
+| Recipients | `recipients_json` from ReportSchedule record |
+| Channels | Email (attached PDF) |
+| Timing | Per schedule: daily, weekly (day_of_week), monthly (1st) at configured time |
+| Content | Report PDF (temperature_compliance, energy_summary, alert_summary, or executive_overview) |
+| Workflows | WF-017 |
+| Status | NOT IMPLEMENTED |
+
+### NT-015: Outage Declared
+
+| Field | Value |
+|---|---|
+| Event | super_admin declares upstream outage |
+| Trigger | `OutageDeclarationService::declare()` |
+| Recipients | All org_admins |
+| Channels | Email + In-app + Reverb broadcast (banner) |
+| Timing | Immediate |
+| Content | "Platform experiencing upstream issues — monitoring temporarily degraded. Declared by [user] at [time]. Reason: [reason]" |
+| Workflows | WF-020 |
+| Status | NOT IMPLEMENTED |
+
+### NT-016: Outage Resolved
+
+| Field | Value |
+|---|---|
+| Event | super_admin ends outage |
+| Trigger | `OutageDeclarationService::resolve()` |
+| Recipients | All org_admins |
+| Channels | Email + In-app + Reverb broadcast (banner removal) |
+| Timing | Immediate |
+| Content | "Platform monitoring restored. Outage duration: [X hours]. [N] alerts were suppressed during outage — review recommended." |
+| Workflows | WF-020 |
+| Status | NOT IMPLEMENTED |
+
+### NT-017: Mass Offline / Site-Level Alert
+
+| Field | Value |
+|---|---|
+| Event | >50% devices at site offline within 5 minutes OR gateway offline |
+| Trigger | `MassOfflineDetector` (called from `CheckDeviceHealth`) |
+| Recipients | Site escalation chain (level 1) |
+| Channels | Push + WhatsApp + Email |
+| Timing | Immediate |
+| Content | "Possible power outage or gateway failure at [site] — [N] of [M] devices offline. Gateway status: [online/offline]" |
+| Workflows | WF-019 |
+| Status | NOT IMPLEMENTED |
+
+### NT-018: Zero Readings Platform Alert
+
+| Field | Value |
+|---|---|
+| Event | No sensor readings received platform-wide in 10 minutes |
+| Trigger | `DetectPlatformOutage` job (runs every 5 minutes) |
+| Recipients | All super_admin users |
+| Channels | Email + Push + SMS (if configured) |
+| Timing | Immediate |
+| Content | "No sensor data received platform-wide in [X] minutes — possible MQTT/ChirpStack outage. Last reading at [timestamp]." |
+| Workflows | WF-025 |
+| Status | NOT IMPLEMENTED |
+
+### NT-019: Sensor Anomaly Alert
+
+| Field | Value |
+|---|---|
+| Event | Device sends 5+ invalid readings in 1 hour |
+| Trigger | `SanityCheckService::checkAnomalyThreshold()` |
+| Recipients | Site technicians + site_manager |
+| Channels | Push + In-app |
+| Timing | Immediate (once per hour per device, cooldown) |
+| Content | "Sensor [name] sending invalid data ([N] invalid readings in last hour) — possible hardware failure. Last invalid value: [value] (valid range: [min]-[max])" |
+| Workflows | WF-002 |
+| Status | NOT IMPLEMENTED |
+
+### NT-020: Health Check Failure
+
+| Field | Value |
+|---|---|
+| Event | `/health` endpoint returns non-200 |
+| Trigger | External monitoring service (Pingdom / Better Uptime) |
+| Recipients | Astrea engineering team (external — not in-app) |
+| Channels | External (webhook from monitoring service → Slack/PagerDuty) |
+| Timing | Per monitoring service config (typically 1-5 min intervals) |
+| Content | "Health check failed: [component] — DB: [ok/fail], Redis: [ok/fail], Queue: [depth], Last MQTT: [timestamp]" |
+| Workflows | WF-023 |
+| Status | NOT IMPLEMENTED |
+
+---
+
+## 5. Validation Catalog — Phase 10 (VL-011 → VL-018)
+
+### VL-011: Corrective Action
+
+| Field | Type | Required | Rules | Error Message |
+|---|---|---|---|---|
+| alert_id | FK | ✅ | exists:alerts,id; alert must have severity critical or high | Invalid alert |
+| action_taken | text | ✅ | max:2000, min:10 | Describe the corrective action taken (min 10 characters) |
+| notes | text | ❌ | max:1000, nullable | — |
+
+**System-managed:** taken_by (auth user), taken_at (now), verified_by (nullable), verified_at (nullable), status (logged/verified).
+
+### VL-012: Maintenance Window
+
+| Field | Type | Required | Rules | Error Message |
+|---|---|---|---|---|
+| site_id | FK | ✅ | exists:sites,id, user must have site access | Invalid site |
+| zone | string | ❌ | max:255, nullable (null = entire site) | — |
+| title | string | ✅ | max:255 | Required |
+| recurrence_rule | string | ✅ | valid RRULE or `once` | Invalid recurrence |
+| start_time | time | ✅ | format:H:i | Invalid time format |
+| duration_minutes | integer | ✅ | min:15, max:480 (8 hours) | Duration must be 15-480 minutes |
+| suppress_alerts | boolean | ✅ | default:true | — |
+
+**Cross-Field Rules:**
+
+| Rule | Fields | Condition |
+|---|---|---|
+| No overlapping windows | site_id, zone, start_time, duration_minutes | Cannot overlap with existing window for same site+zone |
+
+### VL-013: Report Schedule
+
+| Field | Type | Required | Rules | Error Message |
+|---|---|---|---|---|
+| site_id | FK | ❌ | exists:sites,id, nullable (null = org-wide) | Invalid site |
+| type | enum | ✅ | in:temperature_compliance,energy_summary,alert_summary,executive_overview | Invalid report type |
+| frequency | enum | ✅ | in:daily,weekly,monthly | Invalid frequency |
+| day_of_week | integer | Required if weekly | 0-6 (Sunday=0) | Invalid day |
+| time | time | ✅ | format:H:i | Invalid time |
+| recipients_json | JSON | ✅ | array of valid email addresses, min:1, max:10 | At least one recipient required |
+| active | boolean | ❌ | default:true | — |
+
+### VL-014: Site Template
+
+| Field | Type | Required | Rules | Error Message |
+|---|---|---|---|---|
+| name | string | ✅ | max:255, unique per org | Template name already exists |
+| description | text | ❌ | max:1000, nullable | — |
+| modules | JSON | ✅ | array of valid module slugs | Invalid modules |
+| zone_config | JSON | ❌ | array of {name, type}, nullable | Invalid zone config |
+| recipe_assignments | JSON | ❌ | array of {zone, recipe_id}, each recipe_id exists:recipes,id, nullable | Invalid recipe |
+| escalation_structure | JSON | ❌ | valid escalation chain structure (levels array), nullable | Invalid escalation structure |
+
+### VL-015: Data Export Request
+
+| Field | Type | Required | Rules | Error Message |
+|---|---|---|---|---|
+| format | enum | ❌ | in:zip (only ZIP supported currently), default:zip | Invalid format |
+| date_from | date | ❌ | format:Y-m-d, before:date_to, nullable (default: org created_at) | Invalid date |
+| date_to | date | ❌ | format:Y-m-d, after:date_from, nullable (default: today) | Invalid date |
+
+**Cross-Field Rules:**
+
+| Rule | Fields | Condition |
+|---|---|---|
+| Rate limit | org_id | Max 1 active export per org at a time |
+| Date range cap | date_from, date_to | Max 24 months of data per export |
+
+### VL-016: Device Replacement
+
+| Field | Type | Required | Rules | Error Message |
+|---|---|---|---|---|
+| new_dev_eui | string | ✅ | max:16, unique across all devices, different from current | DevEUI already registered |
+| new_app_key | string | ✅ | max:32 | Required for OTAA provisioning |
+| new_model | string | ❌ | in:EM300-TH,CT101,WS301,AM307,VS121,EM300-MCS,WS202, nullable (defaults to old device model) | Invalid sensor model |
+
+**Cross-Field Rules:**
+
+| Rule | Fields | Condition |
+|---|---|---|
+| Old device must be active or offline | old device status | Cannot replace a device that is `pending` or already `replaced` |
+| Model compatibility | new_model, old device recipe | If new_model differs, recipe compatibility checked (sensor_model match) |
+
+### VL-017: Outage Declaration
+
+| Field | Type | Required | Rules | Error Message |
+|---|---|---|---|---|
+| reason | text | ✅ | max:500, min:5 | Describe the outage reason |
+| affected_services | JSON | ✅ | array of strings in:chirpstack,twilio,mqtt,redis,database,other | Select affected services |
+
+### VL-018: Sensor Valid Ranges (Configuration)
+
+| Model | Metric | Min | Max | Unit |
+|---|---|---|---|---|
+| EM300-TH | temperature | -40 | 85 | °C |
+| EM300-TH | humidity | 0 | 100 | % |
+| EM300-MCS | temperature | -40 | 85 | °C |
+| CT101 | current | 0 | 100 | A |
+| WS301 | door_status | 0 | 1 | binary |
+| AM307 | co2 | 0 | 5000 | ppm |
+| AM307 | pm2_5 | 0 | 1000 | μg/m³ |
+| AM307 | humidity | 0 | 100 | % |
+| AM307 | temperature | -20 | 60 | °C |
+| VS121 | people_count | 0 | 500 | count |
+| WS202 | temperature | -40 | 85 | °C |
+
+**Enforcement:** `SanityCheckService::VALID_RANGES` constant (or config file). Applied in `ProcessSensorReading` BEFORE `ReadingStorageService::store()`.
+
+---
+
+## 6. Integration Map — Phase 10 (INT-009)
+
+| ID | Service | Purpose | Direction | Auth | Failure Mode | Timeout | Workflows |
+|---|---|---|---|---|---|---|---|
+| INT-009 | Uptime Monitoring (Pingdom / Better Uptime / UptimeRobot) | Platform health monitoring via `/health` endpoint | Inbound (polling) | None (public endpoint) or API key | External service alerts Astrea team via Slack/PagerDuty | N/A (external polls us) | WF-023 |
+
+### INT-009 Details
+
+| Field | Value |
+|---|---|
+| Endpoint | `GET /health` (public, no auth required) |
+| Response format | JSON: `{status: "ok"/"degraded"/"down", checks: {db: bool, redis: bool, queue_depth: int, last_mqtt_reading_at: iso8601, horizon: string}}` |
+| HTTP status | 200 if all checks pass, 503 if any critical check fails |
+| Rate limit | No rate limit (monitoring services poll every 1-5 minutes) |
+| Sandbox | Same endpoint in all environments |
+
+---
+
+## Cross-Reference Index — Phase 10 Workflows
+
+### Phase 10 Workflow → Spec Mapping
+
+| Workflow | Business Rules | State Machines | Permissions | Notifications |
+|---|---|---|---|---|
+| WF-013 Corrective Action | BR-055, BR-056, BR-057, BR-058 | SM-011 (CorrectiveAction) | PM-004: log/verify corrective actions | NT-012 (Reminder) |
+| WF-014 Device Replacement | BR-059, BR-060, BR-061, BR-062, BR-063 | SM-004 ext (replaced state) | PM-004: replace device (`manage devices`) | — |
+| WF-015 Data Export & Offboarding | BR-064, BR-065, BR-066, BR-085 | SM-012 (DataExport) | PM-004: export org data | NT-013 (Export Ready) |
+| WF-016 Alert Analytics & Tuning | BR-067, BR-068 | — | PM-004: view alert analytics | — |
+| WF-017 Scheduled Report Delivery | BR-069, BR-070, BR-071, BR-072 | — | PM-004: manage report schedules | NT-014 (Report Delivery) |
+| WF-018 Maintenance Windows | BR-073, BR-074, BR-075, BR-076 | — | PM-004: manage maintenance windows | — |
+| WF-019 Mass Offline Detection | BR-077, BR-078, BR-079 | SM-004 (Device), SM-009 (Gateway) | — (system) | NT-017 (Mass Offline) |
+| WF-020 Upstream Outage Declaration | BR-080, BR-081, BR-082 | SM-013 (Outage) | PM-004: access command center | NT-015 (Declared), NT-016 (Resolved) |
+| WF-021 LFPDPPP Consent | BR-083, BR-084, BR-085 | — | — (all users) | — |
+| WF-022 Site Template Cloning | BR-089, BR-090, BR-091 | — | PM-004: manage/use site templates | — |
+| WF-023 Health Check | BR-092, BR-093 | — | PM-004: access command center | NT-020 (External) |
+| WF-024 Alert Delivery Monitoring | BR-094, BR-095 | SM-010 (Notification) | PM-004: access command center | — |
+| WF-025 Zero Readings Detection | BR-097, BR-098 | — | — (system) | NT-018 (Platform Alert) |
+| WF-026 Dashboard Action Cards | BR-099, BR-100 | — | — (role-gated per BR-100) | — |
+
+### Phase 10 Rules Modifying Existing Workflows
+
+| Existing Workflow | Phase 10 Rules Added | Impact |
+|---|---|---|
+| WF-002 Sensor Data Pipeline | BR-086, BR-087, BR-088, BR-096 | Sanity checks + dedup BEFORE storage |
+| WF-001 Client Onboarding | BR-072, BR-090, BR-091 | Default report schedule + template support |
+| WF-003 Alert Lifecycle | BR-073, BR-076, BR-077, BR-080 | Alert suppression during maintenance/outage/mass-offline |
+| WF-004 Device Health | BR-077, BR-078, BR-079 | Mass offline grouping replaces individual alerts |
+| WF-006 Morning Summaries | BR-058 | Include corrective actions in compliance reports |
+
+### Phase 10 ID Summary
+
+| Category | New IDs | Range | Count |
+|---|---|---|---|
+| Business Rules | BR-055 → BR-100 | 46 new rules | 46 |
+| State Machines | SM-011 → SM-013 + SM-004 ext | 3 new + 1 extension | 4 |
+| Permission Matrix | PM-004 | 1 new matrix, 7 new permissions | 7 perms |
+| Notifications | NT-012 → NT-020 | 9 new notifications | 9 |
+| Validations | VL-011 → VL-018 | 8 new schemas | 8 |
+| Integrations | INT-009 | 1 new integration | 1 |
+| Workflows | WF-013 → WF-026 | 14 new workflows | 14 |
+| **Total new IDs** | | | **89** |

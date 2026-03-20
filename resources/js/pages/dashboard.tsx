@@ -8,7 +8,7 @@ import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, Cpu, LayoutGrid, Map, MapPin, Signal, Wrench } from 'lucide-react';
+import { AlertTriangle, BatteryLow, Clock, Cpu, LayoutGrid, Map, MapPin, Signal, Wrench } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 declare global {
@@ -35,9 +35,16 @@ interface DashboardKPIs {
     open_work_orders: number;
 }
 
+interface ActionCards {
+    unacknowledged_alerts: number;
+    overdue_work_orders: number;
+    critical_battery: number;
+}
+
 interface Props {
     kpis: DashboardKPIs;
     siteStats: SiteStat[];
+    actionCards: ActionCards;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -50,7 +57,7 @@ const statusColors: Record<string, string> = {
     inactive: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
 };
 
-export default function Dashboard({ kpis, siteStats }: Props) {
+export default function Dashboard({ kpis, siteStats, actionCards }: Props) {
     const { t } = useLang();
     const { current_organization } = usePage<SharedData>().props;
     const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
@@ -132,6 +139,54 @@ export default function Dashboard({ kpis, siteStats }: Props) {
                             </div>
                         </CardContent>
                     </Card>
+                )}
+
+                {/* Needs Attention — action cards (BR-099, BR-100) */}
+                {(actionCards.unacknowledged_alerts > 0 || actionCards.overdue_work_orders > 0 || actionCards.critical_battery > 0) && (
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        {actionCards.unacknowledged_alerts > 0 && (
+                            <Card
+                                className="cursor-pointer border-red-200 transition-colors hover:border-red-300 dark:border-red-900/50 dark:hover:border-red-800"
+                                onClick={() => router.get('/alerts?status=active')}
+                            >
+                                <CardContent className="flex items-center gap-3 p-4">
+                                    <AlertTriangle className="h-5 w-5 shrink-0 text-red-500" />
+                                    <p className="text-sm font-medium">
+                                        <span className="tabular-nums">{actionCards.unacknowledged_alerts}</span>{' '}
+                                        {t('alerts need acknowledgment')}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        )}
+                        {actionCards.overdue_work_orders > 0 && (
+                            <Card
+                                className="cursor-pointer border-amber-200 transition-colors hover:border-amber-300 dark:border-amber-900/50 dark:hover:border-amber-800"
+                                onClick={() => router.get('/work-orders?status=overdue')}
+                            >
+                                <CardContent className="flex items-center gap-3 p-4">
+                                    <Clock className="h-5 w-5 shrink-0 text-amber-500" />
+                                    <p className="text-sm font-medium">
+                                        <span className="tabular-nums">{actionCards.overdue_work_orders}</span>{' '}
+                                        {t('work orders overdue')}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        )}
+                        {actionCards.critical_battery > 0 && (
+                            <Card
+                                className="cursor-pointer border-amber-200 transition-colors hover:border-amber-300 dark:border-amber-900/50 dark:hover:border-amber-800"
+                                onClick={() => router.get('/settings/devices?battery=critical')}
+                            >
+                                <CardContent className="flex items-center gap-3 p-4">
+                                    <BatteryLow className="h-5 w-5 shrink-0 text-amber-500" />
+                                    <p className="text-sm font-medium">
+                                        <span className="tabular-nums">{actionCards.critical_battery}</span>{' '}
+                                        {t('sensors battery critical')}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
                 )}
 
                 {/* Sites: Grid or Map */}

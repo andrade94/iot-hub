@@ -17,18 +17,23 @@ class ReadingStorageService
     {
         $now = now();
 
+        // Build records and insert, silently skipping duplicates (BR-096)
+        $records = [];
         foreach ($readings as $metric => $data) {
-            SensorReading::create([
+            $records[] = [
                 'time' => $now,
                 'device_id' => $device->id,
                 'metric' => $metric,
                 'value' => $data['value'],
                 'unit' => $data['unit'] ?? null,
-            ]);
+                'created_at' => $now,
+            ];
 
             // Update Redis latest reading cache
             $this->updateLatestCache($device->id, $metric, $data['value'], $data['unit'] ?? '', $now->toIso8601String());
         }
+
+        SensorReading::insertOrIgnore($records);
 
         // Update device fields
         $updateData = ['last_reading_at' => $now];

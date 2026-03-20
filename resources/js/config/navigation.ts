@@ -24,6 +24,7 @@ import {
     Shield,
     User,
     Users,
+    Wrench,
 } from 'lucide-react';
 
 /**
@@ -51,6 +52,13 @@ export const navigation: NavGroup[] = [
                 icon: Activity,
                 tooltip: 'View activity log',
                 requiredPermission: 'view activity log',
+            },
+            {
+                title: 'Alert Tuning',
+                href: '/analytics/alerts',
+                icon: BarChart3,
+                tooltip: 'Alert analytics & tuning',
+                requiredPermission: 'view alert analytics',
             },
         ],
     },
@@ -168,6 +176,13 @@ export const navigation: NavGroup[] = [
                 icon: CalendarCheck,
                 tooltip: 'Compliance calendar',
                 requiredPermission: 'manage org settings',
+            },
+            {
+                title: 'Maintenance Windows',
+                href: '/settings/maintenance-windows',
+                icon: Wrench,
+                tooltip: 'Schedule maintenance windows',
+                requiredPermission: 'manage maintenance windows',
             },
             {
                 title: 'Users',

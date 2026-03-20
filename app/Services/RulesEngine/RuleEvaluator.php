@@ -5,6 +5,8 @@ namespace App\Services\RulesEngine;
 use App\Models\Alert;
 use App\Models\AlertRule;
 use App\Models\Device;
+use App\Models\MaintenanceWindow;
+use App\Models\OutageDeclaration;
 use App\Services\Alerts\AlertRouter;
 use App\Services\RulesEngine\DefrostDetector;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +26,11 @@ class RuleEvaluator
      */
     public function evaluate(Device $device, array $readings): void
     {
+        // Upstream outage suppression (BR-080): suppress ALL alert evaluation platform-wide
+        if (OutageDeclaration::isActive()) {
+            return;
+        }
+
         $rules = AlertRule::active()
             ->where(function ($q) use ($device) {
                 $q->where('site_id', $device->site_id)
@@ -44,6 +51,11 @@ class RuleEvaluator
      */
     protected function evaluateRule(AlertRule $rule, Device $device, array $readings): void
     {
+        // Maintenance window suppression (BR-073): skip evaluation during scheduled downtime
+        if (MaintenanceWindow::isActiveForZone($device->site_id, $device->zone, $device->site?->timezone)) {
+            return;
+        }
+
         $conditions = $rule->conditions;
         if (! is_array($conditions) || empty($conditions)) {
             return;

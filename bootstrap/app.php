@@ -40,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'org.scope' => EnsureOrganizationScope::class,
             'site.access' => EnsureSiteAccess::class,
             'module.active' => EnsureModuleActive::class,
+            'privacy' => \App\Http\Middleware\EnsurePrivacyConsent::class,
         ]);
     })
     ->withSchedule(function (Schedule $schedule) {
@@ -74,6 +75,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Check device health (every 5 minutes)
         $schedule->job(new \App\Jobs\CheckDeviceHealth)->everyFiveMinutes();
+
+        // Detect platform-wide outage — zero readings (every 5 minutes)
+        $schedule->job(new \App\Jobs\DetectPlatformOutage)->everyFiveMinutes();
+
+        // Send scheduled reports (daily at 6:00 AM)
+        $schedule->job(new \App\Jobs\SendScheduledReports)->dailyAt('06:00');
 
         // Morning summaries (runs every minute, timezone-aware)
         $schedule->job(new \App\Jobs\SendMorningSummary)->everyMinute();

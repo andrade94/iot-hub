@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Device;
 use App\Models\Site;
+use App\Services\Devices\DeviceReplacementService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -99,5 +100,25 @@ class DeviceController extends Controller
         $device->delete();
 
         return back()->with('success', 'Device removed successfully.');
+    }
+
+    /**
+     * Replace a device with a new one — transfers config, marks old as replaced (BR-059-063).
+     */
+    public function replace(Request $request, Site $site, Device $device, DeviceReplacementService $service)
+    {
+        $this->authorize('update', $device);
+
+        abort_unless(in_array($device->status, ['active', 'offline']), 422, 'Only active or offline devices can be replaced.');
+
+        $validated = $request->validate([
+            'new_dev_eui' => 'required|string|max:16|unique:devices,dev_eui',
+            'new_app_key' => 'required|string|max:32',
+            'new_model' => 'nullable|string|in:EM300-TH,CT101,WS301,AM307,VS121,EM300-MCS,WS202',
+        ]);
+
+        $service->replace($device, $validated);
+
+        return back()->with('success', 'Device replaced. New device pending activation.');
     }
 }

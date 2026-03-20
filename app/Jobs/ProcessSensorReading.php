@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Device;
 use App\Services\Decoders\DecoderFactory;
 use App\Services\Readings\ReadingStorageService;
+use App\Services\Readings\SanityCheckService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,7 @@ class ProcessSensorReading implements ShouldQueue
         public ?int $rssi = null,
     ) {}
 
-    public function handle(DecoderFactory $decoderFactory, ReadingStorageService $storageService): void
+    public function handle(DecoderFactory $decoderFactory, ReadingStorageService $storageService, SanityCheckService $sanityService): void
     {
         $device = Device::find($this->deviceId);
 
@@ -48,6 +49,18 @@ class ProcessSensorReading implements ShouldQueue
 
         if (empty($readings)) {
             Log::warning('ProcessSensorReading: empty readings', [
+                'device_id' => $this->deviceId,
+                'model' => $device->model,
+            ]);
+
+            return;
+        }
+
+        // Sanity check: filter out physically impossible values (BR-086, BR-087, BR-088)
+        $readings = $sanityService->validate($device, $readings);
+
+        if (empty($readings)) {
+            Log::info('ProcessSensorReading: all readings failed sanity check', [
                 'device_id' => $this->deviceId,
                 'model' => $device->model,
             ]);

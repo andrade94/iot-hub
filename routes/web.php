@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AlertAnalyticsController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\AlertRuleController;
 use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CommandCenterController;
 use App\Http\Controllers\ComplianceCalendarController;
+use App\Http\Controllers\CorrectiveActionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\DeviceDetailController;
@@ -26,11 +28,19 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SiteDetailController;
 use App\Http\Controllers\SiteOnboardingController;
 use App\Http\Controllers\SiteSettingsController;
+use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\DataExportController;
+use App\Http\Controllers\MaintenanceWindowController;
+use App\Http\Controllers\ReportScheduleController;
+use App\Http\Controllers\SiteTemplateController;
 use App\Http\Controllers\WorkOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+
+// Health check (public, no auth — for external monitoring)
+Route::get('/health', HealthCheckController::class)->name('health');
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -41,7 +51,22 @@ Route::get('/', function () {
 // Locale switching
 Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
-Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
+// Privacy consent (Phase 10 — LFPDPPP compliance)
+Route::middleware('auth')->group(function () {
+    Route::get('/privacy/accept', fn () => Inertia::render('privacy/accept', [
+        'version' => config('app.privacy_policy_version', '1.0'),
+    ]))->name('privacy.show');
+    Route::post('/privacy/accept', function (\Illuminate\Http\Request $request) {
+        $request->user()->update([
+            'privacy_accepted_at' => now(),
+            'privacy_policy_version' => config('app.privacy_policy_version', '1.0'),
+        ]);
+
+        return redirect()->intended('/dashboard');
+    })->name('privacy.accept');
+});
+
+Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     // Site context switching
@@ -125,6 +150,7 @@ Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
         Route::get('sites/{site}/devices/{device}', [DeviceController::class, 'show'])->name('devices.show');
         Route::put('sites/{site}/devices/{device}', [DeviceController::class, 'update'])->name('devices.update')->middleware('permission:manage devices');
         Route::delete('sites/{site}/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy')->middleware('permission:manage devices');
+        Route::post('sites/{site}/devices/{device}/replace', [DeviceController::class, 'replace'])->name('devices.replace')->middleware('permission:manage devices');
     });
 
     // Floor plan management
@@ -182,6 +208,45 @@ Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
     Route::post('alerts/{alert}/resolve', [AlertController::class, 'resolve'])->name('alerts.resolve');
     Route::post('alerts/{alert}/dismiss', [AlertController::class, 'dismiss'])->name('alerts.dismiss');
 
+    // Corrective Actions (Phase 10)
+    Route::post('alerts/{alert}/corrective-actions', [CorrectiveActionController::class, 'store'])
+        ->name('corrective-actions.store');
+    Route::post('alerts/{alert}/corrective-actions/{correctiveAction}/verify', [CorrectiveActionController::class, 'verify'])
+        ->name('corrective-actions.verify');
+
+    // Alert Analytics (Phase 10)
+    Route::get('analytics/alerts', AlertAnalyticsController::class)->name('analytics.alerts');
+
+    // Maintenance Windows (Phase 10)
+    Route::prefix('settings/maintenance-windows')->name('maintenance-windows.')->group(function () {
+        Route::get('/', [MaintenanceWindowController::class, 'index'])->name('index');
+        Route::post('/', [MaintenanceWindowController::class, 'store'])->name('store');
+        Route::put('{maintenanceWindow}', [MaintenanceWindowController::class, 'update'])->name('update');
+        Route::delete('{maintenanceWindow}', [MaintenanceWindowController::class, 'destroy'])->name('destroy');
+    });
+
+    // Data Export (Phase 10)
+    Route::prefix('settings/export-data')->name('export-data.')->group(function () {
+        Route::get('/', [DataExportController::class, 'index'])->name('index');
+        Route::post('/', [DataExportController::class, 'store'])->name('store');
+    });
+
+    // Site Templates (Phase 10)
+    Route::prefix('settings/site-templates')->name('site-templates.')->group(function () {
+        Route::get('/', [SiteTemplateController::class, 'index'])->name('index');
+        Route::post('/', [SiteTemplateController::class, 'store'])->name('store');
+        Route::delete('{siteTemplate}', [SiteTemplateController::class, 'destroy'])->name('destroy');
+        Route::post('{siteTemplate}/apply', [SiteTemplateController::class, 'apply'])->name('apply');
+    });
+
+    // Report Schedules (Phase 10)
+    Route::prefix('settings/report-schedules')->name('report-schedules.')->group(function () {
+        Route::get('/', [ReportScheduleController::class, 'index'])->name('index');
+        Route::post('/', [ReportScheduleController::class, 'store'])->name('store');
+        Route::put('{reportSchedule}', [ReportScheduleController::class, 'update'])->name('update');
+        Route::delete('{reportSchedule}', [ReportScheduleController::class, 'destroy'])->name('destroy');
+    });
+
     // Alert rules (per site)
     Route::middleware(['site.access', 'permission:manage alert rules'])->group(function () {
         Route::get('sites/{site}/rules', [AlertRuleController::class, 'index'])->name('rules.index');
@@ -220,6 +285,8 @@ Route::middleware(['auth', 'verified', 'org.scope'])->group(function () {
         Route::get('/devices', [CommandCenterController::class, 'devices'])->name('devices');
         Route::get('/revenue', [CommandCenterController::class, 'revenue'])->name('revenue');
         Route::get('/dispatch', [CommandCenterController::class, 'dispatch'])->name('dispatch');
+        Route::post('/outage', [CommandCenterController::class, 'declareOutage'])->name('outage.declare');
+        Route::delete('/outage', [CommandCenterController::class, 'resolveOutage'])->name('outage.resolve');
         Route::get('/{organization}', [CommandCenterController::class, 'show'])->name('show');
     });
 

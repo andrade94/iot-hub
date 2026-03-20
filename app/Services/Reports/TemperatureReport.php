@@ -2,6 +2,8 @@
 
 namespace App\Services\Reports;
 
+use App\Models\Alert;
+use App\Models\CorrectiveAction;
 use App\Models\Device;
 use App\Models\SensorReading;
 use App\Models\Site;
@@ -63,6 +65,28 @@ class TemperatureReport
                 $deviceData = $this->buildDeviceData($device, $readings);
                 $totalReadings += $deviceData['readings_count'];
                 $totalExcursions += count($deviceData['excursions']);
+
+                // Enrich excursions with corrective actions (BR-058)
+                if (! empty($deviceData['excursions'])) {
+                    $alertIds = Alert::where('device_id', $device->id)
+                        ->where('site_id', $site->id)
+                        ->whereIn('severity', ['critical', 'high'])
+                        ->whereBetween('triggered_at', [$from, $to])
+                        ->pluck('id');
+
+                    if ($alertIds->isNotEmpty()) {
+                        $actions = CorrectiveAction::whereIn('alert_id', $alertIds)
+                            ->with('takenByUser:id,name')
+                            ->get();
+
+                        $deviceData['corrective_actions'] = $actions->map(fn ($ca) => [
+                            'action_taken' => $ca->action_taken,
+                            'taken_by' => $ca->takenByUser?->name,
+                            'taken_at' => $ca->taken_at->toIso8601String(),
+                            'status' => $ca->status,
+                        ])->values()->toArray();
+                    }
+                }
 
                 $zoneData['devices'][] = $deviceData;
             }

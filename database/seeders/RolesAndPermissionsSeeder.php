@@ -47,6 +47,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'view activity log',
             // Command center
             'access command center',
+            // Corrective actions (Phase 10)
+            'log corrective actions',
+            'verify corrective actions',
+            // Maintenance, analytics, reports, templates, export (Phase 10)
+            'manage maintenance windows',
+            'view alert analytics',
+            'manage report schedules',
+            'manage site templates',
+            'export organization data',
         ];
 
         foreach ($permissions as $permission) {
@@ -76,6 +85,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'view reports', 'generate reports',
             'view work orders', 'manage work orders',
             'view activity log',
+            'log corrective actions', 'verify corrective actions',
+            'manage maintenance windows', 'view alert analytics',
         ]);
 
         // Site Viewer
@@ -85,6 +96,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view devices',
             'view alerts',
             'view reports',
+            'log corrective actions',
         ]);
 
         // Technician
@@ -94,6 +106,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view devices',
             'view alerts', 'acknowledge alerts',
             'view work orders', 'complete work orders',
+            'log corrective actions',
         ]);
 
         $this->command->info('IoT roles and permissions created successfully!');

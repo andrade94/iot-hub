@@ -1,16 +1,19 @@
 import { Can } from '@/components/Can';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
-import type { Alert, AlertNotificationRecord, BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import type { Alert, AlertNotificationRecord, BreadcrumbItem, CorrectiveAction, SharedData } from '@/types';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     ArrowLeft,
     Bell,
     CheckCircle2,
+    ClipboardCheck,
     Clock,
     Cpu,
     Eye,
@@ -18,9 +21,11 @@ import {
     MapPin,
     MessageSquare,
     Phone,
+    Plus,
     ShieldAlert,
     XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
 
 interface Props {
     alert: Alert & {
@@ -30,6 +35,7 @@ interface Props {
 
 export default function AlertShow({ alert }: Props) {
     const { t } = useLang();
+    const { auth } = usePage<SharedData>().props;
     const data = alert.data;
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -187,6 +193,11 @@ export default function AlertShow({ alert }: Props) {
                                     </div>
                                 </CardContent>
                             </Card>
+                        )}
+
+                        {/* Corrective Actions — only for critical/high alerts (Phase 10, WF-013) */}
+                        {['critical', 'high'].includes(alert.severity) && (
+                            <CorrectiveActionsSection alert={alert} currentUserId={auth.user.id} />
                         )}
                     </div>
 
@@ -414,4 +425,166 @@ function StatusBadge({ status }: { status: string }) {
         dismissed: 'outline',
     };
     return <Badge variant={variants[status] ?? 'outline'}>{status}</Badge>;
+}
+
+/* ── Corrective Actions Section (Phase 10) ───────── */
+
+function CorrectiveActionsSection({ alert, currentUserId }: { alert: Props['alert']; currentUserId: number }) {
+    const { t } = useLang();
+    const [showForm, setShowForm] = useState(false);
+
+    const caForm = useForm({ action_taken: '', notes: '' });
+
+    const actions = alert.corrective_actions ?? [];
+    const allVerified = actions.length > 0 && actions.every((ca) => ca.status === 'verified');
+
+    const submitAction = (e: React.FormEvent) => {
+        e.preventDefault();
+        caForm.post(`/alerts/${alert.id}/corrective-actions`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                caForm.reset();
+                setShowForm(false);
+            },
+        });
+    };
+
+    const verifyAction = (ca: CorrectiveAction) => {
+        router.post(`/alerts/${alert.id}/corrective-actions/${ca.id}/verify`, {}, { preserveScroll: true });
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                        <ClipboardCheck className="h-4 w-4" />
+                        {t('Corrective Actions')}
+                        {actions.length > 0 && (
+                            <Badge variant={allVerified ? 'success' : 'warning'} className="text-xs">
+                                {actions.length}
+                            </Badge>
+                        )}
+                    </CardTitle>
+                    {allVerified && actions.length > 0 && (
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            {t('All verified')} ✓
+                        </span>
+                    )}
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {/* Warning banner when no actions logged */}
+                {actions.length === 0 && (
+                    <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                        <div>
+                            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                                {t('Corrective action required')}
+                            </p>
+                            <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-300">
+                                {t('This excursion requires a corrective action for COFEPRIS compliance. Log what was done to address it.')}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Existing corrective actions */}
+                {actions.map((ca) => (
+                    <div key={ca.id} className="space-y-2 rounded-lg border p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <span className="font-medium text-foreground">{ca.taken_by_user?.name}</span>
+                                <span>·</span>
+                                <span>{formatTimeAgo(ca.taken_at)}</span>
+                            </div>
+                            <Badge variant={ca.status === 'verified' ? 'success' : 'warning'} className="text-xs">
+                                {ca.status === 'verified' ? t('Verified') + ' ✓' : t('Pending verification')}
+                            </Badge>
+                        </div>
+
+                        <p className="text-sm leading-relaxed">{ca.action_taken}</p>
+
+                        {ca.notes && (
+                            <p className="text-xs text-muted-foreground italic">{ca.notes}</p>
+                        )}
+
+                        {ca.status === 'verified' && ca.verified_by_user && (
+                            <p className="text-xs text-muted-foreground">
+                                {t('Verified by')} {ca.verified_by_user.name} · {formatTimeAgo(ca.verified_at!)}
+                            </p>
+                        )}
+
+                        {/* Verify button: only for logged actions, different user, with permission */}
+                        {ca.status === 'logged' && ca.taken_by !== currentUserId && (
+                            <Can permission="verify corrective actions">
+                                <Button size="sm" variant="outline" onClick={() => verifyAction(ca)} className="mt-1">
+                                    <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                                    {t('Verify')}
+                                </Button>
+                            </Can>
+                        )}
+                    </div>
+                ))}
+
+                {/* Log corrective action form */}
+                <Can permission="log corrective actions">
+                    {showForm ? (
+                        <form onSubmit={submitAction} className="space-y-3 rounded-lg border border-dashed p-4">
+                            <div>
+                                <Textarea
+                                    value={caForm.data.action_taken}
+                                    onChange={(e) => caForm.setData('action_taken', e.target.value)}
+                                    placeholder={t('Describe what was done to address this excursion...')}
+                                    rows={3}
+                                    className="resize-none"
+                                />
+                                <InputError message={caForm.errors.action_taken} className="mt-1" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button type="submit" size="sm" disabled={caForm.processing}>
+                                    {caForm.processing ? t('Saving...') : t('Submit')}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                        setShowForm(false);
+                                        caForm.reset();
+                                        caForm.clearErrors();
+                                    }}
+                                >
+                                    {t('Cancel')}
+                                </Button>
+                            </div>
+                        </form>
+                    ) : (
+                        <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
+                            <Plus className="mr-1.5 h-3.5 w-3.5" />
+                            {t('Log Corrective Action')}
+                        </Button>
+                    )}
+                </Can>
+            </CardContent>
+        </Card>
+    );
+}
+
+function formatTimeAgo(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+
+    if (diffMin < 1) return 'just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return date.toLocaleDateString();
 }

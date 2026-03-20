@@ -59,6 +59,12 @@ export interface SharedData {
     locale?: string;
     notifications: DatabaseNotification[];
     unreadNotificationsCount: number;
+    active_outage?: {
+        id: number;
+        reason: string;
+        affected_services: string[];
+        declared_at: string;
+    } | null;
     flash?: {
         success?: string;
         error?: string;
@@ -297,6 +303,22 @@ export interface Alert {
     device?: Device;
     resolved_by_user?: User;
     notifications?: AlertNotificationRecord[];
+    corrective_actions?: CorrectiveAction[];
+}
+
+export interface CorrectiveAction {
+    id: number;
+    alert_id: number;
+    site_id: number;
+    action_taken: string;
+    notes: string | null;
+    status: 'logged' | 'verified';
+    taken_by: number;
+    taken_at: string;
+    verified_by: number | null;
+    verified_at: string | null;
+    taken_by_user: User;
+    verified_by_user: User | null;
 }
 
 export interface AlertData {

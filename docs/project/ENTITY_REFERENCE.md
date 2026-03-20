@@ -43,6 +43,15 @@
   - [TrafficSnapshot](#trafficsnapshot)
 - [Compliance](#compliance)
   - [ComplianceEvent](#complianceevent)
+  - [CorrectiveAction](#correctiveaction)
+- [Data Quality](#data-quality)
+  - [DeviceAnomaly](#deviceanomaly)
+- [Operational](#operational)
+  - [MaintenanceWindow](#maintenancewindow)
+  - [OutageDeclaration](#outagedeclaration)
+  - [ReportSchedule](#reportschedule)
+  - [DataExport](#dataexport)
+  - [SiteTemplate](#sitetemplate)
 - [Integrations](#integrations)
   - [ApiKey](#apikey)
   - [WebhookSubscription](#webhooksubscription)
@@ -1123,6 +1132,264 @@ Logged fields: `status`, `cfdi_uuid`, `paid_at`, `payment_method`. Dirty-only, n
 | `scopeOverdue` | `status = 'overdue'` |
 | `scopeForSite` | `site_id = ?` |
 | `scopeForOrg` | `org_id = ?` |
+
+---
+
+### CorrectiveAction
+
+**Model**: `App\Models\CorrectiveAction`
+**Table**: `corrective_actions`
+**Migration**: `2026_03_20_000003_create_corrective_actions_table.php`
+**Traits**: `LogsActivity`
+**Added**: Phase 10 Sprint 1
+
+**Purpose**: Tracks corrective actions taken in response to temperature excursions or critical/high alerts. Required for COFEPRIS compliance (NOM-251). Two-state lifecycle: logged → verified (SM-011). Verification must be by a different user than who logged the action (BR-057).
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| alert_id | foreignId | no | -- | -- | FK -> alerts, cascade delete |
+| site_id | foreignId | no | -- | -- | FK -> sites, cascade delete |
+| action_taken | text | no | -- | -- | min:10, max:2000 |
+| notes | text | yes | -- | -- | max:1000 |
+| status | string | no | `'logged'` | -- | logged, verified (SM-011) |
+| taken_by | foreignId | no | -- | -- | FK -> users, cascade delete |
+| taken_at | timestamp | no | -- | `datetime` | |
+| verified_by | unsignedBigInteger | yes | -- | -- | FK -> users, null on delete |
+| verified_at | timestamp | yes | -- | `datetime` | |
+| created_at | timestamp | yes | -- | -- | |
+| updated_at | timestamp | yes | -- | -- | |
+
+#### Relations
+
+| Method | Type | Related Model | FK / Pivot |
+|--------|------|---------------|------------|
+| `alert()` | belongsTo | Alert | `alert_id` |
+| `site()` | belongsTo | Site | `site_id` |
+| `takenByUser()` | belongsTo | User | `taken_by` |
+| `verifiedByUser()` | belongsTo | User | `verified_by` |
+
+#### Methods
+
+| Method | Description |
+|--------|-------------|
+| `verify(int $userId)` | Transitions status logged→verified. Guards: must be different user, must be 'logged' status. |
+
+#### Scopes
+
+| Scope | Filter |
+|-------|--------|
+| `scopeForAlert` | `alert_id = ?` |
+| `scopePendingVerification` | `status = 'logged'` |
+
+---
+
+## Data Quality
+
+### DeviceAnomaly
+
+**Model**: `App\Models\DeviceAnomaly`
+**Table**: `device_anomalies`
+**Migration**: `2026_03_20_000002_create_device_anomalies_table.php`
+**Added**: Phase 10 Sprint 1
+
+**Purpose**: Logs sensor readings that fail sanity checks (physically impossible values outside manufacturer-rated ranges). Used by SanityCheckService to track anomalies and trigger hardware failure alerts after 5+ anomalies per device per hour (BR-088).
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| device_id | foreignId | no | -- | -- | FK -> devices, cascade delete |
+| metric | string | no | -- | -- | e.g., temperature, humidity, co2 |
+| value | double | no | -- | `float` | The invalid reading value |
+| valid_min | double | no | -- | `float` | Expected minimum for this model+metric |
+| valid_max | double | no | -- | `float` | Expected maximum for this model+metric |
+| unit | string | yes | -- | -- | °C, %, ppm, etc. |
+| recorded_at | timestamp | no | -- | `datetime` | When the invalid reading was received |
+| created_at | timestamp | yes | -- | `datetime` | |
+
+#### Relations
+
+| Method | Type | Related Model | FK / Pivot |
+|--------|------|---------------|------------|
+| `device()` | belongsTo | Device | `device_id` |
+
+---
+
+## Operational
+
+### MaintenanceWindow
+
+**Model**: `App\Models\MaintenanceWindow`
+**Table**: `maintenance_windows`
+**Migration**: `2026_03_20_100001_create_maintenance_windows_table.php`
+**Traits**: `LogsActivity`
+**Added**: Phase 10 Sprint 2
+
+**Purpose**: Scheduled downtime periods per site/zone that suppress alert evaluation during planned maintenance (BR-073). Supports recurrence patterns: once, daily, weekly, monthly. Used by RuleEvaluator to skip evaluation during active windows.
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| site_id | foreignId | no | -- | -- | FK -> sites, cascade delete |
+| zone | string | yes | -- | -- | null = entire site |
+| title | string | no | -- | -- | e.g., "Walk-in cooler cleaning" |
+| recurrence | string | no | `'once'` | -- | once, daily, weekly, monthly |
+| day_of_week | tinyint | yes | -- | `integer` | 0=Sun..6=Sat (for weekly) |
+| start_time | time | no | -- | `string` | H:i format |
+| duration_minutes | smallint | no | 60 | `integer` | 15-480 range |
+| suppress_alerts | boolean | no | true | `boolean` | Toggle suppression |
+| created_by | foreignId | no | -- | -- | FK -> users, cascade delete |
+| created_at | timestamp | yes | -- | -- | |
+| updated_at | timestamp | yes | -- | -- | |
+
+#### Relations
+
+| Method | Type | Related Model | FK / Pivot |
+|--------|------|---------------|------------|
+| `site()` | belongsTo | Site | `site_id` |
+| `createdByUser()` | belongsTo | User | `created_by` |
+
+#### Key Methods
+
+| Method | Description |
+|--------|-------------|
+| `isActiveNow(?timezone)` | Checks if window is currently active (time + recurrence + suppress flag) |
+| `isActiveForZone(siteId, zone, ?tz)` | Static: any active window for site+zone? Called from RuleEvaluator |
+
+---
+
+### OutageDeclaration
+
+**Model**: `App\Models\OutageDeclaration`
+**Table**: `outage_declarations`
+**Migration**: `2026_03_20_100002_create_outage_declarations_table.php`
+**Added**: Phase 10 Sprint 2
+
+**Purpose**: Platform-wide upstream outage tracking (SM-013). When declared by super_admin, suppresses ALL alert evaluation and work order creation platform-wide (BR-080). Shared globally via HandleInertiaRequests for dashboard banner display.
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| reason | text | no | -- | -- | min:5, max:500 |
+| affected_services | json | no | -- | `array` | chirpstack, twilio, mqtt, redis, database, other |
+| status | string | no | `'active'` | -- | active, resolved (SM-013) |
+| declared_by | foreignId | no | -- | -- | FK -> users |
+| declared_at | timestamp | no | -- | `datetime` | |
+| resolved_by | unsignedBigInteger | yes | -- | -- | FK -> users, null on delete |
+| resolved_at | timestamp | yes | -- | `datetime` | |
+| created_at | timestamp | yes | -- | -- | |
+| updated_at | timestamp | yes | -- | -- | |
+
+#### Relations
+
+| Method | Type | Related Model | FK / Pivot |
+|--------|------|---------------|------------|
+| `declaredByUser()` | belongsTo | User | `declared_by` |
+| `resolvedByUser()` | belongsTo | User | `resolved_by` |
+
+#### Key Methods
+
+| Method | Description |
+|--------|-------------|
+| `resolve(userId)` | Transitions active→resolved. Sets resolved_by + resolved_at. |
+| `isActive()` | Static: any active outage exists? First check in RuleEvaluator + CheckDeviceHealth. |
+| `current()` | Static: get the active outage record (for banner display). |
+
+---
+
+### ReportSchedule
+
+**Model**: `App\Models\ReportSchedule`
+**Table**: `report_schedules`
+**Migration**: `2026_03_20_200002_create_report_schedules_table.php`
+**Added**: Phase 10 Sprint 3
+
+**Purpose**: Automated report delivery schedules. Types: temperature_compliance, energy_summary, alert_summary, executive_overview. Frequencies: daily, weekly, monthly. Processed by `SendScheduledReports` job (daily at 06:00).
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| org_id | foreignId | no | -- | -- | FK -> organizations |
+| site_id | foreignId | yes | -- | -- | FK -> sites (null = org-wide) |
+| type | string | no | -- | -- | temperature_compliance, energy_summary, alert_summary, executive_overview |
+| frequency | string | no | -- | -- | daily, weekly, monthly |
+| day_of_week | tinyint | yes | -- | `integer` | 0-6 (for weekly) |
+| time | time | no | 08:00 | -- | |
+| recipients_json | json | no | -- | `array` | Array of email addresses |
+| active | boolean | no | true | `boolean` | |
+| created_by | foreignId | no | -- | -- | FK -> users |
+
+---
+
+### DataExport
+
+**Model**: `App\Models\DataExport`
+**Table**: `data_exports`
+**Migration**: `2026_03_20_200003_create_data_exports_table.php`
+**Added**: Phase 10 Sprint 3
+
+**Purpose**: LFPDPPP data portability. Async ZIP export of org data (readings, alerts, users). SM-012: queued → processing → completed/failed → expired (48h).
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| org_id | foreignId | no | -- | -- | FK -> organizations |
+| status | string | no | queued | -- | SM-012: queued, processing, completed, failed, expired |
+| date_from | date | yes | -- | `date` | |
+| date_to | date | yes | -- | `date` | |
+| file_path | string | yes | -- | -- | Path in storage |
+| file_size | bigint | yes | -- | `integer` | Bytes |
+| attempts | tinyint | no | 0 | `integer` | Max 3 |
+| error | text | yes | -- | -- | Failure reason |
+| completed_at | timestamp | yes | -- | `datetime` | |
+| expires_at | timestamp | yes | -- | `datetime` | 48h after completion |
+| requested_by | foreignId | no | -- | -- | FK -> users |
+
+#### Key Methods
+
+| Method | Description |
+|--------|-------------|
+| `markProcessing()` | queued → processing, increments attempts |
+| `markCompleted(path, size)` | processing → completed, sets expires_at=+48h |
+| `markFailed(error)` | processing → failed |
+| `canTransitionTo(status)` | SM-012 guard |
+
+---
+
+### SiteTemplate
+
+**Model**: `App\Models\SiteTemplate`
+**Table**: `site_templates`
+**Migration**: `2026_03_20_200004_create_site_templates_table.php`
+**Added**: Phase 10 Sprint 3
+
+**Purpose**: Reusable site configurations for rapid onboarding at scale. Captures modules, zones, recipes, escalation structure from a "golden" source site. Applied via `SiteTemplateService::applyToSite()`.
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| org_id | foreignId | no | -- | -- | FK -> organizations |
+| name | string | no | -- | -- | Unique per org |
+| description | text | yes | -- | -- | |
+| modules | json | no | -- | `array` | Module slugs |
+| zone_config | json | yes | -- | `array` | [{name}] |
+| recipe_assignments | json | yes | -- | `array` | [{zone, recipe_id}] |
+| escalation_structure | json | yes | -- | `array` | Escalation chain levels |
+| created_by | foreignId | no | -- | -- | FK -> users |
 
 ---
 

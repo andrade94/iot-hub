@@ -52,6 +52,21 @@ export const complianceEventSchema = z.object({
 
 export type ComplianceEventFormData = z.infer<typeof complianceEventSchema>;
 
+// ── Maintenance Window Form (settings/maintenance-windows/index.tsx) ──
+
+export const maintenanceWindowSchema = z.object({
+    site_id: z.string().min(1, 'Required'),
+    zone: z.string().optional(),
+    title: z.string().min(1, 'Required').max(255),
+    recurrence: z.string().min(1, 'Required'),
+    day_of_week: z.string().optional(),
+    start_time: z.string().min(1, 'Required'),
+    duration_minutes: z.string().min(1, 'Required'),
+    suppress_alerts: z.boolean().optional(),
+});
+
+export type MaintenanceWindowFormData = z.infer<typeof maintenanceWindowSchema>;
+
 // ── Billing Profile Form (settings/billing/profiles.tsx) ──────────
 
 const RFC_REGEX = /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/;

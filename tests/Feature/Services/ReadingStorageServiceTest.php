@@ -61,3 +61,30 @@ test('activates pending device on first reading', function () {
 
     expect($device->fresh()->status)->toBe('active');
 });
+
+test('duplicate readings are silently ignored', function () {
+    $device = createDevice($this->site);
+
+    $this->service->store($device, [
+        'temperature' => ['value' => 22.5, 'unit' => '°C'],
+    ]);
+
+    // Store exact same reading again (simulates queue retry)
+    $this->service->store($device, [
+        'temperature' => ['value' => 22.5, 'unit' => '°C'],
+    ]);
+
+    // Only 1 reading stored due to unique constraint + insertOrIgnore
+    expect(SensorReading::where('device_id', $device->id)->where('metric', 'temperature')->count())->toBe(1);
+});
+
+test('different metrics at same time are stored separately', function () {
+    $device = createDevice($this->site);
+
+    $this->service->store($device, [
+        'temperature' => ['value' => 22.5, 'unit' => '°C'],
+        'humidity' => ['value' => 65.0, 'unit' => '%'],
+    ]);
+
+    expect(SensorReading::where('device_id', $device->id)->count())->toBe(2);
+});

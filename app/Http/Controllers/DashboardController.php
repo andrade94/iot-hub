@@ -40,6 +40,20 @@ class DashboardController extends Controller
                 'online_count' => $site->online_devices_count,
             ]);
 
+        // Action cards: counts for items needing attention (BR-099, BR-100)
+        $actionCards = [
+            'unacknowledged_alerts' => Alert::whereIn('site_id', $siteIds)->active()->count(),
+            'overdue_work_orders' => WorkOrder::whereIn('site_id', $siteIds)
+                ->where('status', 'open')
+                ->where('created_at', '<', now()->subDays(3))
+                ->count(),
+            'critical_battery' => Device::whereIn('site_id', $siteIds)
+                ->where('status', 'active')
+                ->whereNotNull('battery_pct')
+                ->where('battery_pct', '<', 20)
+                ->count(),
+        ];
+
         return Inertia::render('dashboard', [
             'kpis' => [
                 'total_devices' => $totalDevices,
@@ -48,6 +62,7 @@ class DashboardController extends Controller
                 'open_work_orders' => $openWorkOrders,
             ],
             'siteStats' => $siteStats,
+            'actionCards' => $actionCards,
         ]);
     }
 }

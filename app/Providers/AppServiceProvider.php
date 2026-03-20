@@ -6,6 +6,7 @@ use App\Mail\WelcomeMail;
 use App\Models\Alert;
 use App\Models\AlertRule;
 use App\Models\BillingProfile;
+use App\Models\CorrectiveAction;
 use App\Models\Device;
 use App\Models\EscalationChain;
 use App\Models\File;
@@ -60,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(EscalationChain::class, EscalationChainPolicy::class);
         Gate::policy(BillingProfile::class, BillingPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(CorrectiveAction::class, \App\Policies\CorrectiveActionPolicy::class);
 
         // Send welcome email when a user registers
         // Only sends when mail is configured (not log driver)

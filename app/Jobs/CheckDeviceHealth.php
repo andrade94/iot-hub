@@ -4,6 +4,9 @@ namespace App\Jobs;
 
 use App\Models\Device;
 use App\Models\Gateway;
+use App\Models\OutageDeclaration;
+use App\Models\Site;
+use App\Services\Alerts\MassOfflineDetector;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -23,15 +26,33 @@ class CheckDeviceHealth implements ShouldQueue
 
     /**
      * Detect devices that haven't reported in >15 minutes.
+     * Includes mass offline detection (BR-077) to suppress individual work orders.
      */
     protected function checkOfflineDevices(): void
     {
+        // Skip work order creation during declared outage (BR-080)
+        $outageActive = OutageDeclaration::isActive();
+
         $offlineDevices = Device::where('status', 'active')
             ->where(function ($query) {
                 $query->whereNull('last_reading_at')
                     ->orWhere('last_reading_at', '<', now()->subMinutes(15));
             })
             ->get();
+
+        // Mass offline detection: check per-site before individual alerts (BR-077)
+        $massOfflineSites = collect();
+        if (! $outageActive) {
+            $massDetector = app(MassOfflineDetector::class);
+            $affectedSiteIds = $offlineDevices->pluck('site_id')->unique();
+
+            foreach ($affectedSiteIds as $siteId) {
+                $site = Site::find($siteId);
+                if ($site && $massDetector->check($site)) {
+                    $massOfflineSites->push($siteId);
+                }
+            }
+        }
 
         foreach ($offlineDevices as $device) {
             $device->update(['status' => 'offline']);
@@ -42,9 +63,11 @@ class CheckDeviceHealth implements ShouldQueue
                 'last_reading_at' => $device->last_reading_at?->toIso8601String(),
             ]);
 
-            // Auto-create work order if offline > 2 hours
-            if ($device->last_reading_at && $device->last_reading_at->lt(now()->subHours(2))) {
-                CreateWorkOrder::dispatchIfNotDuplicate($device, 'device_offline', "Device '{$device->name}' has been offline for over 2 hours.");
+            // Only create individual work orders if NOT mass offline and NOT outage
+            if (! $outageActive && ! $massOfflineSites->contains($device->site_id)) {
+                if ($device->last_reading_at && $device->last_reading_at->lt(now()->subHours(2))) {
+                    CreateWorkOrder::dispatchIfNotDuplicate($device, 'device_offline', "Device '{$device->name}' has been offline for over 2 hours.");
+                }
             }
         }
     }
