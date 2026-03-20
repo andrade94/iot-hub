@@ -378,7 +378,7 @@ CREATE INDEX idx_defrost_schedules_device ON defrost_schedules(device_id, status
 | **super_admin** | Everything. All orgs. Command Center. | Astrea team | All sites, all orgs |
 | **org_admin** | Their org: all sites, billing, users, config. Assigns regionals to sites. | Director de Operaciones del cliente | All sites in their org |
 | **site_manager** | Multiple assigned sites: dashboards, alerts, reports, compare sites | Gerente Regional | Multiple sites (assigned by org_admin) |
-| **site_viewer** | Their single site: read-only dashboards, reports, acknowledge alerts | Gerente de Tienda | Single site (assigned to their store) |
+| **site_viewer** | Their single site: read-only dashboards, reports, acknowledge alerts, request maintenance | Gerente de Tienda | Single site (assigned to their store) |
 | **technician** | Assigned sites: device status, battery, signal, historical data, alert detail | Técnico de mantenimiento | Multiple sites (assigned by org_admin) |
 
 ### Site-Level Scoping
@@ -1456,6 +1456,21 @@ The mobile app is the **daily monitoring interface** for store-level and regiona
   - Without this: every scheduled maintenance generates false alerts → alert fatigue → people ignore real alerts
   - Different from user quiet hours (per-user) — this is per-SITE, per-ZONE scheduled downtime
 
+- [ ] **Mass Offline Detection & Gateway Outage Grouping**
+  - When a gateway dies or site loses power, all 15 sensors go offline within minutes
+  - Current behavior: creates 15 individual "device offline" work orders — wrong
+  - Correct behavior: if >50% of devices at a site go offline within 5 minutes → create ONE site-level alert "Possible power outage or gateway failure at [site]" → suppress individual device offline alerts/work orders
+  - Check gateway status first: if gateway offline → "Gateway offline" alert (not device alerts)
+  - Check cross-site pattern: if >3 sites go offline simultaneously → "Upstream outage" alert to super_admin only
+  - Without this: first power outage at a 15-sensor site generates 15 WhatsApp messages → client overwhelmed → blocks the number
+
+- [ ] **Upstream Outage Declaration (super_admin)**
+  - When ChirpStack Cloud or Twilio has an outage, ALL devices across ALL sites go offline
+  - super_admin needs a "Declare Outage" button in Command Center
+  - While active: suppress all offline alerts platform-wide, show banner on all dashboards "Platform experiencing upstream issues — monitoring temporarily degraded"
+  - When resolved: "End Outage" → resume normal monitoring, send summary of what was missed
+  - Without this: ChirpStack 1-hour outage = hundreds of false work orders across all clients
+
 - [ ] **Sensor Data Sanity Checks**
   - Sensors occasionally send physically impossible values (e.g., 500°C from EM300-TH rated -40 to 85°C)
   - New config: per-model valid ranges (EM300-TH: -40 to 85°C, CT101: 0 to 100A, etc.)
@@ -1479,6 +1494,41 @@ The mobile app is the **daily monitoring interface** for store-level and regiona
   - Technician only needs to: register gateway serial + scan dev_euis + place on floor plan
   - Reduces onboarding from ~30 min to ~10 min per site
   - Critical for enterprise deals (OXXO, 7-Eleven, Walmart) where onboarding 50+ sites/month
+
+- [ ] **Health Check Endpoint + Monitoring Integration**
+  - `GET /health` returns JSON: DB connection, Redis connection, queue depth, last MQTT reading timestamp, worker status
+  - Integration with uptime monitoring (Pingdom, Better Uptime, UptimeRobot)
+  - If any check fails → external alert to Astrea team (separate from client alerts)
+  - Without this: platform goes down and nobody knows until a client calls
+
+- [ ] **Alert Delivery Monitoring Dashboard (super_admin)**
+  - New section in Command Center: "Delivery Health"
+  - Metrics: WhatsApp sent/delivered/failed (last 24h), Push sent/delivered/failed, Email bounce rate
+  - Per-org breakdown: which clients have delivery issues?
+  - Data source: `AlertNotification` model (already tracks sent/delivered/failed)
+  - Without this: critical alerts silently failing to deliver, nobody knows
+
+- [ ] **Duplicate Reading Protection (Idempotency)**
+  - If `ProcessSensorReading` runs twice for the same payload (queue retry after timeout), same reading stored twice
+  - Corrupts: charts (double data points), reports (inflated statistics), compliance data
+  - Fix: unique constraint on `(device_id, time, metric)` in sensor_readings table + `INSERT ... ON CONFLICT DO NOTHING`
+  - Or: idempotency key check in ProcessSensorReading job before storing
+  - Without this: compliance reports show wrong data → audit failure
+
+- [ ] **Platform-Wide Zero-Readings Auto-Detection**
+  - Different from individual device offline (CheckDeviceHealth) and manual outage declaration
+  - Scheduled check every 5 minutes: "Were ANY readings received platform-wide in the last 10 minutes?"
+  - If zero → immediate alert to super_admin: "No sensor data received in 10 minutes — possible MQTT/ChirpStack outage"
+  - Automatic — doesn't require human to notice and declare outage
+  - Without this: 30+ minutes of silent platform outage during food safety monitoring
+
+- [ ] **Dashboard Action Cards**
+  - On Dashboard page, add "Needs Attention" section above site grid:
+  - "X alerts need acknowledgment" (link to filtered alerts)
+  - "X work orders overdue" (link to filtered WOs)
+  - "X sensors battery critical" (link to device list)
+  - Drives daily engagement — user lands on dashboard and immediately sees what needs action
+  - Different from KPI cards (which show counts) — these are actionable prompts with direct links
 
 ### Phase 11: Operational Excellence (Post-Launch — Within 90 Days)
 
@@ -1517,6 +1567,45 @@ The mobile app is the **daily monitoring interface** for store-level and regiona
   - Escalation chains: remove user from all levels, notify org_admin of gaps
   - Activity log: "User X deactivated by Y, Z work orders reassigned"
   - LFPDPPP compliance: data retained for audit but user cannot access system
+
+- [ ] **Notification Preferences per User**
+  - Settings page section: "My Notifications"
+  - Per-channel toggles: WhatsApp (on/off), Push (on/off), Email (on/off)
+  - Per-severity filter: "Only notify me for Critical/High" vs "All severities"
+  - Respects escalation chain (if user is in a chain, they still receive escalation-level notifications regardless of preference)
+  - Without this: users who prefer push-only still get WhatsApp, or vice versa
+
+- [ ] **Device/Asset Inventory Report**
+  - New report type in Reports Index: "Device Inventory"
+  - Content: all devices grouped by site/zone, model, battery level, last calibration, age, status
+  - Sortable by: battery level (lowest first), age (oldest first), last seen
+  - Exportable as CSV for procurement planning ("I need 20 EM300-TH replacements next quarter")
+  - Useful for: annual budgeting, hardware lifecycle planning, fleet management
+
+- [ ] **Bulk Operations on Key Screens**
+  - Alerts Index: checkbox select → bulk acknowledge / bulk resolve
+  - Work Orders Index: checkbox select → bulk assign to technician
+  - Devices Index: checkbox select → bulk update zone / bulk update recipe
+  - UI pattern: floating action bar at bottom when items selected (existing convention in WORKFLOW_UX_DESIGN.md)
+  - Critical at scale: after a power restoration, 15 alerts resolve — user shouldn't click "ack" 15 times
+
+- [ ] **Site Event Timeline (Investigation View)**
+  - New page: `/sites/{id}/timeline` (org_admin, site_manager)
+  - Unified chronological view of ALL events for a site on a given date range:
+    - Sensor readings (key metrics)
+    - Alerts (triggered, acknowledged, resolved)
+    - Work orders (created, completed)
+    - Activity log entries (config changes)
+    - Corrective actions
+  - Use case: client calls "something went wrong at Store X last Tuesday" → open timeline → see everything in one view
+  - Filterable by: date range, event type, zone, device
+
+- [ ] **site_viewer "Request Maintenance" Button**
+  - On Site Detail page: "Request Help" button visible to site_viewer role
+  - Opens simple form: description (textarea) + priority (select) + optional photo
+  - Creates a work order with type=maintenance, assigned to org_admin (who then assigns to tech)
+  - Bridges the gap: gerente sees a problem but currently can't take action beyond acknowledging
+  - Different from full WO creation (which requires manage work orders permission) — this is a simplified "help request"
 
 - [ ] **Payment Reminders & Dunning**
   - Automated email when invoice becomes overdue (at 7, 14, 30 days)
@@ -1651,6 +1740,8 @@ The mobile app is the **daily monitoring interface** for store-level and regiona
 | **Hosting** | DigitalOcean via Forge (region: SFO3 — closest to Mexico) |
 | **Backup** | Daily automated, 30-day retention |
 | **LFPDPPP** | Mexican data protection law compliance |
+| **RPO** | Recovery Point Objective: < 1 hour (max data loss on disaster) |
+| **RTO** | Recovery Time Objective: < 4 hours (max downtime to restore service) |
 | **Language** | Spanish (Mexico) primary, English secondary |
 | **Browser support** | Chrome, Safari, Edge (latest 2 versions) |
 | **PHP version** | 8.4+ |
@@ -1806,17 +1897,26 @@ php artisan mqtt:listen     # MQTT listener (custom command)
 | 41 | Audit mode? | **One-click full compliance view.** 90 days of data + excursions + corrective actions + calibration certs in single PDF. Target: <2 min from inspector arrival to docs ready. | 2026-03-19 |
 | 42 | Public API? | **Phase 13.** Versioned REST API with OpenAPI docs, webhook subscriptions, API key auth. Enables client BI integration. | 2026-03-19 |
 
-| 46 | Maintenance windows? | **Per-site, per-zone scheduled downtime.** Suppress alerts during known maintenance. Different from user quiet hours. | 2026-03-19 |
-| 47 | Data sanity checks? | **Per-model valid ranges.** Discard physically impossible readings, log anomaly, alert after 5+ invalid readings. | 2026-03-19 |
-| 48 | Gap detection? | **Flag monitoring gaps >15 min.** Required for NOM-072 (pharma). Include in compliance reports. | 2026-03-19 |
+| 43 | Mass offline detection? | **Group by gateway/site.** If >50% devices offline within 5 min → one site alert, not N device alerts. First power outage without this = 15 WhatsApp messages to gerente. | 2026-03-19 |
+| 44 | Upstream outage? | **super_admin declares outage.** Suppress all offline alerts platform-wide. Resume + summary when resolved. Prevents hundreds of false WOs. | 2026-03-19 |
+| 45 | Maintenance windows? | **Per-site, per-zone scheduled downtime.** Suppress alerts during known maintenance. Different from user quiet hours. | 2026-03-19 |
+| 46 | Data sanity checks? | **Per-model valid ranges.** Discard physically impossible readings, log anomaly, alert after 5+ invalid readings. | 2026-03-19 |
+| 47 | Gap detection? | **Flag monitoring gaps >15 min.** Required for NOM-072 (pharma). Include in compliance reports. | 2026-03-19 |
+| 48 | Health check endpoint? | **GET /health with DB/Redis/MQTT/queue checks.** Integrate with uptime monitoring. Platform down = Astrea team alerted immediately. | 2026-03-19 |
+| 49 | Duplicate readings? | **Idempotency via unique constraint or job-level check.** Prevents double data points that corrupt compliance reports. | 2026-03-19 |
+| 50 | site_viewer permissions? | **Can acknowledge alerts + request maintenance.** Cannot resolve, dismiss, or create full work orders. Matches gerente de tienda daily workflow. | 2026-03-19 |
+| 51 | Bulk operations? | **Phase 11.** Checkbox select + floating action bar. Critical at scale (15 alerts after power restoration). | 2026-03-19 |
+| 52 | Notification preferences? | **Per-user channel toggles.** Respects escalation chain as override. Prevents users blocking WhatsApp by giving them control. | 2026-03-19 |
+| 53 | Investigation timeline? | **Unified site event view.** All readings + alerts + WOs + activity on one timeline. For "what happened last Tuesday?" calls. | 2026-03-19 |
+| 54 | RPO/RTO? | **RPO <1h, RTO <4h.** Food safety monitoring demands quick recovery. Daily backups + tested restore procedure. | 2026-03-19 |
 
 ### Still Open
 
 | # | Question | Options | Context |
 |---|---|---|---|
-| 43 | NOM-072 (pharma) features? | Stricter temp requirements, dual-sensor validation, gap detection (<15 min) | Pharmacies have different rules than food. Need customer validation. |
-| 44 | Predictive analytics scope? | Battery prediction (easy) vs compressor failure (hard) vs full ML pipeline | Start with heuristic-based (like defrost detection), ML later. |
-| 45 | Partner/reseller model? | Revenue share % vs flat fee per client? | Depends on go-to-market strategy. Decide when first partner opportunity arises. |
+| 55 | NOM-072 (pharma) features? | Stricter temp requirements, dual-sensor validation, gap detection (<15 min) | Pharmacies have different rules than food. Need customer validation. |
+| 56 | Predictive analytics scope? | Battery prediction (easy) vs compressor failure (hard) vs full ML pipeline | Start with heuristic-based (like defrost detection), ML later. |
+| 57 | Partner/reseller model? | Revenue share % vs flat fee per client? | Depends on go-to-market strategy. Decide when first partner opportunity arises. |
 
 ---
 
