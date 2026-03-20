@@ -92,10 +92,19 @@ Every rule traces to workflows (WF-xxx), is enforced in specific code, and has a
 
 | ID | Rule | Severity | Workflows | Enforced In | Status |
 |---|---|---|---|---|---|
-| BR-047 | Site onboarding is a sequential 5-step wizard: gateway → devices → floor plans → modules → escalation → complete | HIGH | WF-001 | `SiteOnboardingController::determineCurrentStep()` | IMPLEMENTED |
+| BR-047 | Site onboarding is a sequential 5-step wizard: gateway → devices → floor plans → modules → escalation → complete. **Note:** Floor plans (FloorPlan model + FloorPlanController) are an optional sub-step in the onboarding wizard — sites can complete onboarding without uploading floor plans. | HIGH | WF-001 | `SiteOnboardingController::determineCurrentStep()` | IMPLEMENTED |
 | BR-048 | Onboarding completion requires: ≥1 gateway, ≥1 device, ≥1 module activated | CRITICAL | WF-001 | `SiteOnboardingController::complete()` | IMPLEMENTED |
 | BR-049 | Organization creation auto-generates subscription with segment-appropriate base_fee | HIGH | WF-001 | `PartnerController::store()` | IMPLEMENTED |
 | BR-050 | Module activation auto-applies matching recipes to site devices | HIGH | WF-011 | `SiteOnboardingController::activateModules()` → `RecipeApplicationService` | IMPLEMENTED |
+
+### 1.8 Segment Analytics Rules
+
+| ID | Rule | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|
+| BR-051 | Door open/close pattern analytics for cold-chain segment — tracks door frequency, average open duration, and correlates with temperature excursions | MEDIUM | WF-002 | `DoorPatternService` | IMPLEMENTED |
+| BR-052 | Compressor duty cycle analytics for industrial segment — tracks on/off cycles, utilization percentage, and detects abnormal patterns | MEDIUM | WF-002 | `CompressorDutyCycleService` | IMPLEMENTED |
+| BR-053 | Retail traffic snapshot analytics — stores periodic customer count data from VS121 sensors for retail segment sites | MEDIUM | WF-002 | `TrafficSnapshot` model | IMPLEMENTED |
+| BR-054 | IAQ zone scoring — calculates composite air quality scores per zone from AM307 sensor data (CO2, PM2.5, humidity, temperature) | MEDIUM | WF-002, WF-011 | `IaqZoneScore` model | IMPLEMENTED |
 
 ---
 
@@ -504,6 +513,19 @@ Onboarding sub-steps: gateway → devices → floor_plans (optional) → modules
 | `AlertTriggered` | `private:site.{id}` | alert details, severity | Real-time alert banner |
 | `NotificationCreated` | `private:App.Models.User.{id}` | notification data | Bell icon count update |
 
+### NT-011: Export Ready Notification
+
+| Field | Value |
+|---|---|
+| Event | Export job completed |
+| Trigger | Export job finishes processing |
+| Recipients | Requesting user |
+| Channels | Database (in-app) |
+| Timing | Immediate (upon job completion) |
+| Content | Export file ready for download |
+| Workflows | WF-010 |
+| Status | IMPLEMENTED |
+
 ---
 
 ## 5. Validation Catalog (VL-xxx)
@@ -639,6 +661,10 @@ Onboarding sub-steps: gateway → devices → floor_plans (optional) → modules
 | SAP/CONTPAQ (INT-004/005) | **LOW** | Export delayed — local copies stored, non-blocking |
 | Webhooks (INT-008) | **LOW** | External integrations delayed — auto-retry with failure tracking |
 
+### Middleware: ApplyOrgBranding
+
+> **Note (cross-ref WF-012 White-Label):** The `ApplyOrgBranding` middleware applies organization-specific CSS variables and branding (logo, colors, fonts) on every authenticated page load. It reads `current_organization.settings` and shares branding data via Inertia, enabling white-label customization per organization.
+
 ---
 
 ## Cross-Reference Index
@@ -648,7 +674,7 @@ Onboarding sub-steps: gateway → devices → floor_plans (optional) → modules
 | Workflow | Business Rules | State Machines | Permissions | Notifications |
 |---|---|---|---|---|
 | WF-001 Client Onboarding | BR-047, BR-048, BR-049, BR-050 | SM-005 (Site) | PM: onboard sites, manage sites | NT-008 (Welcome) |
-| WF-002 Sensor Data Pipeline | BR-001, BR-002, BR-007, BR-008, BR-009 | SM-004 (Device) | — (system) | NT-010 (Broadcast) |
+| WF-002 Sensor Data Pipeline | BR-001, BR-002, BR-007, BR-008, BR-009, BR-051, BR-052, BR-053, BR-054 | SM-004 (Device) | — (system) | NT-010 (Broadcast) |
 | WF-003 Alert Lifecycle | BR-010–BR-020, BR-014, BR-040, BR-042 | SM-001 (Alert), SM-010 (Notification) | PM: view/acknowledge alerts, manage alert rules | NT-001, NT-002 |
 | WF-004 Device Health | BR-003, BR-004, BR-005, BR-006 | SM-004 (Device), SM-009 (Gateway) | — (system) | NT-007 |
 | WF-005 Work Orders | BR-005, BR-006, BR-044 | SM-002 (WorkOrder) | PM: view/manage/complete work orders | NT-007 |
@@ -656,6 +682,16 @@ Onboarding sub-steps: gateway → devices → floor_plans (optional) → modules
 | WF-007 Billing | BR-021–BR-028 | SM-003 (Invoice), SM-007 (Subscription) | PM: manage org settings (billing) | — |
 | WF-008 Compliance | BR-038 | SM-006 (ComplianceEvent) | PM: manage org settings | NT-006 |
 | WF-009 User Management | — | — | PM: view/manage users, assign site users | NT-008 |
-| WF-010 Integration Export | BR-028, BR-045 | — | PM: manage org settings | — |
-| WF-011 Module System | BR-043, BR-050 | — | PM: manage devices | — |
+| WF-010 Integration Export | BR-028, BR-045 | — | PM: manage org settings | NT-011 (Export Ready) |
+| WF-011 Module System | BR-043, BR-050, BR-054 | — | PM: manage devices | — |
 | WF-012 White-Label | — | — | PM: manage org settings | — |
+
+### Additional Screen Inventory (Undocumented Pages)
+
+The following pages exist in the codebase but were not captured in the original workflow-to-UI mapping:
+
+| Screen | Path | Workflows | Notes |
+|---|---|---|---|
+| Report Summary | `resources/js/pages/reports/summary.tsx` | WF-006 | Aggregated report summary view for site/org-level reporting |
+| Module Settings | `resources/js/pages/settings/modules.tsx` | WF-011 | Module activation/deactivation configuration per site |
+| Billing Profiles | `resources/js/pages/settings/billing/profiles.tsx` | WF-007 | Manage organization billing profiles (RFC, razon_social, regimen_fiscal) for CFDI generation |
