@@ -8,7 +8,9 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import type { BreadcrumbItem, Organization } from '@/types';
 import { Transition } from '@headlessui/react';
-import { Head, useForm } from '@inertiajs/react';
+import { useValidatedForm } from '@/hooks/use-validated-form';
+import { organizationSettingsSchema } from '@/utils/schemas';
+import { Head } from '@inertiajs/react';
 
 interface Props {
     organization: Organization;
@@ -24,7 +26,7 @@ export default function OrganizationSettings({ organization }: Props) {
 
     const brandingData = organization.branding as Record<string, string> | null;
 
-    const form = useForm({
+    const form = useValidatedForm(organizationSettingsSchema, {
         name: organization.name,
         default_timezone: organization.default_timezone ?? '',
         default_opening_hour: organization.default_opening_hour ?? '',
@@ -39,6 +41,7 @@ export default function OrganizationSettings({ organization }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (!form.validate()) return;
         form.patch('/settings/organization', {
             preserveScroll: true,
         });

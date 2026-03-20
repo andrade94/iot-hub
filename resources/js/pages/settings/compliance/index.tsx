@@ -14,7 +14,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import { useValidatedForm } from '@/hooks/use-validated-form';
+import { complianceEventSchema } from '@/utils/schemas';
+import { Head, router } from '@inertiajs/react';
 import { CalendarCheck, CheckCircle2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -322,7 +324,7 @@ function EventForm({
     const { t } = useLang();
     const isEdit = !!event;
 
-    const form = useForm({
+    const form = useValidatedForm(complianceEventSchema, {
         title: event?.title ?? '',
         type: event?.type ?? '',
         site_id: event?.site_id?.toString() ?? '',
@@ -332,6 +334,7 @@ function EventForm({
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (!form.validate()) return;
 
         form.transform((data) => ({
             ...data,

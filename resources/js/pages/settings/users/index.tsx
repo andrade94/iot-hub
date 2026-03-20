@@ -14,7 +14,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import { useValidatedForm } from '@/hooks/use-validated-form';
+import { userSchema } from '@/utils/schemas';
+import { Head, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -211,7 +213,7 @@ function UserForm({
     const { t } = useLang();
     const isEdit = !!user;
 
-    const form = useForm({
+    const form = useValidatedForm(userSchema, {
         name: user?.name ?? '',
         email: user?.email ?? '',
         phone: user?.phone ?? '',
@@ -224,6 +226,7 @@ function UserForm({
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (!form.validate()) return;
         if (isEdit) {
             form.put(`/settings/users/${user!.id}`, {
                 preserveScroll: true,

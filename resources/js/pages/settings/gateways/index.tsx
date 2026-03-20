@@ -12,7 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, Gateway, Site } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import { useValidatedForm } from '@/hooks/use-validated-form';
+import { gatewaySchema } from '@/utils/schemas';
+import { Head, router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Eye, Plus, Router, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -196,7 +198,7 @@ export default function GatewayIndex({ site, gateways }: Props) {
 
 function GatewayForm({ siteId, onSuccess }: { siteId: number; onSuccess: () => void }) {
     const { t } = useLang();
-    const form = useForm({
+    const form = useValidatedForm(gatewaySchema, {
         model: '',
         serial: '',
         is_addon: false,
@@ -204,6 +206,7 @@ function GatewayForm({ siteId, onSuccess }: { siteId: number; onSuccess: () => v
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (!form.validate()) return;
         form.post(`/sites/${siteId}/gateways`, {
             onSuccess: () => {
                 form.reset();

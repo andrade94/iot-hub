@@ -12,7 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import { useValidatedForm } from '@/hooks/use-validated-form';
+import { siteSchema } from '@/utils/schemas';
+import { Head, router } from '@inertiajs/react';
 import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -190,7 +192,7 @@ function SiteForm({
     const { t } = useLang();
     const isEdit = !!site;
 
-    const form = useForm({
+    const form = useValidatedForm(siteSchema, {
         name: site?.name ?? '',
         address: site?.address ?? '',
         latitude: site?.latitude ?? '',
@@ -202,6 +204,7 @@ function SiteForm({
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (!form.validate()) return;
         if (isEdit) {
             form.put(`/settings/sites/${site!.id}`, {
                 preserveScroll: true,

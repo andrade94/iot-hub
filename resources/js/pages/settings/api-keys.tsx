@@ -9,7 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { ApiKeyRecord, BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import { useValidatedForm } from '@/hooks/use-validated-form';
+import { apiKeySchema } from '@/utils/schemas';
+import { Head, router } from '@inertiajs/react';
 import { Key, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -27,13 +29,14 @@ export default function ApiKeysPage({ apiKeys, newKey }: Props) {
     const { t } = useLang();
     const [showForm, setShowForm] = useState(false);
 
-    const form = useForm({
+    const form = useValidatedForm(apiKeySchema, {
         name: '',
         rate_limit: 60,
     });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (!form.validate()) return;
         form.post('/settings/api-keys', {
             preserveScroll: true,
             onSuccess: () => { form.reset(); setShowForm(false); },

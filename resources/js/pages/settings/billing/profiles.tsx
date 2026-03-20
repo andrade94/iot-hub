@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BillingProfile, BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
+import { useValidatedForm } from '@/hooks/use-validated-form';
+import { billingProfileSchema } from '@/utils/schemas';
+import { Head } from '@inertiajs/react';
 import { Building2, Plus, Save } from 'lucide-react';
 import { useState } from 'react';
 
@@ -24,7 +26,7 @@ export default function BillingProfiles({ profiles }: Props) {
     const { t } = useLang();
     const [showForm, setShowForm] = useState(false);
 
-    const form = useForm({
+    const form = useValidatedForm(billingProfileSchema, {
         name: '',
         rfc: '',
         razon_social: '',
@@ -35,6 +37,7 @@ export default function BillingProfiles({ profiles }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (!form.validate()) return;
         form.post('/settings/billing/profiles', {
             preserveScroll: true,
             onSuccess: () => { form.reset(); setShowForm(false); },
