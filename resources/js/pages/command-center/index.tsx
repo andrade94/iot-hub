@@ -1,15 +1,20 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import InputError from '@/components/input-error';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, CommandCenterKPIs, Organization, Site } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { AlertTriangle, Building2, Cpu, Globe, MapPin, Signal, Wrench } from 'lucide-react';
+import type { BreadcrumbItem, CommandCenterKPIs, SharedData } from '@/types';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { AlertTriangle, Building2, Cpu, Globe, Mail, MapPin, MessageSquare, Signal, Smartphone, Wrench } from 'lucide-react';
+import { useState } from 'react';
 
 interface OrgSummary {
     id: number;
@@ -23,25 +28,73 @@ interface OrgSummary {
     active_alerts: number;
 }
 
+interface DeliveryChannel {
+    sent: number;
+    delivered: number;
+    failed: number;
+}
+
 interface Props {
     kpis: CommandCenterKPIs;
     organizations: OrgSummary[];
+    deliveryHealth?: { whatsapp: DeliveryChannel; push: DeliveryChannel; email: DeliveryChannel };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Command Center', href: '/command-center' },
 ];
 
-export default function CommandCenterIndex({ kpis, organizations }: Props) {
+export default function CommandCenterIndex({ kpis, organizations, deliveryHealth }: Props) {
     const { t } = useLang();
+    const { active_outage } = usePage<SharedData>().props;
+    const [showOutageDialog, setShowOutageDialog] = useState(false);
+    const outageForm = useForm({ reason: '', affected_services: [] as string[] });
+
+    const handleDeclareOutage = (e: React.FormEvent) => {
+        e.preventDefault();
+        outageForm.post('/command-center/outage', {
+            preserveScroll: true,
+            onSuccess: () => { outageForm.reset(); setShowOutageDialog(false); },
+        });
+    };
+
+    const handleToggleService = (service: string) => {
+        const current = outageForm.data.affected_services;
+        outageForm.setData('affected_services',
+            current.includes(service) ? current.filter(s => s !== service) : [...current, service]
+        );
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Command Center')} />
             <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">{t('Command Center')}</h1>
-                    <p className="text-sm text-muted-foreground">{t('Global platform overview')}</p>
+                {/* Outage Banner */}
+                {active_outage && (
+                    <div className="flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
+                        <div className="flex items-center gap-3">
+                            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                            <div>
+                                <p className="font-medium text-red-800 dark:text-red-200">{t('Platform outage declared')}</p>
+                                <p className="text-sm text-red-700 dark:text-red-300">{active_outage.reason}</p>
+                            </div>
+                        </div>
+                        <Button variant="destructive" size="sm" onClick={() => router.delete('/command-center/outage', { preserveScroll: true })}>
+                            {t('End Outage')}
+                        </Button>
+                    </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight">{t('Command Center')}</h1>
+                        <p className="text-sm text-muted-foreground">{t('Global platform overview')}</p>
+                    </div>
+                    {!active_outage && (
+                        <Button variant="destructive" size="sm" onClick={() => setShowOutageDialog(true)}>
+                            {t('Declare Outage')}
+                        </Button>
+                    )}
                 </div>
 
                 {/* KPI Cards */}
@@ -147,8 +200,77 @@ export default function CommandCenterIndex({ kpis, organizations }: Props) {
                         </TableBody>
                     </Table>
                 </Card>
+                {/* Delivery Health (Phase 10) */}
+                {deliveryHealth && (
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        <DeliveryCard icon={<MessageSquare className="h-4 w-4 text-emerald-500" />} label="WhatsApp" data={deliveryHealth.whatsapp} />
+                        <DeliveryCard icon={<Smartphone className="h-4 w-4 text-blue-500" />} label="Push" data={deliveryHealth.push} />
+                        <DeliveryCard icon={<Mail className="h-4 w-4 text-amber-500" />} label="Email" data={deliveryHealth.email} />
+                    </div>
+                )}
+
+                {/* Outage Declaration Dialog */}
+                <Dialog open={showOutageDialog} onOpenChange={setShowOutageDialog}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>{t('Declare Platform Outage')}</DialogTitle>
+                            <DialogDescription>{t('This will suppress ALL offline alerts platform-wide.')}</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleDeclareOutage} className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label>{t('Reason')}</Label>
+                                <Textarea
+                                    value={outageForm.data.reason}
+                                    onChange={e => outageForm.setData('reason', e.target.value)}
+                                    placeholder={t('Describe the outage...')}
+                                    rows={3}
+                                />
+                                <InputError message={outageForm.errors.reason} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>{t('Affected Services')}</Label>
+                                <div className="flex flex-wrap gap-2">
+                                    {['chirpstack', 'twilio', 'mqtt', 'redis', 'database', 'other'].map(svc => (
+                                        <Button
+                                            key={svc}
+                                            type="button"
+                                            size="sm"
+                                            variant={outageForm.data.affected_services.includes(svc) ? 'default' : 'outline'}
+                                            onClick={() => handleToggleService(svc)}
+                                        >
+                                            {svc}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <InputError message={outageForm.errors.affected_services} />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <Button type="button" variant="ghost" onClick={() => setShowOutageDialog(false)}>{t('Cancel')}</Button>
+                                <Button type="submit" variant="destructive" disabled={outageForm.processing}>{t('Declare Outage')}</Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
+    );
+}
+
+function DeliveryCard({ icon, label, data }: { icon: React.ReactNode; label: string; data: { sent: number; delivered: number; failed: number } }) {
+    return (
+        <Card>
+            <CardContent className="flex items-center gap-3 p-4">
+                {icon}
+                <div className="flex-1">
+                    <p className="text-sm font-medium">{label}</p>
+                    <div className="flex gap-3 text-xs text-muted-foreground">
+                        <span>{data.sent} sent</span>
+                        <span className="text-emerald-600">{data.delivered} delivered</span>
+                        {data.failed > 0 && <span className="text-red-600">{data.failed} failed</span>}
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 

@@ -8,8 +8,13 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { Calendar, Plus, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select as Sel, SelectContent as SelC, SelectItem as SelI, SelectTrigger as SelT, SelectValue as SelV } from '@/components/ui/select';
+import InputError from '@/components/input-error';
 import { useState } from 'react';
 
 interface ReportScheduleRecord {
@@ -43,7 +48,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function ReportSchedulesIndex({ schedules, sites }: Props) {
     const { t } = useLang();
+    const [showCreate, setShowCreate] = useState(false);
     const [deleteSchedule, setDeleteSchedule] = useState<ReportScheduleRecord | null>(null);
+    const createForm = useForm({ type: 'temperature_compliance', site_id: '', frequency: 'weekly', day_of_week: '1', time: '08:00', recipients_json: [''] });
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -55,7 +62,7 @@ export default function ReportSchedulesIndex({ schedules, sites }: Props) {
                         <p className="text-sm text-muted-foreground">{t('Automate compliance and operational report delivery.')}</p>
                     </div>
                     <Can permission="manage report schedules">
-                        <Button><Plus className="mr-2 h-4 w-4" />{t('Add Schedule')}</Button>
+                        <Button onClick={() => setShowCreate(true)}><Plus className="mr-2 h-4 w-4" />{t('Add Schedule')}</Button>
                     </Can>
                 </div>
 
@@ -101,6 +108,52 @@ export default function ReportSchedulesIndex({ schedules, sites }: Props) {
                         ))}
                     </div>
                 )}
+
+                {/* Create Schedule Dialog */}
+                <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>{t('Add Report Schedule')}</DialogTitle>
+                            <DialogDescription>{t('Configure automated report delivery.')}</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={(e) => { e.preventDefault(); createForm.post('/settings/report-schedules', { preserveScroll: true, onSuccess: () => { createForm.reset(); setShowCreate(false); } }); }} className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label>{t('Report Type')}</Label>
+                                <Sel value={createForm.data.type} onValueChange={v => createForm.setData('type', v)}>
+                                    <SelT><SelV /></SelT>
+                                    <SelC>
+                                        <SelI value="temperature_compliance">{t('Temperature Compliance')}</SelI>
+                                        <SelI value="energy_summary">{t('Energy Summary')}</SelI>
+                                        <SelI value="alert_summary">{t('Alert Summary')}</SelI>
+                                        <SelI value="executive_overview">{t('Executive Overview')}</SelI>
+                                    </SelC>
+                                </Sel>
+                            </div>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="grid gap-2">
+                                    <Label>{t('Frequency')}</Label>
+                                    <Sel value={createForm.data.frequency} onValueChange={v => createForm.setData('frequency', v)}>
+                                        <SelT><SelV /></SelT>
+                                        <SelC><SelI value="daily">{t('Daily')}</SelI><SelI value="weekly">{t('Weekly')}</SelI><SelI value="monthly">{t('Monthly')}</SelI></SelC>
+                                    </Sel>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>{t('Time')}</Label>
+                                    <Input type="time" value={createForm.data.time} onChange={e => createForm.setData('time', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>{t('Recipient Email')}</Label>
+                                <Input type="email" value={createForm.data.recipients_json[0]} onChange={e => createForm.setData('recipients_json', [e.target.value])} placeholder="admin@example.com" />
+                                <InputError message={createForm.errors.recipients_json} />
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2">
+                                <Button type="button" variant="ghost" onClick={() => setShowCreate(false)}>{t('Cancel')}</Button>
+                                <Button type="submit" disabled={createForm.processing}>{t('Create')}</Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
 
                 <ConfirmationDialog
                     open={!!deleteSchedule}

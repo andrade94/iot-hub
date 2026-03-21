@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -96,12 +97,14 @@ export default function DeviceIndex({ site, devices, zones, filters }: Props) {
                             {site.name} — {totalDevices} {t('device(s)')}
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href={`/sites/${site.id}/devices?add=true`}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            {t('Add Device')}
-                        </Link>
-                    </Button>
+                    <Can permission="manage devices">
+                        <Button asChild>
+                            <Link href={`/sites/${site.id}/devices?add=true`}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                {t('Add Device')}
+                            </Link>
+                        </Button>
+                    </Can>
                 </div>
 
                 {/* Stats bar */}

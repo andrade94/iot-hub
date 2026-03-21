@@ -1,13 +1,18 @@
+import { Can } from '@/components/Can';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { Alert, BreadcrumbItem, ChartDataPoint, Device } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     Activity,
     AlertTriangle,
@@ -21,7 +26,7 @@ import {
     Radio,
     Signal,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
     CartesianGrid,
     Line,
@@ -66,6 +71,9 @@ export default function DeviceShow({
         { title: device.name, href: '#' },
     ];
 
+    const [showReplace, setShowReplace] = useState(false);
+    const replaceForm = useForm({ new_dev_eui: '', new_app_key: '', new_model: '' });
+
     function changePeriod(newPeriod: string) {
         router.get(`/devices/${device.id}`, { period: newPeriod, metric }, { preserveState: true, replace: true });
     }
@@ -94,6 +102,14 @@ export default function DeviceShow({
                         </div>
                         <p className="mt-0.5 font-mono text-xs text-muted-foreground">{device.dev_eui}</p>
                     </div>
+                    {/* Replace button (Phase 10) */}
+                    {['active', 'offline'].includes(device.status) && (
+                        <Can permission="manage devices">
+                            <Button variant="outline" size="sm" onClick={() => setShowReplace(true)}>
+                                {t('Replace')}
+                            </Button>
+                        </Can>
+                    )}
                 </div>
 
                 {/* Quick stats */}
@@ -234,6 +250,36 @@ export default function DeviceShow({
                         </Card>
                     </div>
                 </div>
+
+                {/* Device Replacement Dialog (Phase 10) */}
+                <Dialog open={showReplace} onOpenChange={setShowReplace}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>{t('Replace Device')}</DialogTitle>
+                            <DialogDescription>{t('Transfer all config to a new device. Old device will be marked as replaced.')}</DialogDescription>
+                        </DialogHeader>
+                        <div className="rounded-lg bg-muted p-3 text-sm">
+                            <p className="font-medium">{device.name}</p>
+                            <p className="font-mono text-xs text-muted-foreground">{device.dev_eui} · {device.model}</p>
+                        </div>
+                        <form onSubmit={(e) => { e.preventDefault(); replaceForm.post(`/sites/${device.site_id}/devices/${device.id}/replace`, { preserveScroll: true, onSuccess: () => { replaceForm.reset(); setShowReplace(false); } }); }} className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label>{t('New DevEUI')}</Label>
+                                <Input value={replaceForm.data.new_dev_eui} onChange={e => replaceForm.setData('new_dev_eui', e.target.value)} placeholder={t('Scan or enter DevEUI')} className="font-mono" maxLength={16} />
+                                <InputError message={replaceForm.errors.new_dev_eui} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>{t('New AppKey')}</Label>
+                                <Input value={replaceForm.data.new_app_key} onChange={e => replaceForm.setData('new_app_key', e.target.value)} placeholder={t('Enter OTAA AppKey')} className="font-mono" maxLength={32} />
+                                <InputError message={replaceForm.errors.new_app_key} />
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2">
+                                <Button type="button" variant="ghost" onClick={() => setShowReplace(false)}>{t('Cancel')}</Button>
+                                <Button type="submit" disabled={replaceForm.processing}>{replaceForm.processing ? t('Replacing...') : t('Replace Device')}</Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );
