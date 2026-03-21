@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -66,6 +67,7 @@ export default function GatewayIndex({ site, gateways }: Props) {
                             {site.name} — {gateways.total} {t('gateway(s)')}
                         </p>
                     </div>
+                    <Can permission="manage devices">
                     <Dialog open={showCreate} onOpenChange={setShowCreate}>
                         <DialogTrigger asChild>
                             <Button>
@@ -80,6 +82,7 @@ export default function GatewayIndex({ site, gateways }: Props) {
                             <GatewayForm siteId={site.id} onSuccess={() => setShowCreate(false)} />
                         </DialogContent>
                     </Dialog>
+                    </Can>
                 </div>
 
                 <Card className="flex-1">

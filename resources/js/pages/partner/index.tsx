@@ -11,7 +11,7 @@ import InputError from '@/components/input-error';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { Building2, Plus } from 'lucide-react';
 import { useState } from 'react';
 
@@ -90,7 +90,7 @@ export default function PartnerIndex({ organizations }: Props) {
                                 </TableRow>
                             ) : (
                                 organizations.map((org) => (
-                                    <TableRow key={org.id}>
+                                    <TableRow key={org.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.get(`/command-center/${org.id}`)}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="h-8 w-8">

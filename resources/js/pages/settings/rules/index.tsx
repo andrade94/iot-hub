@@ -2,6 +2,7 @@ import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Switch } from '@/components/ui/switch';
 import { useLang } from '@/hooks/use-lang';
@@ -16,6 +17,7 @@ import {
     ShieldAlert,
     Trash2,
 } from 'lucide-react';
+import { useState } from 'react';
 
 interface Props {
     site: Site;
@@ -24,6 +26,7 @@ interface Props {
 
 export default function AlertRuleIndex({ site, rules }: Props) {
     const { t } = useLang();
+    const [deleteRule, setDeleteRule] = useState<AlertRule | null>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Sites', href: '/settings/sites' },
@@ -75,16 +78,30 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                 ) : (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {rules.map((rule) => (
-                            <RuleCard key={rule.id} rule={rule} siteId={site.id} />
+                            <RuleCard key={rule.id} rule={rule} siteId={site.id} onDelete={setDeleteRule} />
                         ))}
                     </div>
                 )}
+
+                <ConfirmationDialog
+                    open={!!deleteRule}
+                    onOpenChange={(open) => !open && setDeleteRule(null)}
+                    title={t('Delete Alert Rule')}
+                    description={`Delete "${deleteRule?.name}"? This cannot be undone.`}
+                    warningMessage={t('Active alerts using this rule will not be affected, but no new alerts will be created.')}
+                    onConfirm={() => {
+                        if (deleteRule) {
+                            router.delete(`/sites/${site.id}/rules/${deleteRule.id}`, { preserveScroll: true, onSuccess: () => setDeleteRule(null) });
+                        }
+                    }}
+                    actionLabel={t('Delete')}
+                />
             </div>
         </AppLayout>
     );
 }
 
-function RuleCard({ rule, siteId }: { rule: AlertRule; siteId: number }) {
+function RuleCard({ rule, siteId, onDelete }: { rule: AlertRule; siteId: number; onDelete: (rule: AlertRule) => void }) {
     const { t } = useLang();
 
     function toggleActive() {
@@ -171,11 +188,7 @@ function RuleCard({ rule, siteId }: { rule: AlertRule; siteId: number }) {
                             variant="ghost"
                             size="icon-sm"
                             className="text-destructive"
-                            onClick={() =>
-                                router.delete(`/sites/${siteId}/rules/${rule.id}`, {
-                                    preserveScroll: true,
-                                })
-                            }
+                            onClick={() => onDelete(rule)}
                         >
                             <Trash2 className="h-3.5 w-3.5" />
                         </Button>

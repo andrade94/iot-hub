@@ -23,8 +23,10 @@ export default function WorkOrderShow({ workOrder: wo }: Props) {
         { title: wo.title, href: '#' },
     ];
 
+    const STATUS_MAP: Record<string, string> = { assign: 'assigned', start: 'in_progress', complete: 'completed', cancel: 'cancelled' };
+
     function updateStatus(action: string) {
-        router.put(`/work-orders/${wo.id}/status`, { action }, { preserveScroll: true });
+        router.put(`/work-orders/${wo.id}/status`, { status: STATUS_MAP[action] ?? action }, { preserveScroll: true });
     }
 
     function submitNote(e: React.FormEvent) {

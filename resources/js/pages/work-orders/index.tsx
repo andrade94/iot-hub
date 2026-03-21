@@ -52,7 +52,7 @@ export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Pr
                         <p className="text-sm text-muted-foreground">{workOrders.total} {t('total')}</p>
                     </div>
                     <Can permission="manage work orders">
-                        <Button onClick={() => router.get('/work-orders/create')}>
+                        <Button disabled title={t('Work orders are auto-created from device health checks')}>
                             <Plus className="mr-2 h-4 w-4" />{t('New Work Order')}
                         </Button>
                     </Can>

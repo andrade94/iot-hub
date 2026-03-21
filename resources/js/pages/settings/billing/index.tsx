@@ -7,8 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, Invoice, Subscription } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { CreditCard, DollarSign, FileText, Settings } from 'lucide-react';
+import { Can } from '@/components/Can';
+import { Head, Link, router } from '@inertiajs/react';
+import { CreditCard, DollarSign, Download, FileText, Settings } from 'lucide-react';
 
 interface Props {
     subscription: Subscription | null;
@@ -93,11 +94,18 @@ export default function BillingDashboard({ subscription, invoices, monthlyTotal 
 
                 {/* Invoices */}
                 <Card className="flex-1">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-base">
-                            <FileText className="h-4 w-4" />{t('Invoices')}
-                        </CardTitle>
-                        <CardDescription>{invoices.length} {t('invoice(s)')}</CardDescription>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <FileText className="h-4 w-4" />{t('Invoices')}
+                            </CardTitle>
+                            <CardDescription>{invoices.length} {t('invoice(s)')}</CardDescription>
+                        </div>
+                        <Can permission="manage org settings">
+                            <Button size="sm" onClick={() => router.post('/settings/billing/generate-invoice', {}, { preserveScroll: true })}>
+                                {t('Generate Invoice')}
+                            </Button>
+                        </Can>
                     </CardHeader>
                     <Table>
                         <TableHeader>
@@ -108,12 +116,13 @@ export default function BillingDashboard({ subscription, invoices, monthlyTotal 
                                 <TableHead>{t('Total')}</TableHead>
                                 <TableHead>{t('Status')}</TableHead>
                                 <TableHead>{t('CFDI')}</TableHead>
+                                <TableHead>{t('Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {invoices.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="py-0">
+                                    <TableCell colSpan={7} className="py-0">
                                         <EmptyState
                                             size="sm"
                                             variant="muted"
@@ -136,6 +145,22 @@ export default function BillingDashboard({ subscription, invoices, monthlyTotal 
                                         </TableCell>
                                         <TableCell className="text-xs text-muted-foreground">
                                             {inv.cfdi_uuid ? inv.cfdi_uuid.substring(0, 8) + '...' : '—'}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-1">
+                                                {['sent', 'overdue'].includes(inv.status) && (
+                                                    <Button size="sm" variant="outline" onClick={() => router.post(`/settings/billing/invoices/${inv.id}/mark-paid`, {}, { preserveScroll: true })}>
+                                                        {t('Mark Paid')}
+                                                    </Button>
+                                                )}
+                                                {inv.cfdi_uuid && (
+                                                    <>
+                                                        <Button size="sm" variant="ghost" asChild>
+                                                            <a href={`/settings/billing/invoices/${inv.id}/download/pdf`}><Download className="h-3.5 w-3.5" /></a>
+                                                        </Button>
+                                                    </>
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))

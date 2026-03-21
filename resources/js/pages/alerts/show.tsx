@@ -99,6 +99,19 @@ export default function AlertShow({ alert }: Props) {
                                     {t('Resolve')}
                                 </Button>
                             )}
+                            {['active', 'acknowledged'].includes(alert.status) && (
+                                <Can permission="manage alert rules">
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() =>
+                                            router.post(`/alerts/${alert.id}/dismiss`, {}, { preserveScroll: true })
+                                        }
+                                    >
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                        {t('Dismiss')}
+                                    </Button>
+                                </Can>
+                            )}
                         </div>
                     </Can>
                 </div>

@@ -130,6 +130,11 @@ export default function SitesIndex({ sites, timezones }: Props) {
                                         <TableCell>
                                             <Can permission="manage sites">
                                                 <div className="flex gap-1">
+                                                    {site.status === 'onboarding' && (
+                                                        <Button variant="outline" size="sm" onClick={() => router.get(`/sites/${site.id}/onboard`)}>
+                                                            {t('Onboard')}
+                                                        </Button>
+                                                    )}
                                                     <Dialog open={editSite?.id === site.id} onOpenChange={(open) => !open && setEditSite(null)}>
                                                         <DialogTrigger asChild>
                                                             <Button variant="ghost" size="icon-sm" onClick={() => setEditSite(site)}>

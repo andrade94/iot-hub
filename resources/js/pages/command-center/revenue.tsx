@@ -213,7 +213,7 @@ function KPICard({ icon, label, value, accent }: { icon: React.ReactNode; label:
             <CardContent className="flex items-center gap-3 p-4">
                 {icon}
                 <div>
-                    <p className={`text-2xl font-bold tabular-nums ${accent ? `text-${accent}-600 dark:text-${accent}-400` : ''}`}>
+                    <p className={`text-2xl font-bold tabular-nums ${accent === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' : accent === 'red' ? 'text-red-600 dark:text-red-400' : accent === 'amber' ? 'text-amber-600 dark:text-amber-400' : ''}`}>
                         {value}
                     </p>
                     <p className="text-xs text-muted-foreground">{label}</p>
