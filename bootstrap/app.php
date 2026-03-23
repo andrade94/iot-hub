@@ -94,6 +94,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 });
         })->dailyAt('03:00');
 
+        // Detect NOM-072 monitoring gaps (every 15 minutes)
+        $schedule->job(new \App\Jobs\DetectMonitoringGaps)->everyFifteenMinutes();
+
         // Check expired alert snoozes + re-notify (every minute)
         $schedule->job(new \App\Jobs\CheckExpiredSnoozes)->everyMinute();
 
