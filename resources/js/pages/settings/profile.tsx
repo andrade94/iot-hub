@@ -146,6 +146,8 @@ export default function Profile({
 
                 <QuietHoursSection />
 
+                <NotificationPrefsSection />
+
                 <DeleteUser />
             </SettingsLayout>
         </AppLayout>
@@ -248,6 +250,92 @@ function QuietHoursSection() {
             <div className="flex items-center gap-4">
                 <Button onClick={save} disabled={saving}>
                     {saving ? 'Saving...' : 'Save quiet hours'}
+                </Button>
+                {saved && <p className="text-sm text-neutral-600">Saved</p>}
+            </div>
+        </div>
+    );
+}
+
+function NotificationPrefsSection() {
+    const { auth } = usePage<SharedData>().props;
+    const user = auth.user as SharedData['auth']['user'] & {
+        notify_whatsapp?: boolean;
+        notify_push?: boolean;
+        notify_email?: boolean;
+        notify_min_severity?: string;
+    };
+
+    const [whatsapp, setWhatsapp] = useState(user.notify_whatsapp ?? true);
+    const [push, setPush] = useState(user.notify_push ?? true);
+    const [email, setEmail] = useState(user.notify_email ?? true);
+    const [minSeverity, setMinSeverity] = useState(user.notify_min_severity ?? 'low');
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+
+    function save() {
+        setSaving(true);
+        router.patch(
+            '/settings/profile',
+            {
+                name: user.name,
+                email: user.email,
+                notify_whatsapp: whatsapp,
+                notify_push: push,
+                notify_email: email,
+                notify_min_severity: minSeverity,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSaved(true);
+                    setTimeout(() => setSaved(false), 2000);
+                },
+                onFinish: () => setSaving(false),
+            },
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            <HeadingSmall
+                title="Notification preferences"
+                description="Choose how and when you receive alert notifications. Escalation chain notifications override these preferences."
+            />
+
+            <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                    <Switch id="notify-whatsapp" checked={whatsapp} onCheckedChange={setWhatsapp} />
+                    <Label htmlFor="notify-whatsapp">WhatsApp alerts</Label>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Switch id="notify-push" checked={push} onCheckedChange={setPush} />
+                    <Label htmlFor="notify-push">Push notifications</Label>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Switch id="notify-email" checked={email} onCheckedChange={setEmail} />
+                    <Label htmlFor="notify-email">Email notifications</Label>
+                </div>
+            </div>
+
+            <div className="grid gap-2 sm:max-w-[250px]">
+                <Label htmlFor="min-severity">Minimum severity</Label>
+                <Select value={minSeverity} onValueChange={setMinSeverity}>
+                    <SelectTrigger id="min-severity">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="low">All alerts</SelectItem>
+                        <SelectItem value="medium">Medium and above</SelectItem>
+                        <SelectItem value="high">High and above</SelectItem>
+                        <SelectItem value="critical">Critical only</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="flex items-center gap-4">
+                <Button onClick={save} disabled={saving}>
+                    {saving ? 'Saving...' : 'Save preferences'}
                 </Button>
                 {saved && <p className="text-sm text-neutral-600">Saved</p>}
             </div>

@@ -61,7 +61,12 @@ class AlertRouter
                     if (! $this->shouldNotifyUser($userId, $alert)) {
                         continue;
                     }
+                    $user = User::find($userId);
                     foreach ($channels as $channel) {
+                        // BR-112: Respect per-user channel + severity preferences
+                        if ($user && (! $user->wantsChannel($channel) || ! $user->wantsSeverity($alert->severity))) {
+                            continue;
+                        }
                         SendAlertNotification::dispatch($alert, $userId, $channel);
                     }
                 }

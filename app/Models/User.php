@@ -34,6 +34,10 @@ class User extends Authenticatable
         'quiet_hours_start',
         'quiet_hours_end',
         'quiet_hours_tz',
+        'notify_whatsapp',
+        'notify_push',
+        'notify_email',
+        'notify_min_severity',
     ];
 
     protected $hidden = [
@@ -50,6 +54,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'has_app_access' => 'boolean',
+            'notify_whatsapp' => 'boolean',
+            'notify_push' => 'boolean',
+            'notify_email' => 'boolean',
         ];
     }
 
@@ -111,6 +118,24 @@ class User extends Authenticatable
     public function belongsToOrg(int $orgId): bool
     {
         return $this->org_id === $orgId;
+    }
+
+    public function wantsChannel(string $channel): bool
+    {
+        return match ($channel) {
+            'whatsapp' => $this->notify_whatsapp ?? true,
+            'push' => $this->notify_push ?? true,
+            'email' => $this->notify_email ?? true,
+            default => true,
+        };
+    }
+
+    public function wantsSeverity(string $severity): bool
+    {
+        $minSeverity = $this->notify_min_severity ?? 'low';
+        $levels = ['low' => 0, 'medium' => 1, 'high' => 2, 'critical' => 3];
+
+        return ($levels[$severity] ?? 0) >= ($levels[$minSeverity] ?? 0);
     }
 
     public function alertSnoozes(): HasMany
