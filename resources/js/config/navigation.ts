@@ -229,13 +229,14 @@ export const navigation: NavGroup[] = [
                 tooltip: 'Export organization data',
                 requiredPermission: 'export organization data',
             },
-            {
-                title: 'Billing',
-                href: '/settings/billing',
-                icon: CreditCard,
-                tooltip: 'Billing & invoices',
-                requiredPermission: 'manage org settings',
-            },
+            // Billing deactivated for MVP — reactivate when payment processing is needed
+            // {
+            //     title: 'Billing',
+            //     href: '/settings/billing',
+            //     icon: CreditCard,
+            //     tooltip: 'Billing & invoices',
+            //     requiredPermission: 'manage org settings',
+            // },
         ],
     },
 ];

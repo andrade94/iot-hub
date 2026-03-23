@@ -34,17 +34,17 @@ class PartnerController extends Controller
 
         $org = Organization::create($validated);
 
-        // Auto-create a default billing profile and subscription
-        $profile = BillingProfile::create([
-            'org_id' => $org->id,
-            'name' => $org->name,
-            'rfc' => 'XAXX010101000', // Generic RFC placeholder — client will update
-            'razon_social' => $org->name,
-            'is_default' => true,
-        ]);
+        // Billing deactivated for MVP — org created without subscription
+        // To reactivate, uncomment and create BillingProfile + Subscription:
+        // $profile = BillingProfile::create([
+        //     'org_id' => $org->id,
+        //     'name' => $org->name,
+        //     'rfc' => 'XAXX010101000',
+        //     'razon_social' => $org->name,
+        //     'is_default' => true,
+        // ]);
+        // app(SubscriptionService::class)->createSubscription($org, $profile);
 
-        app(SubscriptionService::class)->createSubscription($org, $profile);
-
-        return back()->with('success', "Organization '{$org->name}' created with default subscription.");
+        return back()->with('success', "Organization '{$org->name}' created.");
     }
 }
