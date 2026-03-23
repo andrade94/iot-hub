@@ -32,6 +32,11 @@ class SiteOnboardingController extends Controller
         $chirpstackConfigured = ! empty(config('services.chirpstack.url'))
             && ! empty(config('services.chirpstack.api_key'));
 
+        // BR-091: Load available site templates for template selector
+        $templates = \App\Models\SiteTemplate::forOrg($site->org_id)
+            ->select('id', 'name', 'description')
+            ->get();
+
         return Inertia::render('settings/sites/onboard', [
             'site' => $site,
             'modules' => $modules,
@@ -40,6 +45,7 @@ class SiteOnboardingController extends Controller
             'steps' => $this->getStepStatuses($site),
             'segmentSuggestions' => $segmentSuggestions,
             'chirpstackConfigured' => $chirpstackConfigured,
+            'templates' => $templates,
         ]);
     }
 
@@ -168,6 +174,12 @@ class SiteOnboardingController extends Controller
      */
     public function complete(Request $request, Site $site)
     {
+        // BR-091: Apply site template if selected
+        if ($request->filled('template_id')) {
+            $template = \App\Models\SiteTemplate::findOrFail($request->input('template_id'));
+            app(\App\Services\Sites\SiteTemplateService::class)->applyToSite($template, $site);
+        }
+
         // Validate minimum onboarding requirements
         $warnings = [];
         if ($site->gateways->isEmpty()) {

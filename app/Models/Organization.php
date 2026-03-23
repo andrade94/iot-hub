@@ -13,9 +13,23 @@ class Organization extends Model
 {
     use HasFactory, LogsActivity, SoftDeletes;
 
+    /**
+     * SM-ORG: Organization lifecycle states.
+     * active → suspended (non-payment, monitoring continues with warning)
+     * active → archived (departed client, data retained 12 months)
+     * suspended → active (payment received)
+     * archived is terminal (data deletion after retention period)
+     */
+    protected static array $transitions = [
+        'active' => ['suspended', 'archived'],
+        'suspended' => ['active', 'archived'],
+        // archived is terminal
+    ];
+
     protected $fillable = [
         'name',
         'slug',
+        'status',
         'segment',
         'plan',
         'settings',
@@ -24,6 +38,41 @@ class Organization extends Model
         'default_opening_hour',
         'default_timezone',
     ];
+
+    public function canTransitionTo(string $newStatus): bool
+    {
+        return in_array($newStatus, static::$transitions[$this->status] ?? []);
+    }
+
+    public function suspend(): self
+    {
+        if (! $this->canTransitionTo('suspended')) {
+            throw new \InvalidArgumentException("Cannot suspend organization in '{$this->status}' status");
+        }
+        $this->update(['status' => 'suspended']);
+
+        return $this;
+    }
+
+    public function archive(): self
+    {
+        if (! $this->canTransitionTo('archived')) {
+            throw new \InvalidArgumentException("Cannot archive organization in '{$this->status}' status");
+        }
+        $this->update(['status' => 'archived']);
+
+        return $this;
+    }
+
+    public function reactivate(): self
+    {
+        if ($this->status !== 'suspended') {
+            throw new \InvalidArgumentException('Only suspended organizations can be reactivated');
+        }
+        $this->update(['status' => 'active']);
+
+        return $this;
+    }
 
     protected function casts(): array
     {
