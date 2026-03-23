@@ -153,6 +153,43 @@ class UserManagementController extends Controller
         return back()->with('success', 'User deleted successfully.');
     }
 
+    public function deactivate(Request $request, User $user)
+    {
+        $org = $this->resolveOrganization($request);
+
+        if ($user->org_id !== $org->id) {
+            abort(403);
+        }
+
+        if ($user->id === $request->user()->id) {
+            return back()->with('error', 'You cannot deactivate your own account.');
+        }
+
+        $service = app(\App\Services\Users\UserDeactivationService::class);
+        $result = $service->deactivate($user, $request->user());
+
+        $message = "User deactivated. {$result['work_orders_reassigned']} work order(s) unassigned.";
+        if ($result['escalation_gaps'] > 0) {
+            $message .= " {$result['escalation_gaps']} escalation chain gap(s) created — review chains.";
+        }
+
+        return back()->with('success', $message);
+    }
+
+    public function reactivate(Request $request, User $user)
+    {
+        $org = $this->resolveOrganization($request);
+
+        if ($user->org_id !== $org->id) {
+            abort(403);
+        }
+
+        $service = app(\App\Services\Users\UserDeactivationService::class);
+        $service->reactivate($user, $request->user());
+
+        return back()->with('success', 'User reactivated.');
+    }
+
     private function resolveOrganization(Request $request): Organization
     {
         if (app()->bound('current_organization')) {

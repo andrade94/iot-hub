@@ -38,6 +38,7 @@ class User extends Authenticatable
         'notify_push',
         'notify_email',
         'notify_min_severity',
+        'deactivated_at',
     ];
 
     protected $hidden = [
@@ -57,6 +58,7 @@ class User extends Authenticatable
             'notify_whatsapp' => 'boolean',
             'notify_push' => 'boolean',
             'notify_email' => 'boolean',
+            'deactivated_at' => 'datetime',
         ];
     }
 
@@ -118,6 +120,16 @@ class User extends Authenticatable
     public function belongsToOrg(int $orgId): bool
     {
         return $this->org_id === $orgId;
+    }
+
+    public function isDeactivated(): bool
+    {
+        return $this->deactivated_at !== null;
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deactivated_at');
     }
 
     public function wantsChannel(string $channel): bool

@@ -338,6 +338,8 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
         Route::post('/', [UserManagementController::class, 'store'])->name('store');
         Route::put('{user}', [UserManagementController::class, 'update'])->name('update');
         Route::delete('{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+        Route::post('{user}/deactivate', [UserManagementController::class, 'deactivate'])->name('deactivate');
+        Route::post('{user}/reactivate', [UserManagementController::class, 'reactivate'])->name('reactivate');
     });
 
     // Compliance Calendar
