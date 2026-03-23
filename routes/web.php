@@ -208,6 +208,11 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
     Route::post('alerts/{alert}/resolve', [AlertController::class, 'resolve'])->name('alerts.resolve');
     Route::post('alerts/{alert}/dismiss', [AlertController::class, 'dismiss'])->name('alerts.dismiss');
 
+    // Bulk Operations (Phase 11)
+    Route::post('alerts/bulk-acknowledge', [AlertController::class, 'bulkAcknowledge'])->name('alerts.bulk-acknowledge');
+    Route::post('alerts/bulk-resolve', [AlertController::class, 'bulkResolve'])->name('alerts.bulk-resolve');
+    Route::post('work-orders/bulk-assign', [WorkOrderController::class, 'bulkAssign'])->name('work-orders.bulk-assign');
+
     // Alert Snooze (Phase 11)
     Route::post('alerts/{alert}/snooze', [AlertController::class, 'snooze'])->name('alerts.snooze');
     Route::delete('alerts/{alert}/snooze', [AlertController::class, 'unsnooze'])->name('alerts.unsnooze');

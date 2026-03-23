@@ -1,7 +1,9 @@
 import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
+import { BulkActionBar } from '@/components/ui/bulk-action-bar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -53,6 +55,36 @@ export default function AlertIndex({ alerts, filters }: Props) {
     const { t } = useLang();
     const [dateFrom, setDateFrom] = useState(filters.from ?? '');
     const [dateTo, setDateTo] = useState(filters.to ?? '');
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+    const actionableAlerts = alerts.data.filter((a) => ['active', 'acknowledged'].includes(a.status));
+    const allActionableSelected = actionableAlerts.length > 0 && actionableAlerts.every((a) => selectedIds.includes(a.id));
+
+    function toggleSelect(id: number) {
+        setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+    }
+
+    function toggleSelectAll() {
+        if (allActionableSelected) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(actionableAlerts.map((a) => a.id));
+        }
+    }
+
+    function bulkAcknowledge() {
+        router.post('/alerts/bulk-acknowledge', { ids: selectedIds }, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedIds([]),
+        });
+    }
+
+    function bulkResolve() {
+        router.post('/alerts/bulk-resolve', { ids: selectedIds }, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedIds([]),
+        });
+    }
 
     function applyFilter(key: string, value: string | undefined) {
         const params: Record<string, string> = { ...filters };
@@ -185,6 +217,13 @@ export default function AlertIndex({ alerts, filters }: Props) {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[40px]">
+                                    <Checkbox
+                                        checked={allActionableSelected && actionableAlerts.length > 0}
+                                        onCheckedChange={toggleSelectAll}
+                                        aria-label="Select all"
+                                    />
+                                </TableHead>
                                 <TableHead className="w-[100px]">{t('Severity')}</TableHead>
                                 <TableHead>{t('Alert')}</TableHead>
                                 <TableHead>{t('Device')}</TableHead>
@@ -197,7 +236,7 @@ export default function AlertIndex({ alerts, filters }: Props) {
                         <TableBody>
                             {alerts.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="p-0">
+                                    <TableCell colSpan={8} className="p-0">
                                         <EmptyState
                                             size="sm"
                                             variant="muted"
@@ -224,9 +263,18 @@ export default function AlertIndex({ alerts, filters }: Props) {
                                             alert.status === 'active' && alert.severity === 'critical'
                                                 ? 'bg-red-50/50 dark:bg-red-950/10'
                                                 : ''
-                                        }`}
+                                        } ${selectedIds.includes(alert.id) ? 'bg-accent/50' : ''}`}
                                         onClick={() => router.get(`/alerts/${alert.id}`)}
                                     >
+                                        <TableCell onClick={(e) => e.stopPropagation()}>
+                                            {['active', 'acknowledged'].includes(alert.status) && (
+                                                <Checkbox
+                                                    checked={selectedIds.includes(alert.id)}
+                                                    onCheckedChange={() => toggleSelect(alert.id)}
+                                                    aria-label={`Select alert ${alert.id}`}
+                                                />
+                                            )}
+                                        </TableCell>
                                         <TableCell>
                                             <SeverityBadge severity={alert.severity} />
                                         </TableCell>
@@ -357,6 +405,26 @@ export default function AlertIndex({ alerts, filters }: Props) {
                     )}
                 </Card>
             </div>
+
+            <Can permission="acknowledge alerts">
+                <BulkActionBar selectedCount={selectedIds.length} onClear={() => setSelectedIds([])}>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={bulkAcknowledge}
+                    >
+                        <Eye className="mr-2 h-4 w-4" />
+                        {t('Acknowledge')}
+                    </Button>
+                    <Button
+                        size="sm"
+                        onClick={bulkResolve}
+                    >
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        {t('Resolve')}
+                    </Button>
+                </BulkActionBar>
+            </Can>
         </AppLayout>
     );
 }

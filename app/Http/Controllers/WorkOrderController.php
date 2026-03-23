@@ -43,10 +43,20 @@ class WorkOrderController extends Controller
 
         $workOrders = $query->latest()->paginate(20)->withQueryString();
 
+        // Get technicians for bulk assign dropdown (site_manager+ only)
+        $technicians = [];
+        if ($user->hasAnyRole(['super_admin', 'org_admin', 'site_manager'])) {
+            $technicians = \App\Models\User::role('technician')
+                ->where('org_id', $user->org_id)
+                ->select('id', 'name')
+                ->get();
+        }
+
         return Inertia::render('work-orders/index', [
             'workOrders' => $workOrders,
             'filters' => $request->only(['status', 'priority', 'type', 'assigned']),
             'isTechnician' => $user->hasRole('technician'),
+            'technicians' => $technicians,
         ]);
     }
 
@@ -109,6 +119,45 @@ class WorkOrderController extends Controller
         }
 
         return back()->with('success', 'Work order status updated.');
+    }
+
+    public function bulkAssign(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:50',
+            'ids.*' => 'integer|exists:work_orders,id',
+            'assigned_to' => 'required|exists:users,id',
+        ]);
+
+        $user = $request->user();
+        $succeeded = 0;
+        $failed = 0;
+
+        foreach ($validated['ids'] as $id) {
+            $wo = WorkOrder::find($id);
+            if (! $wo) {
+                $failed++;
+                continue;
+            }
+            // Check site access
+            if (! $user->hasRole('super_admin') && ! $user->canAccessSite($wo->site_id)) {
+                $failed++;
+                continue;
+            }
+            try {
+                $wo->assign($validated['assigned_to']);
+                $succeeded++;
+            } catch (\InvalidArgumentException) {
+                $failed++;
+            }
+        }
+
+        $message = "{$succeeded} work order(s) assigned.";
+        if ($failed > 0) {
+            $message .= " {$failed} skipped.";
+        }
+
+        return back()->with('success', $message);
     }
 
     public function addPhoto(Request $request, WorkOrder $workOrder)

@@ -1,7 +1,9 @@
 import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
+import { BulkActionBar } from '@/components/ui/bulk-action-bar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +12,8 @@ import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, WorkOrder } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Filter, Plus, Wrench } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Plus, UserPlus, Wrench } from 'lucide-react';
+import { useState } from 'react';
 
 interface PaginatedWorkOrders {
     data: WorkOrder[];
@@ -21,10 +24,16 @@ interface PaginatedWorkOrders {
     next_page_url: string | null;
 }
 
+interface Technician {
+    id: number;
+    name: string;
+}
+
 interface Props {
     workOrders: PaginatedWorkOrders;
     filters: { status?: string; priority?: string; type?: string; assigned?: string };
     isTechnician?: boolean;
+    technicians?: Technician[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,8 +41,27 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Work Orders', href: '/work-orders' },
 ];
 
-export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Props) {
+export default function WorkOrderIndex({ workOrders, filters, isTechnician, technicians = [] }: Props) {
     const { t } = useLang();
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+    const assignableWOs = workOrders.data.filter((wo) => ['open', 'assigned'].includes(wo.status));
+    const allSelected = assignableWOs.length > 0 && assignableWOs.every((wo) => selectedIds.includes(wo.id));
+
+    function toggleSelect(id: number) {
+        setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+    }
+
+    function toggleSelectAll() {
+        setSelectedIds(allSelected ? [] : assignableWOs.map((wo) => wo.id));
+    }
+
+    function bulkAssign(techId: number) {
+        router.post('/work-orders/bulk-assign', { ids: selectedIds, assigned_to: techId }, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedIds([]),
+        });
+    }
 
     function applyFilter(key: string, value: string | undefined) {
         const params: Record<string, string> = { ...filters };
@@ -109,6 +137,15 @@ export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Pr
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                {!isTechnician && (
+                                    <TableHead className="w-[40px]">
+                                        <Checkbox
+                                            checked={allSelected && assignableWOs.length > 0}
+                                            onCheckedChange={toggleSelectAll}
+                                            aria-label="Select all"
+                                        />
+                                    </TableHead>
+                                )}
                                 <TableHead>{t('Title')}</TableHead>
                                 <TableHead>{t('Type')}</TableHead>
                                 <TableHead>{t('Priority')}</TableHead>
@@ -121,7 +158,7 @@ export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Pr
                         <TableBody>
                             {workOrders.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="p-0">
+                                    <TableCell colSpan={isTechnician ? 7 : 8} className="p-0">
                                         <EmptyState
                                             size="sm"
                                             variant="muted"
@@ -142,7 +179,18 @@ export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Pr
                                 </TableRow>
                             ) : (
                                 workOrders.data.map((wo) => (
-                                    <TableRow key={wo.id} className="cursor-pointer" onClick={() => router.get(`/work-orders/${wo.id}`)}>
+                                    <TableRow key={wo.id} className={`cursor-pointer ${selectedIds.includes(wo.id) ? 'bg-accent/50' : ''}`} onClick={() => router.get(`/work-orders/${wo.id}`)}>
+                                        {!isTechnician && (
+                                            <TableCell onClick={(e) => e.stopPropagation()}>
+                                                {['open', 'assigned'].includes(wo.status) && (
+                                                    <Checkbox
+                                                        checked={selectedIds.includes(wo.id)}
+                                                        onCheckedChange={() => toggleSelect(wo.id)}
+                                                        aria-label={`Select WO ${wo.id}`}
+                                                    />
+                                                )}
+                                            </TableCell>
+                                        )}
                                         <TableCell className="font-medium">{wo.title}</TableCell>
                                         <TableCell><TypeBadge type={wo.type} /></TableCell>
                                         <TableCell><PriorityBadge priority={wo.priority} /></TableCell>
@@ -168,6 +216,24 @@ export default function WorkOrderIndex({ workOrders, filters, isTechnician }: Pr
                     )}
                 </Card>
             </div>
+
+            {!isTechnician && technicians.length > 0 && (
+                <BulkActionBar selectedCount={selectedIds.length} onClear={() => setSelectedIds([])}>
+                    <Select onValueChange={(v) => bulkAssign(Number(v))}>
+                        <SelectTrigger className="bg-primary-foreground text-foreground w-[200px]">
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            <SelectValue placeholder={t('Assign to...')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {technicians.map((tech) => (
+                                <SelectItem key={tech.id} value={String(tech.id)}>
+                                    {tech.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </BulkActionBar>
+            )}
         </AppLayout>
     );
 }

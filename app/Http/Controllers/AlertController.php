@@ -131,6 +131,72 @@ class AlertController extends Controller
         return back()->with('success', "Alert snoozed for {$validated['duration_minutes']} minutes.");
     }
 
+    public function bulkAcknowledge(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:100',
+            'ids.*' => 'integer|exists:alerts,id',
+        ]);
+
+        $user = $request->user();
+        $succeeded = 0;
+        $failed = 0;
+
+        foreach ($validated['ids'] as $id) {
+            $alert = Alert::find($id);
+            if (! $alert || ! $user->can('acknowledge', $alert)) {
+                $failed++;
+                continue;
+            }
+            try {
+                $alert->acknowledge($user->id);
+                $succeeded++;
+            } catch (\InvalidArgumentException) {
+                $failed++;
+            }
+        }
+
+        $message = "{$succeeded} alert(s) acknowledged.";
+        if ($failed > 0) {
+            $message .= " {$failed} skipped (already processed or unauthorized).";
+        }
+
+        return back()->with('success', $message);
+    }
+
+    public function bulkResolve(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:100',
+            'ids.*' => 'integer|exists:alerts,id',
+        ]);
+
+        $user = $request->user();
+        $succeeded = 0;
+        $failed = 0;
+
+        foreach ($validated['ids'] as $id) {
+            $alert = Alert::find($id);
+            if (! $alert || ! $user->can('resolve', $alert)) {
+                $failed++;
+                continue;
+            }
+            try {
+                $alert->resolve($user->id, 'manual');
+                $succeeded++;
+            } catch (\InvalidArgumentException) {
+                $failed++;
+            }
+        }
+
+        $message = "{$succeeded} alert(s) resolved.";
+        if ($failed > 0) {
+            $message .= " {$failed} skipped.";
+        }
+
+        return back()->with('success', $message);
+    }
+
     public function unsnooze(Request $request, Alert $alert)
     {
         \App\Models\AlertSnooze::where('alert_id', $alert->id)
