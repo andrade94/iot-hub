@@ -172,6 +172,7 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
 
     // Site detail & zones
     Route::middleware('site.access')->group(function () {
+        Route::get('sites/{site}/timeline', \App\Http\Controllers\SiteTimelineController::class)->name('sites.timeline');
         Route::get('sites/{site}', [SiteDetailController::class, 'show'])->name('sites.show');
         Route::get('sites/{site}/zones/{zone}', [SiteDetailController::class, 'zone'])->name('sites.zone');
     });
