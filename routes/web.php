@@ -208,6 +208,10 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
     Route::post('alerts/{alert}/resolve', [AlertController::class, 'resolve'])->name('alerts.resolve');
     Route::post('alerts/{alert}/dismiss', [AlertController::class, 'dismiss'])->name('alerts.dismiss');
 
+    // Alert Snooze (Phase 11)
+    Route::post('alerts/{alert}/snooze', [AlertController::class, 'snooze'])->name('alerts.snooze');
+    Route::delete('alerts/{alert}/snooze', [AlertController::class, 'unsnooze'])->name('alerts.unsnooze');
+
     // Corrective Actions (Phase 10)
     Route::post('alerts/{alert}/corrective-actions', [CorrectiveActionController::class, 'store'])
         ->name('corrective-actions.store');

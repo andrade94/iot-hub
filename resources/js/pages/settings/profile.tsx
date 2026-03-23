@@ -2,7 +2,7 @@ import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileCo
 import { send } from '@/routes/verification';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Form, Head, Link, router, usePage } from '@inertiajs/react';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/ui/heading-small';
@@ -10,9 +10,12 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit } from '@/routes/profile';
+import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -141,8 +144,113 @@ export default function Profile({
                     </Form>
                 </div>
 
+                <QuietHoursSection />
+
                 <DeleteUser />
             </SettingsLayout>
         </AppLayout>
+    );
+}
+
+function QuietHoursSection() {
+    const { auth } = usePage<SharedData>().props;
+    const user = auth.user as SharedData['auth']['user'] & {
+        quiet_hours_start?: string | null;
+        quiet_hours_end?: string | null;
+        quiet_hours_tz?: string | null;
+    };
+
+    const [enabled, setEnabled] = useState(!!user.quiet_hours_start);
+    const [start, setStart] = useState(user.quiet_hours_start ?? '23:00');
+    const [end, setEnd] = useState(user.quiet_hours_end ?? '06:00');
+    const [tz, setTz] = useState(user.quiet_hours_tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+
+    function save() {
+        setSaving(true);
+        router.patch(
+            '/settings/profile',
+            {
+                name: user.name,
+                email: user.email,
+                quiet_hours_start: enabled ? start : null,
+                quiet_hours_end: enabled ? end : null,
+                quiet_hours_tz: enabled ? tz : null,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSaved(true);
+                    setTimeout(() => setSaved(false), 2000);
+                },
+                onFinish: () => setSaving(false),
+            },
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            <HeadingSmall
+                title="Quiet hours"
+                description="Suppress non-critical alert notifications during off-hours. Critical and high-severity alerts are always delivered."
+            />
+
+            <div className="flex items-center gap-3">
+                <Switch
+                    id="quiet-hours-enabled"
+                    checked={enabled}
+                    onCheckedChange={setEnabled}
+                />
+                <Label htmlFor="quiet-hours-enabled">Enable quiet hours</Label>
+            </div>
+
+            {enabled && (
+                <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="grid gap-2">
+                        <Label htmlFor="quiet-start">Start time</Label>
+                        <Input
+                            id="quiet-start"
+                            type="time"
+                            value={start}
+                            onChange={(e) => setStart(e.target.value)}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="quiet-end">End time</Label>
+                        <Input
+                            id="quiet-end"
+                            type="time"
+                            value={end}
+                            onChange={(e) => setEnd(e.target.value)}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="quiet-tz">Timezone</Label>
+                        <Select value={tz} onValueChange={setTz}>
+                            <SelectTrigger id="quiet-tz">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {['America/Mexico_City', 'America/Monterrey', 'America/Cancun', 'America/Tijuana', 'America/Hermosillo', 'UTC'].map(
+                                    (zone) => (
+                                        <SelectItem key={zone} value={zone}>
+                                            {zone.replace('America/', '').replace('_', ' ')}
+                                        </SelectItem>
+                                    ),
+                                )}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex items-center gap-4">
+                <Button onClick={save} disabled={saving}>
+                    {saving ? 'Saving...' : 'Save quiet hours'}
+                </Button>
+                {saved && <p className="text-sm text-neutral-600">Saved</p>}
+            </div>
+        </div>
     );
 }

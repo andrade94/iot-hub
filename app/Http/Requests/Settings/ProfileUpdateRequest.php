@@ -27,6 +27,10 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+
+            'quiet_hours_start' => ['nullable', 'date_format:H:i'],
+            'quiet_hours_end' => ['nullable', 'date_format:H:i', 'different:quiet_hours_start'],
+            'quiet_hours_tz' => ['nullable', 'timezone'],
         ];
     }
 }

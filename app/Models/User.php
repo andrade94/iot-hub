@@ -31,6 +31,9 @@ class User extends Authenticatable
         'escalation_level',
         'privacy_accepted_at',
         'privacy_policy_version',
+        'quiet_hours_start',
+        'quiet_hours_end',
+        'quiet_hours_tz',
     ];
 
     protected $hidden = [
@@ -108,6 +111,35 @@ class User extends Authenticatable
     public function belongsToOrg(int $orgId): bool
     {
         return $this->org_id === $orgId;
+    }
+
+    public function alertSnoozes(): HasMany
+    {
+        return $this->hasMany(AlertSnooze::class);
+    }
+
+    public function isInQuietHours(): bool
+    {
+        if (! $this->quiet_hours_start || ! $this->quiet_hours_end) {
+            return false;
+        }
+
+        $tz = $this->quiet_hours_tz ?? $this->organization?->default_timezone ?? 'UTC';
+        $now = now($tz);
+        $start = $now->copy()->setTimeFromTimeString($this->quiet_hours_start);
+        $end = $now->copy()->setTimeFromTimeString($this->quiet_hours_end);
+
+        // Handle overnight ranges (e.g., 23:00 → 06:00)
+        if ($start->gt($end)) {
+            return $now->gte($start) || $now->lte($end);
+        }
+
+        return $now->between($start, $end);
+    }
+
+    public function hasAlertSnoozed(int $alertId): bool
+    {
+        return $this->alertSnoozes()->where('alert_id', $alertId)->active()->exists();
     }
 
     public function getActivitylogOptions(): LogOptions

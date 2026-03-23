@@ -9,6 +9,12 @@ import AppLayout from '@/layouts/app-layout';
 import type { Alert, AlertNotificationRecord, BreadcrumbItem, CorrectiveAction, SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
     AlertTriangle,
     ArrowLeft,
     Bell,
@@ -23,17 +29,24 @@ import {
     Phone,
     Plus,
     ShieldAlert,
+    Timer,
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+
+interface AlertSnoozeData {
+    id: number;
+    expires_at: string;
+}
 
 interface Props {
     alert: Alert & {
         notifications?: AlertNotificationRecord[];
     };
+    userSnooze?: AlertSnoozeData | null;
 }
 
-export default function AlertShow({ alert }: Props) {
+export default function AlertShow({ alert, userSnooze }: Props) {
     const { t } = useLang();
     const { auth } = usePage<SharedData>().props;
     const data = alert.data;
@@ -63,6 +76,20 @@ export default function AlertShow({ alert }: Props) {
                         <p className="mt-1 text-sm text-muted-foreground">
                             {t('Triggered')} {new Date(alert.triggered_at).toLocaleString()}
                         </p>
+                        {userSnooze && (
+                            <div className="mt-1 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                                <Timer className="h-3 w-3" />
+                                {t('Snoozed until')} {new Date(userSnooze.expires_at).toLocaleTimeString()}
+                                <button
+                                    className="text-xs underline hover:text-foreground"
+                                    onClick={() =>
+                                        router.delete(`/alerts/${alert.id}/snooze`, { preserveScroll: true })
+                                    }
+                                >
+                                    {t('Cancel')}
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Actions */}
@@ -100,17 +127,49 @@ export default function AlertShow({ alert }: Props) {
                                 </Button>
                             )}
                             {['active', 'acknowledged'].includes(alert.status) && (
-                                <Can permission="manage alert rules">
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() =>
-                                            router.post(`/alerts/${alert.id}/dismiss`, {}, { preserveScroll: true })
-                                        }
-                                    >
-                                        <XCircle className="mr-2 h-4 w-4" />
-                                        {t('Dismiss')}
-                                    </Button>
-                                </Can>
+                                <>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" size="sm">
+                                                <Timer className="mr-2 h-4 w-4" />
+                                                {userSnooze ? t('Snoozed') : t('Snooze')}
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            {[
+                                                { mins: 30, label: '30 min' },
+                                                { mins: 60, label: '1 hour' },
+                                                { mins: 120, label: '2 hours' },
+                                                { mins: 240, label: '4 hours' },
+                                                { mins: 480, label: '8 hours' },
+                                            ].map(({ mins, label }) => (
+                                                <DropdownMenuItem
+                                                    key={mins}
+                                                    onClick={() =>
+                                                        router.post(
+                                                            `/alerts/${alert.id}/snooze`,
+                                                            { duration_minutes: mins },
+                                                            { preserveScroll: true },
+                                                        )
+                                                    }
+                                                >
+                                                    {label}
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                    <Can permission="manage alert rules">
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() =>
+                                                router.post(`/alerts/${alert.id}/dismiss`, {}, { preserveScroll: true })
+                                            }
+                                        >
+                                            <XCircle className="mr-2 h-4 w-4" />
+                                            {t('Dismiss')}
+                                        </Button>
+                                    </Can>
+                                </>
                             )}
                         </div>
                     </Can>

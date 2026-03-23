@@ -65,8 +65,14 @@ class AlertController extends Controller
             'correctiveActions.verifiedByUser',
         ]);
 
+        $userSnooze = $alert->snoozes()
+            ->where('user_id', $request->user()->id)
+            ->active()
+            ->first();
+
         return Inertia::render('alerts/show', [
             'alert' => $alert,
+            'userSnooze' => $userSnooze,
         ]);
     }
 
@@ -107,5 +113,30 @@ class AlertController extends Controller
         }
 
         return back()->with('success', 'Alert dismissed.');
+    }
+
+    public function snooze(Request $request, Alert $alert)
+    {
+        $this->authorize('acknowledge', $alert);
+
+        $validated = $request->validate([
+            'duration_minutes' => 'required|integer|in:30,60,120,240,480',
+        ]);
+
+        \App\Models\AlertSnooze::updateOrCreate(
+            ['alert_id' => $alert->id, 'user_id' => $request->user()->id],
+            ['expires_at' => now()->addMinutes($validated['duration_minutes'])]
+        );
+
+        return back()->with('success', "Alert snoozed for {$validated['duration_minutes']} minutes.");
+    }
+
+    public function unsnooze(Request $request, Alert $alert)
+    {
+        \App\Models\AlertSnooze::where('alert_id', $alert->id)
+            ->where('user_id', $request->user()->id)
+            ->delete();
+
+        return back()->with('success', 'Snooze cancelled.');
     }
 }

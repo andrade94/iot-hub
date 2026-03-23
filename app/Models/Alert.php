@@ -80,6 +80,16 @@ class Alert extends Model
         return $this->hasMany(CorrectiveAction::class);
     }
 
+    public function snoozes(): HasMany
+    {
+        return $this->hasMany(AlertSnooze::class);
+    }
+
+    public function isSnoozedFor(int $userId): bool
+    {
+        return $this->snoozes()->where('user_id', $userId)->active()->exists();
+    }
+
     public function acknowledge(int $userId): self
     {
         if (! $this->canTransitionTo('acknowledged')) {

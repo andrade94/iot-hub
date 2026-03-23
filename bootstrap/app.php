@@ -94,6 +94,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 });
         })->dailyAt('03:00');
 
+        // Check expired alert snoozes + re-notify (every minute)
+        $schedule->job(new \App\Jobs\CheckExpiredSnoozes)->everyMinute();
+
         // Morning summaries (runs every minute, timezone-aware)
         $schedule->job(new \App\Jobs\SendMorningSummary)->everyMinute();
 

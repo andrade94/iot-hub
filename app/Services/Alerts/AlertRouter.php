@@ -7,6 +7,7 @@ use App\Jobs\SendAlertNotification;
 use App\Jobs\SendBatchAlertSummary;
 use App\Models\Alert;
 use App\Models\EscalationChain;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
@@ -57,6 +58,9 @@ class AlertRouter
             // Higher levels (delayed): dispatch EscalateAlert job with delay
             if ($level['level'] === min($targetLevels) && $delayMinutes <= 0) {
                 foreach ($userIds as $userId) {
+                    if (! $this->shouldNotifyUser($userId, $alert)) {
+                        continue;
+                    }
                     foreach ($channels as $channel) {
                         SendAlertNotification::dispatch($alert, $userId, $channel);
                     }
@@ -143,6 +147,32 @@ class AlertRouter
             'low' => [1],                               // Level 1 only
             default => [1],
         };
+    }
+
+    /**
+     * BR-101/BR-102: Check if a user should receive notifications for this alert.
+     * Checks snooze status and quiet hours. Escalation overrides are handled by
+     * EscalationService which bypasses this check.
+     */
+    public function shouldNotifyUser(int $userId, Alert $alert): bool
+    {
+        $user = User::find($userId);
+
+        if (! $user) {
+            return false;
+        }
+
+        // BR-102: Check if user has snoozed this alert
+        if ($alert->isSnoozedFor($userId)) {
+            return false;
+        }
+
+        // BR-101: Check quiet hours — only suppress LOW/MEDIUM
+        if ($user->isInQuietHours() && in_array($alert->severity, ['low', 'medium'])) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
