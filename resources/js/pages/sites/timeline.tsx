@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLang } from '@/hooks/use-lang';
@@ -89,10 +90,10 @@ export default function SiteTimeline({ site, events, totalEvents, zones, filters
                 <Card>
                     <CardContent className="p-3">
                         <div className="flex flex-wrap items-center gap-3">
-                            <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                            <Input type="date" className="w-[150px]" value={from} onChange={(e) => setFrom(e.target.value)} />
-                            <span className="text-xs text-muted-foreground">—</span>
-                            <Input type="date" className="w-[150px]" value={to} onChange={(e) => setTo(e.target.value)} />
+                            <Filter className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" />
+                            <Input type="date" className="w-full sm:w-[150px]" value={from} onChange={(e) => setFrom(e.target.value)} />
+                            <span className="hidden text-xs text-muted-foreground sm:inline">—</span>
+                            <Input type="date" className="w-full sm:w-[150px]" value={to} onChange={(e) => setTo(e.target.value)} />
                             <Button variant="secondary" size="sm" onClick={() => applyFilters()}>
                                 {t('Apply')}
                             </Button>
@@ -190,5 +191,26 @@ export default function SiteTimeline({ site, events, totalEvents, zones, filters
                 )}
             </div>
         </AppLayout>
+    );
+}
+
+export function SiteTimelineSkeleton() {
+    return (
+        <div className="flex flex-col gap-6 p-4 md:p-6">
+            <div><Skeleton className="h-7 w-56" /><Skeleton className="mt-2 h-4 w-40" /></div>
+            <Card><CardContent className="p-3"><div className="flex flex-wrap gap-3"><Skeleton className="h-9 w-[150px]" /><Skeleton className="h-9 w-[150px]" /><Skeleton className="h-9 w-[80px]" /><Skeleton className="h-9 w-[160px]" /></div></CardContent></Card>
+            <div className="space-y-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i}>
+                        <Skeleton className="mb-3 h-4 w-48" />
+                        <div className="ml-4 space-y-3 border-l-2 border-border pl-6">
+                            {Array.from({ length: 3 }).map((_, j) => (
+                                <Skeleton key={j} className="h-16 w-full rounded-md" />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 }

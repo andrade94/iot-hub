@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
@@ -193,5 +194,28 @@ export default function SiteComparison({ rankings, metric, days, sites }: Props)
                 </Card>
             </div>
         </AppLayout>
+    );
+}
+
+export function SiteComparisonSkeleton() {
+    return (
+        <div className="flex flex-col gap-6 p-4 md:p-6">
+            <div className="flex items-center justify-between">
+                <div><Skeleton className="h-7 w-40" /><Skeleton className="mt-2 h-4 w-64" /></div>
+                <div className="flex gap-2"><Skeleton className="h-9 w-[180px]" /><Skeleton className="h-9 w-[120px]" /></div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i}><CardContent className="p-4"><Skeleton className="h-4 w-24" /><Skeleton className="mt-3 h-8 w-16" /></CardContent></Card>
+                ))}
+            </div>
+            <Card>
+                <div className="p-4 space-y-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <Skeleton key={i} className="h-10 w-full" />
+                    ))}
+                </div>
+            </Card>
+        </div>
     );
 }

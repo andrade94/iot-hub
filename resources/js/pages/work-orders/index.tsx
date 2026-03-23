@@ -73,7 +73,7 @@ export default function WorkOrderIndex({ workOrders, filters, isTechnician, tech
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Work Orders')} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+            <div className={`flex h-full flex-1 flex-col gap-4 p-4 md:p-6 ${selectedIds.length > 0 ? 'pb-20' : ''}`}>
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">{t('Work Orders')}</h1>
