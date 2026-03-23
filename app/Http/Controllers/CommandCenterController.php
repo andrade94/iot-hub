@@ -308,6 +308,16 @@ class CommandCenterController extends Controller
         $outage = OutageDeclaration::where('status', 'active')->firstOrFail();
         $outage->resolve($request->user()->id);
 
-        return back()->with('success', 'Outage resolved. Normal monitoring resumed.');
+        // BR-081: Send missed-alert summary
+        $missedAlerts = Alert::where('triggered_at', '>=', $outage->declared_at)
+            ->where('triggered_at', '<=', now())
+            ->count();
+
+        $message = 'Outage resolved. Normal monitoring resumed.';
+        if ($missedAlerts > 0) {
+            $message .= " {$missedAlerts} alert(s) were triggered during the outage — review the alert list.";
+        }
+
+        return back()->with('success', $message);
     }
 }

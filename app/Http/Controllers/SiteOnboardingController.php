@@ -188,6 +188,23 @@ class SiteOnboardingController extends Controller
 
         $site->update(['status' => 'active']);
 
+        // BR-072: Auto-create default weekly temperature compliance report schedule
+        \App\Models\ReportSchedule::firstOrCreate(
+            ['site_id' => $site->id, 'org_id' => $site->org_id, 'type' => 'temperature_compliance'],
+            [
+                'frequency' => 'weekly',
+                'day_of_week' => 1, // Monday
+                'time' => '08:00',
+                'recipients_json' => \App\Models\User::where('org_id', $site->org_id)
+                    ->role('org_admin')
+                    ->pluck('email')
+                    ->take(3)
+                    ->toArray(),
+                'active' => true,
+                'created_by' => $request->user()->id,
+            ]
+        );
+
         $message = "Site '{$site->name}' is now active.";
         if (! empty($warnings)) {
             $message .= ' Warnings: '.implode(' ', $warnings);

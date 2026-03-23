@@ -70,6 +70,30 @@ class CheckDeviceHealth implements ShouldQueue
                 }
             }
         }
+
+        // BR-079: Cross-site pattern detection — if >3 sites have mass offline, flag as upstream outage
+        if ($massOfflineSites->count() >= 3 && ! $outageActive) {
+            $siteNames = Site::whereIn('id', $massOfflineSites)->pluck('name')->implode(', ');
+            Log::critical("Possible upstream outage: {$massOfflineSites->count()} sites with mass offline", [
+                'site_ids' => $massOfflineSites->toArray(),
+            ]);
+
+            // Alert super_admins
+            \App\Models\Alert::firstOrCreate(
+                ['status' => 'active', 'severity' => 'critical', 'site_id' => $massOfflineSites->first()],
+                [
+                    'rule_id' => null,
+                    'device_id' => null,
+                    'triggered_at' => now(),
+                    'data' => [
+                        'type' => 'upstream_outage',
+                        'rule_name' => "Upstream outage — {$massOfflineSites->count()} sites affected",
+                        'affected_sites' => $siteNames,
+                        'site_count' => $massOfflineSites->count(),
+                    ],
+                ]
+            );
+        }
     }
 
     /**
