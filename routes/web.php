@@ -166,6 +166,7 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
 
     // Site Comparison (Phase 11) — must be before sites/{site} to avoid wildcard capture
     Route::get('sites/compare', \App\Http\Controllers\SiteComparisonController::class)->name('sites.compare');
+    Route::get('sites/compare/export', [\App\Http\Controllers\SiteComparisonController::class, 'export'])->name('sites.compare.export');
 
     // SLA & KPI Dashboard (Phase 11)
     Route::get('analytics/performance', \App\Http\Controllers\PerformanceAnalyticsController::class)->name('analytics.performance');
