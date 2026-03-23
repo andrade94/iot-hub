@@ -1,8 +1,8 @@
 {
   "last_triage": "2026-03-22T12:00:00Z",
   "last_triage_commit": "9888be7",
-  "last_phase_run": "phase-4",
-  "last_phase_date": "2026-03-23T12:00:00Z",
+  "last_phase_run": "phase-11-build",
+  "last_phase_date": "2026-03-23T20:00:00Z",
   "doc_freshness_snapshot": {
     "PLATFORM_REFERENCE.md": "2026-03-20",
     "ENTITY_REFERENCE.md": "2026-03-20",
@@ -23,11 +23,11 @@
     "CLAUDE.md": "2026-03-21"
   },
   "census_snapshot": {
-    "models": 40,
-    "controllers": 48,
+    "models": 41,
+    "controllers": 52,
     "migrations": 57,
-    "services": 36,
-    "jobs": 17,
+    "services": 40,
+    "jobs": 18,
     "policies": 14,
     "factories": 40,
     "seeders": 11,
@@ -37,16 +37,16 @@
     "events": 3,
     "notifications": 5,
     "form_requests": 3,
-    "frontend_pages": 61,
+    "frontend_pages": 64,
     "custom_components": 27,
     "shadcn_components": 92,
-    "hooks": 14,
+    "hooks": 11,
     "utils": 10,
-    "tests": 110,
-    "routes_web": 158,
+    "tests": 120,
+    "routes_web": 168,
     "routes_settings": 12,
     "routes_api": 27,
-    "routes_total": 197,
+    "routes_total": 207,
     "roles": 5,
     "permissions": 29
   },
@@ -107,7 +107,8 @@
     "M4": { "completion": "100%", "completed_date": "2026-03-18" },
     "M5": { "completion": "100%", "completed_date": "2026-03-18" },
     "M6": { "completion": "100%", "completed_date": "2026-03-19", "tasks_done": 24, "tasks_total": 24, "gaps_resolved": 32, "gaps_remaining": 2 },
-    "Phase10": { "completion": "100%", "completed_date": "2026-03-21", "features_built": 17, "tests_written": 23 }
+    "Phase10": { "completion": "100%", "completed_date": "2026-03-21", "features_built": 17, "tests_written": 23 },
+    "Phase11": { "completion": "100%", "completed_date": "2026-03-23", "features_built": 7, "cycles": 7, "tests_written": 81, "new_pages": 3, "new_services": 5 }
   },
   "dead_code": {
     "total": 6,
