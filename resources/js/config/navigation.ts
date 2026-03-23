@@ -63,6 +63,18 @@ export const navigation: NavGroup[] = [
                 tooltip: 'Alert analytics & tuning',
                 requiredPermission: 'view alert analytics',
             },
+            {
+                title: 'Performance',
+                href: '/analytics/performance',
+                icon: BarChart3,
+                tooltip: 'SLA & KPI dashboard',
+            },
+            {
+                title: 'Compare Sites',
+                href: '/sites/compare',
+                icon: BarChart3,
+                tooltip: 'Rank and compare site performance',
+            },
         ],
     },
     {

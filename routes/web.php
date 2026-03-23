@@ -164,6 +164,12 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
     Route::get('recipes', [RecipeController::class, 'index'])->name('recipes.index');
     Route::get('recipes/{recipe}', [RecipeController::class, 'show'])->name('recipes.show');
 
+    // Site Comparison (Phase 11) — must be before sites/{site} to avoid wildcard capture
+    Route::get('sites/compare', \App\Http\Controllers\SiteComparisonController::class)->name('sites.compare');
+
+    // SLA & KPI Dashboard (Phase 11)
+    Route::get('analytics/performance', \App\Http\Controllers\PerformanceAnalyticsController::class)->name('analytics.performance');
+
     // Site detail & zones
     Route::middleware('site.access')->group(function () {
         Route::get('sites/{site}', [SiteDetailController::class, 'show'])->name('sites.show');
