@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * @property-read DeviceCalibration|null $latestCalibration
+ */
 class Device extends Model
 {
     use HasFactory, LogsActivity, SoftDeletes;
@@ -45,6 +48,26 @@ class Device extends Model
             'last_reading_at' => 'datetime',
             'provisioned_at' => 'datetime',
         ];
+    }
+
+    public function calibrations(): HasMany
+    {
+        return $this->hasMany(DeviceCalibration::class);
+    }
+
+    public function latestCalibration(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(DeviceCalibration::class)->latestOfMany('calibrated_at');
+    }
+
+    public function calibrationStatus(): string
+    {
+        $cal = $this->latestCalibration;
+        if (! $cal) {
+            return 'none';
+        }
+
+        return $cal->calibrationStatus();
     }
 
     public function site(): BelongsTo

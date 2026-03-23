@@ -177,6 +177,10 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
         Route::get('sites/{site}/zones/{zone}', [SiteDetailController::class, 'zone'])->name('sites.zone');
     });
 
+    // Device calibrations (Phase 12)
+    Route::post('devices/{device}/calibrations', [\App\Http\Controllers\DeviceCalibrationController::class, 'store'])->name('calibrations.store');
+    Route::delete('calibrations/{calibration}', [\App\Http\Controllers\DeviceCalibrationController::class, 'destroy'])->name('calibrations.destroy');
+
     // Device detail (public within org scope)
     Route::get('devices/{device}', [DeviceDetailController::class, 'show'])->name('devices.show');
 
