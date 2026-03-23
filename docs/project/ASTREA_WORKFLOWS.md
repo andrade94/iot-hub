@@ -1,6 +1,7 @@
 # Astrea Platform Workflows
 
-> 12 end-to-end workflows with file:method references. Generated from source code.
+> 22 end-to-end workflows with file:method references. Generated from source code.
+> Last updated: 2026-03-23 (Phase 3 — added 10 Phase 10 workflows).
 
 ## Summary
 
@@ -18,6 +19,16 @@
 | 10 | Integration Export | `SapExportService` / `ContpaqExportService` | **org_admin** |
 | 11 | Module System | `ModuleController::toggle` | **org_admin** |
 | 12 | White-Label Branding | `OrganizationSettingsController::update` | **org_admin** |
+| 13 | Corrective Action | `CorrectiveActionController::store` | **site_manager** / **technician** |
+| 14 | Device Replacement | `DeviceController::replace` | **site_manager** |
+| 15 | Data Export & Offboarding | `DataExportController::store` | **org_admin** |
+| 16 | Maintenance Window Mgmt | `MaintenanceWindowController::store` | **site_manager** |
+| 17 | Outage Declaration | `CommandCenterController::declareOutage` | **super_admin** |
+| 18 | Site Template Cloning | `SiteTemplateController::store` | **site_manager** |
+| 19 | Alert Analytics | `AlertAnalyticsController::__invoke` | **org_admin** / **site_manager** |
+| 20 | Sanity Check Pipeline | `SanityCheckService::validate` | System |
+| 21 | Mass Offline Detection | `MassOfflineDetector::check` | System |
+| 22 | Scheduled Report Delivery | `SendScheduledReports` job | System (scheduled) |
 
 ---
 
@@ -311,3 +322,199 @@
 4. `buildCssVariables()` maps to `--brand-primary`, `--brand-secondary`, `--brand-accent`, `--brand-font`
 5. Shares via Inertia props: `branding.css_variables` + `org_logo_url`
 6. Frontend applies CSS variables to document root; logo from `org_logo_url` (external URLs or storage paths)
+
+---
+
+## Phase 10 Workflows (Operational Completeness)
+
+---
+
+## 13. Corrective Action Workflow
+
+**Actors:** **site_manager** / **technician** (logger), **site_manager** (verifier)
+
+1. **site_manager/technician** logs corrective action on an unresolved alert
+   - `CorrectiveActionController::store` -- validates `action_taken` + `notes`
+   - `CorrectiveAction::create()` -- status='logged', taken_by=user.id, taken_at=now()
+   - (side effect: `LogsActivity` trait logs action_taken + status change)
+2. **Supervisor** verifies the corrective action
+   - `CorrectiveActionController::verify` -- authorizes via `CorrectiveActionPolicy`
+   - `CorrectiveAction::verify($userId)` -- transitions status 'logged' → 'verified' (SM-011)
+   - Sets verified_by, verified_at (side effect: activity log entry)
+   - (guard: verifier must be different user than logger)
+
+---
+
+## 14. Device Replacement Flow
+
+**Actors:** **site_manager**
+
+1. **site_manager** initiates replacement with new device info
+   - `DeviceController::replace` -- validates new_dev_eui, new_app_key, new_model
+   - Authorizes via `DevicePolicy`; aborts if old device not in ['active', 'offline'] (BR-059)
+2. Service creates new device inheriting old configuration
+   - `DeviceReplacementService::replace()` -- copies site_id, gateway_id, recipe_id, zone, floor_x/y from old device
+   - New device created with status='pending', replaced_device_id → old device
+3. Alert rules transferred to new device
+   - `AlertRule::where('device_id', oldDevice.id)->update(['device_id' => newDevice.id])` (BR-060)
+4. Old device archived
+   - Old device status → 'replaced' (BR-060)
+   - (side effect: activity log records "Device X replaced by Device Y by Technician Z")
+
+---
+
+## 15. Data Export & Offboarding
+
+**Actors:** **org_admin**
+
+1. **org_admin** requests data export
+   - `DataExportController::store` -- validates date_from, date_to
+   - Enforces permission 'export organization data'; rate limit: 1 active export per org
+   - `DataExport::create()` -- status='queued', requested_by=user.id
+2. Async job dispatched
+   - `ExportOrganizationData::dispatch($export->id)` (tries=3, timeout=600s)
+3. Job generates multi-file ZIP
+   - `DataExport::markProcessing()` -- status='processing' (SM-012)
+   - `exportReadings()` -- CSV chunked by 1000 (device_id, device_name, metric, value, unit, time)
+   - `exportAlerts()` -- CSV chunked by 500 (id, site, device, severity, status, timestamps, resolution_type)
+   - `exportUsers()` -- CSV chunked by 100 (id, name, email, phone, created_at — no passwords)
+4. Notify requester when ready
+   - `DataExport::markCompleted($filePath, $fileSize)` -- status='completed', expires_at=now+48h
+   - `ExportReadyNotification` -- channels: database, broadcast, mail with download link
+5. Error handling
+   - On failure: `DataExport::markFailed($error)` -- status='failed'
+
+---
+
+## 16. Maintenance Window Management
+
+**Actors:** **site_manager**
+
+1. **site_manager** creates maintenance window
+   - `MaintenanceWindowController::store` -- validates site_id, zone, title, recurrence (once/daily/weekly/monthly), day_of_week, start_time (H:i), duration_minutes (15-480), suppress_alerts
+   - `MaintenanceWindow::create()` -- suppress_alerts defaults true, created_by=user.id
+2. Alert suppression check during window
+   - `MaintenanceWindow::isActiveNow(?timezone)` -- checks suppress_alerts=true AND current time within window (BR-073)
+   - Recurrence matching: once/daily = any day, weekly = day_of_week match, monthly = 1st of month
+   - `MaintenanceWindow::isActiveForZone($siteId, $zone, $tz)` -- static check for any active window in zone
+3. CRUD operations
+   - `MaintenanceWindowController::update` / `destroy` -- standard CRUD
+   - (side effect: `LogsActivity` logs title, zone, recurrence, start_time, duration_minutes, suppress_alerts)
+
+---
+
+## 17. Outage Declaration
+
+**Actors:** **super_admin**
+
+1. **super_admin** declares upstream outage from Command Center
+   - `CommandCenterController::declareOutage` -- validates reason (5-500 chars), affected_services (array of: chirpstack, twilio, mqtt, redis, database, other)
+   - `OutageDeclaration::create()` -- status='active', declared_by, declared_at=now() (BR-080)
+2. System-wide suppression active
+   - `OutageDeclaration::isActive()` returns true → offline alerts suppressed platform-wide
+   - Frontend dashboard shows outage banner via `HandleInertiaRequests` shared `active_outage` prop
+3. **super_admin** resolves outage
+   - `CommandCenterController::resolveOutage` -- fetches current active outage
+   - `OutageDeclaration::resolve($userId)` -- status 'active' → 'resolved' (SM-013), sets resolved_by, resolved_at
+4. Normal monitoring resumes
+   - `OutageDeclaration::current()` returns null → alerts fire normally again
+
+---
+
+## 18. Site Template Cloning
+
+**Actors:** **site_manager**
+
+1. **site_manager** captures template from existing site
+   - `SiteTemplateController::store` -- validates source_site_id, name, description
+   - `SiteTemplateService::capture($sourceSite)` extracts: modules, zones (unique device zones), recipe_assignments (zone → recipe_id), escalation_structure (BR-089)
+   - `SiteTemplate::create()` -- org_id, name, description + captured config JSON fields
+2. **site_manager** applies template to target site
+   - `SiteTemplateController::apply` -- validates target site_id
+   - `SiteTemplateService::applyToSite($template, $targetSite)` (BR-090):
+     - Activates modules via `SiteModule::updateOrCreate()`
+     - Creates escalation chain structure if present
+   - (note: zone_config + recipe_assignments captured but applied manually on devices)
+3. Template deletion
+   - `SiteTemplateController::destroy` -- deletes template
+
+---
+
+## 19. Alert Analytics
+
+**Actors:** **org_admin**, **site_manager**
+
+1. User navigates to alert analytics page
+   - `AlertAnalyticsController::__invoke` -- enforces 'view alert analytics' permission
+   - Instantiates `AlertAnalyticsService(orgId, siteId, days=30)`
+2. Service computes summary KPIs (BR-067)
+   - `AlertAnalyticsService::getSummary()` -- total_alerts, dismissal_rate, avg_response_minutes, auto_resolved_pct
+3. Service identifies noisiest rules
+   - `AlertAnalyticsService::getNoisiestRules(limit=10)` -- JOINs Alert + AlertRule, groups by rule_id, orders by count DESC (BR-067)
+4. Trend + breakdown computed
+   - `getTrend()` -- daily alert counts over period
+   - `getResolutionBreakdown()` -- counts by resolution_type (auto, manual, work_order, dismissed)
+5. Tuning suggestions generated
+   - `getSuggestedTuning()` -- rules firing 50+ times/week → "consider raising threshold" (BR-068)
+6. Frontend renders
+   - `Inertia::render('analytics/alerts')` with summary, noisiest_rules, trend, resolution_breakdown, suggested_tuning
+
+---
+
+## 20. Sanity Check Pipeline
+
+**Actors:** System (automatic)
+
+1. Reading arrives for processing
+   - Called during sensor reading ingestion pipeline
+2. Validate against model-specific ranges
+   - `SanityCheckService::validate($device, $readings)` -- looks up VALID_RANGES[device.model][metric]
+   - If value within range → passes to $valid[]; otherwise → logAnomaly()
+3. Invalid reading logged as anomaly
+   - `SanityCheckService::logAnomaly()` -- `DeviceAnomaly::create()` with device_id, metric, value, valid_min/max (BR-086, BR-087)
+4. Threshold alert on repeated anomalies
+   - `checkAnomalyThreshold()` -- Redis counter `anomaly_count:{device_id}:{metric}` (1h window)
+   - At 5+ invalid readings: creates Alert severity='high', data.type='sensor_anomaly' (BR-088)
+   - Message: "Device {name} sent 5+ invalid readings — possible hardware failure"
+5. Only valid readings returned for storage
+
+---
+
+## 21. Mass Offline Detection
+
+**Actors:** System (automatic)
+
+1. System checks site offline status
+   - `MassOfflineDetector::check($site)` -- triggered during device health checks
+   - Counts total active+offline devices at site
+2. Calculate offline percentage
+   - Counts devices offline >5 min (last_reading_at < now-5min or null)
+   - Returns false if offlinePct <= 50%
+3. Identify root cause
+   - `isGatewayOffline($site)` -- checks Gateway last_seen_at < 30min (BR-078)
+4. Create single site-level alert (hourly cooldown)
+   - `createSiteLevelAlert()` -- severity='critical', type='mass_offline' (BR-077)
+   - Message: "Gateway offline at {site}" OR "Possible power outage at {site} — {N} of {total} offline"
+   - Cooldown: skips if active mass_offline alert exists from last hour
+5. Individual device offline alerts suppressed
+
+---
+
+## 22. Scheduled Report Delivery
+
+**Actors:** **org_admin** (configuration), System (delivery)
+
+1. **org_admin** configures report schedule
+   - `ReportScheduleController::store` -- validates type, site_id, frequency (daily/weekly/monthly), day_of_week, time, recipients_json (1-10 emails), active
+   - `ReportSchedule::create()` -- org_id, created_by=user.id
+2. Cron job runs daily
+   - `SendScheduledReports::handle` -- loads active schedules, filters by `shouldFireToday()`
+   - `shouldFireToday()`: daily=always, weekly=day_of_week match, monthly=1st of month
+3. Generate and send report per schedule
+   - `sendReport($schedule)` -- generates report data by type
+   - `Mail::raw()` to each recipient in recipients_json
+4. Track delivery status
+   - On success: `ReportSchedule::update(['last_sent_at' => now(), 'last_error' => null])`
+   - On failure: `ReportSchedule::update(['last_error' => $e->getMessage()])`
+5. Admin manages schedules
+   - `ReportScheduleController::update` / `destroy` -- standard CRUD

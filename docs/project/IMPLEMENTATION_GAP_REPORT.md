@@ -1,25 +1,31 @@
 # Implementation Gap Report
 
 > **Astrea IoT Platform** — Spec vs. Current Codebase Comparison
-> Refreshed: 2026-03-19 | Phase 8 Validation (post-5b regeneration)
-> Sources: SYSTEM_BEHAVIOR_SPEC.md, WORKFLOW_UX_DESIGN.md
-> Previous report: 2026-03-19 (Phase 5b regeneration)
+> Refreshed: 2026-03-23 | Phase 3 Re-documentation (post-Phase 10 build)
+> Sources: SYSTEM_BEHAVIOR_SPEC.md, WORKFLOW_UX_DESIGN.md, ENTITY_REFERENCE.md
+> Previous report: 2026-03-19 (Phase 8 validation)
 
 ---
 
 ## Progress Since Last Report
 
-**Previous report:** 2026-03-19 (Phase 5b) | **This report:** 2026-03-19 (Phase 8 validation)
+**Previous report:** 2026-03-19 (Phase 8) | **This report:** 2026-03-23 (Phase 3 re-census post-Phase 10)
 
 | Metric | Previous | Current | Delta |
 |---|---|---|---|
-| Total gaps | 1 | 2 | +1 (new finding from Phase 8, immediately fixed) |
-| SECURITY | 0 | 0 | — (alert auth gap found + fixed in this cycle) |
+| Total gaps | 2 | 5 | +3 (Phase 10 coverage gaps identified) |
+| SECURITY | 0 | 0 | — |
 | CRITICAL | 0 | 0 | — |
-| HIGH | 0 | 0 | — (SM-003 classified MEDIUM) |
-| MEDIUM | 0 | 1 | +1 (SM-003 Invoice lacks canTransitionTo) |
-| LOW | 0 | 0 | — |
+| HIGH | 0 | 0 | — |
+| MEDIUM | 1 | 3 | +2 (missing tests + policies for Phase 10 entities) |
+| LOW | 0 | 2 | +2 (minor: stale doc stats, unused seeder) |
 | DEFERRED | 1 | 1 | 0 |
+
+### Phase 10 Build Summary (2026-03-20 → 2026-03-21)
+- 17 features built, 7 new models, 10 new migrations, 6 new controllers, 5 new services
+- 3 new jobs, 1 new notification, 1 new policy, 1 new middleware
+- 6 new pages, 23 new tests, 6 new permissions
+- PRD updated to v3.2 (Phases 10-13 added, 31 new features total)
 
 ### Resolved This Cycle (Phase 8)
 - **SECURITY: Alert action routes lacked backend authorization** — `AlertController::acknowledge/resolve/dismiss` had no `$this->authorize()` calls and routes had no permission middleware. Frontend `Can` component was the only guard. **FIXED**: Added `$this->authorize()` to all 3 controller methods + added `dismiss()` method to `AlertPolicy`. All 12 alert tests pass.
@@ -83,12 +89,15 @@ All 54 business rules (BR-001 through BR-054) are IMPLEMENTED. No backend gaps.
 | SM-008 | Defrost Schedule | 4: learning→detected→confirmed/manual | ✅ | ✅ | NONE |
 | SM-009 | Gateway | 2: online↔offline | ✅ | ✅ | NONE |
 | SM-010 | Alert Notification | 3: sent→delivered/failed | ✅ | ✅ | NONE |
+| SM-011 | Corrective Action | 2: logged→verified | ✅ | ✅ (different-user guard) | NONE |
+| SM-012 | Data Export | 4: queued→processing→completed/failed | ✅ | ✅ (markProcessing/markCompleted/markFailed) | NONE |
+| SM-013 | Outage Declaration | 2: active→resolved | ✅ | ✅ (resolve guard) | NONE |
 
 ### Permissions (from Phase 5c)
 
 | Check | Status |
 |---|---|
-| 23 permissions seeded + 13 policies | ✅ NONE |
+| 29 permissions seeded (23 base + 6 Phase 10) + 14 policies | ✅ NONE |
 | Entity-level access (org, site, owner) | ✅ NONE |
 | Multi-tenant middleware scoping | ✅ NONE |
 | Frontend permission checks (`Can`/`HasRole`) | ✅ IMPLEMENTED (M6) |
@@ -121,6 +130,8 @@ All 8 integrations (INT-001 through INT-008) are IMPLEMENTED. No gaps.
 | `compliance:send-reminders` | ✅ daily 07:00 |
 | `notifications:send-digest --daily` | ✅ daily 08:00 |
 | `notifications:send-digest --weekly` | ✅ Monday 09:00 |
+| `SendScheduledReports` | ✅ daily (Phase 10) |
+| `DetectPlatformOutage` | ✅ every 5min (Phase 10) |
 
 ---
 
@@ -128,7 +139,7 @@ All 8 integrations (INT-001 through INT-008) are IMPLEMENTED. No gaps.
 
 ### Screen Inventory (from Phase 5b.3)
 
-**All 60 spec'd screens exist.** No missing pages. 4 EXTRA pages previously identified are now documented in the screen inventory.
+**All 61 pages exist** (55 from M1-M6 + 6 Phase 10 pages). No missing pages. Phase 10 added: analytics/alerts, privacy/accept, settings/export-data, settings/maintenance-windows, settings/report-schedules, settings/site-templates.
 
 ### Deep Per-Page Audit (Step 2 — 5b.7 Format)
 
@@ -1432,3 +1443,48 @@ Grouped by feature area. Each group needs a Phase 7 feature spec before building
 ---
 
 *Phase 10 gap report finalized 2026-03-20. Total: 5 PARTIAL items (from original 75). All 17 features built. 109 Phase 10 tests passing.*
+
+---
+
+## Phase 3 Re-Census Findings (2026-03-23)
+
+### New Gaps Identified
+
+| # | Severity | Type | Description | Entity |
+|---|---|---|---|---|
+| GAP-P10-001 | MEDIUM | Missing Tests | DataExport has no dedicated test file | DataExport |
+| GAP-P10-002 | MEDIUM | Missing Tests | ReportSchedule has no dedicated test file | ReportSchedule |
+| GAP-P10-003 | MEDIUM | Missing Policy | SiteTemplate has no authorization policy | SiteTemplate |
+| GAP-P10-004 | LOW | Stale Stats | PLATFORM_REFERENCE.md had 9 stale aggregate stats | Docs |
+| GAP-P10-005 | LOW | Dead Code | 6 dead items: NotificationSeeder, 3 hooks, 2 components | Code cleanup |
+
+### Entities Missing Test Coverage (Phase 10)
+
+| Entity | Controller | Routes | Model | Tests | Gap |
+|---|---|---|---|---|---|
+| DataExport | ✅ DataExportController | ✅ 2 routes | ✅ | ❌ No test file | MEDIUM |
+| ReportSchedule | ✅ ReportScheduleController | ✅ 4 routes | ✅ | ❌ No test file | MEDIUM |
+| SiteTemplate | ✅ SiteTemplateController | ✅ 4 routes | ✅ | ❌ No test file, no policy | MEDIUM |
+
+### 5 PARTIAL Items (Carried Forward from Phase 10 Build)
+
+1. BR-066 — Wire full offboarding flow (export → deactivate subscription → archive)
+2. BR-072 — Auto-create default report schedule on site activation
+3. BR-079 — Wire cross-site pattern detection to auto-trigger from CheckDeviceHealth
+4. BR-081 — Send missed-alert summary notification when outage resolved
+5. BR-091 — Integrate site template selector into onboarding wizard step 1
+
+### Dead Code (for cleanup)
+
+| Item | Type | Reason |
+|---|---|---|
+| `database/seeders/NotificationSeeder.php` | Seeder | Not called in DatabaseSeeder |
+| `resources/js/hooks/use-error-handler.ts` | Hook | 0 imports |
+| `resources/js/hooks/use-search.ts` | Hook | 0 imports |
+| `resources/js/hooks/useDebounce.ts` | Hook | 0 imports |
+| `resources/js/components/HasRole.tsx` | Component | 0 imports, redundant with Can.tsx |
+| `resources/js/components/SiteSelector.tsx` | Component | 0 imports |
+
+---
+
+*Updated 2026-03-23 during Phase 3 re-documentation. Census: 40 models, 48 controllers, 197 routes, 110 tests, 29 permissions.*

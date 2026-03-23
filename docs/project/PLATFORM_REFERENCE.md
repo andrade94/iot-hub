@@ -2,7 +2,7 @@
 
 > **Tier 3 Living Reference** -- for developers and AI assistants working on the codebase.
 > Generated from source code. Keep in sync with actual implementations.
-> Last updated: 2026-03-20 (Phase 8 — Phase 10 COMPLETE, all 17 features built)
+> Last updated: 2026-03-23 (Phase 3 re-census — Phase 10 complete, 40 models, 197 routes, 110 tests)
 
 ---
 
@@ -76,29 +76,29 @@ Astrea is a **multi-tenant LoRaWAN operations platform** that bridges physical s
 ```
 app/
 ├── Http/
-│   ├── Controllers/          39 controllers (web + API)
-│   ├── Middleware/            EnsureOrganizationScope, EnsureSiteAccess, ApplyOrgBranding, HandleInertiaRequests
-│   └── Requests/             Form request validation
+│   ├── Controllers/          48 controllers (web + API + settings)
+│   ├── Middleware/            8 middleware (EnsureOrganizationScope, EnsureSiteAccess, EnsurePrivacyConsent, ApplyOrgBranding, etc.)
+│   └── Requests/             3 form request classes
 ├── Models/                   40 Eloquent models
-├── Services/                 29 service classes across 9 domains
-├── Jobs/                     14 queued jobs
+├── Services/                 36 service classes across 12 domains
+├── Jobs/                     17 queued jobs
 ├── Events/                   3 broadcast events
-├── Notifications/            SystemNotification, ActivityNotification
-├── Policies/                 13 authorization policies
-├── Factories/                33 model factories
-├── Mail/                     7 mailables
-└── Console/                  10 Artisan commands
+├── Notifications/            5 notification classes (System, Activity, Welcome, ExportReady, PlatformOutage)
+├── Policies/                 14 authorization policies
+├── Factories/                40 model factories
+├── Mail/                     8 mailables
+└── Console/                  11 Artisan commands
 ```
 
 ### Frontend (React + Inertia)
 
 ```
 resources/js/
-├── pages/                    55 Inertia page components
+├── pages/                    61 Inertia page components
 ├── components/               Custom + shadcn/ui (90+ components)
 │   └── ui/                   shadcn components (kebab-case)
 ├── layouts/                  AppLayout, AuthLayout, SettingsLayout
-├── hooks/                    18 custom hooks
+├── hooks/                    14 custom hooks
 ├── config/                   navigation.ts (sidebar structure)
 ├── i18n/                     509 translation keys (en + es)
 ├── types/                    TypeScript definitions
@@ -1114,7 +1114,7 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 
 ## 8. Frontend Pages
 
-55 Inertia page components organized by domain.
+61 Inertia page components organized by domain.
 
 ### Auth Pages
 
@@ -1151,6 +1151,12 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 |---|---|---|
 | Alert List | `pages/alerts/index.tsx` | `alerts/index` |
 | Alert Detail | `pages/alerts/show.tsx` | `alerts/show` |
+
+### Analytics Pages (Phase 10)
+
+| Page | File Path | Inertia Render Path |
+|---|---|---|
+| Alert Analytics | `pages/analytics/alerts.tsx` | `analytics/alerts` |
 
 ### Report Pages
 
@@ -1206,6 +1212,23 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | Integrations | `pages/settings/integrations.tsx` | `settings/integrations` |
 | Compliance Calendar | `pages/settings/compliance.tsx` | `settings/compliance` |
 | Sites Index | `pages/settings/sites/index.tsx` | `settings/sites/index` |
+| Escalation Chains | `pages/settings/escalation-chains/index.tsx` | `settings/escalation-chains/index` |
+| Gateways | `pages/settings/gateways/index.tsx` | `settings/gateways/index` |
+| Gateway Detail | `pages/settings/gateways/show.tsx` | `settings/gateways/show` |
+| Device Detail | `pages/settings/devices/show.tsx` | `settings/devices/show` |
+| Rule Detail | `pages/settings/rules/show.tsx` | `settings/rules/show` |
+| Recipe Index | `pages/settings/recipes/index.tsx` | `settings/recipes/index` |
+| Recipe Detail | `pages/settings/recipes/show.tsx` | `settings/recipes/show` |
+| Maintenance Windows | `pages/settings/maintenance-windows/index.tsx` | `settings/maintenance-windows/index` |
+| Report Schedules | `pages/settings/report-schedules/index.tsx` | `settings/report-schedules/index` |
+| Data Export | `pages/settings/export-data/index.tsx` | `settings/export-data/index` |
+| Site Templates | `pages/settings/site-templates/index.tsx` | `settings/site-templates/index` |
+
+### Privacy Pages (Phase 10)
+
+| Page | File Path | Inertia Render Path |
+|---|---|---|
+| Privacy Consent | `pages/privacy/accept.tsx` | `privacy/accept` |
 
 ### Partner Pages
 
@@ -1217,7 +1240,7 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 
 ## 9. Background Jobs
 
-14 queued jobs that handle the data pipeline, alert processing, and scheduled operations.
+17 queued jobs that handle the data pipeline, alert processing, and scheduled operations.
 
 ### Data Pipeline Jobs
 
@@ -1244,6 +1267,11 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | `SendRegionalSummary` | Every minute | 1 | Scheduler | For each site_manager, calculates 30 min after earliest assigned site opening. Generates regional roll-up via `MorningSummaryService` |
 | `SendCorporateSummary` | Daily (8 AM) | 1 | Scheduler | Generates org-wide summary for all org_admin users across all organizations via `MorningSummaryService` |
 | `LearnDefrostPattern` | Per-device (hour 49) | 1 | Dispatched after 49 hours | Analyzes 48 hours of temperature data via `DefrostDetector`. Detects repeating spike patterns across two days. Creates `DefrostSchedule` if pattern found. |
+| `SendScheduledReports` | Daily | 1 | Scheduler | Checks `ReportSchedule` records, generates + emails reports on configured schedule (daily/weekly/monthly) |
+| `DetectPlatformOutage` | Every 5 min | 1 | Scheduler | Checks if ANY readings received platform-wide in last 10 min. Alerts super_admin if zero → possible MQTT/ChirpStack outage |
+| `ExportOrganizationData` | default | 3 | User request | Generates ZIP with all org data (readings CSV, alerts, work orders, compliance, users). Emails download link via `ExportReadyNotification` |
+| `SendBatchAlertSummary` | alerts | 1 | Mass offline event | Sends one summary instead of N individual alerts during mass offline events |
+| `SyncSubscriptionMetering` | Periodic | 1 | Scheduler | Syncs device counts to subscription items for billing accuracy |
 
 ### Queue Worker Configuration
 
@@ -1440,7 +1468,7 @@ The navigation config also exports:
 
 ## 13. Service Layer
 
-29 service classes organized across 9 domains.
+36 service classes organized across 12 domains.
 
 | Domain | Services | Purpose |
 |---|---|---|
@@ -1448,7 +1476,7 @@ The navigation config also exports:
 | **Decoders** | DecoderFactory, MilesightDecoder | Payload normalization by sensor model |
 | **Readings** | ReadingStorageService, ReadingQueryService, ChartDataService | Store to TimescaleDB + Redis; query with auto-resolution selection; chart data formatting |
 | **RulesEngine** | RuleEvaluator, DefrostDetector, BaselineService | Alert condition evaluation, defrost cycle learning, normal pattern learning |
-| **Alerts** | AlertRouter, EscalationService | Channel routing (WhatsApp/push/Reverb), escalation chain processing |
+| **Alerts** | AlertRouter, EscalationService, AlertAnalyticsService, MassOfflineDetector | Channel routing, escalation, alert trend analytics, mass offline grouping |
 | **WhatsApp** | TwilioService | Twilio API integration for WhatsApp message delivery |
 | **Reports** | MorningSummaryService, TemperatureReport, EnergyReport | Morning summaries (store/regional/corporate), COFEPRIS PDF, energy analysis PDF |
 | **Billing** | SubscriptionService, InvoiceService, FacturapiService | Subscription management, invoice generation, CFDI stamping |
@@ -1456,6 +1484,11 @@ The navigation config also exports:
 | **WorkOrders** | WorkOrderService | Auto-create from triggers, lifecycle management |
 | **Api** | WebhookDispatcher | Outbound webhook delivery |
 | **Integrations** | SapExportService, ContpaqExportService | ERP/accounting data exports |
+| **Devices** | DeviceReplacementService | Device swap with config transfer (zone, floor plan, recipe, rules) |
+| **Readings** | SanityCheckService | Per-model valid range checks, anomaly logging, garbage data filtering |
+| **Sites** | SiteTemplateService | Clone golden site config (modules, zones, recipes, escalation) |
+| **Push** | PushNotificationService | Expo Push API for mobile notifications |
+| **Recipes** | RecipeApplicationService | Auto-apply recipes on module activation, manage overrides |
 | **Files** | FileStorageService, FileValidationService, ImageOptimizationService, PdfService | Upload handling, validation, image optimization, PDF generation |
 
 ### ReadingQueryService Auto-Resolution

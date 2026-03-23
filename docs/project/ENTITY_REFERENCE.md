@@ -1,7 +1,7 @@
 # Entity Reference -- Astrea IoT Platform
 
 > Tier 3 Model Reference. Generated from source code in `app/Models/` and `database/migrations/`.
-> 33 models across 10 domains.
+> 40 models across 12 domains. Last updated: 2026-03-23 (Phase 1 re-census).
 
 ---
 

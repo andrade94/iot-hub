@@ -95,6 +95,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view sites',
             'view devices',
             'view alerts',
+            'acknowledge alerts',
             'view reports',
             'log corrective actions',
         ]);

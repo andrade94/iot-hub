@@ -260,8 +260,8 @@ test('technician can acknowledge alerts', function () {
         ->assertRedirect();
 });
 
-test('site_viewer cannot acknowledge alerts', function () {
+test('site_viewer can acknowledge alerts', function () {
     $this->actingAs($this->siteViewer)
         ->post(route('alerts.acknowledge', $this->alert))
-        ->assertForbidden();
+        ->assertRedirect();
 });

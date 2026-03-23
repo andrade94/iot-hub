@@ -1,46 +1,54 @@
 {
-  "last_triage": "2026-03-19T18:00:00Z",
-  "last_triage_commit": "087146f",
-  "last_phase_run": "phase-5b.8-6-7",
-  "last_phase_date": "2026-03-19T18:00:00Z",
+  "last_triage": "2026-03-22T12:00:00Z",
+  "last_triage_commit": "9888be7",
+  "last_phase_run": "phase-4",
+  "last_phase_date": "2026-03-23T12:00:00Z",
   "doc_freshness_snapshot": {
-    "PLATFORM_REFERENCE.md": "2026-03-18",
-    "ENTITY_REFERENCE.md": "2026-03-18",
+    "PLATFORM_REFERENCE.md": "2026-03-20",
+    "ENTITY_REFERENCE.md": "2026-03-20",
     "ASTREA_BUSINESS_RULES.md": "2026-03-17",
     "AUDIT_PACKAGE.md": "2026-03-18",
     "ASTREA_GAP_ANALYSIS.md": "2026-03-17",
-    "ASTREA_ROADMAP.md": "2026-03-18",
+    "ASTREA_ROADMAP.md": "2026-03-19",
     "ASTREA_WORKFLOWS.md": "2026-03-19",
-    "SYSTEM_BEHAVIOR_SPEC.md": "2026-03-19",
+    "SYSTEM_BEHAVIOR_SPEC.md": "2026-03-20",
     "WORKFLOW_UX_DESIGN.md": "2026-03-19",
-    "IMPLEMENTATION_GAP_REPORT.md": "2026-03-19",
+    "IMPLEMENTATION_GAP_REPORT.md": "2026-03-20",
     "ASTREA_TASK_BREAKDOWN.md": "2026-03-19",
     "ASTREA_FEATURE_SPECS.md": "2026-03-19",
-    "prd_platform.md": "2026-03-14",
-    "CLAUDE.md": "2026-03-18"
+    "ASTREA_FEATURE_SPECS_P10S1.md": "2026-03-20",
+    "ASTREA_FEATURE_SPECS_P10S2.md": "2026-03-20",
+    "ASTREA_FEATURE_SPECS_P10S3.md": "2026-03-20",
+    "prd_platform.md": "2026-03-19",
+    "CLAUDE.md": "2026-03-21"
   },
   "census_snapshot": {
-    "models": 33,
-    "controllers": 42,
-    "migrations": 47,
-    "services": 31,
-    "jobs": 14,
-    "policies": 13,
-    "factories": 33,
-    "commands": 10,
+    "models": 40,
+    "controllers": 48,
+    "migrations": 57,
+    "services": 36,
+    "jobs": 17,
+    "policies": 14,
+    "factories": 40,
+    "seeders": 11,
+    "commands": 11,
     "mail": 8,
-    "middleware": 7,
+    "middleware": 8,
     "events": 3,
-    "notifications": 4,
-    "frontend_pages": 56,
-    "custom_components": 28,
+    "notifications": 5,
+    "form_requests": 3,
+    "frontend_pages": 61,
+    "custom_components": 27,
     "shadcn_components": 92,
-    "hooks": 13,
-    "tests": 87,
-    "routes_total": 173,
-    "i18n_keys": 509,
+    "hooks": 14,
+    "utils": 10,
+    "tests": 110,
+    "routes_web": 158,
+    "routes_settings": 12,
+    "routes_api": 27,
+    "routes_total": 197,
     "roles": 5,
-    "permissions": 23
+    "permissions": 29
   },
   "phase_5_outputs": {
     "SYSTEM_BEHAVIOR_SPEC.md": {
@@ -87,7 +95,10 @@
       "feature_specs": 5,
       "qa_test_plans": 3,
       "build_checklists": 1
-    }
+    },
+    "ASTREA_FEATURE_SPECS_P10S1.md": { "feature_specs": 6 },
+    "ASTREA_FEATURE_SPECS_P10S2.md": { "feature_specs": 6 },
+    "ASTREA_FEATURE_SPECS_P10S3.md": { "feature_specs": 5 }
   },
   "milestone_status": {
     "M1": { "completion": "100%", "completed_date": "2026-03-17" },
@@ -95,6 +106,34 @@
     "M3": { "completion": "100%", "completed_date": "2026-03-17" },
     "M4": { "completion": "100%", "completed_date": "2026-03-18" },
     "M5": { "completion": "100%", "completed_date": "2026-03-18" },
-    "M6": { "completion": "100%", "completed_date": "2026-03-19", "tasks_done": 24, "tasks_total": 24, "gaps_resolved": 32, "gaps_remaining": 2 }
+    "M6": { "completion": "100%", "completed_date": "2026-03-19", "tasks_done": 24, "tasks_total": 24, "gaps_resolved": 32, "gaps_remaining": 2 },
+    "Phase10": { "completion": "100%", "completed_date": "2026-03-21", "features_built": 17, "tests_written": 23 }
+  },
+  "dead_code": {
+    "total": 6,
+    "items": [
+      "database/seeders/NotificationSeeder.php (not called in DatabaseSeeder)",
+      "resources/js/hooks/use-error-handler.ts (0 imports)",
+      "resources/js/hooks/use-search.ts (0 imports)",
+      "resources/js/hooks/useDebounce.ts (0 imports)",
+      "resources/js/components/HasRole.tsx (0 imports, redundant with Can.tsx)",
+      "resources/js/components/SiteSelector.tsx (0 imports)"
+    ]
+  },
+  "prd_phase_status": {
+    "phase_0_foundation": "built",
+    "phase_1_data_pipeline": "built",
+    "phase_2_alert_engine": "built",
+    "phase_3_dashboards": "built",
+    "phase_4_cold_chain": "built",
+    "phase_5_energy_compliance": "built",
+    "phase_6_command_center": "built",
+    "phase_7_billing": "built",
+    "phase_8_mobile_app": "separate_repo",
+    "phase_9_advanced": "partial",
+    "phase_10_operational": "built",
+    "phase_11_excellence": "not_started",
+    "phase_12_competitive": "not_started",
+    "phase_13_scale": "not_started"
   }
 }
