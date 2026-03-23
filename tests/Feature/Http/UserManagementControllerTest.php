@@ -143,11 +143,22 @@ test('created user gets assigned role', function () {
             'name' => 'Role User',
             'email' => 'roleuser@example.com',
             'password' => 'password123',
-            'role' => 'technician',
+            'role' => 'site_manager', // org_admin can only assign client roles
         ]);
 
     $user = User::where('email', 'roleuser@example.com')->first();
-    expect($user->hasRole('technician'))->toBeTrue();
+    expect($user->hasRole('site_manager'))->toBeTrue();
+});
+
+test('org_admin cannot assign technician role', function () {
+    $this->actingAs($this->admin)
+        ->post(route('users.store'), [
+            'name' => 'Tech User',
+            'email' => 'techuser@example.com',
+            'password' => 'password123',
+            'role' => 'technician',
+        ])
+        ->assertSessionHasErrors('role');
 });
 
 test('created user gets attached to specified sites', function () {

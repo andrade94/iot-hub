@@ -62,11 +62,15 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Super Admin — all permissions
+        // ── Astrea Internal Roles ──────────────────────────────
+
+        // Super Admin — Astrea platform team, full access
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdmin->givePermissionTo(Permission::all());
 
-        // Org Admin — all except manage organizations and command center
+        // ── Client Roles ──────────────────────────────────────
+
+        // Org Admin — Client operations director
         $orgAdmin = Role::firstOrCreate(['name' => 'org_admin']);
         $orgAdmin->givePermissionTo(
             collect($permissions)->reject(fn ($p) => in_array($p, [
@@ -75,7 +79,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ]))->toArray()
         );
 
-        // Site Manager
+        // Site Manager — Client regional manager
         $siteManager = Role::firstOrCreate(['name' => 'site_manager']);
         $siteManager->givePermissionTo([
             'view sites', 'manage sites',
@@ -89,7 +93,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage maintenance windows', 'view alert analytics',
         ]);
 
-        // Site Viewer
+        // Site Viewer — Client store manager (gerente de tienda)
         $siteViewer = Role::firstOrCreate(['name' => 'site_viewer']);
         $siteViewer->givePermissionTo([
             'view sites',
@@ -100,7 +104,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'log corrective actions',
         ]);
 
-        // Technician
+        // ── Astrea Internal Role ───────────────────────────────
+
+        // Technician — Astrea field tech (created by super_admin only, not by client org_admin)
         $technician = Role::firstOrCreate(['name' => 'technician']);
         $technician->givePermissionTo([
             'view sites',

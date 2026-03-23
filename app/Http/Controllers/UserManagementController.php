@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleDefinitions;
 use App\Models\Organization;
 use App\Models\Site;
 use App\Models\User;
@@ -38,13 +39,22 @@ class UserManagementController extends Controller
             ->orderBy('name')
             ->get();
 
-        $roles = Role::whereNotIn('name', ['super_admin'])
-            ->pluck('name');
+        // org_admin can only assign client roles; super_admin can assign all except super_admin
+        $assignableRoles = $request->user()->hasRole('super_admin')
+            ? collect(array_keys(RoleDefinitions::ROLES))->reject(fn ($r) => $r === 'super_admin')->values()
+            : collect(RoleDefinitions::CLIENT_ASSIGNABLE);
+
+        $roleOptions = $assignableRoles->map(fn ($r) => [
+            'value' => $r,
+            'label' => RoleDefinitions::label($r),
+            'owner' => RoleDefinitions::owner($r),
+        ]);
 
         return Inertia::render('settings/users/index', [
             'users' => $users,
             'sites' => $sites,
-            'roles' => $roles,
+            'roles' => $assignableRoles,
+            'roleOptions' => $roleOptions,
         ]);
     }
 
@@ -52,13 +62,17 @@ class UserManagementController extends Controller
     {
         $org = $this->resolveOrganization($request);
 
+        $allowedRoles = $request->user()->hasRole('super_admin')
+            ? ['org_admin', 'site_manager', 'site_viewer', 'technician']
+            : RoleDefinitions::CLIENT_ASSIGNABLE;
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users')],
             'phone' => 'nullable|string|max:30',
             'whatsapp_phone' => 'nullable|string|max:30',
             'password' => 'required|string|min:8',
-            'role' => ['required', 'string', Rule::in(['org_admin', 'site_manager', 'site_viewer', 'technician'])],
+            'role' => ['required', 'string', Rule::in($allowedRoles)],
             'site_ids' => 'nullable|array',
             'site_ids.*' => 'integer|exists:sites,id',
             'has_app_access' => 'boolean',
@@ -98,12 +112,16 @@ class UserManagementController extends Controller
             abort(403);
         }
 
+        $allowedRoles = $request->user()->hasRole('super_admin')
+            ? ['org_admin', 'site_manager', 'site_viewer', 'technician']
+            : RoleDefinitions::CLIENT_ASSIGNABLE;
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone' => 'nullable|string|max:30',
             'whatsapp_phone' => 'nullable|string|max:30',
-            'role' => ['required', 'string', Rule::in(['org_admin', 'site_manager', 'site_viewer', 'technician'])],
+            'role' => ['required', 'string', Rule::in($allowedRoles)],
             'site_ids' => 'nullable|array',
             'site_ids.*' => 'integer|exists:sites,id',
             'has_app_access' => 'boolean',
