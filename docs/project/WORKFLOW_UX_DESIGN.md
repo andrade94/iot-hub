@@ -2972,3 +2972,289 @@ These are correctly workflow-independent.
 | **Inline toggles** | Maintenance window suppress_alerts and report schedule active use inline toggle switches | Quick enable/disable without opening edit dialog |
 | **Interstitial pages** | Privacy consent uses full-screen centered card (no sidebar) | Legal requirement; user cannot dismiss or navigate around it |
 | **Email tag input** | Report schedule recipients uses tag-style email input (type + Enter) | Multiple recipients, clear visual of who receives reports |
+
+---
+
+## Phase 11: Operational Excellence — Screen Designs
+
+> Added: 2026-03-23 (Phase 5b). 3 new pages + 4 page modifications for Phase 11 P0+P1 features.
+
+---
+
+### NEW: Site Comparison & Ranking
+
+**URL:** `/sites/compare`
+**Roles:** org_admin (all org sites), site_manager (assigned sites)
+**Pattern:** Dashboard with ranking table + comparison charts
+**Workflows:** WF-NEW (Site Comparison)
+**Rules:** BR-115, BR-116, BR-117, BR-118
+
+#### Inbound Navigation
+| From | Element | Condition |
+|---|---|---|
+| Sidebar | "Site Comparison" menu item | org_admin, site_manager |
+| Dashboard | "Compare Sites" link in site grid header | 2+ sites |
+
+#### Data Displayed
+| Section | Content | Format |
+|---|---|---|
+| Metric Selector | Dropdown: compliance %, alert count, avg response time, device uptime %, energy cost | Select component, default: compliance % |
+| Period Selector | 30 / 90 / 365 days | Button group |
+| Ranking Table | Sites ranked by selected metric. Columns: Rank, Site Name, Metric Value, Trend (vs previous period), Status Badge | DataTable, sortable by any column |
+| Comparison Chart | Line chart overlaying selected sites (2-5) over time for chosen metric | Recharts LineChart, one series per site, legend with checkboxes |
+| Summary Cards | Best performing site, worst performing site, org average | 3 stat cards above table |
+
+#### Actions
+| Action | Element | Leads To | Condition | Workflow |
+|---|---|---|---|---|
+| Change metric | Metric selector dropdown | Same page, re-ranked | Always | — |
+| Change period | Period button group | Same page, recalculated | Always | — |
+| Select sites for chart | Checkbox in table rows (max 5) | Chart updates with selected sites | Always | — |
+| View site detail | Site name click in table | `/sites/{id}` | Always | — |
+| Export as PDF | "Export PDF" button (top-right) | Download PDF | org_admin only | BR-118 |
+
+#### Role Differences
+| Element | org_admin | site_manager |
+|---|---|---|
+| Sites shown | All org sites | Assigned sites only |
+| Export PDF | ✅ Visible | ❌ Hidden |
+| Energy cost metric | ✅ Visible | ✅ Visible |
+
+#### Screen States
+| State | Condition | What User Sees |
+|---|---|---|
+| Loading | Initial fetch | Skeleton cards + skeleton table |
+| Empty | <2 sites | "Site comparison requires at least 2 sites." + CTA to sites settings |
+| Populated | 2+ sites | Full ranking table + chart |
+| Chart active | 2-5 sites checked | Chart section expands with line chart |
+
+---
+
+### NEW: SLA & KPI Dashboard
+
+**URL:** `/analytics/performance`
+**Roles:** org_admin only
+**Pattern:** Analytics dashboard with KPI cards, trend charts, export
+**Workflows:** WF-NEW (SLA Dashboard)
+**Rules:** BR-119, BR-120, BR-121
+
+#### Inbound Navigation
+| From | Element | Condition |
+|---|---|---|
+| Sidebar | "Performance" under Analytics section | org_admin |
+| Dashboard | "View Performance" link on KPI cards | org_admin |
+
+#### Data Displayed
+| Section | Content | Format |
+|---|---|---|
+| KPI Cards (5) | Avg response time (min), alerts resolved within SLA (%), device uptime (%), sensor coverage (%), compliance score | Stat cards with value + trend indicator (↑ green / ↓ red) |
+| Trend Charts | Each KPI over selected period (30/90/365d) | Recharts AreaChart, one chart per KPI in 2-column grid |
+| Site Breakdown | Table: site name, each KPI value, overall score | DataTable, sortable, color-coded cells (green/amber/red) |
+| Savings Estimate | "Estimated cost savings" card: alerts prevented × avg incident cost (configurable) | Card with calculated value + methodology link |
+
+#### Actions
+| Action | Element | Leads To | Condition | Workflow |
+|---|---|---|---|---|
+| Change period | Period selector (30/90/365d) | Same page, recalculated | Always | — |
+| Export ROI Report | "Export ROI Report" button | Download PDF | Always | BR-121 |
+| View site detail | Site name in breakdown table | `/sites/{id}` | Always | — |
+| Configure avg incident cost | "Configure" link on savings card | Modal with cost input | org_admin | — |
+
+#### Action Side Effects
+| Action | API Endpoint | Data Mutations | Notifications |
+|---|---|---|---|
+| Export ROI Report | GET `/analytics/performance/export` | — (read only) | — |
+| Configure incident cost | PUT `/settings/organization` | org.settings.avg_incident_cost | — |
+
+#### Screen States
+| State | Condition | What User Sees |
+|---|---|---|
+| Loading | Initial fetch | Skeleton cards + skeleton charts |
+| Populated | Data available | Full dashboard |
+| No data (new org) | <7 days of data | "Performance data requires at least 7 days of monitoring." |
+
+---
+
+### NEW: Site Event Timeline
+
+**URL:** `/sites/{id}/timeline`
+**Roles:** org_admin, site_manager (if site assigned)
+**Pattern:** Chronological event feed with filters
+**Workflows:** WF-NEW (Site Timeline)
+**Rules:** BR-127, BR-128, BR-129, BR-130
+
+#### Inbound Navigation
+| From | Element | Condition |
+|---|---|---|
+| Site Detail | "View Timeline" button/link | org_admin, site_manager |
+| Alert Detail | "View in Timeline" link | When viewing alert for this site |
+
+#### Data Displayed
+| Section | Content | Format |
+|---|---|---|
+| Date Range Picker | Start date, end date (default: last 7 days) | Date range picker component |
+| Filter Bar | Event type checkboxes: Readings, Alerts, Work Orders, Activity Log, Corrective Actions | Toggle chips/checkboxes |
+| Zone Filter | Dropdown: All zones, or specific zone | Select component |
+| Timeline Feed | Chronological list of events, grouped by hour. Each event: icon (type), timestamp, description, actor (if human), link to detail | Vertical timeline component with colored type indicators |
+| Summary Bar | Total events in range, breakdown by type (pill counts) | Horizontal bar above timeline |
+
+#### Event Types in Timeline
+| Type | Icon | Color | Content | Link |
+|---|---|---|---|---|
+| Sensor Reading | Thermometer | Blue | "Zone X: avg 4.2°C (hourly)" | — (aggregated, no detail link) |
+| Alert Triggered | AlertTriangle | Red/Amber | "CRITICAL: Temp alta Walk-in Cooler" | `/alerts/{id}` |
+| Alert Resolved | CheckCircle | Green | "Alert resolved (auto — 2 normal readings)" | `/alerts/{id}` |
+| Work Order | Wrench | Purple | "WO created: Battery replace — Sensor #7" | `/work-orders/{id}` |
+| Activity Log | FileText | Gray | "Alert rule updated by admin@example.com" | — |
+| Corrective Action | Shield | Teal | "CA logged: Replaced thermostat seal" | `/alerts/{id}` |
+
+#### Actions
+| Action | Element | Leads To | Condition | Workflow |
+|---|---|---|---|---|
+| Change date range | Date picker | Same page, reloaded | Always | — |
+| Filter by type | Checkboxes | Same page, filtered | Always | — |
+| Filter by zone | Zone dropdown | Same page, filtered | Always | — |
+| Click event | Event card | Detail page (alert, WO, etc.) | If linkable | — |
+
+#### Screen States
+| State | Condition | What User Sees |
+|---|---|---|
+| Loading | Fetching events | Skeleton timeline (6 placeholder items) |
+| Populated | Events found | Full timeline with events grouped by hour |
+| Empty (no events) | No events in range | "No events in this date range." + suggest expanding range |
+| Empty (filtered) | Filters exclude all events | "No events match your filters." + "Clear filters" |
+
+---
+
+### MODIFY: Alerts Index — Bulk Operations
+
+**Existing page:** `pages/alerts/index.tsx`
+**New rules:** BR-106, BR-108, BR-109, BR-110
+
+#### New Elements
+| Element | Description | Condition |
+|---|---|---|
+| Row checkboxes | Checkbox on each alert row + "Select all" in header | Always visible |
+| Floating action bar | Bottom bar appears when 1+ rows selected. Shows: "{N} selected" + action buttons | ≥1 row checked |
+| "Acknowledge Selected" button | In floating bar. Bulk acknowledges selected alerts. | site_viewer+ (has `acknowledge alerts` permission) |
+| "Resolve Selected" button | In floating bar. Bulk resolves selected alerts. | site_manager+ (cannot be site_viewer) |
+
+#### Action Side Effects (Bulk)
+| Action | API Endpoint | Data Mutations | Notifications |
+|---|---|---|---|
+| Bulk acknowledge | POST `/alerts/bulk-acknowledge` body: `{ids: [...]}` | Alert status → acknowledged (per-item, skip failures) | Toast: "X of Y alerts acknowledged" |
+| Bulk resolve | POST `/alerts/bulk-resolve` body: `{ids: [...]}` | Alert status → resolved (per-item, skip failures) | Toast: "X of Y alerts resolved" |
+
+---
+
+### MODIFY: Work Orders Index — Bulk Assign
+
+**Existing page:** `pages/work-orders/index.tsx`
+**New rules:** BR-107, BR-108, BR-109, BR-110
+
+#### New Elements
+| Element | Description | Condition |
+|---|---|---|
+| Row checkboxes | Checkbox on each WO row | site_manager+ |
+| Floating action bar | "{N} selected" + "Assign to..." button | ≥1 row checked |
+| "Assign to..." button | Opens dropdown of technicians in org → select one → bulk assign | site_manager+ |
+
+#### Action Side Effects (Bulk)
+| Action | API Endpoint | Data Mutations | Notifications |
+|---|---|---|---|
+| Bulk assign | POST `/work-orders/bulk-assign` body: `{ids: [...], assigned_to: userId}` | WO assigned_to updated, status → assigned (per-item) | NT-023: Push to assigned technician |
+
+---
+
+### MODIFY: Alert Detail — Snooze Button
+
+**Existing page:** `pages/alerts/show.tsx`
+**New rules:** BR-102, BR-105
+
+#### New Elements
+| Element | Description | Condition |
+|---|---|---|
+| "Snooze" button | Next to Acknowledge/Resolve buttons. Opens dropdown: 30min, 1h, 2h, 4h, 8h | Alert status = active or acknowledged |
+| Snooze indicator | Badge below alert header: "Snoozed until 14:30" with "Cancel snooze" link | Alert is snoozed by current user |
+
+#### Action Side Effects
+| Action | API Endpoint | Data Mutations | Notifications |
+|---|---|---|---|
+| Snooze alert | POST `/alerts/{id}/snooze` body: `{duration_minutes: 120}` | Create snooze record (alert_id, user_id, expires_at) | NT-024 when snooze expires (if alert still active) |
+| Cancel snooze | DELETE `/alerts/{id}/snooze` | Delete snooze record | — |
+
+---
+
+### MODIFY: Settings — User Management (Deactivation)
+
+**Existing page:** `pages/settings/users/index.tsx`
+**New rules:** BR-122, BR-123, BR-124, BR-125, BR-126
+
+#### New Elements
+| Element | Description | Condition |
+|---|---|---|
+| "Deactivate" action | In user row dropdown menu. Opens ConfirmationDialog with warning about WO reassignment. | org_admin, cannot deactivate self |
+| "Reactivate" action | In user row dropdown for deactivated users. | org_admin |
+| Status badge | "Active" (green) / "Deactivated" (gray) badge on user row | Always |
+| Filter: active/deactivated | Tab or toggle to show/hide deactivated users | org_admin |
+
+#### Action Side Effects
+| Action | API Endpoint | Data Mutations | Notifications |
+|---|---|---|---|
+| Deactivate | POST `/settings/users/{id}/deactivate` | User: set deactivated_at. WOs: reassign to site_manager. Escalation chains: remove user. | NT-022: org_admin notified of gaps |
+| Reactivate | POST `/settings/users/{id}/reactivate` | User: clear deactivated_at. | Activity log entry |
+
+---
+
+### MODIFY: Settings — Profile (Quiet Hours + Notification Prefs)
+
+**Existing page:** `pages/settings/profile.tsx`
+**New rules:** BR-103, BR-111, BR-112, BR-114
+
+#### New Sections (appended to profile page)
+
+**Section: Quiet Hours**
+| Field | Label | Type | Default | Notes |
+|---|---|---|---|---|
+| quiet_hours_start | Start time | Time picker (H:i) | — (disabled) | Enable via toggle |
+| quiet_hours_end | End time | Time picker (H:i) | — (disabled) | Must differ from start |
+| quiet_hours_tz | Timezone | Select | User's org default timezone | Auto-detected |
+
+**Section: Notification Preferences**
+| Field | Label | Type | Default | Notes |
+|---|---|---|---|---|
+| notify_whatsapp | WhatsApp alerts | Toggle switch | On | |
+| notify_push | Push notifications | Toggle switch | On | |
+| notify_email | Email notifications | Toggle switch | On | |
+| notify_min_severity | Minimum severity | Select: All / Medium+ / High+ / Critical only | All | |
+
+Note: "Escalation chain notifications override these preferences" help text below toggles.
+
+---
+
+### Phase 11 Screen Inventory Update
+
+| Screen | URL | Type | Workflows | Roles |
+|---|---|---|---|---|
+| Site Comparison | `/sites/compare` | NEW | WF-NEW | org_admin, site_manager |
+| SLA Dashboard | `/analytics/performance` | NEW | WF-NEW | org_admin |
+| Site Timeline | `/sites/{id}/timeline` | NEW | WF-NEW | org_admin, site_manager |
+| Alerts Index | `/alerts` | MODIFIED | WF-003 ext | All (bulk: site_viewer+) |
+| Work Orders Index | `/work-orders` | MODIFIED | WF-004 ext | site_manager+ |
+| Alert Detail | `/alerts/{id}` | MODIFIED | WF-003 ext | All |
+| Users Index | `/settings/users` | MODIFIED | WF-009 ext | org_admin |
+| Profile Settings | `/settings/profile` | MODIFIED | WF-009 ext | All |
+
+### Phase 11 Navigation Updates
+
+Add to `resources/js/config/navigation.ts`:
+
+```typescript
+// Under Analytics group (existing)
+{ title: 'Performance', href: '/analytics/performance', icon: TrendingUp, requiredPermission: 'view performance analytics' },
+
+// Under Sites group or new Compare section
+{ title: 'Compare Sites', href: '/sites/compare', icon: BarChart3, requiredPermission: 'view site comparison' },
+```
+
+Site Timeline accessed via button on Site Detail page (not sidebar nav).

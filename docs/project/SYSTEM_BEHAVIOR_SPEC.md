@@ -1244,3 +1244,259 @@ The following pages exist in the codebase but were not captured in the original 
 | Integrations | INT-009 | 1 new integration | 1 |
 | Workflows | WF-013 → WF-026 | 14 new workflows | 14 |
 | **Total new IDs** | | | **89** |
+
+---
+
+## Phase 11: Operational Excellence — System Behavior Spec
+
+> Added: 2026-03-23 (Phase 5 — pre-build definition)
+> Scope: P0 + P1 priority features from Phase 4b stress test
+
+---
+
+## 1. Business Rules — Phase 11 (BR-101 → BR-130)
+
+### Feature: Alert Snooze & Quiet Hours (P0 — Anti-Churn)
+
+| ID | Rule | Category | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|---|
+| BR-101 | Each user can set quiet hours (start_time, end_time, timezone). During quiet hours, LOW and MEDIUM alerts are suppressed (queued). CRITICAL and HIGH alerts are always delivered immediately. | Communication | HIGH | WF-003, WF-024 | `AlertRouter::shouldSuppress($user)` | NOT BUILT |
+| BR-102 | Snoozed alerts: user clicks "Snooze 2h" on alert detail → alert notifications suppressed for that user for that alert for 2 hours. After snooze expires, if alert still active, re-notify. | Communication | MEDIUM | WF-003 | `Alert::snooze($userId, $duration)` | NOT BUILT |
+| BR-103 | Quiet hours are per-USER (not per-site). Stored in `users` table (quiet_hours_start, quiet_hours_end, quiet_hours_tz). | Configuration | MEDIUM | WF-009 | User model fields | NOT BUILT |
+| BR-104 | Escalation chain overrides quiet hours: if user is in an escalation chain AND the alert has reached their level, deliver regardless of quiet hours. | Communication | CRITICAL | WF-024 | `EscalationService::escalate()` checks | NOT BUILT |
+| BR-105 | Snoozed alerts still appear in alert list (status unchanged). Only notification delivery is suppressed. | Operational | MEDIUM | WF-003 | Alert list query unchanged | NOT BUILT |
+
+### Feature: Bulk Operations (P0 — Anti-Churn)
+
+| ID | Rule | Category | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|---|
+| BR-106 | Alerts Index: users can select multiple alerts via checkbox → batch acknowledge OR batch resolve. Maximum 100 alerts per batch. | Operational | HIGH | WF-003 | `AlertController::bulkAcknowledge()`, `bulkResolve()` | NOT BUILT |
+| BR-107 | Work Orders Index: users can select multiple WOs via checkbox → batch assign to a technician. Maximum 50 WOs per batch. | Operational | HIGH | WF-004 | `WorkOrderController::bulkAssign()` | NOT BUILT |
+| BR-108 | Bulk actions respect the same permission checks as individual actions. If user cannot acknowledge one alert in the batch, that alert is skipped and reported in the response. | Access | CRITICAL | WF-003, WF-004 | Policy checks per item | NOT BUILT |
+| BR-109 | Bulk actions are atomic per-item, not transactional. If 10 of 15 alerts can be acknowledged, acknowledge the 10 and report 5 failures. | Operational | MEDIUM | WF-003, WF-004 | Loop with try/catch per item | NOT BUILT |
+| BR-110 | UI shows floating action bar at bottom when 1+ items selected. Bar shows count + available actions. Disappears when selection cleared. | UX | MEDIUM | WF-003, WF-004 | Frontend component | NOT BUILT |
+
+### Feature: Notification Preferences (P0 — Anti-Churn)
+
+| ID | Rule | Category | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|---|
+| BR-111 | Each user has per-channel notification preferences: whatsapp (on/off), push (on/off), email (on/off). Defaults: all on. | Communication | HIGH | WF-024 | `User` model fields + `AlertRouter::getChannels($user)` | NOT BUILT |
+| BR-112 | Per-severity filter: user can set minimum severity for notifications (e.g., "only CRITICAL and HIGH"). Alerts below threshold are suppressed for that user. | Communication | MEDIUM | WF-024 | `AlertRouter::shouldNotify($user, $alert)` | NOT BUILT |
+| BR-113 | Escalation chain overrides notification preferences: if user is in a chain and alert reaches their level, all enabled channels fire regardless of severity filter. | Communication | CRITICAL | WF-024 | `EscalationService` bypass check | NOT BUILT |
+| BR-114 | Settings page section "My Notifications" shows per-channel toggles + severity filter. Changes take effect immediately (no restart/refresh needed). | UX | LOW | WF-009 | Settings page + User model update | NOT BUILT |
+
+### Feature: Site Comparison & Ranking (P1 — Operational Value)
+
+| ID | Rule | Category | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|---|
+| BR-115 | New page `/sites/compare` accessible to site_manager and org_admin. Shows ranking table of accessible sites by selected metric. | Operational | MEDIUM | WF-NEW | `SiteComparisonController` | NOT BUILT |
+| BR-116 | Ranking metrics: compliance % (alerts resolved / total), alert count (period), average response time (alert → ack), device uptime %, energy cost. Default sort: compliance % descending. | Analytics | MEDIUM | WF-NEW | `SiteComparisonService::rank()` | NOT BUILT |
+| BR-117 | Side-by-side comparison: user selects 2-5 sites → overlay charts for chosen metric over time (30/90/365 days). | Analytics | LOW | WF-NEW | Frontend chart component | NOT BUILT |
+| BR-118 | Export ranking as PDF for regional meetings. Includes: date range, metric, all sites with values, org branding. | Reporting | LOW | WF-NEW | `PdfService::generateComparison()` | NOT BUILT |
+
+### Feature: SLA & KPI Dashboard (P1 — Operational Value)
+
+| ID | Rule | Category | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|---|
+| BR-119 | New page `/analytics/performance` accessible to org_admin. Shows KPIs: avg alert response time (target <15 min), alerts resolved within SLA %, device uptime %, sensor coverage %, compliance score per site. | Analytics | MEDIUM | WF-NEW | `PerformanceAnalyticsController` | NOT BUILT |
+| BR-120 | Trend over 30/90/365 days for each KPI. Shows improvement or degradation with directional indicator. | Analytics | LOW | WF-NEW | `PerformanceAnalyticsService::getTrend()` | NOT BUILT |
+| BR-121 | Export as "ROI Report" PDF — org_admin shows to their board to justify IoT investment. Includes: KPIs, trends, cost savings estimate (based on alerts prevented × avg incident cost). | Reporting | MEDIUM | WF-NEW | `PdfService::generateROIReport()` | NOT BUILT |
+
+### Feature: User Deactivation & Transfer (P1 — Operational Value)
+
+| ID | Rule | Category | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|---|
+| BR-122 | Deactivate user (not delete): block login, keep all audit trail records. New field: `deactivated_at` (nullable timestamp). User with `deactivated_at` set cannot authenticate. | Access | CRITICAL | WF-009 | Auth middleware + User model | NOT BUILT |
+| BR-123 | On deactivation: auto-reassign open work orders to the user's site_manager (or mark unassigned). Escalation chains: remove user from all levels, notify org_admin of gaps. | Operational | HIGH | WF-009 | `UserDeactivationService::deactivate()` | NOT BUILT |
+| BR-124 | Activity log records: "User X deactivated by Y, Z work orders reassigned to W". | Compliance | HIGH | WF-009 | `LogsActivity` on User model | NOT BUILT |
+| BR-125 | Deactivated users are excluded from: user lists, escalation chain dropdowns, work order assignment dropdowns. But their historical records (WOs, CAs, activity log) remain visible. | Operational | MEDIUM | WF-009 | Scopes on User model | NOT BUILT |
+| BR-126 | Reactivation: org_admin can reactivate a deactivated user. Clears `deactivated_at`. Does NOT auto-restore escalation chain membership — must be manually re-added. | Access | MEDIUM | WF-009 | `UserManagementController::reactivate()` | NOT BUILT |
+
+### Feature: Site Event Timeline (P1 — Operational Value)
+
+| ID | Rule | Category | Severity | Workflows | Enforced In | Status |
+|---|---|---|---|---|---|---|
+| BR-127 | New page `/sites/{id}/timeline` accessible to org_admin, site_manager. Shows unified chronological view of ALL events for a site within a date range. | Operational | MEDIUM | WF-NEW | `SiteTimelineController` | NOT BUILT |
+| BR-128 | Event types included: sensor readings (key metrics only — hourly aggregates, not raw), alerts (triggered/ack'd/resolved), work orders (created/completed), activity log entries (config changes), corrective actions. | Operational | MEDIUM | WF-NEW | `SiteTimelineService::getEvents()` | NOT BUILT |
+| BR-129 | Filterable by: date range (default last 7 days), event type, zone, device. | UX | LOW | WF-NEW | Query params | NOT BUILT |
+| BR-130 | Performance: timeline queries must return in <2 seconds for 7-day range on a site with 30 sensors. Use aggregated readings (1h buckets), not raw. | Quality | HIGH | WF-NEW | ReadingQueryService auto-resolution | NOT BUILT |
+
+---
+
+## 2. State Machines — Phase 11 (SM-014 → SM-015)
+
+### SM-014: User Account Lifecycle
+
+```
+  ┌──────────┐
+  │  active   │◄──── reactivate (org_admin)
+  └────┬─────┘
+       │ deactivate (org_admin)
+  ┌────▼─────┐
+  │ deactivated │
+  └──────────┘
+```
+
+| From | To | Trigger | Actor | Guard | Side Effects |
+|---|---|---|---|---|---|
+| active | deactivated | Deactivate user | org_admin | Cannot deactivate self; cannot deactivate last org_admin | Reassign WOs (BR-123), remove from escalation chains, log activity (BR-124) |
+| deactivated | active | Reactivate user | org_admin | — | Clears deactivated_at, logs activity. Does NOT restore escalation chain membership. |
+
+### SM-015: Alert Snooze (per-user overlay, not entity state)
+
+```
+  ┌───────────────┐
+  │ not_snoozed   │ (default)
+  └───────┬───────┘
+          │ snooze(userId, duration)
+  ┌───────▼───────┐
+  │   snoozed     │ (notifications suppressed for this user)
+  └───────┬───────┘
+          │ duration expires OR user un-snoozes
+  ┌───────▼───────┐
+  │ not_snoozed   │ (re-notify if alert still active)
+  └───────────────┘
+```
+
+Note: Snooze is stored per (alert_id, user_id) — not a state on the Alert model. Implemented via `alert_snoozes` table or Redis key with TTL.
+
+---
+
+## 3. Permission Matrix — Phase 11 (PM-005)
+
+### PM-005: Phase 11 Permission Updates
+
+| Action | Entity | super_admin | org_admin | site_manager | site_viewer | technician |
+|---|---|---|---|---|---|---|
+| Bulk acknowledge | Alert | ✅ | ✅ own org | ✅ own sites | ✅ own site | ✅ own sites |
+| Bulk resolve | Alert | ✅ | ✅ own org | ✅ own sites | ❌ | ❌ |
+| Bulk assign WOs | WorkOrder | ✅ | ✅ own org | ✅ own sites | ❌ | ❌ |
+| Snooze alert | Alert | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Set quiet hours | User (self) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Set notification prefs | User (self) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| View site comparison | Site | ✅ | ✅ own org | ✅ own sites | ❌ | ❌ |
+| View SLA dashboard | Analytics | ✅ | ✅ own org | ❌ | ❌ | ❌ |
+| View site timeline | Site | ✅ | ✅ own org | ✅ own sites | ❌ | ❌ |
+| Deactivate user | User | ✅ | ✅ own org | ❌ | ❌ | ❌ |
+| Reactivate user | User | ✅ | ✅ own org | ❌ | ❌ | ❌ |
+| Export ROI report | Analytics | ✅ | ✅ own org | ❌ | ❌ | ❌ |
+
+### New Permissions Required
+
+| Permission | Used By | Entity |
+|---|---|---|
+| `view site comparison` | site_manager, org_admin | Sites |
+| `view performance analytics` | org_admin | Analytics |
+| `deactivate users` | org_admin | Users |
+
+---
+
+## 4. Notification & Communication Map — Phase 11 (NT-021 → NT-025)
+
+### NT-021: Quiet Hours Summary
+
+| Field | Value |
+|---|---|
+| **Trigger** | End of quiet hours period |
+| **Recipients** | The user whose quiet hours just ended |
+| **Channel** | Push only |
+| **Content** | "You had {N} alerts during quiet hours. {critical_count} critical, {high_count} high." With link to filtered alert list. |
+| **Suppressible** | No (this IS the catch-up notification) |
+
+### NT-022: User Deactivation Notice
+
+| Field | Value |
+|---|---|
+| **Trigger** | User deactivated by org_admin |
+| **Recipients** | org_admin (confirmation), affected escalation chain members (gap warning) |
+| **Channel** | In-app + email to org_admin |
+| **Content** | "User {name} deactivated. {N} work orders reassigned. {M} escalation chain gaps created — review chains." |
+
+### NT-023: Work Order Reassignment (Bulk)
+
+| Field | Value |
+|---|---|
+| **Trigger** | Bulk assign work orders to technician |
+| **Recipients** | Assigned technician |
+| **Channel** | Push + in-app |
+| **Content** | "You have been assigned {N} new work orders by {assigner}." |
+
+### NT-024: Snooze Expiry Re-notification
+
+| Field | Value |
+|---|---|
+| **Trigger** | Alert snooze expires AND alert still active |
+| **Recipients** | User who snoozed |
+| **Channel** | Same channels as original alert |
+| **Content** | Original alert content + "Snoozed alert still active — requires attention." |
+
+### NT-025: SLA Threshold Breach
+
+| Field | Value |
+|---|---|
+| **Trigger** | Average response time exceeds 15 min threshold over 7-day rolling window |
+| **Recipients** | org_admin |
+| **Channel** | Email (weekly digest) |
+| **Content** | "Alert response time SLA breached: avg {X} min (target: <15 min). Top 5 slowest sites: ..." |
+
+---
+
+## 5. Validation Catalog — Phase 11 (VL-016 → VL-019)
+
+### VL-016: Alert Snooze
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| alert_id | FK | ✅ | Must exist, user must have access |
+| duration_minutes | integer | ✅ | In [30, 60, 120, 240, 480]. Default: 120 |
+
+### VL-017: Quiet Hours
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| quiet_hours_start | time (H:i) | ❌ | Valid time format |
+| quiet_hours_end | time (H:i) | ❌ | Valid time format; must be different from start |
+| quiet_hours_tz | string | ❌ | Valid timezone identifier |
+
+### VL-018: Notification Preferences
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| notify_whatsapp | boolean | ❌ | Default: true |
+| notify_push | boolean | ❌ | Default: true |
+| notify_email | boolean | ❌ | Default: true |
+| notify_min_severity | enum | ❌ | In [low, medium, high, critical]. Default: low (all) |
+
+### VL-019: Bulk Operations
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| ids | array | ✅ | Min: 1, max: 100 (alerts) or 50 (WOs). Each ID must exist. |
+| action | string | ✅ | In [acknowledge, resolve, assign] |
+| assigned_to | FK | Conditional | Required if action=assign. Must be a technician in the org. |
+
+---
+
+## 6. Phase 11 Workflow Cross-Reference
+
+| Workflow | New Business Rules | New State Machines | New Permissions | New Notifications |
+|---|---|---|---|---|
+| WF-003 (Alert Lifecycle) ext | BR-101, BR-102, BR-104, BR-105, BR-106, BR-108, BR-109 | SM-015 (Snooze) | Bulk acknowledge | NT-024 (Snooze expiry) |
+| WF-004 (Work Order) ext | BR-107, BR-108, BR-109 | — | Bulk assign WOs | NT-023 (Bulk reassignment) |
+| WF-009 (User Mgmt) ext | BR-111–BR-114, BR-122–BR-126 | SM-014 (User lifecycle) | deactivate users | NT-021 (Quiet summary), NT-022 (Deactivation) |
+| WF-024 (Escalation) ext | BR-104, BR-113 | — | — | — (escalation override rules) |
+| WF-NEW: Site Comparison | BR-115–BR-118 | — | view site comparison | — |
+| WF-NEW: SLA Dashboard | BR-119–BR-121 | — | view performance analytics | NT-025 (SLA breach) |
+| WF-NEW: Site Timeline | BR-127–BR-130 | — | — (reuses site access) | — |
+
+### Phase 11 ID Summary
+
+| Category | New IDs | Range | Count |
+|---|---|---|---|
+| Business Rules | BR-101 → BR-130 | 30 new rules | 30 |
+| State Machines | SM-014 → SM-015 | 2 new state machines | 2 |
+| Permission Matrix | PM-005 | 3 new permissions | 3 |
+| Notifications | NT-021 → NT-025 | 5 new notifications | 5 |
+| Validations | VL-016 → VL-019 | 4 new schemas | 4 |
+| Integrations | — | No new integrations | 0 |
+| **Total new IDs** | | | **44** |
