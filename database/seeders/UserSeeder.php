@@ -74,11 +74,33 @@ class UserSeeder extends Seeder
             $org1Sites->mapWithKeys(fn ($site) => [$site->id => ['assigned_at' => now()]])->toArray()
         );
 
-        $this->command->info('✓ Created 5 IoT test users');
-        $this->command->info('  Super Admin: super@example.com / password');
-        $this->command->info('  Org Admin: admin@example.com / password');
-        $this->command->info('  Site Manager: manager@example.com / password');
-        $this->command->info('  Site Viewer: viewer@example.com / password');
-        $this->command->info('  Technician: tech@example.com / password');
+        // Support — Astrea ops team, no org (sees all via command center)
+        $support = User::create([
+            'name' => 'Astrea Support',
+            'email' => 'support@example.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+        ]);
+        $support->assignRole('support');
+
+        // Account Manager — Astrea sales, no org (read-only across clients)
+        $accountMgr = User::create([
+            'name' => 'Astrea Account Manager',
+            'email' => 'account@example.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+        ]);
+        $accountMgr->assignRole('account_manager');
+
+        $this->command->info('✓ Created 7 IoT test users');
+        $this->command->info('  Astrea roles:');
+        $this->command->info('    Super Admin:     super@example.com / password');
+        $this->command->info('    Support:         support@example.com / password');
+        $this->command->info('    Account Manager: account@example.com / password');
+        $this->command->info('    Technician:      tech@example.com / password');
+        $this->command->info('  Client roles:');
+        $this->command->info('    Org Admin:       admin@example.com / password');
+        $this->command->info('    Site Manager:    manager@example.com / password');
+        $this->command->info('    Site Viewer:     viewer@example.com / password');
     }
 }

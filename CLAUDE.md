@@ -72,10 +72,12 @@ php artisan db:seed              # Seed without resetting
 | Email | Password | Role | Owner |
 |-------|----------|------|-------|
 | `super@example.com` | `password` | super_admin | Astrea |
+| `support@example.com` | `password` | support | Astrea |
+| `account@example.com` | `password` | account_manager | Astrea |
+| `tech@example.com` | `password` | technician | Astrea |
 | `admin@example.com` | `password` | client_org_admin | Client |
 | `manager@example.com` | `password` | client_site_manager | Client |
 | `viewer@example.com` | `password` | client_site_viewer | Client |
-| `tech@example.com` | `password` | technician | Astrea |
 
 ## Architecture
 
