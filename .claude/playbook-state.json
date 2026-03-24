@@ -1,8 +1,8 @@
 {
   "last_triage": "2026-03-22T12:00:00Z",
   "last_triage_commit": "9888be7",
-  "last_phase_run": "phase-11-build",
-  "last_phase_date": "2026-03-23T20:00:00Z",
+  "last_phase_run": "phase-8-validate",
+  "last_phase_date": "2026-03-24T01:00:00Z",
   "doc_freshness_snapshot": {
     "PLATFORM_REFERENCE.md": "2026-03-20",
     "ENTITY_REFERENCE.md": "2026-03-20",
@@ -23,11 +23,11 @@
     "CLAUDE.md": "2026-03-21"
   },
   "census_snapshot": {
-    "models": 41,
-    "controllers": 52,
+    "models": 42,
+    "controllers": 55,
     "migrations": 57,
-    "services": 40,
-    "jobs": 18,
+    "services": 42,
+    "jobs": 21,
     "policies": 14,
     "factories": 40,
     "seeders": 11,
@@ -37,16 +37,16 @@
     "events": 3,
     "notifications": 5,
     "form_requests": 3,
-    "frontend_pages": 64,
+    "frontend_pages": 65,
     "custom_components": 27,
     "shadcn_components": 92,
     "hooks": 11,
     "utils": 10,
-    "tests": 120,
-    "routes_web": 168,
+    "tests": 124,
+    "routes_web": 173,
     "routes_settings": 12,
     "routes_api": 27,
-    "routes_total": 207,
+    "routes_total": 212,
     "roles": 5,
     "permissions": 29
   },
@@ -108,7 +108,9 @@
     "M5": { "completion": "100%", "completed_date": "2026-03-18" },
     "M6": { "completion": "100%", "completed_date": "2026-03-19", "tasks_done": 24, "tasks_total": 24, "gaps_resolved": 32, "gaps_remaining": 2 },
     "Phase10": { "completion": "100%", "completed_date": "2026-03-21", "features_built": 17, "tests_written": 23 },
-    "Phase11": { "completion": "100%", "completed_date": "2026-03-23", "features_built": 7, "cycles": 7, "tests_written": 81, "new_pages": 3, "new_services": 5 }
+    "Phase11": { "completion": "100%", "completed_date": "2026-03-23", "features_built": 7, "cycles": 7, "tests_written": 81, "new_pages": 3, "new_services": 5 },
+    "Phase12": { "completion": "100%", "completed_date": "2026-03-23", "features_built": 4, "notes": "calibration, gap detection, audit mode, PDF export" },
+    "Phase13_partial": { "completion": "25%", "completed_date": "2026-03-23", "features_built": 1, "notes": "predictive analytics (battery, compressor, drift). Remaining: public API, webhooks, multi-currency, partner portal, etc." }
   },
   "dead_code": {
     "total": 6,

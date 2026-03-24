@@ -2,7 +2,7 @@
 
 > **Tier 3 Living Reference** -- for developers and AI assistants working on the codebase.
 > Generated from source code. Keep in sync with actual implementations.
-> Last updated: 2026-03-23 (Phase 11 complete — 41 models, 207 routes, 120 tests, 64 pages)
+> Last updated: 2026-03-23 (Phases 11-13 complete — 42 models, 212 routes, 124 tests, 65 pages)
 
 ---
 
@@ -76,12 +76,12 @@ Astrea is a **multi-tenant LoRaWAN operations platform** that bridges physical s
 ```
 app/
 ├── Http/
-│   ├── Controllers/          52 controllers (web + API + settings)
+│   ├── Controllers/          55 controllers (web + API + settings)
 │   ├── Middleware/            8 middleware (EnsureOrganizationScope, EnsureSiteAccess, EnsurePrivacyConsent, ApplyOrgBranding, etc.)
 │   └── Requests/             3 form request classes
 ├── Models/                   40 Eloquent models
-├── Services/                 40 service classes across 14 domains
-├── Jobs/                     18 queued jobs
+├── Services/                 42 service classes across 15 domains
+├── Jobs/                     21 queued jobs
 ├── Events/                   3 broadcast events
 ├── Notifications/            5 notification classes (System, Activity, Welcome, ExportReady, PlatformOutage)
 ├── Policies/                 14 authorization policies
@@ -94,7 +94,7 @@ app/
 
 ```
 resources/js/
-├── pages/                    64 Inertia page components
+├── pages/                    65 Inertia page components
 ├── components/               Custom + shadcn/ui (90+ components)
 │   └── ui/                   shadcn components (kebab-case)
 ├── layouts/                  AppLayout, AuthLayout, SettingsLayout
