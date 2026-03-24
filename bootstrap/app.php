@@ -94,6 +94,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 });
         })->dailyAt('03:00');
 
+        // Predictive analytics — battery, compressor, temp drift (daily at 5:00 AM)
+        $schedule->job(new \App\Jobs\RunPredictiveAnalytics)->dailyAt('05:00');
+
         // Detect NOM-072 monitoring gaps (every 15 minutes)
         $schedule->job(new \App\Jobs\DetectMonitoringGaps)->everyFifteenMinutes();
 
