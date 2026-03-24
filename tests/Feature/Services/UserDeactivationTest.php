@@ -17,7 +17,7 @@ beforeEach(function () {
         'privacy_accepted_at' => now(),
         'privacy_policy_version' => '1.0',
     ]);
-    $this->admin->assignRole('org_admin');
+    $this->admin->assignRole('client_org_admin');
 
     $this->tech = User::factory()->create([
         'org_id' => $this->org->id,

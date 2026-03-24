@@ -16,8 +16,8 @@ beforeEach(function () {
     $this->org = createOrg();
     $this->site = createSite($this->org);
 
-    $this->siteManager = createUserWithRole('site_manager', $this->org);
-    $this->siteManager->sites()->attach($this->site->id, ['role' => 'site_manager', 'assigned_at' => now()]);
+    $this->siteManager = createUserWithRole('client_site_manager', $this->org);
+    $this->siteManager->sites()->attach($this->site->id, ['role' => 'client_site_manager', 'assigned_at' => now()]);
 
     $this->technician = createUserWithRole('technician', $this->org);
     $this->technician->sites()->attach($this->site->id, ['role' => 'technician', 'assigned_at' => now()]);
@@ -162,8 +162,8 @@ test('SendMorningSummary calls PushNotificationService for matching sites', func
     Carbon::setTestNow(Carbon::parse('2026-03-16 14:00:00', 'UTC'));
 
     // Create a site_viewer user with a push token attached to the site
-    $viewer = createUserWithRole('site_viewer', $this->org);
-    $viewer->sites()->attach($this->site->id, ['role' => 'site_viewer', 'assigned_at' => now()]);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
+    $viewer->sites()->attach($this->site->id, ['role' => 'client_site_viewer', 'assigned_at' => now()]);
 
     PushToken::create([
         'user_id' => $viewer->id,

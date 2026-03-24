@@ -56,7 +56,7 @@ class SendMorningSummary implements ShouldQueue
             // site-level users (viewers, managers) + org-level admins
             $recipients = $site->users;
             $orgAdmins = \App\Models\User::where('org_id', $site->org_id)
-                ->role('org_admin')
+                ->role('client_org_admin')
                 ->get();
             $allRecipients = $recipients->merge($orgAdmins)->unique('id');
 

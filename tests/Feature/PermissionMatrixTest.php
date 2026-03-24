@@ -38,9 +38,9 @@ beforeEach(function () {
     // Create one user per role
     $this->superAdmin = createUserWithRole('super_admin');
     // super_admin has no org_id by default — set org context via session
-    $this->orgAdmin = createUserWithRole('org_admin', $this->org);
-    $this->siteManager = createUserWithRole('site_manager', $this->org);
-    $this->siteViewer = createUserWithRole('site_viewer', $this->org);
+    $this->orgAdmin = createUserWithRole('client_org_admin', $this->org);
+    $this->siteManager = createUserWithRole('client_site_manager', $this->org);
+    $this->siteViewer = createUserWithRole('client_site_viewer', $this->org);
     $this->technician = createUserWithRole('technician', $this->org);
 
     // Attach site access for roles that require pivot

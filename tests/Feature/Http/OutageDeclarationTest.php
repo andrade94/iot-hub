@@ -44,7 +44,7 @@ test('super_admin can resolve outage', function () {
 });
 
 test('non-super_admin cannot declare outage', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
 
     $response = $this->actingAs($user)->post(route('command-center.outage.declare'), [
         'reason' => 'Should not work',

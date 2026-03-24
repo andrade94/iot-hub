@@ -10,7 +10,7 @@ beforeEach(function () {
 });
 
 test('user with permission can log corrective action on critical alert', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
     $alert = Alert::factory()->create([
         'site_id' => $this->site->id,
@@ -33,7 +33,7 @@ test('user with permission can log corrective action on critical alert', functio
 });
 
 test('user with permission can log corrective action on high severity alert', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     $user->sites()->attach($this->site);
     $alert = Alert::factory()->create([
         'site_id' => $this->site->id,
@@ -50,7 +50,7 @@ test('user with permission can log corrective action on high severity alert', fu
 });
 
 test('cannot log corrective action on medium severity alert', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
     $alert = Alert::factory()->create([
         'site_id' => $this->site->id,
@@ -67,7 +67,7 @@ test('cannot log corrective action on medium severity alert', function () {
 });
 
 test('action_taken must be at least 10 characters', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
     $alert = Alert::factory()->create([
         'site_id' => $this->site->id,
@@ -83,9 +83,9 @@ test('action_taken must be at least 10 characters', function () {
 });
 
 test('different user can verify corrective action', function () {
-    $userA = createUserWithRole('site_viewer', $this->org);
+    $userA = createUserWithRole('client_site_viewer', $this->org);
     $userA->sites()->attach($this->site);
-    $userB = createUserWithRole('site_manager', $this->org);
+    $userB = createUserWithRole('client_site_manager', $this->org);
     $userB->sites()->attach($this->site);
 
     $alert = Alert::factory()->create([
@@ -113,7 +113,7 @@ test('different user can verify corrective action', function () {
 });
 
 test('same user cannot verify their own corrective action', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
 
     $alert = Alert::factory()->create([
@@ -140,9 +140,9 @@ test('same user cannot verify their own corrective action', function () {
 });
 
 test('site_viewer cannot verify corrective actions', function () {
-    $userA = createUserWithRole('site_manager', $this->org);
+    $userA = createUserWithRole('client_site_manager', $this->org);
     $userA->sites()->attach($this->site);
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
     $viewer->sites()->attach($this->site);
 
     $alert = Alert::factory()->create([
@@ -168,7 +168,7 @@ test('site_viewer cannot verify corrective actions', function () {
 });
 
 test('corrective actions appear on alert detail page', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     $alert = Alert::factory()->create([

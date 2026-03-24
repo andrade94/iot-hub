@@ -6,7 +6,7 @@ beforeEach(function () {
     seedPermissions();
 
     $this->org = createOrg();
-    $this->user = createUserWithRole('org_admin', $this->org);
+    $this->user = createUserWithRole('client_org_admin', $this->org);
 });
 
 test('org_admin can list api keys', function () {
@@ -71,7 +71,7 @@ test('cannot delete another org api key', function () {
 });
 
 test('site_viewer cannot access api keys', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->get(route('api-keys.index'))

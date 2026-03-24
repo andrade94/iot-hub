@@ -10,12 +10,12 @@ beforeEach(function () {
 
     $this->org = createOrg();
     $this->site = createSite($this->org);
-    $this->user = createUserWithRole('org_admin', $this->org);
+    $this->user = createUserWithRole('client_org_admin', $this->org);
 
     // GatewayController uses $this->authorize() which requires a policy.
     // Grant all abilities to org_admin for gateway operations.
     Gate::before(function ($user) {
-        if ($user->hasRole('super_admin') || $user->hasRole('org_admin')) {
+        if ($user->hasRole('super_admin') || $user->hasRole('client_org_admin')) {
             return true;
         }
     });
@@ -81,7 +81,7 @@ test('org_admin can delete a gateway', function () {
 });
 
 test('site_viewer cannot manage gateways', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
     $viewer->sites()->attach($this->site->id, ['assigned_at' => now()]);
 
     $this->actingAs($viewer)
@@ -94,7 +94,7 @@ test('site_viewer cannot manage gateways', function () {
 
 test('user from another org cannot access gateways', function () {
     $otherOrg = createOrg(['name' => 'Other']);
-    $otherUser = createUserWithRole('org_admin', $otherOrg);
+    $otherUser = createUserWithRole('client_org_admin', $otherOrg);
 
     $this->actingAs($otherUser)
         ->get(route('gateways.index', $this->site))

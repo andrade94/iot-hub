@@ -9,7 +9,7 @@ beforeEach(function () {
     seedPermissions();
 
     $this->org = createOrg();
-    $this->admin = createUserWithRole('org_admin', $this->org);
+    $this->admin = createUserWithRole('client_org_admin', $this->org);
 });
 
 test('shares branding props when organization has branding', function () {

@@ -10,7 +10,7 @@ beforeEach(function () {
 
     $this->org = createOrg();
     $this->site = createSite($this->org);
-    $this->admin = createUserWithRole('org_admin', $this->org);
+    $this->admin = createUserWithRole('client_org_admin', $this->org);
 });
 
 test('sends email for event due in 30 days', function () {
@@ -147,7 +147,7 @@ test('does not send for completed events', function () {
 });
 
 test('sends to all admin users for the organization', function () {
-    $secondAdmin = createUserWithRole('org_admin', $this->org);
+    $secondAdmin = createUserWithRole('client_org_admin', $this->org);
 
     ComplianceEvent::factory()->create([
         'org_id' => $this->org->id,

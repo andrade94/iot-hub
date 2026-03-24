@@ -7,7 +7,7 @@ beforeEach(function () {
 
     $this->org = createOrg();
     $this->site = createSite($this->org);
-    $this->admin = createUserWithRole('org_admin', $this->org);
+    $this->admin = createUserWithRole('client_org_admin', $this->org);
 });
 
 // ──────────────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ test('guest is redirected to login', function () {
 });
 
 test('site_viewer is forbidden from accessing site settings', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->get(route('sites.settings.index'))
@@ -28,7 +28,7 @@ test('site_viewer is forbidden from accessing site settings', function () {
 });
 
 test('site_viewer is forbidden from store', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->post(route('sites.settings.store'), [
@@ -39,7 +39,7 @@ test('site_viewer is forbidden from store', function () {
 });
 
 test('site_viewer is forbidden from update', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->put(route('sites.settings.update', $this->site), [
@@ -50,7 +50,7 @@ test('site_viewer is forbidden from update', function () {
 });
 
 test('site_viewer is forbidden from delete', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->delete(route('sites.settings.destroy', $this->site))

@@ -208,7 +208,7 @@ class SiteOnboardingController extends Controller
                 'day_of_week' => 1, // Monday
                 'time' => '08:00',
                 'recipients_json' => \App\Models\User::where('org_id', $site->org_id)
-                    ->role('org_admin')
+                    ->role('client_org_admin')
                     ->pluck('email')
                     ->take(3)
                     ->toArray(),

@@ -14,7 +14,7 @@ test('guest is redirected to login', function () {
 });
 
 test('non-super_admin (org_admin) gets 403', function () {
-    $orgAdmin = createUserWithRole('org_admin', $this->org);
+    $orgAdmin = createUserWithRole('client_org_admin', $this->org);
 
     $this->actingAs($orgAdmin)
         ->get(route('partner.index'))

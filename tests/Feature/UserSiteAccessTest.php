@@ -18,7 +18,7 @@ beforeEach(function () {
 
 test('org_admin gets all org sites via accessibleSites', function () {
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    $user->assignRole('org_admin');
+    $user->assignRole('client_org_admin');
 
     $sites = $user->accessibleSites();
 
@@ -27,7 +27,7 @@ test('org_admin gets all org sites via accessibleSites', function () {
 
 test('site_viewer gets only assigned sites via accessibleSites', function () {
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    $user->assignRole('site_viewer');
+    $user->assignRole('client_site_viewer');
     $user->sites()->attach($this->site1->id, ['assigned_at' => now()]);
 
     $sites = $user->accessibleSites();
@@ -51,7 +51,7 @@ test('technician gets only assigned sites', function () {
 
 test('canAccessSite returns true for assigned site', function () {
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    $user->assignRole('site_viewer');
+    $user->assignRole('client_site_viewer');
     $user->sites()->attach($this->site1->id, ['assigned_at' => now()]);
 
     expect($user->canAccessSite($this->site1->id))->toBeTrue();
@@ -60,7 +60,7 @@ test('canAccessSite returns true for assigned site', function () {
 
 test('canAccessSite returns true for org_admin on any org site', function () {
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    $user->assignRole('org_admin');
+    $user->assignRole('client_org_admin');
 
     expect($user->canAccessSite($this->site1->id))->toBeTrue();
     expect($user->canAccessSite($this->site2->id))->toBeTrue();
@@ -74,7 +74,7 @@ test('canAccessSite returns false for org_admin on other org site', function () 
     $otherSite = Site::create(['org_id' => $otherOrg->id, 'name' => 'Other Site', 'status' => 'active']);
 
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    $user->assignRole('org_admin');
+    $user->assignRole('client_org_admin');
 
     expect($user->canAccessSite($otherSite->id))->toBeFalse();
 });

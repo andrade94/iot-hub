@@ -10,7 +10,7 @@ beforeEach(function () {
 
     $this->org = createOrg();
     $this->site = createSite($this->org);
-    $this->admin = createUserWithRole('org_admin', $this->org);
+    $this->admin = createUserWithRole('client_org_admin', $this->org);
 });
 
 // ──────────────────────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ test('industrial dashboard supports period parameter', function () {
 test('user without site access is forbidden', function () {
     $otherOrg = createOrg(['name' => 'Other Org']);
     $otherSite = createSite($otherOrg);
-    $viewer = createUserWithRole('site_viewer', $otherOrg);
+    $viewer = createUserWithRole('client_site_viewer', $otherOrg);
 
     $this->actingAs($viewer)
         ->get(route('modules.iaq', $otherSite))

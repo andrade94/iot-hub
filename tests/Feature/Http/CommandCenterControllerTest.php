@@ -11,7 +11,7 @@ beforeEach(function () {
     $this->org = createOrg();
     $this->site = createSite($this->org);
     $this->superAdmin = createUserWithRole('super_admin');
-    $this->orgAdmin = createUserWithRole('org_admin', $this->org);
+    $this->orgAdmin = createUserWithRole('client_org_admin', $this->org);
 });
 
 test('super_admin can access command center index', function () {
@@ -53,7 +53,7 @@ test('org_admin is forbidden from command center', function () {
 });
 
 test('site_manager is forbidden from command center', function () {
-    $manager = createUserWithRole('site_manager', $this->org);
+    $manager = createUserWithRole('client_site_manager', $this->org);
 
     $this->actingAs($manager)
         ->get(route('command-center.index'))

@@ -17,7 +17,7 @@ beforeEach(function () {
 });
 
 test('org_admin can list devices for their site', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     createDevice($this->site, ['name' => 'Sensor A']);
     createDevice($this->site, ['name' => 'Sensor B']);
 
@@ -27,7 +27,7 @@ test('org_admin can list devices for their site', function () {
 });
 
 test('site_viewer with access can list devices', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     $user->sites()->attach($this->site->id, ['assigned_at' => now()]);
 
     createDevice($this->site);
@@ -38,7 +38,7 @@ test('site_viewer with access can list devices', function () {
 });
 
 test('site_viewer without access is forbidden', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     // No site attachment
 
     $this->actingAs($user)
@@ -47,7 +47,7 @@ test('site_viewer without access is forbidden', function () {
 });
 
 test('devices can be filtered by status', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     createDevice($this->site, ['name' => 'Active', 'status' => 'active']);
     createDevice($this->site, ['name' => 'Pending', 'status' => 'pending']);
 
@@ -57,7 +57,7 @@ test('devices can be filtered by status', function () {
 });
 
 test('devices can be searched by name', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     createDevice($this->site, ['name' => 'Kitchen Sensor']);
     createDevice($this->site, ['name' => 'Lobby Sensor']);
 
@@ -67,7 +67,7 @@ test('devices can be searched by name', function () {
 });
 
 test('org_admin can store a device', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
 
     $this->actingAs($user)
         ->post(route('devices.store', $this->site), [
@@ -82,7 +82,7 @@ test('org_admin can store a device', function () {
 });
 
 test('store device fails with duplicate dev_eui', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     createDevice($this->site, ['dev_eui' => 'DUPLICATE1234']);
 
     $this->actingAs($user)
@@ -95,7 +95,7 @@ test('store device fails with duplicate dev_eui', function () {
 });
 
 test('store device fails without required fields', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
 
     $this->actingAs($user)
         ->post(route('devices.store', $this->site), [])
@@ -103,7 +103,7 @@ test('store device fails without required fields', function () {
 });
 
 test('site_viewer cannot store devices', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     $user->sites()->attach($this->site->id, ['assigned_at' => now()]);
 
     $this->actingAs($user)
@@ -116,7 +116,7 @@ test('site_viewer cannot store devices', function () {
 });
 
 test('org_admin can view a device', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $device = createDevice($this->site);
 
     $this->actingAs($user)
@@ -125,7 +125,7 @@ test('org_admin can view a device', function () {
 });
 
 test('org_admin can update a device', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $device = createDevice($this->site, ['name' => 'Old Name']);
 
     $this->actingAs($user)
@@ -140,7 +140,7 @@ test('org_admin can update a device', function () {
 });
 
 test('org_admin can delete a device', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $device = createDevice($this->site);
 
     $this->actingAs($user)
@@ -151,7 +151,7 @@ test('org_admin can delete a device', function () {
 });
 
 test('user from another org cannot access devices', function () {
-    $user = createUserWithRole('org_admin', $this->otherOrg);
+    $user = createUserWithRole('client_org_admin', $this->otherOrg);
 
     $this->actingAs($user)
         ->get(route('devices.index', $this->site))

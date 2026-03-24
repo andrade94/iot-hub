@@ -71,7 +71,7 @@ class ActivityLogController extends Controller
         $currentUser = $request->user();
 
         // Authorization: Users can only view their own activity unless they have admin role
-        if ($currentUser->id !== $userId && ! $currentUser->hasAnyRole(['super_admin', 'org_admin'])) {
+        if ($currentUser->id !== $userId && ! $currentUser->hasAnyRole(['super_admin', 'client_org_admin'])) {
             abort(403, 'You can only view your own activity.');
         }
 
@@ -106,7 +106,7 @@ class ActivityLogController extends Controller
             if ((string) $currentUser->id !== $id && ! $currentUser->hasRole('admin')) {
                 abort(403, 'You can only view your own activity.');
             }
-        } elseif (! $currentUser->hasAnyRole(['super_admin', 'org_admin'])) {
+        } elseif (! $currentUser->hasAnyRole(['super_admin', 'client_org_admin'])) {
             abort(403, 'Admin access required to view this activity.');
         }
 

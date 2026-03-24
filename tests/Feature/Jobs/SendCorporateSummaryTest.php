@@ -9,7 +9,7 @@ beforeEach(function () {
 test('processes orgs with sites and org_admins', function () {
     $org = createOrg();
     createSite($org);
-    createUserWithRole('org_admin', $org);
+    createUserWithRole('client_org_admin', $org);
 
     (new SendCorporateSummary)->handle(app(\App\Services\Reports\MorningSummaryService::class));
 

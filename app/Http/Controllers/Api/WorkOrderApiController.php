@@ -157,7 +157,7 @@ class WorkOrderApiController extends Controller
             abort(403, 'You do not have access to this site.');
         }
 
-        if (! $user->hasAnyRole(['site_manager', 'org_admin', 'super_admin'])) {
+        if (! $user->hasAnyRole(['client_site_manager', 'client_org_admin', 'super_admin'])) {
             abort(403, 'You do not have permission to create work orders.');
         }
 

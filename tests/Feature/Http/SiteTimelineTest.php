@@ -20,7 +20,7 @@ beforeEach(function () {
         'privacy_accepted_at' => now(),
         'privacy_policy_version' => '1.0',
     ]);
-    $this->manager->assignRole('site_manager');
+    $this->manager->assignRole('client_site_manager');
     $this->manager->sites()->attach($this->site->id, [
         'assigned_at' => now(),
         'assigned_by' => $this->manager->id,

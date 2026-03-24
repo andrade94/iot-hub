@@ -8,7 +8,7 @@ beforeEach(function () {
 
     $this->org = createOrg();
     $this->site = createSite($this->org, ['status' => 'onboarding']);
-    $this->user = createUserWithRole('org_admin', $this->org);
+    $this->user = createUserWithRole('client_org_admin', $this->org);
 });
 
 test('org_admin can view onboarding wizard', function () {
@@ -92,7 +92,7 @@ test('org_admin can complete onboarding', function () {
 
 test('user from another org cannot onboard', function () {
     $otherOrg = createOrg(['name' => 'Other']);
-    $otherUser = createUserWithRole('org_admin', $otherOrg);
+    $otherUser = createUserWithRole('client_org_admin', $otherOrg);
 
     $this->actingAs($otherUser)
         ->get(route('sites.onboard', $this->site))

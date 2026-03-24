@@ -14,7 +14,7 @@ beforeEach(function () {
 // ── Feature 1: Dashboard Action Cards ──────────
 
 test('dashboard returns action card counts', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
     $device = createDevice($this->site);
 
@@ -44,7 +44,7 @@ test('dashboard returns action card counts', function () {
 // ── Feature 3: LFPDPPP Consent ──────────
 
 test('user without consent is redirected to privacy page', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
     // Override: clear consent to test redirect
     $user->update(['privacy_accepted_at' => null, 'privacy_policy_version' => null]);
@@ -55,7 +55,7 @@ test('user without consent is redirected to privacy page', function () {
 });
 
 test('user can accept privacy policy', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->update(['privacy_accepted_at' => null, 'privacy_policy_version' => null]);
 
     $response = $this->actingAs($user)->post(route('privacy.accept'));
@@ -66,7 +66,7 @@ test('user can accept privacy policy', function () {
 });
 
 test('accepted user can access dashboard normally', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
     // User already has consent from createUserWithRole
 
@@ -76,7 +76,7 @@ test('accepted user can access dashboard normally', function () {
 });
 
 test('privacy consent page renders', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->update(['privacy_accepted_at' => null, 'privacy_policy_version' => null]);
 
     $response = $this->actingAs($user)->get(route('privacy.show'));
@@ -87,7 +87,7 @@ test('privacy consent page renders', function () {
 // ── Feature 4: Device Replacement ──────────
 
 test('site_manager can replace active device', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
 
     $device = createDevice($this->site, ['status' => 'active', 'zone' => 'Walk-in Cooler']);
@@ -116,7 +116,7 @@ test('site_manager can replace active device', function () {
 });
 
 test('cannot replace pending device', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
 
     $device = createDevice($this->site, ['status' => 'pending']);
@@ -130,7 +130,7 @@ test('cannot replace pending device', function () {
 });
 
 test('new dev_eui must be unique', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
 
     $existingDevice = createDevice($this->site);

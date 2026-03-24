@@ -69,13 +69,13 @@ php artisan db:seed              # Seed without resetting
 
 ### Test Credentials (after seeding)
 
-| Email | Password | Role |
-|-------|----------|------|
-| `super@example.com` | `password` | super_admin |
-| `admin@example.com` | `password` | org_admin |
-| `manager@example.com` | `password` | site_manager |
-| `viewer@example.com` | `password` | site_viewer |
-| `tech@example.com` | `password` | technician |
+| Email | Password | Role | Owner |
+|-------|----------|------|-------|
+| `super@example.com` | `password` | super_admin | Astrea |
+| `admin@example.com` | `password` | client_org_admin | Client |
+| `manager@example.com` | `password` | client_site_manager | Client |
+| `viewer@example.com` | `password` | client_site_viewer | Client |
+| `tech@example.com` | `password` | technician | Astrea |
 
 ## Architecture
 
@@ -115,9 +115,11 @@ The `HandleInertiaRequests` middleware shares these props on every page load:
 **Fortify** handles authentication with: registration, password reset, email verification, two-factor authentication.
 
 **Spatie Laravel Permission** manages roles/permissions:
-- Roles: `super_admin`, `org_admin`, `site_manager`, `site_viewer`, `technician`
+- Astrea roles: `super_admin`, `support`, `account_manager`, `technician`
+- Client roles: `client_org_admin`, `client_site_manager`, `client_site_viewer`
 - 29 permissions across organizations, sites, devices, alerts, users, reports, work orders, settings, corrective actions, maintenance, analytics, templates, export
-- Check with `$user->hasRole('org_admin')` or `$user->hasPermissionTo('manage devices')`
+- Check with `$user->hasRole('client_org_admin')` or `$user->hasPermissionTo('manage devices')`
+- Role metadata: `App\Enums\RoleDefinitions` — labels, ownership (astrea/client), assignable lists
 - Gate checks in policies, middleware-based route protection
 
 ### Real-time

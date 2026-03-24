@@ -21,7 +21,7 @@ beforeEach(function () {
 
 test('site viewer can switch to assigned site', function () {
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    $user->assignRole('site_viewer');
+    $user->assignRole('client_site_viewer');
     $user->sites()->attach($this->site1->id, ['assigned_at' => now()]);
 
     $this->actingAs($user)
@@ -31,7 +31,7 @@ test('site viewer can switch to assigned site', function () {
 
 test('site viewer cannot switch to unassigned site', function () {
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    $user->assignRole('site_viewer');
+    $user->assignRole('client_site_viewer');
     $user->sites()->attach($this->site1->id, ['assigned_at' => now()]);
 
     $this->actingAs($user)
@@ -41,7 +41,7 @@ test('site viewer cannot switch to unassigned site', function () {
 
 test('org_admin can switch to any org site', function () {
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    $user->assignRole('org_admin');
+    $user->assignRole('client_org_admin');
 
     $this->actingAs($user)
         ->post(route('site.switch'), ['site_id' => $this->site2->id])
@@ -50,7 +50,7 @@ test('org_admin can switch to any org site', function () {
 
 test('org_admin cannot switch to other org site', function () {
     $user = User::factory()->create(['org_id' => $this->org->id]);
-    $user->assignRole('org_admin');
+    $user->assignRole('client_org_admin');
 
     $this->actingAs($user)
         ->post(route('site.switch'), ['site_id' => $this->otherSite->id])

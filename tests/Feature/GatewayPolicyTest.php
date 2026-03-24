@@ -13,7 +13,7 @@ beforeEach(function () {
     $this->site = createSite($this->org);
 
     $this->user = User::factory()->create(['org_id' => $this->org->id]);
-    $this->user->assignRole('org_admin');
+    $this->user->assignRole('client_org_admin');
 
     $this->gateway = Gateway::create([
         'site_id' => $this->site->id,
@@ -33,7 +33,7 @@ test('user with manage devices permission and site access can viewAny gateways',
 
 test('user without manage devices permission cannot viewAny gateways', function () {
     $viewer = User::factory()->create(['org_id' => $this->org->id]);
-    $viewer->assignRole('site_viewer'); // has view devices but not manage devices
+    $viewer->assignRole('client_site_viewer'); // has view devices but not manage devices
 
     expect($this->policy->viewAny($viewer, $this->site))->toBeFalse();
 });
@@ -41,7 +41,7 @@ test('user without manage devices permission cannot viewAny gateways', function 
 test('user with permission but no site access cannot viewAny gateways', function () {
     $otherOrg = createOrg(['slug' => 'other-org-gw-policy']);
     $otherUser = User::factory()->create(['org_id' => $otherOrg->id]);
-    $otherUser->assignRole('org_admin');
+    $otherUser->assignRole('client_org_admin');
 
     expect($this->policy->viewAny($otherUser, $this->site))->toBeFalse();
 });
@@ -54,7 +54,7 @@ test('user with manage devices permission and site access can view a gateway', f
 
 test('user without manage devices permission cannot view a gateway', function () {
     $viewer = User::factory()->create(['org_id' => $this->org->id]);
-    $viewer->assignRole('site_viewer');
+    $viewer->assignRole('client_site_viewer');
 
     expect($this->policy->view($viewer, $this->gateway, $this->site))->toBeFalse();
 });
@@ -67,7 +67,7 @@ test('user with manage devices permission and site access can create a gateway',
 
 test('user without manage devices permission cannot create a gateway', function () {
     $viewer = User::factory()->create(['org_id' => $this->org->id]);
-    $viewer->assignRole('site_viewer');
+    $viewer->assignRole('client_site_viewer');
 
     expect($this->policy->create($viewer, $this->site))->toBeFalse();
 });
@@ -80,7 +80,7 @@ test('user with manage devices permission and site access can delete a gateway',
 
 test('user without manage devices permission cannot delete a gateway', function () {
     $viewer = User::factory()->create(['org_id' => $this->org->id]);
-    $viewer->assignRole('site_viewer');
+    $viewer->assignRole('client_site_viewer');
 
     expect($this->policy->delete($viewer, $this->gateway, $this->site))->toBeFalse();
 });

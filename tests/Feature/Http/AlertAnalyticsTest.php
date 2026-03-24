@@ -11,7 +11,7 @@ beforeEach(function () {
 });
 
 test('org_admin can view alert analytics page', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->get(route('analytics.alerts'));
@@ -20,7 +20,7 @@ test('org_admin can view alert analytics page', function () {
 });
 
 test('site_viewer cannot view alert analytics', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->get(route('analytics.alerts'));

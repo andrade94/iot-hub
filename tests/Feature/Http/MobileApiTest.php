@@ -25,16 +25,16 @@ beforeEach(function () {
     $this->site = createSite($this->org);
     $this->device = createDevice($this->site, ['zone' => 'Zone A']);
 
-    $this->siteManager = createUserWithRole('site_manager', $this->org);
-    $this->siteManager->sites()->attach($this->site->id, ['role' => 'site_manager', 'assigned_at' => now()]);
+    $this->siteManager = createUserWithRole('client_site_manager', $this->org);
+    $this->siteManager->sites()->attach($this->site->id, ['role' => 'client_site_manager', 'assigned_at' => now()]);
 
     $this->technician = createUserWithRole('technician', $this->org);
     $this->technician->sites()->attach($this->site->id, ['role' => 'technician', 'assigned_at' => now()]);
 
-    $this->siteViewer = createUserWithRole('site_viewer', $this->org);
-    $this->siteViewer->sites()->attach($this->site->id, ['role' => 'site_viewer', 'assigned_at' => now()]);
+    $this->siteViewer = createUserWithRole('client_site_viewer', $this->org);
+    $this->siteViewer->sites()->attach($this->site->id, ['role' => 'client_site_viewer', 'assigned_at' => now()]);
 
-    $this->orgAdmin = createUserWithRole('org_admin', $this->org);
+    $this->orgAdmin = createUserWithRole('client_org_admin', $this->org);
 });
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -149,10 +149,10 @@ test('site detail returns zones and alerts', function () {
 
 test('site detail rejects user without site access', function () {
     $otherOrg = createOrg(['slug' => 'other-org-test']);
-    $otherUser = createUserWithRole('site_manager', $otherOrg);
+    $otherUser = createUserWithRole('client_site_manager', $otherOrg);
     $otherUser->sites()->attach(
         createSite($otherOrg)->id,
-        ['role' => 'site_manager', 'assigned_at' => now()]
+        ['role' => 'client_site_manager', 'assigned_at' => now()]
     );
     Sanctum::actingAs($otherUser);
 

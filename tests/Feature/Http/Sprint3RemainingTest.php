@@ -28,7 +28,7 @@ test('command center includes delivery health data', function () {
 // ── Feature 6: Scheduled Report Delivery ──────────
 
 test('org_admin can view report schedules', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->get(route('report-schedules.index'));
@@ -37,7 +37,7 @@ test('org_admin can view report schedules', function () {
 });
 
 test('org_admin can create report schedule', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->post(route('report-schedules.store'), [
@@ -55,7 +55,7 @@ test('org_admin can create report schedule', function () {
 });
 
 test('org_admin can delete report schedule', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
 
     $schedule = ReportSchedule::create([
         'org_id' => $this->org->id,
@@ -73,7 +73,7 @@ test('org_admin can delete report schedule', function () {
 });
 
 test('schedule shouldFireToday for weekly matches day', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $today = now()->dayOfWeek;
 
     $schedule = ReportSchedule::create([
@@ -96,7 +96,7 @@ test('schedule shouldFireToday for weekly matches day', function () {
 // ── Feature 7: Data Export ──────────
 
 test('org_admin can view data export page', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->get(route('export-data.index'));
@@ -107,7 +107,7 @@ test('org_admin can view data export page', function () {
 test('org_admin can request data export', function () {
     Queue::fake();
 
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->post(route('export-data.store'), [
@@ -123,7 +123,7 @@ test('org_admin can request data export', function () {
 });
 
 test('rate limit prevents duplicate active exports', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     DataExport::create([
@@ -138,7 +138,7 @@ test('rate limit prevents duplicate active exports', function () {
 });
 
 test('data export state machine transitions', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
 
     $export = DataExport::create([
         'org_id' => $this->org->id,
@@ -162,7 +162,7 @@ test('data export state machine transitions', function () {
 // ── Feature 8: Site Templates ──────────
 
 test('org_admin can view site templates', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->get(route('site-templates.index'));
@@ -171,7 +171,7 @@ test('org_admin can view site templates', function () {
 });
 
 test('org_admin can create template from source site', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->post(route('site-templates.store'), [
@@ -187,7 +187,7 @@ test('org_admin can create template from source site', function () {
 });
 
 test('org_admin can delete template', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
 
     $template = SiteTemplate::create([
         'org_id' => $this->org->id,
@@ -203,7 +203,7 @@ test('org_admin can delete template', function () {
 });
 
 test('template name must be unique per org', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
     $user->sites()->attach($this->site);
 
     SiteTemplate::create([
@@ -224,7 +224,7 @@ test('template name must be unique per org', function () {
 });
 
 test('site_viewer cannot manage templates', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->get(route('site-templates.index'));

@@ -32,7 +32,7 @@ beforeEach(function () {
         'priority' => 'high',
     ]);
 
-    $this->userOrgA = createUserWithRole('org_admin', $this->orgA);
+    $this->userOrgA = createUserWithRole('client_org_admin', $this->orgA);
 
     // ── Org B ────────────────────────────────────────────────────
     $this->orgB = createOrg(['name' => 'Org B', 'slug' => 'org-b']);
@@ -56,16 +56,16 @@ beforeEach(function () {
         'priority' => 'medium',
     ]);
 
-    $this->userOrgB = createUserWithRole('org_admin', $this->orgB);
+    $this->userOrgB = createUserWithRole('client_org_admin', $this->orgB);
 
     // ── Site-scoped users (Org A, two sites) ─────────────────────
     $this->siteA2 = createSite($this->orgA, ['name' => 'Site A2']);
     $this->deviceA2 = createDevice($this->siteA2, ['name' => 'Device A2']);
 
-    $this->managerSiteA = createUserWithRole('site_manager', $this->orgA);
+    $this->managerSiteA = createUserWithRole('client_site_manager', $this->orgA);
     $this->managerSiteA->sites()->attach($this->siteA->id, ['assigned_at' => now()]);
 
-    $this->viewerSiteA = createUserWithRole('site_viewer', $this->orgA);
+    $this->viewerSiteA = createUserWithRole('client_site_viewer', $this->orgA);
     $this->viewerSiteA->sites()->attach($this->siteA->id, ['assigned_at' => now()]);
 
     // ── Super Admin ──────────────────────────────────────────────

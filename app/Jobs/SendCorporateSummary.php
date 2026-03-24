@@ -33,7 +33,7 @@ class SendCorporateSummary implements ShouldQueue
 
         foreach ($organizations as $org) {
             $orgAdmins = $org->users->filter(
-                fn (User $user) => $user->hasRole('org_admin'),
+                fn (User $user) => $user->hasRole('client_org_admin'),
             );
 
             if ($orgAdmins->isEmpty()) {

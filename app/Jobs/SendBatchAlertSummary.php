@@ -91,7 +91,7 @@ class SendBatchAlertSummary implements ShouldQueue
         }
 
         $admins = $org->users->filter(
-            fn (User $user) => $user->hasRole('org_admin'),
+            fn (User $user) => $user->hasRole('client_org_admin'),
         );
 
         $twilio = app(TwilioService::class);

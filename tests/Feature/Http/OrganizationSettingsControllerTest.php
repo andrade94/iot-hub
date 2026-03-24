@@ -12,7 +12,7 @@ beforeEach(function () {
         'branding' => ['primary_color' => '#000000', 'accent_color' => '#ffffff'],
     ]);
 
-    $this->admin = createUserWithRole('org_admin', $this->org);
+    $this->admin = createUserWithRole('client_org_admin', $this->org);
 
     app()->instance('current_organization', $this->org);
 });
@@ -25,7 +25,7 @@ test('guest is redirected to login', function () {
 });
 
 test('user without manage org settings permission gets 403', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->get(route('organization.edit'))

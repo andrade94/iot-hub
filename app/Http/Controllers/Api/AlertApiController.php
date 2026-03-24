@@ -142,7 +142,7 @@ class AlertApiController extends Controller
             abort(403, 'You do not have access to this alert.');
         }
 
-        if (! $user->hasAnyRole(['site_manager', 'technician', 'org_admin', 'super_admin'])) {
+        if (! $user->hasAnyRole(['client_site_manager', 'technician', 'client_org_admin', 'super_admin'])) {
             abort(403, 'You do not have permission to acknowledge alerts.');
         }
 
@@ -172,7 +172,7 @@ class AlertApiController extends Controller
             abort(403, 'You do not have access to this alert.');
         }
 
-        if (! $user->hasAnyRole(['site_manager', 'technician', 'org_admin', 'super_admin'])) {
+        if (! $user->hasAnyRole(['client_site_manager', 'technician', 'client_org_admin', 'super_admin'])) {
             abort(403, 'You do not have permission to resolve alerts.');
         }
 

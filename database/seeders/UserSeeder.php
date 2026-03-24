@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
             'email_verified_at' => now(),
             'org_id' => $org1->id,
         ]);
-        $orgAdmin->assignRole('org_admin');
+        $orgAdmin->assignRole('client_org_admin');
 
         // Site Manager — org 1, sites 1 & 2
         $manager = User::create([
@@ -42,7 +42,7 @@ class UserSeeder extends Seeder
             'email_verified_at' => now(),
             'org_id' => $org1->id,
         ]);
-        $manager->assignRole('site_manager');
+        $manager->assignRole('client_site_manager');
         $manager->sites()->attach([
             $org1Sites[0]->id => ['assigned_at' => now()],
             $org1Sites[1]->id => ['assigned_at' => now()],
@@ -56,7 +56,7 @@ class UserSeeder extends Seeder
             'email_verified_at' => now(),
             'org_id' => $org1->id,
         ]);
-        $viewer->assignRole('site_viewer');
+        $viewer->assignRole('client_site_viewer');
         $viewer->sites()->attach([
             $org1Sites[0]->id => ['assigned_at' => now()],
         ]);

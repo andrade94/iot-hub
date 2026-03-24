@@ -37,9 +37,9 @@ beforeEach(function () {
     // Create one user per role
     // super_admin gets org_id so org-scoped controllers (report schedules, templates, export) work
     $this->superAdmin = createUserWithRole('super_admin', $this->org);
-    $this->orgAdmin = createUserWithRole('org_admin', $this->org);
-    $this->siteManager = createUserWithRole('site_manager', $this->org);
-    $this->siteViewer = createUserWithRole('site_viewer', $this->org);
+    $this->orgAdmin = createUserWithRole('client_org_admin', $this->org);
+    $this->siteManager = createUserWithRole('client_site_manager', $this->org);
+    $this->siteViewer = createUserWithRole('client_site_viewer', $this->org);
     $this->technician = createUserWithRole('technician', $this->org);
 
     // Attach site access for roles that require pivot

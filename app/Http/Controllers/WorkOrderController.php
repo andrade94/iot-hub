@@ -45,7 +45,7 @@ class WorkOrderController extends Controller
 
         // Get technicians for bulk assign dropdown (site_manager+ only)
         $technicians = [];
-        if ($user->hasAnyRole(['super_admin', 'org_admin', 'site_manager'])) {
+        if ($user->hasAnyRole(['super_admin', 'client_org_admin', 'client_site_manager'])) {
             $technicians = \App\Models\User::role('technician')
                 ->where('org_id', $user->org_id)
                 ->select('id', 'name')

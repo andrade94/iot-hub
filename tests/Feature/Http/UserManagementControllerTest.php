@@ -7,7 +7,7 @@ beforeEach(function () {
 
     $this->org = createOrg();
     $this->site = createSite($this->org);
-    $this->admin = createUserWithRole('org_admin', $this->org);
+    $this->admin = createUserWithRole('client_org_admin', $this->org);
 
     // Bind the org in the container (the org.scope middleware does this normally)
     app()->instance('current_organization', $this->org);
@@ -23,7 +23,7 @@ test('guest is redirected to login', function () {
 });
 
 test('user without manage users permission gets 403', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->get(route('users.index'))
@@ -54,11 +54,11 @@ test('org_admin can list users', function () {
 
 test('only shows users from the current org', function () {
     // Create a user in this org
-    $orgUser = createUserWithRole('site_viewer', $this->org);
+    $orgUser = createUserWithRole('client_site_viewer', $this->org);
 
     // Create a user in another org
     $otherOrg = createOrg(['name' => 'Other Org']);
-    $otherUser = createUserWithRole('site_viewer', $otherOrg);
+    $otherUser = createUserWithRole('client_site_viewer', $otherOrg);
 
     $response = $this->actingAs($this->admin)
         ->get(route('users.index'))
@@ -82,7 +82,7 @@ test('org_admin can create a new user with valid data', function () {
             'name' => 'New User',
             'email' => 'newuser@example.com',
             'password' => 'password123',
-            'role' => 'site_viewer',
+            'role' => 'client_site_viewer',
             'site_ids' => [$this->site->id],
         ]);
 
@@ -108,7 +108,7 @@ test('store validates unique email', function () {
             'name' => 'Duplicate',
             'email' => 'taken@example.com',
             'password' => 'password123',
-            'role' => 'site_viewer',
+            'role' => 'client_site_viewer',
         ])
         ->assertSessionHasErrors(['email']);
 });
@@ -130,7 +130,7 @@ test('created user gets assigned to correct org', function () {
             'name' => 'Org User',
             'email' => 'orguser@example.com',
             'password' => 'password123',
-            'role' => 'site_viewer',
+            'role' => 'client_site_viewer',
         ]);
 
     $user = User::where('email', 'orguser@example.com')->first();
@@ -143,11 +143,11 @@ test('created user gets assigned role', function () {
             'name' => 'Role User',
             'email' => 'roleuser@example.com',
             'password' => 'password123',
-            'role' => 'site_manager', // org_admin can only assign client roles
+            'role' => 'client_site_manager', // org_admin can only assign client roles
         ]);
 
     $user = User::where('email', 'roleuser@example.com')->first();
-    expect($user->hasRole('site_manager'))->toBeTrue();
+    expect($user->hasRole('client_site_manager'))->toBeTrue();
 });
 
 test('org_admin cannot assign technician role', function () {
@@ -169,7 +169,7 @@ test('created user gets attached to specified sites', function () {
             'name' => 'Site User',
             'email' => 'siteuser@example.com',
             'password' => 'password123',
-            'role' => 'site_viewer',
+            'role' => 'client_site_viewer',
             'site_ids' => [$this->site->id, $site2->id],
         ]);
 
@@ -184,13 +184,13 @@ test('created user gets attached to specified sites', function () {
 // ──────────────────────────────────────────────────────────────────────
 
 test('org_admin can update a user in their org', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($this->admin)
         ->put(route('users.update', $user), [
             'name' => 'Updated Name',
             'email' => $user->email,
-            'role' => 'site_viewer',
+            'role' => 'client_site_viewer',
             'site_ids' => [],
         ])
         ->assertRedirect()
@@ -202,36 +202,36 @@ test('org_admin can update a user in their org', function () {
 
 test('cannot update a user from another org', function () {
     $otherOrg = createOrg(['name' => 'Other Org']);
-    $otherUser = createUserWithRole('site_viewer', $otherOrg);
+    $otherUser = createUserWithRole('client_site_viewer', $otherOrg);
 
     $this->actingAs($this->admin)
         ->put(route('users.update', $otherUser), [
             'name' => 'Hacked Name',
             'email' => $otherUser->email,
-            'role' => 'site_viewer',
+            'role' => 'client_site_viewer',
             'site_ids' => [],
         ])
         ->assertForbidden();
 });
 
 test('update syncs roles', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($this->admin)
         ->put(route('users.update', $user), [
             'name' => $user->name,
             'email' => $user->email,
-            'role' => 'site_manager',
+            'role' => 'client_site_manager',
             'site_ids' => [],
         ]);
 
     $user->refresh();
-    expect($user->hasRole('site_manager'))->toBeTrue();
-    expect($user->hasRole('site_viewer'))->toBeFalse();
+    expect($user->hasRole('client_site_manager'))->toBeTrue();
+    expect($user->hasRole('client_site_viewer'))->toBeFalse();
 });
 
 test('update syncs site assignments', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     $user->sites()->attach($this->site->id, ['assigned_at' => now()]);
 
     $site2 = createSite($this->org, ['name' => 'New Site']);
@@ -240,7 +240,7 @@ test('update syncs site assignments', function () {
         ->put(route('users.update', $user), [
             'name' => $user->name,
             'email' => $user->email,
-            'role' => 'site_viewer',
+            'role' => 'client_site_viewer',
             'site_ids' => [$site2->id],
         ]);
 
@@ -254,7 +254,7 @@ test('update syncs site assignments', function () {
 // ──────────────────────────────────────────────────────────────────────
 
 test('org_admin can delete a user in their org', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($this->admin)
         ->delete(route('users.destroy', $user))
@@ -266,7 +266,7 @@ test('org_admin can delete a user in their org', function () {
 
 test('cannot delete user from another org', function () {
     $otherOrg = createOrg(['name' => 'Other Org']);
-    $otherUser = createUserWithRole('site_viewer', $otherOrg);
+    $otherUser = createUserWithRole('client_site_viewer', $otherOrg);
 
     $this->actingAs($this->admin)
         ->delete(route('users.destroy', $otherUser))
@@ -283,7 +283,7 @@ test('cannot delete yourself', function () {
 });
 
 test('deleted user site assignments are detached', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     $user->sites()->attach($this->site->id, ['assigned_at' => now()]);
 
     // Verify site assignment exists before deletion

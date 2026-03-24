@@ -9,7 +9,7 @@ beforeEach(function () {
 
     $this->org = createOrg();
     $this->site = createSite($this->org);
-    $this->user = createUserWithRole('org_admin', $this->org);
+    $this->user = createUserWithRole('client_org_admin', $this->org);
 });
 
 test('org_admin can upload a floor plan', function () {
@@ -88,7 +88,7 @@ test('deleting floor plan detaches devices', function () {
 });
 
 test('site_viewer cannot manage floor plans', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
     $viewer->sites()->attach($this->site->id, ['assigned_at' => now()]);
 
     $this->actingAs($viewer)

@@ -6,7 +6,7 @@ beforeEach(function () {
     seedPermissions();
 
     $this->org = createOrg();
-    $this->user = createUserWithRole('org_admin', $this->org);
+    $this->user = createUserWithRole('client_org_admin', $this->org);
 });
 
 test('org_admin can view activity log', function () {
@@ -16,7 +16,7 @@ test('org_admin can view activity log', function () {
 });
 
 test('activity log respects permission gate', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->get(route('activity-log'))
@@ -30,9 +30,9 @@ test('org_admin can view their own user activity', function () {
 });
 
 test('non-admin cannot view other user activity', function () {
-    $manager = createUserWithRole('site_manager', $this->org);
+    $manager = createUserWithRole('client_site_manager', $this->org);
     $manager->sites()->attach(createSite($this->org)->id, ['assigned_at' => now()]);
-    $otherUser = createUserWithRole('site_viewer', $this->org);
+    $otherUser = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($manager)
         ->get(route('activity-log.user', $otherUser->id))

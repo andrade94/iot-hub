@@ -22,7 +22,7 @@ test('job sends WhatsApp summary when batch alerts exist', function () {
         'services.twilio.whatsapp_from' => '+14155238886',
     ]);
 
-    $admin = createUserWithRole('org_admin', $this->org);
+    $admin = createUserWithRole('client_org_admin', $this->org);
     $admin->update(['whatsapp_phone' => '+5215512345678']);
 
     // Create alerts
@@ -59,7 +59,7 @@ test('job sends WhatsApp summary when batch alerts exist', function () {
 });
 
 test('job clears Redis keys after processing', function () {
-    $admin = createUserWithRole('org_admin', $this->org);
+    $admin = createUserWithRole('client_org_admin', $this->org);
     $admin->update(['whatsapp_phone' => '+5215512345678']);
 
     $alert = Alert::create([

@@ -15,14 +15,14 @@ beforeEach(function () {
         'privacy_accepted_at' => now(),
         'privacy_policy_version' => '1.0',
     ]);
-    $this->admin->assignRole('org_admin');
+    $this->admin->assignRole('client_org_admin');
 
     $this->viewer = User::factory()->create([
         'org_id' => $this->org->id,
         'privacy_accepted_at' => now(),
         'privacy_policy_version' => '1.0',
     ]);
-    $this->viewer->assignRole('site_viewer');
+    $this->viewer->assignRole('client_site_viewer');
 });
 
 test('org_admin can view site templates', function () {

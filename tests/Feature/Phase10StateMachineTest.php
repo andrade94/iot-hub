@@ -19,7 +19,7 @@ describe('SM-011 CorrectiveAction', function () {
 
         $this->device = createDevice($this->site);
         $this->taker = createUserWithRole('technician', $this->org);
-        $this->verifier = createUserWithRole('site_manager', $this->org);
+        $this->verifier = createUserWithRole('client_site_manager', $this->org);
 
         $rule = AlertRule::create([
             'site_id' => $this->site->id,
@@ -96,7 +96,7 @@ describe('SM-011 CorrectiveAction', function () {
 describe('SM-012 DataExport', function () {
     beforeEach(function () {
         seedPermissions();
-        $this->user = createUserWithRole('org_admin', $this->org);
+        $this->user = createUserWithRole('client_org_admin', $this->org);
     });
 
     function createExport(string $status, object $context): DataExport
@@ -233,8 +233,8 @@ describe('SM-012 DataExport', function () {
 describe('SM-013 OutageDeclaration', function () {
     beforeEach(function () {
         seedPermissions();
-        $this->declarer = createUserWithRole('org_admin', $this->org);
-        $this->resolver = createUserWithRole('org_admin', $this->org);
+        $this->declarer = createUserWithRole('client_org_admin', $this->org);
+        $this->resolver = createUserWithRole('client_org_admin', $this->org);
     });
 
     function createOutage(string $status, object $context): OutageDeclaration

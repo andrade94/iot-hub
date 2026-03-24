@@ -9,7 +9,7 @@ beforeEach(function () {
     $this->org = createOrg();
     $this->site = createSite($this->org);
     $this->device = createDevice($this->site);
-    $this->user = createUserWithRole('org_admin', $this->org);
+    $this->user = createUserWithRole('client_org_admin', $this->org);
 });
 
 test('unauthenticated API request returns 401', function () {

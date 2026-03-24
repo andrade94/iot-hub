@@ -9,7 +9,7 @@ beforeEach(function () {
 });
 
 test('site_manager can create maintenance window', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->post(route('maintenance-windows.store'), [
@@ -34,7 +34,7 @@ test('site_manager can create maintenance window', function () {
 });
 
 test('site_manager can update maintenance window', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
 
     $window = MaintenanceWindow::create([
@@ -62,7 +62,7 @@ test('site_manager can update maintenance window', function () {
 });
 
 test('site_manager can delete maintenance window', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
 
     $window = MaintenanceWindow::create([
@@ -81,7 +81,7 @@ test('site_manager can delete maintenance window', function () {
 });
 
 test('site_viewer cannot manage maintenance windows', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->get(route('maintenance-windows.index'));
@@ -96,7 +96,7 @@ test('guest is redirected', function () {
 });
 
 test('zone-specific window only matches that zone', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
 
     MaintenanceWindow::create([
@@ -117,7 +117,7 @@ test('zone-specific window only matches that zone', function () {
 });
 
 test('site-wide window suppresses all zones', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
 
     MaintenanceWindow::create([
         'site_id' => $this->site->id,
@@ -136,7 +136,7 @@ test('site-wide window suppresses all zones', function () {
 });
 
 test('disabled window does not suppress', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
 
     MaintenanceWindow::create([
         'site_id' => $this->site->id,
@@ -152,7 +152,7 @@ test('disabled window does not suppress', function () {
 });
 
 test('window outside time range is not active', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
 
     MaintenanceWindow::create([
         'site_id' => $this->site->id,
@@ -168,7 +168,7 @@ test('window outside time range is not active', function () {
 });
 
 test('validation requires title and start_time', function () {
-    $user = createUserWithRole('site_manager', $this->org);
+    $user = createUserWithRole('client_site_manager', $this->org);
     $user->sites()->attach($this->site);
 
     $response = $this->actingAs($user)->post(route('maintenance-windows.store'), [

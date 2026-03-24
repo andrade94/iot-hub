@@ -68,10 +68,41 @@ class RolesAndPermissionsSeeder extends Seeder
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdmin->givePermissionTo(Permission::all());
 
+        // Support — Astrea ops team, view all clients, create WOs, no settings access
+        $support = Role::firstOrCreate(['name' => 'support']);
+        $support->givePermissionTo([
+            'view organizations',
+            'view sites', 'onboard sites',
+            'view devices', 'manage devices', 'provision devices',
+            'view alerts', 'acknowledge alerts',
+            'view users',
+            'view reports', 'generate reports',
+            'view work orders', 'manage work orders',
+            'view activity log',
+            'access command center',
+            'log corrective actions', 'verify corrective actions',
+            'manage maintenance windows', 'view alert analytics',
+            'manage report schedules', 'manage site templates',
+        ]);
+
+        // Account Manager — Astrea sales/account team, read-only client health
+        $accountManager = Role::firstOrCreate(['name' => 'account_manager']);
+        $accountManager->givePermissionTo([
+            'view organizations',
+            'view sites',
+            'view devices',
+            'view alerts',
+            'view reports',
+            'view work orders',
+            'view activity log',
+            'access command center',
+            'view alert analytics',
+        ]);
+
         // ── Client Roles ──────────────────────────────────────
 
         // Org Admin — Client operations director
-        $orgAdmin = Role::firstOrCreate(['name' => 'org_admin']);
+        $orgAdmin = Role::firstOrCreate(['name' => 'client_org_admin']);
         $orgAdmin->givePermissionTo(
             collect($permissions)->reject(fn ($p) => in_array($p, [
                 'manage organizations',
@@ -80,7 +111,7 @@ class RolesAndPermissionsSeeder extends Seeder
         );
 
         // Site Manager — Client regional manager
-        $siteManager = Role::firstOrCreate(['name' => 'site_manager']);
+        $siteManager = Role::firstOrCreate(['name' => 'client_site_manager']);
         $siteManager->givePermissionTo([
             'view sites', 'manage sites',
             'view devices', 'manage devices',
@@ -94,7 +125,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // Site Viewer — Client store manager (gerente de tienda)
-        $siteViewer = Role::firstOrCreate(['name' => 'site_viewer']);
+        $siteViewer = Role::firstOrCreate(['name' => 'client_site_viewer']);
         $siteViewer->givePermissionTo([
             'view sites',
             'view devices',

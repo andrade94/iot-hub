@@ -6,7 +6,7 @@ beforeEach(function () {
     seedPermissions();
 
     $this->org = createOrg();
-    $this->user = createUserWithRole('org_admin', $this->org);
+    $this->user = createUserWithRole('client_org_admin', $this->org);
 });
 
 test('org_admin can list integrations', function () {
@@ -50,7 +50,7 @@ test('upsert updates existing integration of same type', function () {
 });
 
 test('site_viewer cannot manage integrations', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->get(route('integrations.index'))

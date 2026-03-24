@@ -12,7 +12,7 @@ beforeEach(function () {
 });
 
 test('org_admin can access their org sites', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
 
     $this->actingAs($user)
         ->get(route('sites.show', $this->site))
@@ -20,7 +20,7 @@ test('org_admin can access their org sites', function () {
 });
 
 test('org_admin cannot access other org sites', function () {
-    $user = createUserWithRole('org_admin', $this->org);
+    $user = createUserWithRole('client_org_admin', $this->org);
 
     $this->actingAs($user)
         ->get(route('sites.show', $this->otherSite))
@@ -28,7 +28,7 @@ test('org_admin cannot access other org sites', function () {
 });
 
 test('site_viewer can access assigned sites', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     $user->sites()->attach($this->site->id, ['assigned_at' => now()]);
 
     $this->actingAs($user)
@@ -37,7 +37,7 @@ test('site_viewer can access assigned sites', function () {
 });
 
 test('site_viewer cannot access unassigned sites', function () {
-    $user = createUserWithRole('site_viewer', $this->org);
+    $user = createUserWithRole('client_site_viewer', $this->org);
     // No site attachment
 
     $this->actingAs($user)

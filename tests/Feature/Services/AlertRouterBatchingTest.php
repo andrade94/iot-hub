@@ -14,7 +14,7 @@ beforeEach(function () {
     $this->org = createOrg();
     $this->site = createSite($this->org);
     $this->device = createDevice($this->site);
-    $this->admin = createUserWithRole('org_admin', $this->org);
+    $this->admin = createUserWithRole('client_org_admin', $this->org);
 
     // Set up a basic escalation chain so non-batched alerts route normally
     EscalationChain::create([

@@ -72,7 +72,7 @@ test('duplicate alert not sent within cooldown window', function () {
 test('non-super_admin users are not notified', function () {
     Notification::fake();
 
-    $orgAdmin = createUserWithRole('org_admin', $this->org);
+    $orgAdmin = createUserWithRole('client_org_admin', $this->org);
 
     (new DetectPlatformOutage)->handle();
 

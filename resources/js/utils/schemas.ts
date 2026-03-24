@@ -25,7 +25,7 @@ export type SiteFormData = z.infer<typeof siteSchema>;
 
 // ── User Form (settings/users/index.tsx) ──────────────────────────
 
-const ROLES = ['super_admin', 'org_admin', 'site_manager', 'site_viewer', 'technician'] as const;
+const ROLES = ['super_admin', 'client_org_admin', 'client_site_manager', 'client_site_viewer', 'technician'] as const;
 
 export const userSchema = z.object({
     name: z.string().min(1, 'Required').max(255),

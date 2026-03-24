@@ -27,7 +27,7 @@ class SendCalibrationReminders implements ShouldQueue
 
             foreach ($calibrations as $cal) {
                 $orgAdmins = User::where('org_id', $cal->device->site->org_id ?? 0)
-                    ->role('org_admin')
+                    ->role('client_org_admin')
                     ->get();
 
                 foreach ($orgAdmins as $admin) {

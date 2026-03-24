@@ -63,7 +63,7 @@ class UserManagementController extends Controller
         $org = $this->resolveOrganization($request);
 
         $allowedRoles = $request->user()->hasRole('super_admin')
-            ? ['org_admin', 'site_manager', 'site_viewer', 'technician']
+            ? ['client_org_admin', 'client_site_manager', 'client_site_viewer', 'technician']
             : RoleDefinitions::CLIENT_ASSIGNABLE;
 
         $validated = $request->validate([
@@ -113,7 +113,7 @@ class UserManagementController extends Controller
         }
 
         $allowedRoles = $request->user()->hasRole('super_admin')
-            ? ['org_admin', 'site_manager', 'site_viewer', 'technician']
+            ? ['client_org_admin', 'client_site_manager', 'client_site_viewer', 'technician']
             : RoleDefinitions::CLIENT_ASSIGNABLE;
 
         $validated = $request->validate([

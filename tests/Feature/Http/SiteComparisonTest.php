@@ -18,7 +18,7 @@ beforeEach(function () {
         'privacy_accepted_at' => now(),
         'privacy_policy_version' => '1.0',
     ]);
-    $this->admin->assignRole('org_admin');
+    $this->admin->assignRole('client_org_admin');
 });
 
 test('org_admin can access site comparison page', function () {

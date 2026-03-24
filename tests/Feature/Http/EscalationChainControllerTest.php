@@ -7,7 +7,7 @@ beforeEach(function () {
 
     $this->org = createOrg();
     $this->site = createSite($this->org);
-    $this->admin = createUserWithRole('org_admin', $this->org);
+    $this->admin = createUserWithRole('client_org_admin', $this->org);
 });
 
 // ──────────────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ test('guest is redirected to login', function () {
 });
 
 test('site_viewer is forbidden from accessing escalation chains', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $this->actingAs($viewer)
         ->get(route('escalation-chains.index'))
@@ -139,7 +139,7 @@ test('org_admin can delete an escalation chain', function () {
 });
 
 test('site_viewer is forbidden from store update and delete', function () {
-    $viewer = createUserWithRole('site_viewer', $this->org);
+    $viewer = createUserWithRole('client_site_viewer', $this->org);
 
     $chain = EscalationChain::create([
         'site_id' => $this->site->id,

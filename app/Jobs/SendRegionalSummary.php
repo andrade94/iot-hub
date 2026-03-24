@@ -31,7 +31,7 @@ class SendRegionalSummary implements ShouldQueue
     {
         $now = now();
 
-        $managers = User::role('site_manager')
+        $managers = User::role('client_site_manager')
             ->whereNotNull('org_id')
             ->with(['sites' => fn ($q) => $q->active()])
             ->get();

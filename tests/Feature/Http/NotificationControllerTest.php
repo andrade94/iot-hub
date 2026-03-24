@@ -7,7 +7,7 @@ beforeEach(function () {
     seedPermissions();
 
     $this->org = createOrg();
-    $this->user = createUserWithRole('org_admin', $this->org);
+    $this->user = createUserWithRole('client_org_admin', $this->org);
 });
 
 function createNotification($user, array $attrs = []): DatabaseNotification

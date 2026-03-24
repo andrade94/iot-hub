@@ -21,7 +21,7 @@ beforeEach(function () {
 
 test('ACK message acknowledges active alert', function () {
     $user = User::factory()->create(['org_id' => $this->org->id, 'whatsapp_phone' => '+5215551234567']);
-    $user->assignRole('org_admin');
+    $user->assignRole('client_org_admin');
 
     $alert = Alert::create([
         'rule_id' => $this->rule->id,
@@ -44,7 +44,7 @@ test('ACK message acknowledges active alert', function () {
 
 test('ESC message is handled', function () {
     $user = User::factory()->create(['org_id' => $this->org->id, 'whatsapp_phone' => '+5215559876543']);
-    $user->assignRole('org_admin');
+    $user->assignRole('client_org_admin');
 
     Alert::create([
         'rule_id' => $this->rule->id,
@@ -74,7 +74,7 @@ test('unknown phone returns user_not_found', function () {
 
 test('no active alert returns no_active_alert', function () {
     $user = User::factory()->create(['org_id' => $this->org->id, 'whatsapp_phone' => '+5215551111111']);
-    $user->assignRole('org_admin');
+    $user->assignRole('client_org_admin');
 
     $this->postJson('/api/whatsapp/webhook', [
         'Body' => 'ACK',

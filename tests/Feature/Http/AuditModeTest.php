@@ -14,7 +14,7 @@ beforeEach(function () {
         'privacy_accepted_at' => now(),
         'privacy_policy_version' => '1.0',
     ]);
-    $this->admin->assignRole('org_admin');
+    $this->admin->assignRole('client_org_admin');
     $this->admin->sites()->attach($this->site->id, ['assigned_at' => now(), 'assigned_by' => $this->admin->id]);
 });
 

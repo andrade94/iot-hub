@@ -92,7 +92,7 @@ class User extends Authenticatable
                 : Site::all();
         }
 
-        if ($this->hasRole('org_admin') && $this->org_id) {
+        if ($this->hasRole('client_org_admin') && $this->org_id) {
             return Site::where('org_id', $this->org_id)->get();
         }
 
@@ -105,7 +105,7 @@ class User extends Authenticatable
             return true;
         }
 
-        if ($this->hasRole('org_admin') && $this->org_id) {
+        if ($this->hasRole('client_org_admin') && $this->org_id) {
             return Site::where('id', $siteId)->where('org_id', $this->org_id)->exists();
         }
 

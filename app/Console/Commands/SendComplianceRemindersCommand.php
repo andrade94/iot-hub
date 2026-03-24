@@ -74,7 +74,7 @@ class SendComplianceRemindersCommand extends Command
 
                 // Find admin users for this organization
                 $admins = User::where('org_id', $event->org_id)
-                    ->role('org_admin')
+                    ->role('client_org_admin')
                     ->get();
 
                 if ($admins->isEmpty()) {
