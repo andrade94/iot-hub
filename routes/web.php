@@ -43,9 +43,9 @@ use Laravel\Fortify\Features;
 Route::get('/health', HealthCheckController::class)->name('health');
 
 Route::get('/', function () {
-    return Inertia::render('welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 })->name('home');
 
 // Locale switching
