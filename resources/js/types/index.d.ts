@@ -55,6 +55,7 @@ export interface SharedData {
     current_organization: Organization | null;
     accessible_sites: Pick<Site, 'id' | 'name' | 'status'>[];
     current_site: Pick<Site, 'id' | 'name' | 'status' | 'timezone'> | null;
+    all_organizations: Pick<Organization, 'id' | 'name' | 'slug'>[];
     sidebarOpen: boolean;
     locale?: string;
     notifications: DatabaseNotification[];
@@ -598,11 +599,12 @@ export interface Invoice {
     subtotal: number;
     iva: number;
     total: number;
-    status: 'draft' | 'sent' | 'paid' | 'overdue';
+    status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
     cfdi_uuid: string | null;
     pdf_path: string | null;
     xml_path: string | null;
     paid_at: string | null;
+    cancelled_at: string | null;
     payment_method: 'spei' | 'transfer' | null;
     created_at: string;
     updated_at: string;

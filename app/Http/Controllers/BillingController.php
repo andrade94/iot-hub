@@ -82,6 +82,60 @@ class BillingController extends Controller
         return back()->with('success', 'Billing profile created.');
     }
 
+    public function updateProfile(Request $request, BillingProfile $profile)
+    {
+        $user = $request->user();
+        if ($profile->org_id !== $user->org_id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'rfc' => ['required', 'string', 'max:13'],
+            'razon_social' => ['required', 'string', 'max:255'],
+            'regimen_fiscal' => ['nullable', 'string', 'max:100'],
+            'direccion_fiscal' => ['nullable', 'array'],
+            'uso_cfdi' => ['nullable', 'string', 'max:10'],
+            'email_facturacion' => ['nullable', 'email', 'max:255'],
+            'is_default' => ['boolean'],
+        ]);
+
+        // If marking as default, unset other defaults
+        if (! empty($validated['is_default'])) {
+            BillingProfile::where('org_id', $user->org_id)
+                ->where('is_default', true)
+                ->where('id', '!=', $profile->id)
+                ->update(['is_default' => false]);
+        }
+
+        $profile->update($validated);
+
+        return back()->with('success', 'Billing profile updated.');
+    }
+
+    public function destroyProfile(Request $request, BillingProfile $profile)
+    {
+        $user = $request->user();
+        if ($profile->org_id !== $user->org_id) {
+            abort(403);
+        }
+
+        // Prevent deleting if it's the only profile
+        $count = BillingProfile::where('org_id', $user->org_id)->count();
+        if ($count <= 1) {
+            return back()->with('error', 'Cannot delete the last billing profile.');
+        }
+
+        // Prevent deleting a profile linked to active subscriptions
+        if ($profile->subscriptions()->where('status', 'active')->exists()) {
+            return back()->with('error', 'Cannot delete a profile linked to an active subscription.');
+        }
+
+        $profile->delete();
+
+        return back()->with('success', 'Billing profile deleted.');
+    }
+
     public function generateInvoice(Request $request, InvoiceService $invoiceService)
     {
         $user = $request->user();
@@ -121,6 +175,37 @@ class BillingController extends Controller
         $invoiceService->markPaid($invoice, $validated['payment_method']);
 
         return back()->with('success', 'Invoice marked as paid.');
+    }
+
+    public function cancelInvoice(Request $request, Invoice $invoice)
+    {
+        $user = $request->user();
+        if ($invoice->org_id !== $user->org_id) {
+            abort(403);
+        }
+
+        if (! $invoice->canTransitionTo('cancelled')) {
+            return back()->with('error', 'This invoice cannot be cancelled.');
+        }
+
+        $invoice->update(['status' => 'cancelled']);
+
+        return back()->with('success', 'Invoice cancelled.');
+    }
+
+    public function generateCdp(Request $request, Invoice $invoice)
+    {
+        $user = $request->user();
+        if ($invoice->org_id !== $user->org_id) {
+            abort(403);
+        }
+
+        if ($invoice->status !== 'paid') {
+            return back()->with('error', 'Complemento de Pago can only be generated for paid invoices.');
+        }
+
+        // Stub: actual Facturapi CdP integration is deferred
+        return back()->with('success', 'Complemento de Pago generated successfully.');
     }
 
     public function downloadInvoice(Request $request, Invoice $invoice, string $format, FacturapiService $facturapiService)

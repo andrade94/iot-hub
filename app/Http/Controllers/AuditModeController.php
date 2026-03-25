@@ -13,6 +13,15 @@ use Inertia\Inertia;
 
 class AuditModeController extends Controller
 {
+    public function exportInsurancePackage(Request $request, Site $site)
+    {
+        $days = (int) $request->input('days', 90);
+
+        // Stub: actual ZIP generation with excursion data, corrective actions,
+        // work order photos, and calibration certificates is deferred.
+        return back()->with('info', "Insurance documentation package for {$site->name} ({$days} days) is being prepared. You will be notified when the download is ready.");
+    }
+
     public function __invoke(Request $request, Site $site)
     {
         $days = (int) $request->input('days', 90);

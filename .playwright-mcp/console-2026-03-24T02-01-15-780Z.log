@@ -1,0 +1,9 @@
+[   22854ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://iot-hub.test/devices:0
+[   26372ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://iot-hub.test/sites:0
+[  114267ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5173/resources/js/routes/index.ts?t=1774317790096:0
+[  114267ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5173/@vite/client:808
+[  114268ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5173/resources/js/routes/profile/index.ts?t=1774317790087:0
+[  114270ms] [ERROR] [vite] Failed to reload /resources/js/components/app-sidebar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5173/@vite/client:808
+[  114270ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5173/@vite/client:808
+[  114464ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5173/@vite/client:808
+[  114467ms] [ERROR] [vite] Failed to reload /resources/js/components/app-sidebar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5173/@vite/client:808

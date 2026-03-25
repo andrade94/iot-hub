@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Site;
+use App\Models\SiteTemplate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -74,6 +75,52 @@ class SiteSettingsController extends Controller
         $site->update($validated);
 
         return back()->with('success', "Site '{$site->name}' updated.");
+    }
+
+    public function batchImport(Request $request)
+    {
+        $user = $request->user();
+        $orgId = $user->org_id;
+
+        $templates = SiteTemplate::where('org_id', $orgId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $timezones = timezone_identifiers_list(\DateTimeZone::AMERICA);
+
+        return Inertia::render('settings/sites/batch-import', [
+            'templates' => $templates,
+            'timezones' => $timezones,
+        ]);
+    }
+
+    public function processBatchImport(Request $request)
+    {
+        $request->validate([
+            'sites' => 'required|array|min:1',
+            'sites.*.name' => 'required|string|max:255',
+            'sites.*.address' => 'nullable|string|max:500',
+            'sites.*.timezone' => 'nullable|string|timezone',
+            'sites.*.template_name' => 'nullable|string|max:255',
+        ]);
+
+        $user = $request->user();
+        $orgId = $user->org_id;
+        $created = 0;
+
+        foreach ($request->input('sites') as $siteData) {
+            Site::create([
+                'org_id' => $orgId,
+                'name' => $siteData['name'],
+                'address' => $siteData['address'] ?? null,
+                'timezone' => $siteData['timezone'] ?? null,
+                'status' => 'draft',
+            ]);
+            $created++;
+        }
+
+        return redirect()->route('sites.settings.index')
+            ->with('success', "{$created} site(s) imported successfully.");
     }
 
     public function destroy(Site $site)

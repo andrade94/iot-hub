@@ -2,7 +2,7 @@
 
 > **Tier 3 Living Reference** -- for developers and AI assistants working on the codebase.
 > Generated from source code. Keep in sync with actual implementations.
-> Last updated: 2026-03-23 (Phases 11-13 complete — 42 models, 212 routes, 124 tests, 65 pages)
+> Last updated: 2026-03-24 (Phases 0-12 complete, Phase 13 partial — 43 models, 226 routes, 126 tests, 72 pages)
 
 ---
 
@@ -76,16 +76,16 @@ Astrea is a **multi-tenant LoRaWAN operations platform** that bridges physical s
 ```
 app/
 ├── Http/
-│   ├── Controllers/          55 controllers (web + API + settings)
+│   ├── Controllers/          58 controllers (web + API + settings)
 │   ├── Middleware/            8 middleware (EnsureOrganizationScope, EnsureSiteAccess, EnsurePrivacyConsent, ApplyOrgBranding, etc.)
 │   └── Requests/             3 form request classes
-├── Models/                   40 Eloquent models
+├── Models/                   43 Eloquent models
 ├── Services/                 42 service classes across 15 domains
 ├── Jobs/                     21 queued jobs
 ├── Events/                   3 broadcast events
 ├── Notifications/            5 notification classes (System, Activity, Welcome, ExportReady, PlatformOutage)
-├── Policies/                 14 authorization policies
-├── Factories/                40 model factories
+├── Policies/                 18 authorization policies
+├── Factories/                42 model factories
 ├── Mail/                     8 mailables
 └── Console/                  11 Artisan commands
 ```
@@ -94,11 +94,11 @@ app/
 
 ```
 resources/js/
-├── pages/                    65 Inertia page components
-├── components/               Custom + shadcn/ui (90+ components)
+├── pages/                    72 Inertia page components
+├── components/               Custom + shadcn/ui (120 components)
 │   └── ui/                   shadcn components (kebab-case)
 ├── layouts/                  AppLayout, AuthLayout, SettingsLayout
-├── hooks/                    11 custom hooks
+├── hooks/                    12 custom hooks
 ├── config/                   navigation.ts (sidebar structure)
 ├── i18n/                     509 translation keys (en + es)
 ├── types/                    TypeScript definitions
@@ -157,7 +157,7 @@ Every page load receives these props via `HandleInertiaRequests`:
 
 ## 4. Database Schema
 
-40 Eloquent models organized by domain. Phase 10 added: CorrectiveAction, DeviceAnomaly (S1), MaintenanceWindow, OutageDeclaration (S2), ReportSchedule, DataExport, SiteTemplate (S3).
+43 Eloquent models organized by domain. Phase 10 added: CorrectiveAction, DeviceAnomaly (S1), MaintenanceWindow, OutageDeclaration (S2), ReportSchedule, DataExport, SiteTemplate (S3).
 
 ### Core Domain
 
@@ -717,7 +717,7 @@ Configuration for ERP/accounting integrations (SAP, CONTPAQ).
 
 ## 5. Roles & Permissions
 
-5 roles with 29 permissions managed by Spatie Laravel Permission. Phase 10 added 7 permissions: `log corrective actions`, `verify corrective actions`, `manage maintenance windows`, `view alert analytics`, `manage report schedules`, `manage site templates`, `export organization data`.
+7 roles with 29 permissions managed by Spatie Laravel Permission. Phase 10 added 7 permissions: `log corrective actions`, `verify corrective actions`, `manage maintenance windows`, `view alert analytics`, `manage report schedules`, `manage site templates`, `export organization data`.
 
 ### Permission Matrix
 
@@ -834,6 +834,8 @@ All routes organized by group with their middleware stack.
 |---|---|---|---|
 | GET | `/` | home | welcome page (Inertia) |
 | POST | `/locale` | locale.update | LocaleController@update |
+| GET | `/search` | search | SearchController (Cmd+K global search) |
+| GET | `/status` | status | StatusController (platform status page) |
 
 ### Auth Routes (Fortify-managed)
 
@@ -949,6 +951,8 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 
 | Method | URI | Name | Extra Middleware |
 |---|---|---|---|
+| GET | `/sites/{site}/verifications` | sites.verifications | site.access |
+| POST | `/sites/{site}/verifications` | sites.verifications.store | site.access |
 | GET | `/sites/{site}` | sites.show | site.access |
 | GET | `/sites/{site}/zones/{zone}` | sites.zone | site.access |
 
@@ -959,6 +963,7 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | GET | `/sites/{site}/reports/temperature` | reports.temperature | site.access |
 | GET | `/sites/{site}/reports/energy` | reports.energy | site.access |
 | GET | `/sites/{site}/reports/summary` | reports.summary | site.access |
+| GET | `/sites/{site}/reports/inventory` | reports.inventory | site.access |
 
 #### Modules (`site.access, permission:manage devices`)
 
@@ -985,6 +990,8 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | POST | `/sites/{site}/rules` | rules.store | site.access, permission:manage alert rules |
 | GET | `/sites/{site}/rules/{rule}` | rules.show | site.access, permission:manage alert rules |
 | PUT | `/sites/{site}/rules/{rule}` | rules.update | site.access, permission:manage alert rules |
+| GET | `/sites/{site}/rules/create` | rules.create | site.access, permission:manage alert rules |
+| GET | `/sites/{site}/rules/{rule}/edit` | rules.edit | site.access, permission:manage alert rules |
 | DELETE | `/sites/{site}/rules/{rule}` | rules.destroy | site.access, permission:manage alert rules |
 
 #### Exports
@@ -1114,7 +1121,7 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 
 ## 8. Frontend Pages
 
-61 Inertia page components organized by domain.
+72 Inertia page components organized by domain.
 
 ### Auth Pages
 
@@ -1157,6 +1164,7 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | Page | File Path | Inertia Render Path |
 |---|---|---|
 | Alert Analytics | `pages/analytics/alerts.tsx` | `analytics/alerts` |
+| Performance Analytics | `pages/analytics/performance.tsx` | `analytics/performance` |
 
 ### Report Pages
 
@@ -1165,6 +1173,8 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | Temperature Report | `pages/reports/temperature.tsx` | `reports/temperature` |
 | Energy Report | `pages/reports/energy.tsx` | `reports/energy` |
 | Summary Report | `pages/reports/summary.tsx` | `reports/summary` |
+| Reports Index | `pages/reports/index.tsx` | `reports/index` |
+| Device Inventory Report | `pages/reports/inventory.tsx` | `reports/inventory` |
 
 ### Work Order Pages
 
@@ -1212,11 +1222,14 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | Integrations | `pages/settings/integrations.tsx` | `settings/integrations` |
 | Compliance Calendar | `pages/settings/compliance.tsx` | `settings/compliance` |
 | Sites Index | `pages/settings/sites/index.tsx` | `settings/sites/index` |
+| Batch Site Import | `pages/settings/sites/batch-import.tsx` | `settings/sites/batch-import` |
 | Escalation Chains | `pages/settings/escalation-chains/index.tsx` | `settings/escalation-chains/index` |
 | Gateways | `pages/settings/gateways/index.tsx` | `settings/gateways/index` |
 | Gateway Detail | `pages/settings/gateways/show.tsx` | `settings/gateways/show` |
 | Device Detail | `pages/settings/devices/show.tsx` | `settings/devices/show` |
 | Rule Detail | `pages/settings/rules/show.tsx` | `settings/rules/show` |
+| Rule Create | `pages/settings/rules/create.tsx` | `settings/rules/create` |
+| Rule Edit | `pages/settings/rules/edit.tsx` | `settings/rules/edit` |
 | Recipe Index | `pages/settings/recipes/index.tsx` | `settings/recipes/index` |
 | Recipe Detail | `pages/settings/recipes/show.tsx` | `settings/recipes/show` |
 | Maintenance Windows | `pages/settings/maintenance-windows/index.tsx` | `settings/maintenance-windows/index` |
@@ -1235,6 +1248,16 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | Page | File Path | Inertia Render Path |
 |---|---|---|
 | Partner Portal | `pages/partner/index.tsx` | `partner/index` |
+
+### Standalone Pages
+
+| Page | File Path | Inertia Render Path |
+|---|---|---|
+| Platform Status | `pages/status.tsx` | `status` |
+| Sites Index | `pages/sites/index.tsx` | `sites/index` |
+| Sites Comparison | `pages/sites/compare.tsx` | `sites/compare` |
+| Sites Timeline | `pages/sites/timeline.tsx` | `sites/timeline` |
+| Devices Index | `pages/devices/index.tsx` | `devices/index` |
 
 ---
 
@@ -1468,7 +1491,7 @@ The navigation config also exports:
 
 ## 13. Service Layer
 
-36 service classes organized across 12 domains.
+42 service classes organized across 15 domains.
 
 | Domain | Services | Purpose |
 |---|---|---|

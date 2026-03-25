@@ -33,6 +33,9 @@ use App\Http\Controllers\DataExportController;
 use App\Http\Controllers\MaintenanceWindowController;
 use App\Http\Controllers\ReportScheduleController;
 use App\Http\Controllers\SiteTemplateController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\StatusController;
+use App\Http\Controllers\TemperatureVerificationController;
 use App\Http\Controllers\WorkOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +44,9 @@ use Laravel\Fortify\Features;
 
 // Health check (public, no auth — for external monitoring)
 Route::get('/health', HealthCheckController::class)->name('health');
+
+// Platform Status Page
+Route::get('/status', StatusController::class)->name('status');
 
 Route::get('/', function () {
     return auth()->check()
@@ -68,6 +74,33 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    // Global Search (Cmd+K)
+    Route::get('search', SearchController::class)->name('search');
+
+    // Organization context switching (super_admin only)
+    Route::post('org/switch', function (Request $request) {
+        $user = $request->user();
+
+        if (! $user->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $orgId = $request->input('org_id');
+
+        if ($orgId) {
+            $org = \App\Models\Organization::find($orgId);
+            if (! $org) {
+                abort(404, 'Organization not found.');
+            }
+        }
+
+        session(['current_org_id' => $orgId]);
+        // Reset site context when switching org
+        session()->forget('current_site_id');
+
+        return back();
+    })->name('org.switch');
 
     // Site context switching
     Route::post('site/switch', function (Request $request) {
@@ -164,6 +197,11 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
     Route::get('recipes', [RecipeController::class, 'index'])->name('recipes.index');
     Route::get('recipes/{recipe}', [RecipeController::class, 'show'])->name('recipes.show');
 
+    // Site, Device & Gateway index (monitor pages)
+    Route::get('sites', [SiteDetailController::class, 'index'])->name('sites.index');
+    Route::get('devices', [DeviceDetailController::class, 'index'])->name('devices.index');
+    Route::get('settings/gateways', [GatewayController::class, 'globalIndex'])->name('gateways.global');
+
     // Site Comparison (Phase 11) — must be before sites/{site} to avoid wildcard capture
     Route::get('sites/compare', \App\Http\Controllers\SiteComparisonController::class)->name('sites.compare');
     Route::get('sites/compare/export', [\App\Http\Controllers\SiteComparisonController::class, 'export'])->name('sites.compare.export');
@@ -175,6 +213,7 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
     Route::middleware('site.access')->group(function () {
         Route::get('sites/{site}/timeline', \App\Http\Controllers\SiteTimelineController::class)->name('sites.timeline');
         Route::get('sites/{site}/audit', \App\Http\Controllers\AuditModeController::class)->name('sites.audit');
+        Route::get('sites/{site}/audit/export', [\App\Http\Controllers\AuditModeController::class, 'exportInsurancePackage'])->name('sites.audit.export');
         Route::get('sites/{site}', [SiteDetailController::class, 'show'])->name('sites.show');
         Route::get('sites/{site}/zones/{zone}', [SiteDetailController::class, 'zone'])->name('sites.zone');
     });
@@ -209,6 +248,13 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
         Route::get('sites/{site}/reports/energy', [ReportController::class, 'energy'])->name('reports.energy');
         Route::get('sites/{site}/reports/energy/download', [ReportController::class, 'downloadEnergy'])->name('reports.energy.download');
         Route::get('sites/{site}/reports/summary', [ReportController::class, 'summary'])->name('reports.summary');
+        Route::get('sites/{site}/reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
+    });
+
+    // Temperature Verifications (BLD-04)
+    Route::middleware('site.access')->group(function () {
+        Route::get('sites/{site}/verifications', [TemperatureVerificationController::class, 'index'])->name('sites.verifications');
+        Route::post('sites/{site}/verifications', [TemperatureVerificationController::class, 'store'])->name('sites.verifications.store');
     });
 
     // Module management (per site)
@@ -275,8 +321,10 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
     // Alert rules (per site)
     Route::middleware(['site.access', 'permission:manage alert rules'])->group(function () {
         Route::get('sites/{site}/rules', [AlertRuleController::class, 'index'])->name('rules.index');
+        Route::get('sites/{site}/rules/create', [AlertRuleController::class, 'create'])->name('rules.create');
         Route::post('sites/{site}/rules', [AlertRuleController::class, 'store'])->name('rules.store');
         Route::get('sites/{site}/rules/{rule}', [AlertRuleController::class, 'show'])->name('rules.show');
+        Route::get('sites/{site}/rules/{rule}/edit', [AlertRuleController::class, 'edit'])->name('rules.edit');
         Route::put('sites/{site}/rules/{rule}', [AlertRuleController::class, 'update'])->name('rules.update');
         Route::delete('sites/{site}/rules/{rule}', [AlertRuleController::class, 'destroy'])->name('rules.destroy');
     });
@@ -320,8 +368,12 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
         Route::get('/', [BillingController::class, 'dashboard'])->name('dashboard');
         Route::get('/profiles', [BillingController::class, 'profiles'])->name('profiles');
         Route::post('/profiles', [BillingController::class, 'storeProfile'])->name('profiles.store');
+        Route::put('/profiles/{profile}', [BillingController::class, 'updateProfile'])->name('profiles.update');
+        Route::delete('/profiles/{profile}', [BillingController::class, 'destroyProfile'])->name('profiles.destroy');
         Route::post('/generate-invoice', [BillingController::class, 'generateInvoice'])->name('generate-invoice');
         Route::post('/invoices/{invoice}/mark-paid', [BillingController::class, 'markInvoicePaid'])->name('invoices.mark-paid');
+        Route::post('/invoices/{invoice}/cancel', [BillingController::class, 'cancelInvoice'])->name('invoices.cancel');
+        Route::post('/invoices/{invoice}/cdp', [BillingController::class, 'generateCdp'])->name('invoices.cdp');
         Route::get('/invoices/{invoice}/download/{format}', [BillingController::class, 'downloadInvoice'])
             ->name('invoices.download')
             ->where('format', 'pdf|xml');
@@ -343,6 +395,8 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
     // Site Management
     Route::middleware('permission:manage sites')->prefix('settings/sites')->name('sites.settings.')->group(function () {
         Route::get('/', [SiteSettingsController::class, 'index'])->name('index');
+        Route::get('batch-import', [SiteSettingsController::class, 'batchImport'])->name('batch-import');
+        Route::post('batch-import', [SiteSettingsController::class, 'processBatchImport'])->name('batch-import.process');
         Route::post('/', [SiteSettingsController::class, 'store'])->name('store');
         Route::put('{site}', [SiteSettingsController::class, 'update'])->name('update');
         Route::delete('{site}', [SiteSettingsController::class, 'destroy'])->name('destroy');
@@ -382,6 +436,8 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
     Route::middleware('role:super_admin')->group(function () {
         Route::get('partner', [PartnerController::class, 'index'])->name('partner.index');
         Route::post('partner', [PartnerController::class, 'store'])->name('partner.store');
+        Route::post('partner/{organization}/suspend', [PartnerController::class, 'suspend'])->name('partner.suspend');
+        Route::post('partner/{organization}/archive', [PartnerController::class, 'archive'])->name('partner.archive');
     });
 });
 

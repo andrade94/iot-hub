@@ -22,6 +22,28 @@ class AlertRuleController extends Controller
         ]);
     }
 
+    public function create(Request $request, Site $site)
+    {
+        $devices = $site->devices()->select('id', 'name', 'model', 'zone')->get();
+
+        return Inertia::render('settings/rules/create', [
+            'site' => $site,
+            'devices' => $devices,
+        ]);
+    }
+
+    public function edit(Request $request, Site $site, AlertRule $rule)
+    {
+        $rule->load('device');
+        $devices = $site->devices()->select('id', 'name', 'model', 'zone')->get();
+
+        return Inertia::render('settings/rules/edit', [
+            'site' => $site,
+            'rule' => $rule,
+            'devices' => $devices,
+        ]);
+    }
+
     public function store(Request $request, Site $site)
     {
         $validated = $request->validate([

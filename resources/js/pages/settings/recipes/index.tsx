@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FadeIn } from '@/components/ui/fade-in';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, Recipe } from '@/types';
@@ -33,63 +34,98 @@ export default function RecipeIndex({ recipes }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Recipes')} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">{t('Recipes')}</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {recipes.length} {t('sensor recipe(s) available')}
-                    </p>
-                </div>
-
-                {groups.length === 0 ? (
-                    <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed p-12">
-                        <div className="text-center">
-                            <FlaskConical className="mx-auto h-10 w-10 text-muted-foreground/50" />
-                            <p className="mt-3 text-muted-foreground">{t('No recipes available')}</p>
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ── Header ──────────────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative p-6 md:p-8">
+                            <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                {t('Recipe Library')}
+                            </p>
+                            <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                {t('Recipes')}
+                            </h1>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                <span className="font-mono font-medium tabular-nums text-foreground">
+                                    {recipes.length}
+                                </span>{' '}
+                                {t('sensor recipe(s) available')}
+                            </p>
                         </div>
                     </div>
-                ) : (
-                    groups.map((group) => (
-                        <div key={group.module} className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <BookOpen className="h-4 w-4 text-muted-foreground" />
-                                <h2 className="text-sm font-semibold">{group.module}</h2>
-                                <Badge variant="secondary" className="text-xs">
-                                    {group.recipes.length}
-                                </Badge>
-                            </div>
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                {group.recipes.map((recipe) => (
-                                    <Card
-                                        key={recipe.id}
-                                        className="cursor-pointer transition-colors hover:bg-muted/50"
-                                        onClick={() => router.get(`/recipes/${recipe.id}`)}
-                                    >
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-base">{recipe.name}</CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Badge variant="outline" className="font-mono text-xs">
-                                                        {recipe.sensor_model}
-                                                    </Badge>
-                                                </div>
-                                                {recipe.description && (
-                                                    <p className="text-sm text-muted-foreground line-clamp-2">
-                                                        {recipe.description}
-                                                    </p>
-                                                )}
-                                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                    <FlaskConical className="h-3 w-3" />
-                                                    {recipe.default_rules.length} {t('default rule(s)')}
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                </FadeIn>
+
+                {/* ── Recipe Groups ───────────────────────────────── */}
+                {groups.length === 0 ? (
+                    <FadeIn delay={100} duration={500}>
+                        <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed p-12">
+                            <div className="text-center">
+                                <FlaskConical className="mx-auto h-10 w-10 text-muted-foreground/50" />
+                                <p className="mt-3 text-muted-foreground">{t('No recipes available')}</p>
                             </div>
                         </div>
+                    </FadeIn>
+                ) : (
+                    groups.map((group, groupIdx) => (
+                        <FadeIn key={group.module} delay={100 + groupIdx * 100} duration={500}>
+                            <div className="space-y-3">
+                                {/* Section divider */}
+                                <div className="flex items-center gap-3">
+                                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                                    <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {group.module}
+                                    </p>
+                                    <Badge variant="secondary" className="font-mono text-xs tabular-nums">
+                                        {group.recipes.length}
+                                    </Badge>
+                                    <div className="h-px flex-1 bg-border" />
+                                </div>
+
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {group.recipes.map((recipe, recipeIdx) => (
+                                        <FadeIn
+                                            key={recipe.id}
+                                            delay={150 + groupIdx * 100 + recipeIdx * 60}
+                                            duration={500}
+                                        >
+                                            <Card
+                                                className="cursor-pointer shadow-elevation-1 transition-colors hover:bg-muted/50"
+                                                onClick={() => router.get(`/recipes/${recipe.id}`)}
+                                            >
+                                                <CardHeader className="pb-2">
+                                                    <CardTitle className="text-base">{recipe.name}</CardTitle>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="font-mono text-xs tabular-nums"
+                                                            >
+                                                                {recipe.sensor_model}
+                                                            </Badge>
+                                                        </div>
+                                                        {recipe.description && (
+                                                            <p className="line-clamp-2 text-sm text-muted-foreground">
+                                                                {recipe.description}
+                                                            </p>
+                                                        )}
+                                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                            <FlaskConical className="h-3 w-3" />
+                                                            <span className="font-mono tabular-nums">
+                                                                {recipe.default_rules.length}
+                                                            </span>{' '}
+                                                            {t('default rule(s)')}
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </FadeIn>
+                                    ))}
+                                </div>
+                            </div>
+                        </FadeIn>
                     ))
                 )}
             </div>

@@ -1,5 +1,6 @@
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -15,36 +16,38 @@ export default function ConfirmPassword() {
         >
             <Head title="Confirm password" />
 
-            <Form {...store.form()} resetOnSuccess={['password']}>
-                {({ processing, errors }) => (
-                    <div className="space-y-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                name="password"
-                                placeholder="Password"
-                                autoComplete="current-password"
-                                autoFocus
-                            />
+            <FadeIn>
+                <Form {...store.form()} resetOnSuccess={['password']}>
+                    {({ processing, errors }) => (
+                        <div className="space-y-6">
+                            <div className="grid gap-2">
+                                <Label htmlFor="password">Password</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    name="password"
+                                    placeholder="Password"
+                                    autoComplete="current-password"
+                                    autoFocus
+                                />
 
-                            <InputError message={errors.password} />
-                        </div>
+                                <InputError message={errors.password} />
+                            </div>
 
-                        <div className="flex items-center">
-                            <Button
-                                className="w-full"
-                                disabled={processing}
-                                data-test="confirm-password-button"
-                            >
-                                {processing && <Spinner />}
-                                Confirm password
-                            </Button>
+                            <div className="flex items-center">
+                                <Button
+                                    className="w-full"
+                                    disabled={processing}
+                                    data-test="confirm-password-button"
+                                >
+                                    {processing && <Spinner />}
+                                    Confirm password
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </Form>
+                    )}
+                </Form>
+            </FadeIn>
         </AuthLayout>
     );
 }

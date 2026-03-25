@@ -10,6 +10,23 @@ use Inertia\Inertia;
 
 class GatewayController extends Controller
 {
+    public function globalIndex(Request $request)
+    {
+        $user = $request->user();
+        $siteIds = $user->accessibleSites()->pluck('id');
+
+        $gateways = Gateway::whereIn('site_id', $siteIds)
+            ->with('site')
+            ->withCount('devices')
+            ->latest()
+            ->paginate(25)
+            ->withQueryString();
+
+        return Inertia::render('settings/gateways/global', [
+            'gateways' => $gateways,
+        ]);
+    }
+
     public function index(Request $request, Site $site)
     {
         $this->authorize('viewAny', [Gateway::class, $site]);

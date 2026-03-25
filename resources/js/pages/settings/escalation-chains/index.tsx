@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
+import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,7 +19,7 @@ import type { BreadcrumbItem, EscalationChain, EscalationLevel } from '@/types';
 import { useValidatedForm } from '@/hooks/use-validated-form';
 import { escalationChainSchema } from '@/utils/schemas';
 import { Head, router } from '@inertiajs/react';
-import { GitBranch, Link2, Mail, Pencil, Plus, Smartphone, Trash2 } from 'lucide-react';
+import { GitBranch, Mail, Pencil, Plus, Smartphone, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface SiteOption {
@@ -87,137 +88,162 @@ export default function EscalationChainIndex({ chains, sites, users }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Escalation Chains')} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('Escalation Chains')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {chains.length} {t('chain(s)')}
-                        </p>
-                    </div>
-                    <Can permission="manage alert rules">
-                        <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                            <DialogTrigger asChild>
-                                <Button>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    {t('Create Chain')}
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle>{t('Create Escalation Chain')}</DialogTitle>
-                                </DialogHeader>
-                                <ChainForm
-                                    sites={sites}
-                                    users={users}
-                                    onSuccess={() => setShowCreate(false)}
-                                />
-                            </DialogContent>
-                        </Dialog>
-                    </Can>
-                </div>
-
-                <Card className="flex-1">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{t('Name')}</TableHead>
-                                <TableHead>{t('Site')}</TableHead>
-                                <TableHead>{t('Levels')}</TableHead>
-                                <TableHead>{t('Channels')}</TableHead>
-                                <TableHead>{t('Created')}</TableHead>
-                                <TableHead />
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {chains.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="py-0">
-                                        <EmptyState
-                                            size="sm"
-                                            variant="muted"
-                                            className="border-0"
-                                            icon={<GitBranch className="h-5 w-5 text-muted-foreground" />}
-                                            title={t('No escalation chains')}
-                                            description={t('Create an escalation chain to route alert notifications')}
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ── Header ──────────────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative flex items-center justify-between p-6 md:p-8">
+                            <div>
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('Escalation Chains')}
+                                </p>
+                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                    {t('Notification Routing')}
+                                </h1>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    <span className="font-mono font-medium tabular-nums text-foreground">{chains.length}</span>{' '}
+                                    {t('chain(s) configured')}
+                                </p>
+                            </div>
+                            <Can permission="manage alert rules">
+                                <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                                    <DialogTrigger asChild>
+                                        <Button>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            {t('Create Chain')}
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+                                        <DialogHeader>
+                                            <DialogTitle>{t('Create Escalation Chain')}</DialogTitle>
+                                        </DialogHeader>
+                                        <ChainForm
+                                            sites={sites}
+                                            users={users}
+                                            onSuccess={() => setShowCreate(false)}
                                         />
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                chains.map((chain) => {
-                                    const allChannels = [...new Set(chain.levels.flatMap((l) => l.channels))];
+                                    </DialogContent>
+                                </Dialog>
+                            </Can>
+                        </div>
+                    </div>
+                </FadeIn>
 
-                                    return (
-                                        <TableRow key={chain.id}>
-                                            <TableCell className="font-medium">{chain.name}</TableCell>
-                                            <TableCell className="text-muted-foreground">
-                                                {chain.site?.name ?? getSiteName(chain.site_id)}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="secondary" className="text-xs">
-                                                    {chain.levels.length} {t('level(s)')}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex gap-1">
-                                                    {allChannels.map((ch) => (
-                                                        <Badge key={ch} variant="outline" className="text-xs">
-                                                            {ch}
-                                                        </Badge>
-                                                    ))}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground text-sm">
-                                                {formatDate(chain.created_at)}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Can permission="manage alert rules">
-                                                    <div className="flex justify-end gap-1">
-                                                        <Dialog
-                                                            open={editChain?.id === chain.id}
-                                                            onOpenChange={(open) => !open && setEditChain(null)}
-                                                        >
-                                                            <DialogTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon-sm"
-                                                                    title={t('Edit')}
-                                                                    onClick={() => setEditChain(chain)}
-                                                                >
-                                                                    <Pencil className="h-3.5 w-3.5" />
-                                                                </Button>
-                                                            </DialogTrigger>
-                                                            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                                                                <DialogHeader>
-                                                                    <DialogTitle>{t('Edit Escalation Chain')}</DialogTitle>
-                                                                </DialogHeader>
-                                                                <ChainForm
-                                                                    chain={chain}
-                                                                    sites={sites}
-                                                                    users={users}
-                                                                    onSuccess={() => setEditChain(null)}
-                                                                />
-                                                            </DialogContent>
-                                                        </Dialog>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon-sm"
-                                                            className="text-destructive"
-                                                            title={t('Delete')}
-                                                            onClick={() => setDeleteChain(chain)}
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </Button>
+                {/* ── Section Divider ─────────────────────────────── */}
+                <FadeIn delay={75} duration={400}>
+                    <div className="flex items-center gap-3">
+                        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                            {t('All Chains')}
+                        </p>
+                        <div className="h-px flex-1 bg-border" />
+                    </div>
+                </FadeIn>
+
+                {/* ── Table ────────────────────────────────────────── */}
+                <FadeIn delay={150} duration={500}>
+                    <Card className="flex-1 shadow-elevation-1">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>{t('Name')}</TableHead>
+                                    <TableHead>{t('Site')}</TableHead>
+                                    <TableHead>{t('Levels')}</TableHead>
+                                    <TableHead>{t('Channels')}</TableHead>
+                                    <TableHead>{t('Created')}</TableHead>
+                                    <TableHead />
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {chains.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="py-0">
+                                            <EmptyState
+                                                size="sm"
+                                                variant="muted"
+                                                className="border-0"
+                                                icon={<GitBranch className="h-5 w-5 text-muted-foreground" />}
+                                                title={t('No escalation chains')}
+                                                description={t('Create an escalation chain to route alert notifications')}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    chains.map((chain) => {
+                                        const allChannels = [...new Set(chain.levels.flatMap((l) => l.channels))];
+
+                                        return (
+                                            <TableRow key={chain.id}>
+                                                <TableCell className="font-medium">{chain.name}</TableCell>
+                                                <TableCell className="text-muted-foreground">
+                                                    {chain.site?.name ?? getSiteName(chain.site_id)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant="secondary" className="font-mono text-xs tabular-nums">
+                                                        {chain.levels.length} {t('level(s)')}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex gap-1">
+                                                        {allChannels.map((ch) => (
+                                                            <Badge key={ch} variant="outline" className="text-xs">
+                                                                {ch}
+                                                            </Badge>
+                                                        ))}
                                                     </div>
-                                                </Can>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })
-                            )}
-                        </TableBody>
-                    </Table>
-                </Card>
+                                                </TableCell>
+                                                <TableCell className="font-mono text-xs tabular-nums text-muted-foreground">
+                                                    {formatDate(chain.created_at)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Can permission="manage alert rules">
+                                                        <div className="flex justify-end gap-1">
+                                                            <Dialog
+                                                                open={editChain?.id === chain.id}
+                                                                onOpenChange={(open) => !open && setEditChain(null)}
+                                                            >
+                                                                <DialogTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon-sm"
+                                                                        title={t('Edit')}
+                                                                        onClick={() => setEditChain(chain)}
+                                                                    >
+                                                                        <Pencil className="h-3.5 w-3.5" />
+                                                                    </Button>
+                                                                </DialogTrigger>
+                                                                <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+                                                                    <DialogHeader>
+                                                                        <DialogTitle>{t('Edit Escalation Chain')}</DialogTitle>
+                                                                    </DialogHeader>
+                                                                    <ChainForm
+                                                                        chain={chain}
+                                                                        sites={sites}
+                                                                        users={users}
+                                                                        onSuccess={() => setEditChain(null)}
+                                                                    />
+                                                                </DialogContent>
+                                                            </Dialog>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon-sm"
+                                                                className="text-destructive"
+                                                                title={t('Delete')}
+                                                                onClick={() => setDeleteChain(chain)}
+                                                            >
+                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        </div>
+                                                    </Can>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })
+                                )}
+                            </TableBody>
+                        </Table>
+                    </Card>
+                </FadeIn>
             </div>
 
             <ConfirmationDialog
@@ -389,17 +415,17 @@ function ChainForm({
 
 export function EscalationChainsSkeleton() {
     return (
-        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+        <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                    <Skeleton className="h-8 w-40" />
-                    <Skeleton className="h-4 w-24" />
-                </div>
-                <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-36 w-full rounded-xl" />
+
+            {/* Section divider */}
+            <div className="flex items-center gap-3">
+                <Skeleton className="h-3 w-20" />
+                <div className="h-px flex-1 bg-border" />
             </div>
 
-            <Card className="flex-1">
+            <Card className="flex-1 shadow-elevation-1">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -462,7 +488,7 @@ function LevelBuilder({
         <div className="rounded-lg border p-4 space-y-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs font-mono">
+                    <Badge variant="secondary" className="font-mono text-xs tabular-nums">
                         L{level.level}
                     </Badge>
                     <span className="text-sm font-medium">
@@ -490,7 +516,7 @@ function LevelBuilder({
                     min={0}
                     value={level.delay_minutes}
                     onChange={(e) => onDelayChange(Number(e.target.value))}
-                    className="w-32"
+                    className="w-32 font-mono tabular-nums"
                 />
                 <p className="text-xs text-muted-foreground">
                     {level.delay_minutes === 0
@@ -536,7 +562,7 @@ function LevelBuilder({
                 </div>
                 {level.user_ids.length > 0 && (
                     <p className="text-xs text-muted-foreground">
-                        {level.user_ids.length} {t('user(s) selected')}
+                        <span className="font-mono tabular-nums">{level.user_ids.length}</span> {t('user(s) selected')}
                     </p>
                 )}
             </div>

@@ -17,10 +17,10 @@ class Invoice extends Model
      * SM-003: Allowed state transitions for the invoice lifecycle.
      */
     protected static array $transitions = [
-        'draft' => ['sent', 'paid'],
-        'sent' => ['paid', 'overdue'],
-        'overdue' => ['paid'],
-        // paid is a terminal state
+        'draft' => ['sent', 'paid', 'cancelled'],
+        'sent' => ['paid', 'overdue', 'cancelled'],
+        'overdue' => ['paid', 'cancelled'],
+        // paid and cancelled are terminal states
     ];
 
     public function canTransitionTo(string $newStatus): bool
@@ -42,6 +42,7 @@ class Invoice extends Model
         'xml_path',
         'paid_at',
         'payment_method',
+        'cancelled_at',
     ];
 
     protected function casts(): array
@@ -51,6 +52,7 @@ class Invoice extends Model
             'iva' => 'decimal:2',
             'total' => 'decimal:2',
             'paid_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 

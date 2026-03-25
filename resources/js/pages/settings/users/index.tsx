@@ -1,36 +1,26 @@
-import { Can } from '@/components/Can';
+import { Can, usePermission } from '@/components/Can';
 import InputError from '@/components/input-error';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { type UserRecord, getUserColumns } from '@/components/users/columns';
 import { useLang } from '@/hooks/use-lang';
+import { useValidatedForm } from '@/hooks/use-validated-form';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { useValidatedForm } from '@/hooks/use-validated-form';
 import { userSchema } from '@/utils/schemas';
 import { Head, router } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-
-interface UserRecord {
-    id: number;
-    name: string;
-    email: string;
-    phone: string | null;
-    whatsapp_phone: string | null;
-    has_app_access: boolean;
-    role: string | null;
-    sites: { id: number; name: string }[];
-    created_at: string;
-}
+import { Plus } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface SiteOption {
     id: number;
@@ -48,142 +38,114 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '#' },
 ];
 
-const roleBadgeVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
-    org_admin: 'default',
-    site_manager: 'secondary',
-    site_viewer: 'outline',
-    technician: 'outline',
-};
-
 export default function UsersIndex({ users, sites, roles }: Props) {
     const { t } = useLang();
+    const { can } = usePermission();
     const [showCreate, setShowCreate] = useState(false);
     const [editUser, setEditUser] = useState<UserRecord | null>(null);
     const [deleteUser, setDeleteUser] = useState<UserRecord | null>(null);
     const [deleting, setDeleting] = useState(false);
+
+    const canManage = can('manage users');
+
+    const columns = useMemo(
+        () =>
+            getUserColumns({
+                onEdit: (user) => setEditUser(user),
+                onDelete: (user) => setDeleteUser(user),
+                t,
+                canManage,
+            }),
+        [t, canManage],
+    );
 
     function handleDelete() {
         if (!deleteUser) return;
         setDeleting(true);
         router.delete(`/settings/users/${deleteUser.id}`, {
             preserveScroll: true,
-            onFinish: () => { setDeleting(false); setDeleteUser(null); },
+            onFinish: () => {
+                setDeleting(false);
+                setDeleteUser(null);
+            },
         });
     }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Users')} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('Users')}</h1>
-                        <p className="text-sm text-muted-foreground">{users.length} {t('user(s)')}</p>
-                    </div>
-                    <Can permission="manage users">
-                        <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                            <DialogTrigger asChild>
-                                <Button><Plus className="mr-2 h-4 w-4" />{t('Add User')}</Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-lg">
-                                <DialogHeader>
-                                    <DialogTitle>{t('Add User')}</DialogTitle>
-                                </DialogHeader>
-                                <UserForm
-                                    sites={sites}
-                                    roles={roles}
-                                    onSuccess={() => setShowCreate(false)}
-                                />
-                            </DialogContent>
-                        </Dialog>
-                    </Can>
-                </div>
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ── Header card with bg-dots ── */}
+                <FadeIn>
+                    <Card className="shadow-elevation-1 overflow-hidden">
+                        <div className="bg-dots relative border-b px-6 py-5">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                                        {t('User Management')}
+                                    </p>
+                                    <h1 className="font-display mt-1 text-2xl font-bold tracking-tight">
+                                        {t('Users')}
+                                    </h1>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        <span className="font-mono tabular-nums">{users.length}</span>{' '}
+                                        {t('user(s)')}
+                                    </p>
+                                </div>
+                                <Can permission="manage users">
+                                    <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                                        <DialogTrigger asChild>
+                                            <Button>
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                {t('Add User')}
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-lg">
+                                            <DialogHeader>
+                                                <DialogTitle>{t('Add User')}</DialogTitle>
+                                            </DialogHeader>
+                                            <UserForm
+                                                sites={sites}
+                                                roles={roles}
+                                                onSuccess={() => setShowCreate(false)}
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
+                                </Can>
+                            </div>
+                        </div>
+                    </Card>
+                </FadeIn>
 
-                <Card className="flex-1">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{t('Name')}</TableHead>
-                                <TableHead>{t('Email')}</TableHead>
-                                <TableHead>{t('Role')}</TableHead>
-                                <TableHead>{t('Sites')}</TableHead>
-                                <TableHead>{t('App Access')}</TableHead>
-                                <TableHead />
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {users.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                                        {t('No users')}
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                users.map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell className="font-medium">{user.name}</TableCell>
-                                        <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                                        <TableCell>
-                                            {user.role && (
-                                                <Badge variant={roleBadgeVariant[user.role] ?? 'outline'}>
-                                                    {user.role.replace('_', ' ')}
-                                                </Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-wrap gap-1">
-                                                {user.sites.slice(0, 2).map((s) => (
-                                                    <Badge key={s.id} variant="outline" className="text-[10px]">{s.name}</Badge>
-                                                ))}
-                                                {user.sites.length > 2 && (
-                                                    <Badge variant="outline" className="text-[10px]">+{user.sites.length - 2}</Badge>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={user.has_app_access ? 'success' : 'outline'} className="text-xs">
-                                                {user.has_app_access ? t('Yes') : t('No')}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Can permission="manage users">
-                                                <div className="flex gap-1">
-                                                    <Dialog open={editUser?.id === user.id} onOpenChange={(open) => !open && setEditUser(null)}>
-                                                        <DialogTrigger asChild>
-                                                            <Button variant="ghost" size="icon-sm" onClick={() => setEditUser(user)}>
-                                                                <Pencil className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                        </DialogTrigger>
-                                                        <DialogContent className="max-w-lg">
-                                                            <DialogHeader>
-                                                                <DialogTitle>{t('Edit User')}</DialogTitle>
-                                                            </DialogHeader>
-                                                            <UserForm
-                                                                user={user}
-                                                                sites={sites}
-                                                                roles={roles}
-                                                                onSuccess={() => setEditUser(null)}
-                                                            />
-                                                        </DialogContent>
-                                                    </Dialog>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        className="text-destructive"
-                                                        onClick={() => setDeleteUser(user)}
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </Can>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </Card>
+                {/* ── Users table ── */}
+                <FadeIn delay={100}>
+                    <Card className="shadow-elevation-1">
+                        <DataTable
+                            columns={columns}
+                            data={users}
+                            bordered={false}
+                            noResultsMessage={t('No users')}
+                        />
+                    </Card>
+                </FadeIn>
             </div>
+
+            {/* ── Edit dialog (controlled outside table) ── */}
+            <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>{t('Edit User')}</DialogTitle>
+                    </DialogHeader>
+                    {editUser && (
+                        <UserForm
+                            user={editUser}
+                            sites={sites}
+                            roles={roles}
+                            onSuccess={() => setEditUser(null)}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
 
             <ConfirmationDialog
                 open={!!deleteUser}
@@ -199,6 +161,8 @@ export default function UsersIndex({ users, sites, roles }: Props) {
     );
 }
 
+/* ── User Form ───────────────────────────────────── */
+
 function UserForm({
     user,
     sites,
@@ -206,7 +170,7 @@ function UserForm({
     onSuccess,
 }: {
     user?: UserRecord;
-    sites: SiteOption[];
+    sites: { id: number; name: string }[];
     roles: string[];
     onSuccess: () => void;
 }) {
@@ -235,7 +199,10 @@ function UserForm({
         } else {
             form.post('/settings/users', {
                 preserveScroll: true,
-                onSuccess: () => { form.reset(); onSuccess(); },
+                onSuccess: () => {
+                    form.reset();
+                    onSuccess();
+                },
             });
         }
     }
@@ -243,7 +210,10 @@ function UserForm({
     function toggleSite(siteId: number) {
         const current = form.data.site_ids;
         if (current.includes(siteId)) {
-            form.setData('site_ids', current.filter((id) => id !== siteId));
+            form.setData(
+                'site_ids',
+                current.filter((id: number) => id !== siteId),
+            );
         } else {
             form.setData('site_ids', [...current, siteId]);
         }
@@ -253,25 +223,40 @@ function UserForm({
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-2">
                 <Label>{t('Name')}</Label>
-                <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} required />
+                <Input
+                    value={form.data.name}
+                    onChange={(e) => form.setData('name', e.target.value)}
+                    required
+                />
                 <InputError message={form.errors.name} />
             </div>
 
             <div className="grid gap-2">
                 <Label>{t('Email')}</Label>
-                <Input type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} required />
+                <Input
+                    type="email"
+                    value={form.data.email}
+                    onChange={(e) => form.setData('email', e.target.value)}
+                    required
+                />
                 <InputError message={form.errors.email} />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                     <Label>{t('Phone')}</Label>
-                    <Input value={form.data.phone} onChange={(e) => form.setData('phone', e.target.value)} />
+                    <Input
+                        value={form.data.phone}
+                        onChange={(e) => form.setData('phone', e.target.value)}
+                    />
                     <InputError message={form.errors.phone} />
                 </div>
                 <div className="grid gap-2">
                     <Label>{t('WhatsApp')}</Label>
-                    <Input value={form.data.whatsapp_phone} onChange={(e) => form.setData('whatsapp_phone', e.target.value)} />
+                    <Input
+                        value={form.data.whatsapp_phone}
+                        onChange={(e) => form.setData('whatsapp_phone', e.target.value)}
+                    />
                     <InputError message={form.errors.whatsapp_phone} />
                 </div>
             </div>
@@ -279,7 +264,12 @@ function UserForm({
             {!isEdit && (
                 <div className="grid gap-2">
                     <Label>{t('Password')}</Label>
-                    <Input type="password" value={form.data.password} onChange={(e) => form.setData('password', e.target.value)} required />
+                    <Input
+                        type="password"
+                        value={form.data.password}
+                        onChange={(e) => form.setData('password', e.target.value)}
+                        required
+                    />
                     <InputError message={form.errors.password} />
                 </div>
             )}
@@ -338,19 +328,26 @@ function UserForm({
     );
 }
 
+/* ── Skeleton ────────────────────────────────────── */
+
 export function UsersIndexSkeleton() {
     return (
-        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                    <Skeleton className="h-8 w-20" />
-                    <Skeleton className="h-4 w-24" />
+        <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+            {/* Header card */}
+            <Card className="shadow-elevation-1 overflow-hidden">
+                <div className="border-b px-6 py-5">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-2">
+                            <Skeleton className="h-3 w-24" />
+                            <Skeleton className="h-8 w-20" />
+                            <Skeleton className="h-4 w-24" />
+                        </div>
+                        <Skeleton className="h-9 w-28" />
+                    </div>
                 </div>
-                <Skeleton className="h-9 w-28" />
-            </div>
+            </Card>
 
-            <Card className="flex-1">
+            <Card className="shadow-elevation-1">
                 <Table>
                     <TableHeader>
                         <TableRow>

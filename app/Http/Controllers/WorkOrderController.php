@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Site;
+use App\Models\User;
 use App\Models\WorkOrder;
 use App\Services\WorkOrders\WorkOrderService;
 use Illuminate\Http\Request;
@@ -45,11 +46,24 @@ class WorkOrderController extends Controller
 
         // Get technicians for bulk assign dropdown (site_manager+ only)
         $technicians = [];
+        $technicianWorkload = [];
         if ($user->hasAnyRole(['super_admin', 'client_org_admin', 'client_site_manager'])) {
-            $technicians = \App\Models\User::role('technician')
-                ->where('org_id', $user->org_id)
-                ->select('id', 'name')
-                ->get();
+            $techQuery = User::role('technician')
+                ->when($user->org_id, fn ($q) => $q->where('org_id', $user->org_id))
+                ->select('id', 'name');
+
+            $technicians = (clone $techQuery)->get();
+
+            $technicianWorkload = (clone $techQuery)
+                ->withCount(['assignedWorkOrders as open_count' => function ($q) {
+                    $q->whereNotIn('status', ['completed', 'cancelled']);
+                }])
+                ->get()
+                ->map(fn ($tech) => [
+                    'id' => $tech->id,
+                    'name' => $tech->name,
+                    'open_count' => $tech->open_count ?? 0,
+                ]);
         }
 
         return Inertia::render('work-orders/index', [
@@ -57,6 +71,7 @@ class WorkOrderController extends Controller
             'filters' => $request->only(['status', 'priority', 'type', 'assigned']),
             'isTechnician' => $user->hasRole('technician'),
             'technicians' => $technicians,
+            'technicianWorkload' => $technicianWorkload,
         ]);
     }
 

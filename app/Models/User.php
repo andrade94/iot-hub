@@ -150,6 +150,11 @@ class User extends Authenticatable
         return ($levels[$severity] ?? 0) >= ($levels[$minSeverity] ?? 0);
     }
 
+    public function assignedWorkOrders(): HasMany
+    {
+        return $this->hasMany(WorkOrder::class, 'assigned_to');
+    }
+
     public function alertSnoozes(): HasMany
     {
         return $this->hasMany(AlertSnooze::class);

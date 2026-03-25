@@ -10,7 +10,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
+import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -20,7 +23,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { EmptyState } from '@/components/ui/empty-state';
 import InputError from '@/components/input-error';
 import { useValidatedForm } from '@/hooks/use-validated-form';
 import { useLang } from '@/hooks/use-lang';
@@ -63,6 +65,52 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Maintenance Windows', href: '#' },
 ];
 
+export function MaintenanceWindowsSkeleton() {
+    return (
+        <div className="flex flex-col gap-6 p-4 md:p-6">
+            {/* Header */}
+            <div className="rounded-xl border p-6 md:p-8">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <Skeleton className="h-3 w-32" />
+                        <Skeleton className="mt-3 h-8 w-44" />
+                        <Skeleton className="mt-2 h-4 w-72" />
+                    </div>
+                    <Skeleton className="h-9 w-28" />
+                </div>
+            </div>
+            {/* Section Divider */}
+            <div className="flex items-center gap-3">
+                <Skeleton className="h-3 w-24" />
+                <div className="h-px flex-1 bg-border" />
+                <Skeleton className="h-3 w-6" />
+            </div>
+            {/* Window items */}
+            <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="rounded-xl border p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <Skeleton className="h-10 w-10 rounded-lg" />
+                                <div className="space-y-1">
+                                    <Skeleton className="h-4 w-36" />
+                                    <Skeleton className="h-3 w-28" />
+                                    <Skeleton className="h-3 w-40" />
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-5 w-9 rounded-full" />
+                                <Skeleton className="h-8 w-8 rounded-md" />
+                                <Skeleton className="h-8 w-8 rounded-md" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export default function MaintenanceWindowsIndex({ windows, sites }: Props) {
     const { t } = useLang();
     const [showCreate, setShowCreate] = useState(false);
@@ -72,91 +120,120 @@ export default function MaintenanceWindowsIndex({ windows, sites }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Maintenance Windows')} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('Maintenance Windows')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Schedule downtime periods to suppress alerts during planned maintenance.')}
-                        </p>
-                    </div>
-                    <Can permission="manage maintenance windows">
-                        <Button onClick={() => setShowCreate(true)}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            {t('Add Window')}
-                        </Button>
-                    </Can>
-                </div>
-
-                {/* Content */}
-                {windows.length === 0 ? (
-                    <EmptyState
-                        icon={Clock}
-                        title={t('No maintenance windows')}
-                        description={t('Schedule regular maintenance windows to prevent false alerts during planned downtime.')}
-                        action={
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ── Header ──────────────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative flex items-center justify-between p-6 md:p-8">
+                            <div>
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('Maintenance Windows')}
+                                </p>
+                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                    {t('Scheduled Downtime')}
+                                </h1>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {t('Schedule downtime periods to suppress alerts during planned maintenance.')}
+                                </p>
+                            </div>
                             <Can permission="manage maintenance windows">
                                 <Button onClick={() => setShowCreate(true)}>
                                     <Plus className="mr-2 h-4 w-4" />
                                     {t('Add Window')}
                                 </Button>
                             </Can>
-                        }
-                    />
+                        </div>
+                    </div>
+                </FadeIn>
+
+                {/* ── Section Divider ─────────────────────────────── */}
+                <FadeIn delay={75} duration={400}>
+                    <div className="flex items-center gap-3">
+                        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                            {t('Active Windows')}
+                        </p>
+                        <div className="h-px flex-1 bg-border" />
+                        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                            {windows.length}
+                        </span>
+                    </div>
+                </FadeIn>
+
+                {/* ── Content ─────────────────────────────────────── */}
+                {windows.length === 0 ? (
+                    <FadeIn delay={150} duration={500}>
+                        <EmptyState
+                            icon={Clock}
+                            title={t('No maintenance windows')}
+                            description={t('Schedule regular maintenance windows to prevent false alerts during planned downtime.')}
+                            action={
+                                <Can permission="manage maintenance windows">
+                                    <Button onClick={() => setShowCreate(true)}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        {t('Add Window')}
+                                    </Button>
+                                </Can>
+                            }
+                        />
+                    </FadeIn>
                 ) : (
                     <div className="space-y-3">
-                        {windows.map((w) => (
-                            <Card key={w.id}>
-                                <CardContent className="flex items-center justify-between p-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                                            <Wrench className="h-5 w-5 text-muted-foreground" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-medium">{w.title}</p>
-                                                {w.suppress_alerts && isWindowActiveNow(w) && (
-                                                    <Badge variant="warning" className="text-xs">
-                                                        {t('Active now')}
-                                                    </Badge>
-                                                )}
+                        {windows.map((w, index) => (
+                            <FadeIn key={w.id} delay={150 + index * 50} duration={400}>
+                                <Card className="shadow-elevation-1">
+                                    <CardContent className="flex items-center justify-between p-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                                                <Wrench className="h-5 w-5 text-muted-foreground" />
                                             </div>
-                                            <p className="text-sm text-muted-foreground">
-                                                {w.site?.name}
-                                                {w.zone && <> &middot; {w.zone}</>}
-                                                {!w.zone && <> &middot; <span className="italic">{t('Entire site')}</span></>}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {formatSchedule(w)} &middot; {w.duration_minutes} {t('min')}
-                                            </p>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-medium">{w.title}</p>
+                                                    {w.suppress_alerts && isWindowActiveNow(w) && (
+                                                        <Badge variant="warning" className="text-xs">
+                                                            {t('Active now')}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {w.site?.name}
+                                                    {w.zone && <> &middot; {w.zone}</>}
+                                                    {!w.zone && <> &middot; <span className="italic">{t('Entire site')}</span></>}
+                                                </p>
+                                                <p className="font-mono text-xs tabular-nums text-muted-foreground">
+                                                    {formatSchedule(w)} &middot; <span className="font-medium text-foreground">{w.duration_minutes}</span> {t('min')}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <span>{t('Suppress')}</span>
-                                            <Switch
-                                                checked={w.suppress_alerts}
-                                                onCheckedChange={(checked) => {
-                                                    router.put(
-                                                        `/settings/maintenance-windows/${w.id}`,
-                                                        { ...w, suppress_alerts: checked, site_id: undefined } as Record<string, unknown>,
-                                                        { preserveScroll: true },
-                                                    );
-                                                }}
-                                            />
+                                        <div className="flex items-center gap-3">
+                                            <Can permission="manage maintenance windows">
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <span>{t('Suppress')}</span>
+                                                    <Switch
+                                                        checked={w.suppress_alerts}
+                                                        onCheckedChange={(checked) => {
+                                                            router.put(
+                                                                `/settings/maintenance-windows/${w.id}`,
+                                                                { ...w, suppress_alerts: checked, site_id: undefined } as Record<string, unknown>,
+                                                                { preserveScroll: true },
+                                                            );
+                                                        }}
+                                                    />
+                                                </div>
+                                            </Can>
+                                            <Can permission="manage maintenance windows">
+                                                <Button variant="ghost" size="icon" onClick={() => setEditWindow(w)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" onClick={() => setDeleteWindow(w)}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            </Can>
                                         </div>
-                                        <Can permission="manage maintenance windows">
-                                            <Button variant="ghost" size="icon" onClick={() => setEditWindow(w)}>
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => setDeleteWindow(w)}>
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </Can>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
+                            </FadeIn>
                         ))}
                     </div>
                 )}
@@ -355,6 +432,7 @@ function WindowFormDialog({
                                 type="time"
                                 value={form.data.start_time}
                                 onChange={(e) => form.setData('start_time', e.target.value)}
+                                className="font-mono tabular-nums"
                             />
                             <InputError message={form.errors.start_time} />
                         </div>
@@ -366,6 +444,7 @@ function WindowFormDialog({
                                 max={480}
                                 value={form.data.duration_minutes}
                                 onChange={(e) => form.setData('duration_minutes', e.target.value)}
+                                className="font-mono tabular-nums"
                             />
                             <InputError message={form.errors.duration_minutes} />
                         </div>

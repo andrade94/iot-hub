@@ -68,6 +68,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     required
                                     tabIndex={2}
                                     autoComplete="current-password"
+                                    placeholder="••••••••"
                                     className="h-11"
                                 />
                                 <InputError message={errors.password} />

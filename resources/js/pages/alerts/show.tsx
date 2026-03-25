@@ -1,8 +1,12 @@
 import { Can } from '@/components/Can';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
+import { formatTimeAgo } from '@/utils/date';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DetailCard } from '@/components/ui/detail-card';
+import { FadeIn } from '@/components/ui/fade-in';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -60,131 +64,155 @@ export default function AlertShow({ alert, userSnooze }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${t('Alert')} #${alert.id}`} />
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-                {/* Header */}
-                <div className="flex items-start gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => router.get('/alerts')}>
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <h1 className="text-2xl font-bold tracking-tight">
-                                {data?.rule_name ?? `Alert #${alert.id}`}
-                            </h1>
-                            <SeverityBadge severity={alert.severity} />
-                            <StatusBadge status={alert.status} />
-                        </div>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {t('Triggered')} {new Date(alert.triggered_at).toLocaleString()}
-                        </p>
-                        {userSnooze && (
-                            <div className="mt-1 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                                <Timer className="h-3 w-3" />
-                                {t('Snoozed until')} {new Date(userSnooze.expires_at).toLocaleTimeString()}
-                                <button
-                                    className="text-xs underline hover:text-foreground"
-                                    onClick={() =>
-                                        router.delete(`/alerts/${alert.id}/snooze`, { preserveScroll: true })
-                                    }
-                                >
-                                    {t('Cancel')}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Actions */}
-                    <Can permission="acknowledge alerts">
-                        <div className="flex gap-2">
-                            {alert.status === 'active' && (
-                                <>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() =>
-                                            router.post(`/alerts/${alert.id}/acknowledge`, {}, { preserveScroll: true })
-                                        }
-                                    >
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        {t('Acknowledge')}
-                                    </Button>
-                                    <Button
-                                        onClick={() =>
-                                            router.post(`/alerts/${alert.id}/resolve`, {}, { preserveScroll: true })
-                                        }
-                                    >
-                                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                                        {t('Resolve')}
-                                    </Button>
-                                </>
-                            )}
-                            {alert.status === 'acknowledged' && (
+                {/* ── Header ──────────────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative flex items-start justify-between p-6 md:p-8">
+                            <div className="flex items-start gap-4">
                                 <Button
-                                    onClick={() =>
-                                        router.post(`/alerts/${alert.id}/resolve`, {}, { preserveScroll: true })
-                                    }
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => router.get('/alerts')}
+                                    className="mt-1"
                                 >
-                                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                                    {t('Resolve')}
+                                    <ArrowLeft className="h-4 w-4" />
                                 </Button>
-                            )}
-                            {['active', 'acknowledged'].includes(alert.status) && (
-                                <>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" size="sm">
-                                                <Timer className="mr-2 h-4 w-4" />
-                                                {userSnooze ? t('Snoozed') : t('Snooze')}
+                                <div>
+                                    <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Alert Detail')}
+                                    </p>
+                                    <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                                        <h1 className="font-display text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                            {data?.rule_name ?? `Alert #${alert.id}`}
+                                        </h1>
+                                        <SeverityBadge severity={alert.severity} />
+                                        <StatusBadge status={alert.status} />
+                                    </div>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        {t('Triggered')}{' '}
+                                        <span className="font-mono tabular-nums">
+                                            {new Date(alert.triggered_at).toLocaleString()}
+                                        </span>
+                                    </p>
+                                    {userSnooze && (
+                                        <div className="mt-1 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                                            <Timer className="h-3 w-3" />
+                                            {t('Snoozed until')}{' '}
+                                            <span className="font-mono tabular-nums">
+                                                {new Date(userSnooze.expires_at).toLocaleTimeString()}
+                                            </span>
+                                            <button
+                                                className="text-xs underline hover:text-foreground"
+                                                onClick={() =>
+                                                    router.delete(`/alerts/${alert.id}/snooze`, { preserveScroll: true })
+                                                }
+                                            >
+                                                {t('Cancel')}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <Can permission="acknowledge alerts">
+                                <div className="flex gap-2">
+                                    {alert.status === 'active' && (
+                                        <>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() =>
+                                                    router.post(`/alerts/${alert.id}/acknowledge`, {}, { preserveScroll: true })
+                                                }
+                                            >
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                {t('Acknowledge')}
                                             </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            {[
-                                                { mins: 30, label: '30 min' },
-                                                { mins: 60, label: '1 hour' },
-                                                { mins: 120, label: '2 hours' },
-                                                { mins: 240, label: '4 hours' },
-                                                { mins: 480, label: '8 hours' },
-                                            ].map(({ mins, label }) => (
-                                                <DropdownMenuItem
-                                                    key={mins}
-                                                    onClick={() =>
-                                                        router.post(
-                                                            `/alerts/${alert.id}/snooze`,
-                                                            { duration_minutes: mins },
-                                                            { preserveScroll: true },
-                                                        )
-                                                    }
-                                                >
-                                                    {label}
-                                                </DropdownMenuItem>
-                                            ))}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                    <Can permission="manage alert rules">
+                                            <Button
+                                                onClick={() =>
+                                                    router.post(`/alerts/${alert.id}/resolve`, {}, { preserveScroll: true })
+                                                }
+                                            >
+                                                <CheckCircle2 className="mr-2 h-4 w-4" />
+                                                {t('Resolve')}
+                                            </Button>
+                                        </>
+                                    )}
+                                    {alert.status === 'acknowledged' && (
                                         <Button
-                                            variant="ghost"
                                             onClick={() =>
-                                                router.post(`/alerts/${alert.id}/dismiss`, {}, { preserveScroll: true })
+                                                router.post(`/alerts/${alert.id}/resolve`, {}, { preserveScroll: true })
                                             }
                                         >
-                                            <XCircle className="mr-2 h-4 w-4" />
-                                            {t('Dismiss')}
+                                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                                            {t('Resolve')}
                                         </Button>
-                                    </Can>
-                                </>
-                            )}
+                                    )}
+                                    {['active', 'acknowledged'].includes(alert.status) && (
+                                        <>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline" size="sm">
+                                                        <Timer className="mr-2 h-4 w-4" />
+                                                        {userSnooze ? t('Snoozed') : t('Snooze')}
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    {[
+                                                        { mins: 30, label: '30 min' },
+                                                        { mins: 60, label: '1 hour' },
+                                                        { mins: 120, label: '2 hours' },
+                                                        { mins: 240, label: '4 hours' },
+                                                        { mins: 480, label: '8 hours' },
+                                                    ].map(({ mins, label }) => (
+                                                        <DropdownMenuItem
+                                                            key={mins}
+                                                            onClick={() =>
+                                                                router.post(
+                                                                    `/alerts/${alert.id}/snooze`,
+                                                                    { duration_minutes: mins },
+                                                                    { preserveScroll: true },
+                                                                )
+                                                            }
+                                                        >
+                                                            {label}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                            <Can permission="manage alert rules">
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        router.post(`/alerts/${alert.id}/dismiss`, {}, { preserveScroll: true })
+                                                    }
+                                                >
+                                                    <XCircle className="mr-2 h-4 w-4" />
+                                                    {t('Dismiss')}
+                                                </Button>
+                                            </Can>
+                                        </>
+                                    )}
+                                </div>
+                            </Can>
                         </div>
-                    </Can>
-                </div>
+                    </div>
+                </FadeIn>
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                     {/* Main content */}
                     <div className="space-y-6">
-                        {/* Sensor data at trigger */}
+                        {/* ── Trigger Details ─────────────────────────── */}
                         {data && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-base">{t('Trigger Details')}</CardTitle>
-                                </CardHeader>
-                                <CardContent>
+                            <FadeIn delay={75} duration={500}>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                            {t('Trigger Details')}
+                                        </h2>
+                                        <div className="h-px flex-1 bg-border" />
+                                    </div>
                                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                                         <InfoBlock
                                             icon={<Cpu className="h-4 w-4" />}
@@ -195,172 +223,201 @@ export default function AlertShow({ alert, userSnooze }: Props) {
                                         <InfoBlock
                                             icon={<MapPin className="h-4 w-4" />}
                                             label={t('Zone')}
-                                            value={data.zone ?? '—'}
+                                            value={data.zone ?? '\u2014'}
                                         />
                                         <InfoBlock
                                             label={t('Metric')}
                                             value={data.metric}
                                             sub={`${data.condition} ${data.threshold}`}
+                                            mono
                                         />
-                                        <div className="rounded-lg border p-3">
-                                            <p className="text-xs text-muted-foreground">{t('Value at trigger')}</p>
-                                            <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight">
-                                                {data.value}
-                                            </p>
-                                            {data.threshold !== null && (
-                                                <p className="text-xs text-muted-foreground">
-                                                    {t('Threshold')}: {data.threshold}
+                                        <Card className="shadow-elevation-1">
+                                            <CardContent className="p-3">
+                                                <p className="text-xs text-muted-foreground">{t('Value at trigger')}</p>
+                                                <p className="mt-1 font-mono text-2xl font-bold tabular-nums tracking-tight">
+                                                    {data.value}
                                                 </p>
-                                            )}
-                                        </div>
+                                                {data.threshold !== null && (
+                                                    <p className="font-mono text-xs tabular-nums text-muted-foreground">
+                                                        {t('Threshold')}: {data.threshold}
+                                                    </p>
+                                                )}
+                                            </CardContent>
+                                        </Card>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </FadeIn>
                         )}
 
-                        {/* Notification log */}
+                        {/* ── Notification Log ────────────────────────── */}
                         {alert.notifications && alert.notifications.length > 0 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-base">{t('Notification Log')}</CardTitle>
-                                    <CardDescription>
-                                        {alert.notifications.length} {t('notification(s) sent')}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        {alert.notifications.map((notif) => (
-                                            <div
-                                                key={notif.id}
-                                                className="flex items-center justify-between rounded-lg border p-3"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <ChannelIcon channel={notif.channel} />
-                                                    <div>
-                                                        <p className="text-sm font-medium">
-                                                            {notif.user?.name ?? `User #${notif.user_id}`}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            via {notif.channel}
-                                                            {notif.sent_at && (
-                                                                <> · {new Date(notif.sent_at).toLocaleTimeString()}</>
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <Badge
-                                                    variant={
-                                                        notif.status === 'delivered'
-                                                            ? 'success'
-                                                            : notif.status === 'failed'
-                                                              ? 'destructive'
-                                                              : 'outline'
-                                                    }
-                                                    className="text-xs"
-                                                >
-                                                    {notif.status}
-                                                </Badge>
-                                            </div>
-                                        ))}
+                            <FadeIn delay={150} duration={500}>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                            {t('Notification Log')}
+                                        </h2>
+                                        <div className="h-px flex-1 bg-border" />
+                                        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                                            {alert.notifications.length}
+                                        </span>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                    <Card className="shadow-elevation-1">
+                                        <CardContent className="p-4">
+                                            <div className="space-y-2">
+                                                {alert.notifications.map((notif) => (
+                                                    <div
+                                                        key={notif.id}
+                                                        className="flex items-center justify-between rounded-lg border p-3"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <ChannelIcon channel={notif.channel} />
+                                                            <div>
+                                                                <p className="text-sm font-medium">
+                                                                    {notif.user?.name ?? (
+                                                                        <span className="font-mono tabular-nums">
+                                                                            User #{notif.user_id}
+                                                                        </span>
+                                                                    )}
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    via {notif.channel}
+                                                                    {notif.sent_at && (
+                                                                        <>
+                                                                            {' \u00b7 '}
+                                                                            <span className="font-mono tabular-nums">
+                                                                                {new Date(notif.sent_at).toLocaleTimeString()}
+                                                                            </span>
+                                                                        </>
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <Badge
+                                                            variant={
+                                                                notif.status === 'delivered'
+                                                                    ? 'success'
+                                                                    : notif.status === 'failed'
+                                                                      ? 'destructive'
+                                                                      : 'outline'
+                                                            }
+                                                            className="text-xs"
+                                                        >
+                                                            {notif.status}
+                                                        </Badge>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </FadeIn>
                         )}
 
-                        {/* Corrective Actions — only for critical/high alerts (Phase 10, WF-013) */}
+                        {/* ── Corrective Actions ─────────────────────── */}
                         {['critical', 'high'].includes(alert.severity) && (
-                            <CorrectiveActionsSection alert={alert} currentUserId={auth.user.id} />
+                            <FadeIn delay={225} duration={500}>
+                                <CorrectiveActionsSection alert={alert} currentUserId={auth.user.id} />
+                            </FadeIn>
                         )}
                     </div>
 
-                    {/* Sidebar: Timeline */}
+                    {/* ── Sidebar ──────────────────────────────────── */}
                     <div className="space-y-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">{t('Timeline')}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="relative space-y-0">
-                                    {/* Triggered */}
-                                    <TimelineEntry
-                                        icon={<ShieldAlert className="h-3.5 w-3.5" />}
-                                        label={t('Triggered')}
-                                        time={alert.triggered_at}
-                                        color="destructive"
-                                        isFirst
-                                    />
-
-                                    {/* Acknowledged */}
-                                    {alert.acknowledged_at ? (
-                                        <TimelineEntry
-                                            icon={<Eye className="h-3.5 w-3.5" />}
-                                            label={t('Acknowledged')}
-                                            time={alert.acknowledged_at}
-                                            color="warning"
-                                        />
-                                    ) : alert.status === 'active' ? (
-                                        <TimelineEntry
-                                            icon={<Clock className="h-3.5 w-3.5" />}
-                                            label={t('Awaiting acknowledgment')}
-                                            color="muted"
-                                            pending
-                                        />
-                                    ) : null}
-
-                                    {/* Resolved */}
-                                    {alert.resolved_at ? (
-                                        <TimelineEntry
-                                            icon={<CheckCircle2 className="h-3.5 w-3.5" />}
-                                            label={
-                                                alert.resolution_type === 'auto'
-                                                    ? t('Auto-resolved')
-                                                    : alert.resolution_type === 'dismissed'
-                                                      ? t('Dismissed')
-                                                      : t('Resolved')
-                                            }
-                                            time={alert.resolved_at}
-                                            sub={
-                                                alert.resolved_by_user
-                                                    ? `${t('by')} ${alert.resolved_by_user.name}`
-                                                    : undefined
-                                            }
-                                            color="success"
-                                            isLast
-                                        />
-                                    ) : (
-                                        <TimelineEntry
-                                            icon={<Clock className="h-3.5 w-3.5" />}
-                                            label={t('Awaiting resolution')}
-                                            color="muted"
-                                            pending
-                                            isLast
-                                        />
-                                    )}
+                        {/* Timeline */}
+                        <FadeIn delay={100} duration={500}>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Timeline')}
+                                    </h2>
+                                    <div className="h-px flex-1 bg-border" />
                                 </div>
-                            </CardContent>
-                        </Card>
+                                <Card className="shadow-elevation-1">
+                                    <CardContent className="p-4">
+                                        <div className="relative space-y-0">
+                                            {/* Triggered */}
+                                            <TimelineEntry
+                                                icon={<ShieldAlert className="h-3.5 w-3.5" />}
+                                                label={t('Triggered')}
+                                                time={alert.triggered_at}
+                                                color="destructive"
+                                                isFirst
+                                            />
 
-                        {/* Quick info */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">{t('Details')}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <DetailRow label={t('Alert ID')} value={`#${alert.id}`} />
-                                <DetailRow label={t('Severity')} value={alert.severity} />
-                                <DetailRow
-                                    label={t('Site')}
-                                    value={alert.site?.name ?? '—'}
+                                            {/* Acknowledged */}
+                                            {alert.acknowledged_at ? (
+                                                <TimelineEntry
+                                                    icon={<Eye className="h-3.5 w-3.5" />}
+                                                    label={t('Acknowledged')}
+                                                    time={alert.acknowledged_at}
+                                                    color="warning"
+                                                />
+                                            ) : alert.status === 'active' ? (
+                                                <TimelineEntry
+                                                    icon={<Clock className="h-3.5 w-3.5" />}
+                                                    label={t('Awaiting acknowledgment')}
+                                                    color="muted"
+                                                    pending
+                                                />
+                                            ) : null}
+
+                                            {/* Resolved */}
+                                            {alert.resolved_at ? (
+                                                <TimelineEntry
+                                                    icon={<CheckCircle2 className="h-3.5 w-3.5" />}
+                                                    label={
+                                                        alert.resolution_type === 'auto'
+                                                            ? t('Auto-resolved')
+                                                            : alert.resolution_type === 'dismissed'
+                                                              ? t('Dismissed')
+                                                              : t('Resolved')
+                                                    }
+                                                    time={alert.resolved_at}
+                                                    sub={
+                                                        alert.resolved_by_user
+                                                            ? `${t('by')} ${alert.resolved_by_user.name}`
+                                                            : undefined
+                                                    }
+                                                    color="success"
+                                                    isLast
+                                                />
+                                            ) : (
+                                                <TimelineEntry
+                                                    icon={<Clock className="h-3.5 w-3.5" />}
+                                                    label={t('Awaiting resolution')}
+                                                    color="muted"
+                                                    pending
+                                                    isLast
+                                                />
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </FadeIn>
+
+                        {/* Details */}
+                        <FadeIn delay={175} duration={500}>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Details')}
+                                    </h2>
+                                    <div className="h-px flex-1 bg-border" />
+                                </div>
+                                <DetailCard
+                                    className="shadow-elevation-1"
+                                    items={[
+                                        { label: t('Alert ID'), value: <span className="font-mono tabular-nums">#{alert.id}</span> },
+                                        { label: t('Severity'), value: alert.severity },
+                                        { label: t('Site'), value: alert.site?.name ?? '\u2014' },
+                                        ...(alert.rule ? [{ label: t('Rule'), value: alert.rule.name }] : []),
+                                        { label: t('Resolution'), value: alert.resolution_type ?? '\u2014' },
+                                    ]}
                                 />
-                                {alert.rule && (
-                                    <DetailRow label={t('Rule')} value={alert.rule.name} />
-                                )}
-                                <DetailRow
-                                    label={t('Resolution')}
-                                    value={alert.resolution_type ?? '—'}
-                                />
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </FadeIn>
                     </div>
                 </div>
             </div>
@@ -375,21 +432,31 @@ function InfoBlock({
     label,
     value,
     sub,
+    mono,
 }: {
     icon?: React.ReactNode;
     label: string;
     value: string;
     sub?: string;
+    mono?: boolean;
 }) {
     return (
-        <div className="rounded-lg border p-3">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                {icon}
-                {label}
-            </div>
-            <p className="mt-1 text-sm font-medium">{value}</p>
-            {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
-        </div>
+        <Card className="shadow-elevation-1">
+            <CardContent className="p-3">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {icon}
+                    {label}
+                </div>
+                <p className={`mt-1 text-sm font-medium ${mono ? 'font-mono tabular-nums' : ''}`}>
+                    {value}
+                </p>
+                {sub && (
+                    <p className={`text-xs text-muted-foreground ${mono ? 'font-mono tabular-nums' : ''}`}>
+                        {sub}
+                    </p>
+                )}
+            </CardContent>
+        </Card>
     );
 }
 
@@ -439,21 +506,12 @@ function TimelineEntry({
             <div className={pending ? 'opacity-50' : ''}>
                 <p className="text-sm font-medium">{label}</p>
                 {time && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="font-mono text-xs tabular-nums text-muted-foreground">
                         {new Date(time).toLocaleString()}
                     </p>
                 )}
                 {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
             </div>
-        </div>
-    );
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-    return (
-        <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{label}</span>
-            <span className="font-medium">{value}</span>
         </div>
     );
 }
@@ -499,6 +557,88 @@ function StatusBadge({ status }: { status: string }) {
     return <Badge variant={variants[status] ?? 'outline'}>{status}</Badge>;
 }
 
+export function AlertShowSkeleton() {
+    return (
+        <div className="flex flex-col gap-6 p-4 md:p-6">
+            {/* Header */}
+            <div className="rounded-xl border p-6 md:p-8">
+                <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-4">
+                        <Skeleton className="mt-1 h-9 w-9 rounded-md" />
+                        <div>
+                            <Skeleton className="h-3 w-20" />
+                            <div className="mt-3 flex items-center gap-3">
+                                <Skeleton className="h-8 w-48" />
+                                <Skeleton className="h-5 w-16 rounded-full" />
+                                <Skeleton className="h-5 w-16 rounded-full" />
+                            </div>
+                            <Skeleton className="mt-2 h-4 w-44" />
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Skeleton className="h-9 w-28" />
+                        <Skeleton className="h-9 w-24" />
+                    </div>
+                </div>
+            </div>
+            {/* Body */}
+            <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+                <div className="space-y-6">
+                    {/* Trigger Details */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <Skeleton className="h-3 w-24" />
+                            <div className="h-px flex-1 bg-border" />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="rounded-xl border p-3">
+                                    <Skeleton className="h-3 w-16" />
+                                    <Skeleton className="mt-2 h-5 w-24" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                {/* Sidebar */}
+                <div className="space-y-6">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <Skeleton className="h-3 w-16" />
+                            <div className="h-px flex-1 bg-border" />
+                        </div>
+                        <div className="rounded-xl border p-4 space-y-4">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <div key={i} className="flex gap-3">
+                                    <Skeleton className="h-7 w-7 rounded-full" />
+                                    <div className="space-y-1">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-3 w-32" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <Skeleton className="h-3 w-14" />
+                            <div className="h-px flex-1 bg-border" />
+                        </div>
+                        <div className="rounded-xl border p-4 space-y-3">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="flex justify-between">
+                                    <Skeleton className="h-4 w-16" />
+                                    <Skeleton className="h-4 w-20" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /* ── Corrective Actions Section (Phase 10) ───────── */
 
 function CorrectiveActionsSection({ alert, currentUserId }: { alert: Props['alert']; currentUserId: number }) {
@@ -526,137 +666,120 @@ function CorrectiveActionsSection({ alert, currentUserId }: { alert: Props['aler
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                        <ClipboardCheck className="h-4 w-4" />
-                        {t('Corrective Actions')}
-                        {actions.length > 0 && (
-                            <Badge variant={allVerified ? 'success' : 'warning'} className="text-xs">
-                                {actions.length}
-                            </Badge>
-                        )}
-                    </CardTitle>
-                    {allVerified && actions.length > 0 && (
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                            {t('All verified')} ✓
-                        </span>
-                    )}
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {/* Warning banner when no actions logged */}
-                {actions.length === 0 && (
-                    <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                        <div>
-                            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                                {t('Corrective action required')}
-                            </p>
-                            <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-300">
-                                {t('This excursion requires a corrective action for COFEPRIS compliance. Log what was done to address it.')}
-                            </p>
-                        </div>
-                    </div>
+        <div className="space-y-4">
+            <div className="flex items-center gap-3">
+                <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                    {t('Corrective Actions')}
+                </h2>
+                <div className="h-px flex-1 bg-border" />
+                {actions.length > 0 && (
+                    <Badge variant={allVerified ? 'success' : 'warning'} className="text-xs">
+                        <span className="font-mono tabular-nums">{actions.length}</span>
+                    </Badge>
                 )}
-
-                {/* Existing corrective actions */}
-                {actions.map((ca) => (
-                    <div key={ca.id} className="space-y-2 rounded-lg border p-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">{ca.taken_by_user?.name}</span>
-                                <span>·</span>
-                                <span>{formatTimeAgo(ca.taken_at)}</span>
-                            </div>
-                            <Badge variant={ca.status === 'verified' ? 'success' : 'warning'} className="text-xs">
-                                {ca.status === 'verified' ? t('Verified') + ' ✓' : t('Pending verification')}
-                            </Badge>
-                        </div>
-
-                        <p className="text-sm leading-relaxed">{ca.action_taken}</p>
-
-                        {ca.notes && (
-                            <p className="text-xs text-muted-foreground italic">{ca.notes}</p>
-                        )}
-
-                        {ca.status === 'verified' && ca.verified_by_user && (
-                            <p className="text-xs text-muted-foreground">
-                                {t('Verified by')} {ca.verified_by_user.name} · {formatTimeAgo(ca.verified_at!)}
-                            </p>
-                        )}
-
-                        {/* Verify button: only for logged actions, different user, with permission */}
-                        {ca.status === 'logged' && ca.taken_by !== currentUserId && (
-                            <Can permission="verify corrective actions">
-                                <Button size="sm" variant="outline" onClick={() => verifyAction(ca)} className="mt-1">
-                                    <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                                    {t('Verify')}
-                                </Button>
-                            </Can>
-                        )}
-                    </div>
-                ))}
-
-                {/* Log corrective action form */}
-                <Can permission="log corrective actions">
-                    {showForm ? (
-                        <form onSubmit={submitAction} className="space-y-3 rounded-lg border border-dashed p-4">
+                {allVerified && actions.length > 0 && (
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                        {t('All verified')} ✓
+                    </span>
+                )}
+            </div>
+            <Card className="shadow-elevation-1">
+                <CardContent className="space-y-4 p-4">
+                    {/* Warning banner when no actions logged */}
+                    {actions.length === 0 && (
+                        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                             <div>
-                                <Textarea
-                                    value={caForm.data.action_taken}
-                                    onChange={(e) => caForm.setData('action_taken', e.target.value)}
-                                    placeholder={t('Describe what was done to address this excursion...')}
-                                    rows={3}
-                                    className="resize-none"
-                                />
-                                <InputError message={caForm.errors.action_taken} className="mt-1" />
+                                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                                    {t('Corrective action required')}
+                                </p>
+                                <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-300">
+                                    {t('This excursion requires a corrective action for COFEPRIS compliance. Log what was done to address it.')}
+                                </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Button type="submit" size="sm" disabled={caForm.processing}>
-                                    {caForm.processing ? t('Saving...') : t('Submit')}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => {
-                                        setShowForm(false);
-                                        caForm.reset();
-                                        caForm.clearErrors();
-                                    }}
-                                >
-                                    {t('Cancel')}
-                                </Button>
-                            </div>
-                        </form>
-                    ) : (
-                        <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
-                            <Plus className="mr-1.5 h-3.5 w-3.5" />
-                            {t('Log Corrective Action')}
-                        </Button>
+                        </div>
                     )}
-                </Can>
-            </CardContent>
-        </Card>
+
+                    {/* Existing corrective actions */}
+                    {actions.map((ca) => (
+                        <div key={ca.id} className="space-y-2 rounded-lg border p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span className="font-medium text-foreground">{ca.taken_by_user?.name}</span>
+                                    <span>&middot;</span>
+                                    <span className="font-mono text-xs tabular-nums">{formatTimeAgo(ca.taken_at)}</span>
+                                </div>
+                                <Badge variant={ca.status === 'verified' ? 'success' : 'warning'} className="text-xs">
+                                    {ca.status === 'verified' ? t('Verified') + ' \u2713' : t('Pending verification')}
+                                </Badge>
+                            </div>
+
+                            <p className="text-sm leading-relaxed">{ca.action_taken}</p>
+
+                            {ca.notes && (
+                                <p className="text-xs text-muted-foreground italic">{ca.notes}</p>
+                            )}
+
+                            {ca.status === 'verified' && ca.verified_by_user && (
+                                <p className="text-xs text-muted-foreground">
+                                    {t('Verified by')} {ca.verified_by_user.name} &middot;{' '}
+                                    <span className="font-mono tabular-nums">{formatTimeAgo(ca.verified_at!)}</span>
+                                </p>
+                            )}
+
+                            {/* Verify button: only for logged actions, different user, with permission */}
+                            {ca.status === 'logged' && ca.taken_by !== currentUserId && (
+                                <Can permission="verify corrective actions">
+                                    <Button size="sm" variant="outline" onClick={() => verifyAction(ca)} className="mt-1">
+                                        <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                                        {t('Verify')}
+                                    </Button>
+                                </Can>
+                            )}
+                        </div>
+                    ))}
+
+                    {/* Log corrective action form */}
+                    <Can permission="log corrective actions">
+                        {showForm ? (
+                            <form onSubmit={submitAction} className="space-y-3 rounded-lg border border-dashed p-4">
+                                <div>
+                                    <Textarea
+                                        value={caForm.data.action_taken}
+                                        onChange={(e) => caForm.setData('action_taken', e.target.value)}
+                                        placeholder={t('Describe what was done to address this excursion...')}
+                                        rows={3}
+                                        className="resize-none"
+                                    />
+                                    <InputError message={caForm.errors.action_taken} className="mt-1" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button type="submit" size="sm" disabled={caForm.processing}>
+                                        {caForm.processing ? t('Saving...') : t('Submit')}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            setShowForm(false);
+                                            caForm.reset();
+                                            caForm.clearErrors();
+                                        }}
+                                    >
+                                        {t('Cancel')}
+                                    </Button>
+                                </div>
+                            </form>
+                        ) : (
+                            <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
+                                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                {t('Log Corrective Action')}
+                            </Button>
+                        )}
+                    </Can>
+                </CardContent>
+            </Card>
+        </div>
     );
-}
-
-function formatTimeAgo(dateStr: string): string {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
-
-    if (diffMin < 1) return 'just now';
-    if (diffMin < 60) return `${diffMin}m ago`;
-
-    const diffHours = Math.floor(diffMin / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays}d ago`;
-
-    return date.toLocaleDateString();
 }

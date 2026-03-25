@@ -16,15 +16,11 @@ import AppLogo from './app-logo';
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="sidebar">
+        <Sidebar collapsible="icon" variant="floating">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton
-                            size="lg"
-                            asChild
-                            className="group/logo transition-all duration-200 hover:bg-sidebar-accent"
-                        >
+                        <SidebarMenuButton size="lg" asChild>
                             <Link href={dashboard()} prefetch>
                                 <AppLogo />
                             </Link>
@@ -33,7 +29,7 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="scrollbar-thin px-1">
+            <SidebarContent className="scrollbar-thin">
                 <NavMain groups={navigation} />
             </SidebarContent>
 

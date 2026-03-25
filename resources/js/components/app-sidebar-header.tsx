@@ -1,10 +1,15 @@
 import { usePage } from '@inertiajs/react';
+import { Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
+// Button import removed — using native <button> for search trigger
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { OrgSwitcher } from '@/components/OrgSwitcher';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationDropdown } from '@/components/ui/notification-dropdown';
+import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications';
 import { type BreadcrumbItem as BreadcrumbItemType, type DatabaseNotification, type SharedData } from '@/types';
@@ -93,13 +98,40 @@ export function AppSidebarHeader({
     });
 
     return (
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
-            <div className="flex flex-1 items-center gap-2">
-                <SidebarTrigger className="-ml-1" />
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-sidebar-border/40 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-1.5">
+                <SidebarTrigger className="-ml-1 size-7 text-muted-foreground" />
+                <Separator orientation="vertical" className="mx-1 !h-4" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="ml-auto flex items-center gap-1">
+                <OrgSwitcher />
+                <button
+                    className="hidden h-8 w-56 items-center gap-2 rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted/80 md:flex"
+                    onClick={() => {
+                        document.dispatchEvent(
+                            new KeyboardEvent('keydown', { key: 'k', metaKey: true }),
+                        );
+                    }}
+                >
+                    <Search className="size-3.5" />
+                    <span className="flex-1 text-left">Search...</span>
+                    <kbd className="pointer-events-none flex h-5 items-center gap-0.5 rounded border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground/70">
+                        <span className="text-xs">&#8984;</span>K
+                    </kbd>
+                </button>
+                <button
+                    className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:hidden"
+                    onClick={() => {
+                        document.dispatchEvent(
+                            new KeyboardEvent('keydown', { key: 'k', metaKey: true }),
+                        );
+                    }}
+                >
+                    <Search className="size-4" />
+                </button>
+                <LanguageSwitcher size="icon" />
                 <AppearanceToggleDropdown />
                 {auth.user && (
                     <NotificationDropdown notifications={notifications} />

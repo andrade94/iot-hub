@@ -3,12 +3,38 @@
 namespace App\Http\Controllers;
 
 use App\Models\Site;
+use App\Models\WorkOrder;
 use App\Services\Readings\ChartDataService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class SiteDetailController extends Controller
 {
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        $siteIds = $user->accessibleSites()->pluck('id');
+
+        $sites = Site::whereIn('id', $siteIds)
+            ->withCount([
+                'devices',
+                'alerts as active_alerts_count' => fn ($q) => $q->whereIn('status', ['active', 'acknowledged']),
+            ])
+            ->get()
+            ->map(fn ($site) => [
+                'id' => $site->id,
+                'name' => $site->name,
+                'status' => $site->status,
+                'device_count' => $site->devices_count,
+                'online_count' => $site->devices()->where('status', 'active')->where('last_seen_at', '>=', now()->subMinutes(15))->count(),
+                'active_alerts' => $site->active_alerts_count,
+            ]);
+
+        return Inertia::render('sites/index', [
+            'sites' => $sites,
+        ]);
+    }
+
     public function show(Request $request, Site $site, ChartDataService $chartService)
     {
         $site->load(['gateways', 'devices.recipe', 'floorPlans', 'modules']);
@@ -49,12 +75,37 @@ class SiteDetailController extends Controller
             ]);
         });
 
+        $user = $request->user();
+
+        // Feature 3: Viewer's own maintenance requests
+        $myRequests = $user->hasRole('client_site_viewer')
+            ? WorkOrder::where('site_id', $site->id)
+                ->where('created_by', $user->id)
+                ->latest()
+                ->limit(5)
+                ->get()
+            : [];
+
+        // Feature 4: Onboarding checklist data
+        $onboardingChecklist = null;
+        if ($site->status === 'active') {
+            $onboardingChecklist = [
+                'gateway_registered' => $site->gateways->isNotEmpty(),
+                'devices_provisioned' => $site->devices->isNotEmpty(),
+                'modules_activated' => $site->modules->isNotEmpty(),
+                'escalation_chain_configured' => $site->escalationChains()->exists(),
+                'report_schedule_configured' => \App\Models\ReportSchedule::where('site_id', $site->id)->exists(),
+            ];
+        }
+
         return Inertia::render('sites/show', [
             'site' => $site,
             'kpis' => $kpis,
             'zones' => $zones,
             'activeAlerts' => $activeAlerts,
             'floorPlans' => $floorPlans,
+            'myRequests' => $myRequests,
+            'onboardingChecklist' => $onboardingChecklist,
         ]);
     }
 

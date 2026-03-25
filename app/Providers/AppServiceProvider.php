@@ -7,24 +7,32 @@ use App\Models\Alert;
 use App\Models\AlertRule;
 use App\Models\BillingProfile;
 use App\Models\CorrectiveAction;
+use App\Models\DataExport;
 use App\Models\Device;
 use App\Models\EscalationChain;
 use App\Models\File;
 use App\Models\Gateway;
+use App\Models\MaintenanceWindow;
 use App\Models\Recipe;
+use App\Models\ReportSchedule;
 use App\Models\Site;
+use App\Models\SiteTemplate;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Policies\AlertPolicy;
 use App\Policies\AlertRulePolicy;
 use App\Policies\BillingPolicy;
+use App\Policies\DataExportPolicy;
 use App\Policies\DevicePolicy;
 use App\Policies\EscalationChainPolicy;
 use App\Policies\FilePolicy;
 use App\Policies\GatewayPolicy;
+use App\Policies\MaintenanceWindowPolicy;
 use App\Policies\NotificationPolicy;
 use App\Policies\RecipePolicy;
+use App\Policies\ReportSchedulePolicy;
 use App\Policies\SitePolicy;
+use App\Policies\SiteTemplatePolicy;
 use App\Policies\UserPolicy;
 use App\Policies\WorkOrderPolicy;
 use Illuminate\Auth\Events\Registered;
@@ -62,6 +70,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BillingProfile::class, BillingPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(CorrectiveAction::class, \App\Policies\CorrectiveActionPolicy::class);
+        Gate::policy(ReportSchedule::class, ReportSchedulePolicy::class);
+        Gate::policy(SiteTemplate::class, SiteTemplatePolicy::class);
+        Gate::policy(DataExport::class, DataExportPolicy::class);
+        Gate::policy(MaintenanceWindow::class, MaintenanceWindowPolicy::class);
 
         // Send welcome email when a user registers
         // Only sends when mail is configured (not log driver)

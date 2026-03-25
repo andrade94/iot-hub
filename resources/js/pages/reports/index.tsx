@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { FadeIn } from '@/components/ui/fade-in';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,7 +9,8 @@ import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { ArrowRight, BarChart3, Sun, Thermometer, Zap } from 'lucide-react';
+import { format } from 'date-fns';
+import { ArrowRight, BarChart3, Cpu, Sun, Thermometer, Zap } from 'lucide-react';
 import { useState } from 'react';
 
 interface SiteOption {
@@ -64,11 +66,20 @@ export default function ReportsIndex({ sites }: Props) {
         {
             key: 'summary',
             title: t('Morning Summary'),
-            description: t('Daily operational overview — device health, alert counts, and zone status for a single site'),
+            description: t('Daily operational overview \u2014 device health, alert counts, and zone status for a single site'),
             icon: <Sun className="h-6 w-6" />,
             accent: 'text-emerald-500',
             defaultFrom: today,
             route: (siteId) => `/sites/${siteId}/reports/summary`,
+        },
+        {
+            key: 'inventory',
+            title: t('Device Inventory'),
+            description: t('Complete asset register with device status, battery levels, signal strength, calibration, and gateway mapping'),
+            icon: <Cpu className="h-6 w-6" />,
+            accent: 'text-violet-500',
+            defaultFrom: today,
+            route: (siteId) => `/sites/${siteId}/reports/inventory`,
         },
     ];
 
@@ -76,31 +87,54 @@ export default function ReportsIndex({ sites }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Reports')} />
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <BarChart3 className="h-6 w-6 text-muted-foreground" />
-                        <h1 className="text-2xl font-bold tracking-tight">{t('Reports')}</h1>
+                {/* ── Header ──────────────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative p-6 md:p-8">
+                            <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                {t('Reports')}
+                            </p>
+                            <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                {t('Report Center')}
+                            </h1>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                {t('Select a report type, choose a site, and set the date range to generate')}
+                            </p>
+                        </div>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        {t('Select a report type, choose a site, and set the date range to generate')}
-                    </p>
-                </div>
+                </FadeIn>
 
                 {sites.length === 0 ? (
-                    <Card>
-                        <CardContent className="flex items-center justify-center py-16">
-                            <div className="text-center">
-                                <BarChart3 className="mx-auto h-10 w-10 text-muted-foreground/40" />
-                                <p className="mt-3 text-muted-foreground">{t('No sites available for reporting')}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <FadeIn delay={75} duration={400}>
+                        <Card className="shadow-elevation-1">
+                            <CardContent className="flex items-center justify-center py-16">
+                                <div className="text-center">
+                                    <BarChart3 className="mx-auto h-10 w-10 text-muted-foreground/40" />
+                                    <p className="mt-3 text-muted-foreground">{t('No sites available for reporting')}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </FadeIn>
                 ) : (
-                    <div className="grid gap-6 lg:grid-cols-3">
-                        {reportTypes.map((report) => (
-                            <ReportCard key={report.key} report={report} sites={sites} />
-                        ))}
-                    </div>
+                    <>
+                        {/* ── Report Types ────────────────────────────────── */}
+                        <FadeIn delay={75} duration={400}>
+                            <div className="mb-2 flex items-center gap-3">
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('Available Reports')}
+                                </p>
+                                <div className="h-px flex-1 bg-border" />
+                            </div>
+                        </FadeIn>
+                        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                            {reportTypes.map((report, idx) => (
+                                <FadeIn key={report.key} delay={100 + idx * 75} duration={500}>
+                                    <ReportCard report={report} sites={sites} />
+                                </FadeIn>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
         </AppLayout>
@@ -124,7 +158,7 @@ function ReportCard({ report, sites }: { report: ReportType; sites: SiteOption[]
     }
 
     return (
-        <Card className="flex flex-col">
+        <Card className="flex flex-col shadow-elevation-1">
             <CardHeader>
                 <div className="flex items-center gap-3">
                     <div className={report.accent}>{report.icon}</div>
@@ -152,15 +186,23 @@ function ReportCard({ report, sites }: { report: ReportType; sites: SiteOption[]
                     {error && <p className="text-xs text-destructive">{error}</p>}
                 </div>
 
-                {report.key !== 'summary' && (
+                {report.key !== 'summary' && report.key !== 'inventory' && (
                     <div className="grid grid-cols-2 gap-3">
                         <div className="grid gap-2">
                             <Label className="text-xs">{t('From')}</Label>
-                            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+                            <DatePicker
+                                date={from ? new Date(from + 'T00:00:00') : undefined}
+                                onDateChange={(d) => setFrom(d ? format(d, 'yyyy-MM-dd') : '')}
+                                placeholder={t('Select date')}
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label className="text-xs">{t('To')}</Label>
-                            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+                            <DatePicker
+                                date={to ? new Date(to + 'T00:00:00') : undefined}
+                                onDateChange={(d) => setTo(d ? format(d, 'yyyy-MM-dd') : '')}
+                                placeholder={t('Select date')}
+                            />
                         </div>
                     </div>
                 )}
@@ -180,18 +222,24 @@ export function ReportsIndexSkeleton() {
     return (
         <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
             {/* Header */}
-            <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                    <Skeleton className="h-6 w-6 rounded" />
-                    <Skeleton className="h-8 w-24" />
+            <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card">
+                <div className="p-6 md:p-8">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="mt-2 h-9 w-48" />
+                    <Skeleton className="mt-2 h-4 w-80" />
                 </div>
-                <Skeleton className="h-4 w-80" />
+            </div>
+
+            {/* Section divider */}
+            <div className="flex items-center gap-3">
+                <Skeleton className="h-3 w-28" />
+                <div className="h-px flex-1 bg-border" />
             </div>
 
             {/* Report cards */}
-            <div className="grid gap-6 lg:grid-cols-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                    <Card key={i} className="flex flex-col">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <Card key={i} className="flex flex-col shadow-elevation-1">
                         <CardHeader>
                             <div className="flex items-center gap-3">
                                 <Skeleton className="h-6 w-6 rounded" />

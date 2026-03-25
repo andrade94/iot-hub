@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { FadeIn } from '@/components/ui/fade-in';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -62,6 +63,8 @@ export default function CommandCenterDispatch({ sites, workOrders, technicians }
         ? workOrders.filter((wo) => wo.assigned_to === null)
         : workOrders;
 
+    const unassignedCount = workOrders.filter((wo) => wo.assigned_to === null).length;
+
     function handleAssign(workOrderId: number, techId: string) {
         router.post(
             `/work-orders/${workOrderId}/status`,
@@ -82,87 +85,151 @@ export default function CommandCenterDispatch({ sites, workOrders, technicians }
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Field Dispatch')} />
-            <div className="flex h-full flex-1 overflow-hidden">
-                {/* Left panel — work order list */}
-                <div ref={woListRef} className="w-[380px] shrink-0 overflow-y-auto border-r">
-                    <div className="sticky top-0 z-10 border-b bg-background p-4">
-                        <div className="flex items-center justify-between">
+            <div className="flex h-full flex-1 flex-col overflow-hidden">
+                {/* ── Header ──────────────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden border-b border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative flex items-center justify-between p-4 md:px-6 md:py-5">
                             <div>
-                                <h2 className="text-lg font-semibold">{t('Work Orders')}</h2>
-                                <p className="text-xs text-muted-foreground">
-                                    {displayedOrders.length} {t('order(s)')}
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('Field Dispatch')}
+                                </p>
+                                <h1 className="font-display mt-1 text-xl font-bold tracking-tight md:text-2xl">
+                                    {t('Work Order Map')}
+                                </h1>
+                                <p className="mt-0.5 text-sm text-muted-foreground">
+                                    <span className="font-mono font-medium tabular-nums text-foreground">
+                                        {workOrders.length}
+                                    </span>{' '}
+                                    {t('order(s)')}{' '}
+                                    {unassignedCount > 0 && (
+                                        <>
+                                            &middot;{' '}
+                                            <span className="font-mono font-medium tabular-nums text-amber-600 dark:text-amber-400">
+                                                {unassignedCount}
+                                            </span>{' '}
+                                            {t('unassigned')}
+                                        </>
+                                    )}
                                 </p>
                             </div>
-                            <Button
-                                variant={showUnassignedOnly ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => setShowUnassignedOnly(!showUnassignedOnly)}
-                            >
-                                <Filter className="mr-2 h-3.5 w-3.5" />
-                                {t('Unassigned')}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="gap-1.5">
+                                    <MapPin className="h-3 w-3" />
+                                    <span className="font-mono tabular-nums">{sites.length}</span> {t('sites')}
+                                </Badge>
+                            </div>
                         </div>
                     </div>
+                </FadeIn>
 
-                    <div className="space-y-2 p-4">
-                        {displayedOrders.length === 0 ? (
-                            <div className="py-12 text-center">
-                                <Truck className="mx-auto h-8 w-8 text-muted-foreground/40" />
-                                <p className="mt-2 text-sm text-muted-foreground">
-                                    {t('No work orders found')}
-                                </p>
-                            </div>
-                        ) : (
-                            displayedOrders.map((wo) => (
-                                <div
-                                    key={wo.id}
-                                    ref={(el) => {
-                                        if (el) woRefs.current.set(wo.id, el);
-                                    }}
-                                    className={`rounded-lg border p-3 ${
-                                        wo.assigned_to === null ? 'border-l-4 border-l-amber-400' : ''
-                                    }`}
-                                >
-                                    <div className="mb-2 flex items-start justify-between gap-2">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <Badge variant={PRIORITY_VARIANTS[wo.priority] ?? 'outline'} className="text-xs">
-                                                    {wo.priority}
-                                                </Badge>
-                                                <Badge variant="outline" className="text-xs">
-                                                    {wo.type.replace(/_/g, ' ')}
-                                                </Badge>
-                                            </div>
-                                            <p className="mt-1 text-sm font-medium">{wo.title}</p>
-                                            {wo.site && (
-                                                <p className="text-xs text-muted-foreground">{wo.site.name}</p>
-                                            )}
+                {/* ── Split panel ─────────────────────────────────── */}
+                <div className="flex flex-1 overflow-hidden">
+                    {/* Left panel -- work order list */}
+                    <FadeIn direction="left" delay={100} duration={400} className="flex w-[380px] shrink-0 flex-col overflow-hidden border-r">
+                        <Card className="flex flex-1 flex-col overflow-hidden rounded-none border-0 shadow-elevation-1">
+                            {/* Panel header */}
+                            <div className="sticky top-0 z-10 border-b bg-background p-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                {t('Work Orders')}
+                                            </h2>
+                                            <div className="h-px flex-1 bg-border" />
+                                            <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                                                {displayedOrders.length}
+                                            </span>
                                         </div>
                                     </div>
-                                    <Select
-                                        value={wo.assigned_to?.toString() ?? ''}
-                                        onValueChange={(v) => handleAssign(wo.id, v)}
+                                    <Button
+                                        variant={showUnassignedOnly ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => setShowUnassignedOnly(!showUnassignedOnly)}
                                     >
-                                        <SelectTrigger className="h-8 text-xs">
-                                            <SelectValue placeholder={t('Assign technician...')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {technicians.map((tech) => (
-                                                <SelectItem key={tech.id} value={tech.id.toString()}>
-                                                    {tech.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                        <Filter className="mr-2 h-3.5 w-3.5" />
+                                        {t('Unassigned')}
+                                    </Button>
                                 </div>
-                            ))
-                        )}
-                    </div>
-                </div>
+                            </div>
 
-                {/* Right panel — map */}
-                <div className="flex-1">
-                    <DispatchMap sites={sites} onSiteClick={scrollToWorkOrder} />
+                            {/* Scrollable list */}
+                            <div ref={woListRef} className="flex-1 overflow-y-auto">
+                                <div className="space-y-2 p-4">
+                                    {displayedOrders.length === 0 ? (
+                                        <div className="py-12 text-center">
+                                            <Truck className="mx-auto h-8 w-8 text-muted-foreground/40" />
+                                            <p className="mt-2 text-sm text-muted-foreground">
+                                                {t('No work orders found')}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        displayedOrders.map((wo, index) => (
+                                            <FadeIn key={wo.id} delay={50 + index * 30} duration={300} direction="up">
+                                                <div
+                                                    ref={(el) => {
+                                                        if (el) woRefs.current.set(wo.id, el);
+                                                    }}
+                                                    className={`rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50 ${
+                                                        wo.assigned_to === null
+                                                            ? 'border-l-4 border-l-amber-400'
+                                                            : ''
+                                                    }`}
+                                                >
+                                                    <div className="mb-2 flex items-start justify-between gap-2">
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge
+                                                                    variant={PRIORITY_VARIANTS[wo.priority] ?? 'outline'}
+                                                                    className="text-xs"
+                                                                >
+                                                                    {wo.priority}
+                                                                </Badge>
+                                                                <Badge variant="outline" className="text-xs">
+                                                                    {wo.type.replace(/_/g, ' ')}
+                                                                </Badge>
+                                                                <span className="ml-auto font-mono text-[0.65rem] tabular-nums text-muted-foreground">
+                                                                    #{wo.id}
+                                                                </span>
+                                                            </div>
+                                                            <p className="mt-1 text-sm font-medium">{wo.title}</p>
+                                                            {wo.site && (
+                                                                <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                                    <MapPin className="h-3 w-3" />
+                                                                    {wo.site.name}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <Select
+                                                        value={wo.assigned_to?.toString() ?? ''}
+                                                        onValueChange={(v) => handleAssign(wo.id, v)}
+                                                    >
+                                                        <SelectTrigger className="h-8 text-xs">
+                                                            <SelectValue placeholder={t('Assign technician...')} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {technicians.map((tech) => (
+                                                                <SelectItem key={tech.id} value={tech.id.toString()}>
+                                                                    {tech.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </FadeIn>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </Card>
+                    </FadeIn>
+
+                    {/* Right panel -- map */}
+                    <FadeIn direction="right" delay={200} duration={400} className="flex-1">
+                        <DispatchMap sites={sites} onSiteClick={scrollToWorkOrder} />
+                    </FadeIn>
                 </div>
             </div>
         </AppLayout>

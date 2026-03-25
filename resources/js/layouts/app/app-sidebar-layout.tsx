@@ -2,6 +2,7 @@ import { AppContent } from '@/components/app-content';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
+import { GlobalSearch } from '@/components/GlobalSearch';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Toaster } from '@/components/ui/toaster';
 import { useFlashMessages } from '@/hooks/use-flash-messages';
@@ -20,6 +21,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                     {children}
                 </PageTransition>
             </AppContent>
+            <GlobalSearch />
             <Toaster />
         </AppShell>
     );

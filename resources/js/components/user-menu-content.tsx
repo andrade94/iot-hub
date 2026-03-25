@@ -10,7 +10,7 @@ import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Palette, Shield, Settings } from 'lucide-react';
 
 interface UserMenuContentProps {
     user: User;
@@ -42,7 +42,31 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                         onClick={cleanup}
                     >
                         <Settings className="mr-2" />
-                        Settings
+                        Profile
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link
+                        className="block w-full"
+                        href="/settings/password"
+                        as="button"
+                        prefetch
+                        onClick={cleanup}
+                    >
+                        <Shield className="mr-2" />
+                        Security
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link
+                        className="block w-full"
+                        href="/settings/appearance"
+                        as="button"
+                        prefetch
+                        onClick={cleanup}
+                    >
+                        <Palette className="mr-2" />
+                        Appearance
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>

@@ -1,3260 +1,2434 @@
 # Workflow UX Design
 
-> **Astrea IoT Platform** — Maps every business workflow to self-contained per-screen specs with columns, fields, actions, states, and navigation.
-> Regenerated: 2026-03-19 | Phase 5b Playbook Output (new self-contained format)
-> Cross-references: SYSTEM_BEHAVIOR_SPEC.md, ASTREA_WORKFLOWS.md
-
----
-
-## 1. Workflow Catalog
-
-12 validated workflows. Each enriched with triggers, actors, happy/failure paths, and business rule references.
-
-| WF-ID | Workflow | Trigger | Primary Actor | Secondary Actors | Rules | State Machines |
-|---|---|---|---|---|---|---|
-| WF-001 | Client Onboarding | New org created | super_admin, org_admin | — | BR-047–050 | SM-005 |
-| WF-002 | Sensor Data Pipeline | MQTT payload received | System | — | BR-001–002, BR-007–009 | SM-004 |
-| WF-003 | Alert Lifecycle | Threshold breach detected | System → User | technician | BR-010–020 | SM-001, SM-010 |
-| WF-004 | Device Health Monitoring | Scheduled (every 5 min) | System | technician | BR-003–006 | SM-004, SM-009 |
-| WF-005 | Work Order Lifecycle | Manual or auto-created | site_manager, System | technician | BR-005–006, BR-044 | SM-002 |
-| WF-006 | Morning/Regional/Corporate Summaries | Scheduled (opening_hour, +30min, 08:00) | System | All roles | BR-034–037, BR-041 | — |
-| WF-007 | Billing & Invoicing | Monthly (1st of month) | System → org_admin | — | BR-021–028 | SM-003, SM-007 |
-| WF-008 | Compliance Calendar | Manual + scheduled reminders | org_admin, System | — | BR-038 | SM-006 |
-| WF-009 | User Management | Manual | org_admin | — | — | — |
-| WF-010 | Integration Export | Manual or scheduled | org_admin, System | — | BR-028, BR-045 | — |
-| WF-011 | Module & Recipe System | During onboarding or settings | org_admin | — | BR-043, BR-050 | — |
-| WF-012 | White-Label Branding | Settings change | org_admin | — | — | — |
-
----
-
-## 2. User Journeys
-
-### WF-001: Client Onboarding
-
-**Journey: super_admin (creates organization)**
-1. **Partner Portal** `/partner` → clicks "Create Organization" button
-2. **Create Org Dialog** → fills name, segment, plan → submits
-3. System auto-generates subscription with segment base_fee (BR-049)
-4. Redirects to **Partner Portal** with new org in table
-
-**Journey: org_admin (onboards first site)**
-1. **Settings > Sites** `/settings/sites` → clicks "Add Site" button
-2. **Create Site Form** → fills name, address, timezone, opening_hour → submits
-3. Site created with status=onboarding → redirected to **Onboarding Wizard**
-4. **Onboarding Wizard** `/sites/{id}/onboard` — Step 1: Gateway
-   - Enters gateway serial, model → "Register Gateway" button → ChirpStack API call (INT-001)
-5. Step 2: Devices — enters device details (name, dev_eui, model, app_key, zone) → "Register Devices"
-   - ChirpStack provisioning + OTAA key registration
-6. Step 3: Modules — toggles modules (cold_chain, energy, iaq, industrial) → "Activate"
-   - Auto-applies matching recipes to devices (BR-050)
-7. Step 4: Complete — reviews summary → "Complete Onboarding"
-   - Validates: ≥1 gateway, ≥1 device, ≥1 module (BR-048)
-   - Site status: onboarding → active (SM-005)
-8. Redirected to **Site Detail** `/sites/{id}`
-
-**Failure Paths:**
-- ChirpStack API down → error toast "Could not register gateway" + retry button
-- Duplicate dev_eui → inline validation error "DevEUI already registered"
-- Missing requirements at completion → error toast listing what's missing
-
-### WF-003: Alert Lifecycle
-
-**Journey: site_manager (responds to alert)**
-1. **Dashboard** → sees red alert badge in sidebar + notification bell count increments
-2. Clicks notification → **Alert Detail** `/alerts/{id}`
-3. Sees severity badge, trigger details (device, zone, metric, value vs threshold), timeline
-4. Clicks "Acknowledge" → alert status: active → acknowledged (SM-001)
-5. Investigates issue → clicks "Resolve" → alert status: acknowledged → resolved
-6. Toast: "Alert resolved" → redirected to **Alerts Index**
-
-**Journey: technician (via mobile/WhatsApp)**
-1. Receives WhatsApp message with alert details + "Reply ACK to acknowledge"
-2. Replies "ACK" → webhook processes acknowledgment → alert acknowledged
-3. Receives push notification on mobile app
-4. Opens mobile app → **Alert Detail** → acknowledges/resolves
-
-**Journey: System (auto-resolution)**
-1. `RuleEvaluator` detects 2 consecutive normal readings (BR-013)
-2. Alert auto-resolved with resolution_type=auto
-3. Resolved alert broadcast via Reverb (NT-010)
-
-### WF-005: Work Order Lifecycle
-
-**Journey: site_manager (creates and assigns)**
-1. **Work Orders** `/work-orders` → clicks "New Work Order" (or auto-created by BR-005/BR-006)
-2. **Work Order Form** → fills title, type, priority, description, assigns technician
-3. Submits → work order created (status=open or assigned)
-4. Technician receives push notification (NT-007)
-
-**Journey: technician (completes work order)**
-1. **Work Orders** `/work-orders` → filters "Assigned to me"
-2. Clicks work order → **Work Order Detail** `/work-orders/{id}`
-3. Clicks "Start Work" → status: assigned → in_progress
-4. Uploads photos, adds notes during work
-5. Clicks "Complete" → status: in_progress → completed
-6. If linked to alert, alert auto-resolved (BR-044)
-
-### WF-007: Billing & Invoicing
-
-**Journey: org_admin (reviews and pays)**
-1. **Settings > Billing** `/settings/billing` → sees plan summary + usage stats
-2. Clicks "Generate Invoice" → selects period → system calculates total (BR-023)
-3. Invoice created (status=draft) → clicks "Send" → status: draft → sent
-4. Customer pays → org_admin clicks "Mark Paid" → selects payment_method (spei/transfer)
-5. Invoice status: sent → paid → CFDI timbrado via Facturapi (BR-025)
-6. Downloads PDF/XML from invoice row
-
-### WF-008: Compliance Calendar
-
-**Journey: org_admin (manages compliance)**
-1. **Settings > Compliance** `/settings/compliance` → sees calendar view of events
-2. Clicks "Add Event" → fills type (cofepris_audit, calibration, etc.), title, due_date
-3. Event created (status=upcoming)
-4. System sends reminders at 30/7/1 days before due_date (NT-006)
-5. When audit complete → clicks "Mark Complete" → status: upcoming → completed
-
----
-
-## 3. Screen Inventory
-
-60 pages mapped to workflows and roles. Screens in 3+ workflows marked with **HIGH TRAFFIC**.
-
-| Screen | URL Pattern | Workflows | Roles | Pattern | High Traffic |
-|---|---|---|---|---|---|
-| Dashboard | `/dashboard` | WF-002, WF-003, WF-004 | All | KPI cards + site grid/map | ✅ |
-| Alerts Index | `/alerts` | WF-003 | All (view), manager+ (actions) | Filterable data table | |
-| Alert Detail | `/alerts/{id}` | WF-003 | All (view), manager+ (actions) | Detail card + timeline | |
-| Work Orders Index | `/work-orders` | WF-005, WF-004 | manager, technician | Filterable data table | |
-| Work Order Detail | `/work-orders/{id}` | WF-005 | manager, technician | Detail + photos + notes | |
-| Site Detail | `/sites/{id}` | WF-001, WF-002, WF-004 | All | KPI cards + zones grid | ✅ |
-| Zone Detail | `/sites/{id}/zones/{zone}` | WF-002, WF-003 | All | Chart + device table | |
-| Device Detail | `/devices/{id}` | WF-002, WF-003, WF-004 | All | Stats + chart + readings | ✅ |
-| Reports Index | `/reports` | WF-006 | All (except technician) | Report type cards | |
-| Temperature Report | `/sites/{id}/reports/temperature` | WF-006, WF-008 | manager, admin | Charts + compliance bars | |
-| Energy Report | `/sites/{id}/reports/energy` | WF-006 | manager, admin | Cost breakdown + trends | |
-| Summary Report | `/sites/{id}/reports/summary` | WF-006 | manager, admin | Fleet health + zone status | |
-| IAQ Module | `/sites/{id}/modules/iaq` | WF-011 | manager, admin | Zone scores + charts | |
-| Industrial Module | `/sites/{id}/modules/industrial` | WF-011 | manager, admin | Machine monitoring | |
-| Command Center | `/command-center` | WF-001, WF-004 | super_admin | Global KPIs + org table | ✅ |
-| CC Alerts | `/command-center/alerts` | WF-003 | super_admin | Global alert table | |
-| CC Devices | `/command-center/devices` | WF-004 | super_admin | Global device table | |
-| CC Work Orders | `/command-center/work-orders` | WF-005 | super_admin | Global WO table | |
-| CC Revenue | `/command-center/revenue` | WF-007 | super_admin | Revenue analytics | |
-| CC Dispatch | `/command-center/dispatch` | WF-005 | super_admin | Field dispatch map | |
-| CC Org Detail | `/command-center/{id}` | WF-001 | super_admin | Org drill-down | |
-| Partner Portal | `/partner` | WF-001 | super_admin | Org table + create dialog | |
-| Site Onboarding | `/sites/{id}/onboard` | WF-001 | org_admin | Multi-step wizard | |
-| Settings: Sites | `/settings/sites` | WF-001 | org_admin | Site table + CRUD | |
-| Settings: Gateways | `/sites/{id}/gateways` | WF-001 | org_admin | Gateway table + CRUD | |
-| Settings: Gateway Detail | `/sites/{id}/gateways/{id}` | WF-001 | org_admin | Gateway info + devices | |
-| Settings: Devices | `/sites/{id}/devices` | WF-001, WF-002 | org_admin | Device table + stats | |
-| Settings: Device Detail | `/sites/{id}/devices/{id}` | WF-001, WF-002 | org_admin | Device info cards | |
-| Settings: Rules | `/sites/{id}/rules` | WF-003 | org_admin, site_manager | Rule card grid | |
-| Settings: Rule Detail | `/sites/{id}/rules/{id}` | WF-003 | org_admin, site_manager | Rule conditions table | |
-| Settings: Escalation Chains | `/settings/escalation-chains` | WF-003 | org_admin, site_manager | Chain table + CRUD | |
-| Settings: Recipes | `/recipes` | WF-011 | org_admin | Recipe card grid | |
-| Settings: Recipe Detail | `/recipes/{id}` | WF-011 | org_admin | Recipe rules + overrides | |
-| Settings: Users | `/settings/users` | WF-009 | org_admin | User table + invite | |
-| Settings: Organization | `/settings/organization` | WF-012 | org_admin | Org settings form | |
-| Settings: Billing | `/settings/billing` | WF-007 | org_admin | Billing dashboard | |
-| Settings: Billing Profiles | `/settings/billing/profiles` | WF-007 | org_admin | Profile cards + form | |
-| Settings: Compliance | `/settings/compliance` | WF-008 | org_admin | Calendar + CRUD | |
-| Settings: Modules | `/sites/{id}/modules` | WF-011 | org_admin | Module card grid | |
-| Settings: API Keys | `/settings/api-keys` | WF-010 | org_admin | Key table + CRUD | |
-| Settings: Integrations | `/settings/integrations` | WF-010 | org_admin | Integration cards | |
-| Settings: Profile | `/settings/profile` | — | All | Profile form | |
-| Settings: Password | `/settings/password` | — | All | Password form | |
-| Settings: Appearance | `/settings/appearance` | — | All | Theme selector | |
-| Settings: Two-Factor | `/settings/two-factor` | — | All | 2FA setup | |
-| Activity Log | `/activity-log` | — | manager, admin | Timeline view | |
-| Notifications | `/notifications` | ALL | All | Notification list | ✅ |
-| Login | `/login` | — | Unauthenticated | Auth form | |
-| Register | `/register` | — | Unauthenticated | Auth form | |
-| Forgot Password | `/password/forgot` | — | Unauthenticated | Email form | |
-| Reset Password | `/password/reset/{token}` | — | Unauthenticated | Reset form | |
-
----
-
-## 4. Screen Details — Self-Contained Per-Screen Specs
-
-### 4.1 Dashboard
-
-**URL:** `/dashboard` | **Roles:** All | **Pattern:** KPI cards + site grid/map toggle
-**Workflows:** WF-002 (data pipeline), WF-003 (alert badges), WF-004 (device health)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Login | Auto-redirect after auth | Always |
-| Sidebar | "Dashboard" menu item | Always |
-| Any page | Logo click | Always |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| KPI Cards (4) | Total Devices, Online Devices, Active Alerts, Open Work Orders | Card with icon + number; emerald accent (online), red accent (alerts > 0), amber accent (WOs > 0) |
-| Fleet Health | online_devices / total_devices | Progress bar; success >80%, warning otherwise |
-| Site Grid | Site cards with name, status badge, device count, online count, health bar | Clickable cards in responsive grid (1→2→3 cols) |
-| Site Map | Leaflet map with color-coded markers per site | Green = all online, amber = some offline, gray = no devices |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| View site | Site card click | Site Detail `/sites/{id}` | Always | WF-002 |
-| View site (map) | Map marker click | Site Detail `/sites/{id}` | Map view active | WF-002 |
-| Toggle view | Grid/Map buttons | Same page (re-render) | Sites exist | — |
-| View alerts | Alert badge in sidebar | Alerts Index `/alerts` | Alert count > 0 | WF-003 |
-| Switch site | Site selector dropdown | Same page (filtered) | Multiple sites | — |
-| Go to sites | "Go to Sites" button (empty state) | Settings: Sites `/settings/sites` | No sites | WF-001 |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Site Detail `/sites/{id}` | Card click or marker click | site ID |
-| Alerts Index `/alerts` | Sidebar alert badge | — |
-| Settings: Sites `/settings/sites` | Empty state CTA | — |
-
-#### Role Differences
-| Element | super_admin | org_admin | site_manager | site_viewer | technician |
-|---|---|---|---|---|---|
-| KPI cards | All orgs aggregated | Org-scoped | Assigned sites | Assigned sites | Assigned sites |
-| Map view | All org sites | Org sites | Assigned sites | Assigned sites | Assigned sites |
-| Command Center link | Visible | Hidden | Hidden | Hidden | Hidden |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial page load | `DashboardSkeleton` — 4 KPI skeleton cards + 6 site card skeletons + health bar skeleton | None |
-| **Empty (no sites)** | `siteStats.length === 0` | `EmptyState` with MapPin icon + "Go to Sites" button | Navigate to site settings |
-| **Populated (grid)** | Sites exist, grid view | KPI cards + site card grid + fleet health | All actions |
-| **Populated (map)** | Sites exist, map view | KPI cards + Leaflet map + fleet health | All actions |
-
----
-
-### 4.2 Alerts Index
-
-**URL:** `/alerts` | **Roles:** All (view), manager+ (actions) | **Pattern:** Filterable data table
-**Workflows:** WF-003 (alert lifecycle)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | "Alerts" menu item | Always |
-| Dashboard | Alert badge click | Alert count > 0 |
-| Site Detail | Alert card click | Alert exists |
-| Zone Detail | Alert card click | Alert exists |
-| Device Detail | Alert history item click | Alert exists |
-
-#### Table Columns
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Severity | `severity` | Badge with icon (Critical=destructive/ShieldAlert, High=warning/AlertTriangle, Medium=info/Bell, Low=outline/Bell) | No | Visible |
-| Alert | `data.rule_name` | Text; fallback "Alert #{id}" | No | Visible |
-| Device | `data.device_name` / `data.zone` | Text + zone subtitle | No | Visible |
-| Reading | `data.metric`, `data.value`, `data.threshold` | Monospace: "metric: value / threshold" | No | Visible |
-| Status | `status` | Badge (active=destructive, acknowledged=warning, resolved=success, dismissed=outline) | No | Visible |
-| Time | `triggered_at` | Relative time (formatTimeAgo) | No | Visible |
-| Actions | Conditional buttons | Eye, CheckCircle2, XCircle icons | — | Visible |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| View alert | Row click | Alert Detail `/alerts/{id}` | Always | WF-003 |
-| Acknowledge | Eye icon button | Same page (status updated) | status=active; `Can permission="acknowledge alerts"` | WF-003 |
-| Resolve | CheckCircle2 icon button | Same page (status updated) | status=active or acknowledged; `Can permission="acknowledge alerts"` | WF-003 |
-| Dismiss | XCircle icon button | Same page (status updated) | status=active or acknowledged; `Can permission="manage alert rules"` | WF-003 |
-| Filter severity | Dropdown (All/Critical/High/Medium/Low) | Same page (filtered) | Always | — |
-| Filter status | Dropdown (Active+Ack/Active/Ack'd/Resolved/Dismissed) | Same page (filtered) | Always | — |
-| Filter date range | From/To date inputs + Apply button | Same page (filtered) | Always | — |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Acknowledge | POST `/alerts/{id}/acknowledge` | alert: acknowledged_at=now, status→acknowledged | SM-001: active→acknowledged | — |
-| Resolve | POST `/alerts/{id}/resolve` | alert: resolved_at=now, resolved_by=user, status→resolved | SM-001: *→resolved | — |
-| Dismiss | POST `/alerts/{id}/dismiss` | alert: resolved_at=now, status→dismissed | SM-001: *→dismissed | — |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Alert Detail `/alerts/{id}` | Row click | alert ID |
-
-#### Role Differences
-| Element | super_admin | org_admin | site_manager | site_viewer | technician |
-|---|---|---|---|---|---|
-| View alerts | All orgs | Org-scoped | Assigned sites | Assigned sites | Assigned sites |
-| Acknowledge button | `Can` guarded | `Can` guarded | `Can` guarded | Hidden | `Can` guarded |
-| Resolve button | `Can` guarded | `Can` guarded | `Can` guarded | Hidden | `Can` guarded |
-| Dismiss button | `Can` guarded | `Can` guarded | `Can` guarded | Hidden | Hidden |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load / filter change | `AlertIndexSkeleton` — 6 skeleton rows + filter bar | None |
-| **Empty (no alerts)** | No alerts at all | EmptyState: CheckCircle2 (emerald) + "All clear — no alerts" | — |
-| **Empty (filtered)** | Filters active, no matches | EmptyState: "No alerts match these filters" + "Clear filters" button | Clear filters |
-| **Populated** | Alerts exist | Data table with severity summary pills + pagination | All actions per role |
-| **Critical highlight** | Row has status=active, severity=critical | Row highlighted with red-50 background | — |
-
----
-
-### 4.3 Alert Detail
-
-**URL:** `/alerts/{id}` | **Roles:** All (view), manager+ (actions) | **Pattern:** Detail card + timeline
-**Workflows:** WF-003 (alert lifecycle)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Alerts Index | Row click | Always |
-| Site Detail | Alert card click | Alert exists |
-| Zone Detail | Alert card click | Alert exists |
-| Device Detail | Alert history item click | Alert exists |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Alert title (rule_name), severity badge, status badge, triggered datetime | Card header with badges |
-| Trigger Details | Device name+model, Zone, Metric+condition+threshold, Value at trigger | 4-section grid; value displayed in 2xl bold tabular-nums |
-| Notification Log | Per notification: channel icon, user name, channel, sent time, status badge | Conditional (if notifications exist); channel icons: WhatsApp/Push/Email/SMS |
-| Timeline (sidebar) | Triggered → Acknowledged → Resolved/Dismissed | Vertical timeline with color-coded dots; pending states shown in muted |
-| Quick Details (sidebar) | Alert ID, Severity, Site name, Linked rule, Resolution type | Key-value card |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Back | ArrowLeft ghost button | Alerts Index `/alerts` | Always | — |
-| Acknowledge | Eye outline button | Same page (status updated) | status=active; `Can permission="acknowledge alerts"` | WF-003 |
-| Resolve | CheckCircle2 primary button | Same page (status updated) | status=active or acknowledged; `Can permission="acknowledge alerts"` | WF-003 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Acknowledge | POST `/alerts/{id}/acknowledge` | alert: acknowledged_at=now, status→acknowledged | SM-001: active→acknowledged | — |
-| Resolve | POST `/alerts/{id}/resolve` | alert: resolved_at=now, resolved_by=user, status→resolved | SM-001: *→resolved | — |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Alerts Index `/alerts` | Back button | — |
-
-#### Role Differences
-| Element | manager+ | site_viewer |
-|---|---|---|
-| Acknowledge button | Visible (permission-guarded) | Hidden |
-| Resolve button | Visible (permission-guarded) | Hidden |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Active** | status=active | Red severity, action buttons visible, timeline at "Triggered" | Acknowledge, Resolve |
-| **Acknowledged** | status=acknowledged | Amber status, Resolve button only, timeline at "Acknowledged" | Resolve |
-| **Resolved** | status=resolved | Green status, no action buttons, timeline complete | View only |
-| **Dismissed** | status=dismissed | Gray status, no action buttons, timeline shows dismissed | View only |
-
----
-
-### 4.4 Work Orders Index
-
-**URL:** `/work-orders` | **Roles:** manager, technician | **Pattern:** Filterable data table
-**Workflows:** WF-005 (work order lifecycle), WF-004 (auto-created from health)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | "Work Orders" menu item | Always |
-| Dashboard | Work order count card | WO count > 0 |
-| Alert Detail | "Create Work Order" (if linked) | Alert exists |
-
-#### Table Columns
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Title | `title` | Text, font-medium | No | Visible |
-| Type | `type` | Badge, outline (underscores replaced) | No | Visible |
-| Priority | `priority` | Badge (urgent=destructive, high=warning, medium=info, low=outline) | No | Visible |
-| Status | `status` | Badge (open=destructive, assigned=warning, in_progress=info, completed=success, cancelled=outline) | No | Visible |
-| Assigned To | `assigned_user.name` | Text or "—" | No | Visible |
-| Site | `site.name` | Text or "—" | No | Visible |
-| Created | `created_at` | Date (toLocaleDateString) | No | Visible |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| View WO | Row click | WO Detail `/work-orders/{id}` | Always | WF-005 |
-| Create WO | "New" button (Plus icon) | WO Create `/work-orders/create` | `Can permission="manage work orders"` | WF-005 |
-| Toggle "My WOs" | Outline/Default toggle button | Same page (filtered assigned=me) | Always | WF-005 |
-| Filter status | Dropdown (All/Open/Assigned/In Progress/Completed/Cancelled) | Same page | Always | — |
-| Filter priority | Dropdown (All/Urgent/High/Medium/Low) | Same page | Always | — |
-| Filter type | Dropdown (All/Battery Replace/Sensor Replace/Maintenance/Inspection/Install) | Same page | Always | — |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| WO Detail `/work-orders/{id}` | Row click | WO ID |
-| WO Create `/work-orders/create` | "New" button | — |
-
-#### Role Differences
-| Element | site_manager / org_admin | technician | site_viewer |
-|---|---|---|---|
-| "New" button | Visible (`Can` guarded) | Hidden | Hidden |
-| "My WOs" toggle | Available | Available (default filter) | Hidden |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `WorkOrderIndexSkeleton` — header + filter bar + 6 skeleton rows | None |
-| **Empty (no WOs)** | No WOs at all | EmptyState: Wrench icon + "No work orders yet" | — |
-| **Empty (filtered)** | Filters active, no matches | EmptyState: "No work orders match these filters" + "Clear filters" button | Clear filters |
-| **Populated** | WOs exist | Data table with pagination | All actions per role |
-
----
-
-### 4.5 Work Order Detail
-
-**URL:** `/work-orders/{id}` | **Roles:** manager, technician | **Pattern:** Detail + photos + notes
-**Workflows:** WF-005 (work order lifecycle)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Work Orders Index | Row click | Always |
-| CC Work Orders | Row click | super_admin |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Title, Priority badge, Status badge, ID, Site, Created date | Card header with badges |
-| Details Card | Type, Device name, Assigned user, Created by, Linked alert ID, Description | Key-value pairs; description in border-top section |
-| Photos | Grid of photos with optional captions | 2-col (mobile) → 3-col grid; aspect-square images with caption overlay |
-| Notes | Chronological list of note entries | User name + timestamp + note text per entry |
-| Timeline (sidebar) | Created → Assigned → Started → Completed/Cancelled | Vertical timeline with color-coded dots (gray/amber/blue/green) |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Back | ArrowLeft ghost button | Work Orders Index `/work-orders` | Always | — |
-| Assign | User outline button | Same page (status updated) | status=open; `Can permission="manage work orders"` | WF-005 |
-| Start | Play default button | Same page (status updated) | status=assigned; `Can permission="complete work orders"` | WF-005 |
-| Complete | CheckCircle2 default button | Same page (status updated) | status=in_progress; `Can permission="complete work orders"` | WF-005 |
-| Cancel | XCircle ghost button | Same page (status updated) | status ≠ completed/cancelled; `Can permission="manage work orders"` | WF-005 |
-| Upload photo | Upload outline button | File picker → same page | status ≠ completed/cancelled | WF-005 |
-| Add note | Text input + Send button | Same page (note appended) | status ≠ completed/cancelled | WF-005 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications | Integrations |
-|---|---|---|---|---|---|
-| Assign | PUT `/work-orders/{id}/status` (action=assign) | WO: assigned_to, status→assigned | SM-002: open→assigned | NT-007: push to technician | — |
-| Start | PUT `/work-orders/{id}/status` (action=start) | WO: status→in_progress | SM-002: assigned→in_progress | — | — |
-| Complete | PUT `/work-orders/{id}/status` (action=complete) | WO: status→completed | SM-002: in_progress→completed | Auto-resolve linked alert (BR-044) | — |
-| Cancel | PUT `/work-orders/{id}/status` (action=cancel) | WO: status→cancelled | SM-002: *→cancelled | — | — |
-| Upload photo | POST `/work-orders/{id}/photos` (FormData) | WorkOrderPhoto: create | — | — | — |
-| Add note | POST `/work-orders/{id}/notes` | WorkOrderNote: create | — | — | — |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Work Orders Index `/work-orders` | Back button | — |
-
-#### Role Differences
-| Element | site_manager / org_admin | technician |
-|---|---|---|
-| Assign button | Visible (`Can` guarded) | Hidden |
-| Start button | Hidden | Visible (`Can` guarded) |
-| Complete button | Hidden | Visible (`Can` guarded) |
-| Cancel button | Visible (`Can` guarded) | Hidden |
-| Upload / Notes | Available when status allows | Available when status allows |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Open** | status=open | "Open" badge, Assign button | Assign, Cancel, Upload, Note |
-| **Assigned** | status=assigned | "Assigned" badge + assignee name, Start button | Start, Cancel, Upload, Note |
-| **In Progress** | status=in_progress | "In Progress" badge, Complete button | Complete, Cancel, Upload, Note |
-| **Completed** | status=completed | Green "Completed" badge, completion date | View only |
-| **Cancelled** | status=cancelled | Gray "Cancelled" badge | View only |
-| **No photos** | photos empty | "No photos yet" message | Upload (if status allows) |
-
----
-
-### 4.6 Site Detail
-
-**URL:** `/sites/{id}` | **Roles:** All with site access | **Pattern:** KPI cards + zone grid
-**Workflows:** WF-001 (onboarding), WF-002 (data pipeline), WF-004 (device health)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Dashboard | Site card or map marker click | Always |
-| Sidebar | Site selector | Always |
-| CC Org Detail | Site row click | super_admin |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| KPI Cards (5) | Devices, Online, Offline, Active Alerts, Low Battery | Responsive grid; emerald (online), red (offline/alerts), orange (battery) |
-| Fleet Health | online / total percentage | Progress bar; success >80%, warning >50%, destructive otherwise |
-| Floor Plans | Floor plan images with device overlays | Conditional (if floor plans exist); FloorPlanView component |
-| Zones Grid | Zone cards with name, online/total badge, temp summary, health bar | 1→2 col responsive grid |
-| Active Alerts (sidebar) | Alert cards with rule_name, device, zone, severity dot, metric/value | 320px sidebar on lg; clickable cards |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| View zone | Zone card click | Zone Detail `/sites/{id}/zones/{zone}` | Always | WF-002 |
-| Summary report | "Summary" button | Summary Report `/sites/{id}/reports/summary` | Always | WF-006 |
-| Temp report | "Temp Report" button | Temperature Report `/sites/{id}/reports/temperature` | Always | WF-006 |
-| View alert | Alert card click | Alert Detail `/alerts/{id}` | Alert exists | WF-003 |
-| View all alerts | "View all alerts" link | Alerts Index `/alerts` | Alerts exist | WF-003 |
-| Manage devices | "Manage Devices" button (empty state) | Settings: Devices `/sites/{id}/devices` | No devices | WF-001 |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Zone Detail `/sites/{id}/zones/{zone}` | Zone card click | zone name (URL-encoded) |
-| Alert Detail `/alerts/{id}` | Alert card click | alert ID |
-| Summary Report `/sites/{id}/reports/summary` | Button | site ID |
-| Temperature Report `/sites/{id}/reports/temperature` | Button | site ID |
-| Alerts Index `/alerts` | "View all" link | — |
-| Settings: Devices `/sites/{id}/devices` | Empty state CTA | site ID |
-
-#### Role Differences
-| Element | All roles |
-|---|---|
-| Data scope | Server-filtered to user's accessible sites |
-| Report buttons | Visible to all with site access |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `SiteShowSkeleton` — all cards as skeletons | None |
-| **Empty (no devices)** | No devices in site | EmptyState: Cpu icon + "No devices yet" + "Manage Devices" button | Navigate to device settings |
-| **Empty (no alerts)** | No active alerts | Green Signal icon + "All clear" message | — |
-| **Onboarding** | site.status=onboarding | "Setup incomplete" banner + "Continue Setup" CTA | Navigate to onboarding wizard |
-| **Populated** | Zones + devices exist | Full layout with KPIs, zones, floor plans, alerts | All actions |
-
----
-
-### 4.7 Zone Detail
-
-**URL:** `/sites/{id}/zones/{zone}` | **Roles:** All with site access | **Pattern:** Chart + device table
-**Workflows:** WF-002 (data pipeline), WF-003 (alerts)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Site Detail | Zone card click | Always |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Zone name, site name, device count, online count | — |
-| Zone Chart | Temperature area chart (Recharts), gradient fill (emerald) | Height 260px; period buttons: 24h/7d/30d |
-| Metric Summary (4 cards) | Per metric: name, current value, unit, min/avg/max | 2→4 col responsive grid |
-| Devices Table | Device list with status, battery, signal, last seen | Full width; clickable rows |
-| Recent Alerts (sidebar) | Alert cards with severity dot, rule name, device, status, time | 300px sidebar on lg |
-
-#### Table Columns (Devices)
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Device | `name` | Text with online indicator dot (emerald=online, zinc=offline) | No | Visible |
-| Model | `model` | Badge (outline, monospace, text-xs) | No | Visible |
-| Status | `status` | StatusBadge (success/warning/destructive/outline/info) | No | Visible |
-| Battery | `battery_pct` | Dynamic icon + percentage; red <20%, amber <40%, emerald 40%+ | No | Visible |
-| Signal | `rssi` | Dynamic icon + dBm; Signal >-70, SignalMedium >-90, SignalLow otherwise | No | Visible |
-| Last Seen | `last_reading_at` | Time ago (now/Xm/Xh/Xd) or "—" | No | Visible |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Back | ArrowLeft button | Site Detail `/sites/{id}` | Always | — |
-| Change period | 24h/7d/30d buttons | Same page (?period=X) | Always | — |
-| View device | Device row click | Device Detail `/devices/{id}` | Always | WF-002 |
-| View alert | Alert card click | Alert Detail `/alerts/{id}` | Alert exists | WF-003 |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Site Detail `/sites/{id}` | Back button | site ID |
-| Device Detail `/devices/{id}` | Row click | device ID |
-| Alert Detail `/alerts/{id}` | Alert card click | alert ID |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **No chart data** | No readings for period | "No readings for this period" centered in chart | Change period |
-| **No alerts** | No alerts for zone | "No alerts for this zone" in sidebar | — |
-| **No summary** | No metric summary data | Section hidden | — |
-| **Populated** | Data exists | Full layout | All actions |
-
----
-
-### 4.8 Device Detail
-
-**URL:** `/devices/{id}` | **Roles:** All | **Pattern:** Stats + chart + readings
-**Workflows:** WF-002 (data pipeline), WF-003 (alerts), WF-004 (health monitoring)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Zone Detail | Device row click | Always |
-| Settings: Device Detail | Different context (settings vs operational) | — |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Device name, model badge, status badge, dev_eui (mono, xs) | — |
-| Quick Stats (4 cards) | Battery %, Signal (RSSI dBm), Last Seen (time ago), Alert count | 2→4 col grid; dynamic icons per metric |
-| Period & Metric Controls | Period buttons (24h/7d/30d) + Metric dropdown | Card with flex row |
-| Device Chart | LineChart with gradient fill (Recharts) | 300px height; min/avg/max reference lines |
-| Latest Readings | Per-metric cards: name, current value, unit, time ago | 2→3 col grid |
-| Device Info (sidebar) | Model, Zone, Gateway serial, Recipe, Installed date | 300px sidebar card |
-| Alert History (sidebar) | Alert list: severity dot, rule name, time ago, status badge | Sidebar card; clickable items |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Back | ArrowLeft button | Site Detail `/sites/{site_id}` | Always | — |
-| Change period | 24h/7d/30d buttons | Same page (?period=X) | Always | — |
-| Change metric | Metric Select dropdown | Same page (?metric=X) | Always | — |
-| View alert | Alert history item click | Alert Detail `/alerts/{id}` | Alert exists | WF-003 |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Site Detail `/sites/{site_id}` | Back button | site ID |
-| Alert Detail `/alerts/{id}` | Alert history click | alert ID |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `DeviceShowSkeleton` — all card/chart skeletons | None |
-| **No chart data** | No readings for period | "No readings for this period" in chart area | Change period/metric |
-| **No alerts** | No alert history | "No alerts" in sidebar | — |
-| **Populated** | Data exists | Full layout with chart, readings, info | All actions |
-
----
-
-### 4.9 Reports Index
-
-**URL:** `/reports` | **Roles:** All (except technician) | **Pattern:** Report type selection cards
-**Workflows:** WF-006 (reporting)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | "Reports" menu item | Always |
-| Site Detail | Report buttons | manager+ |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Report Cards (3) | Temperature (Thermometer/blue), Energy (Zap/amber), Summary (Sun/emerald) | 3-col grid (responsive); each with icon, title, description, form controls |
-
-#### Form Fields (per Report Card)
-| Field | Label | Type | Required | Default | Notes |
-|---|---|---|---|---|---|
-| site_id | Site | Select dropdown | Yes | — | Shows validation error if empty on submit |
-| from | From | Date input | No | 7d/30d ago depending on type | Hidden for Summary type |
-| to | To | Date input | No | Today | Hidden for Summary type |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Generate | "Generate" button per card | Report page with query params | Site selected | WF-006 |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Temperature Report `/sites/{id}/reports/temperature` | Generate (temperature card) | from, to |
-| Energy Report `/sites/{id}/reports/energy` | Generate (energy card) | from, to |
-| Summary Report `/sites/{id}/reports/summary` | Generate (summary card) | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `ReportsIndexSkeleton` — 3 skeleton cards | None |
-| **Empty (no sites)** | No sites available | EmptyState: BarChart icon + "No sites available for reporting" | — |
-| **Populated** | Sites exist | 3 report cards with controls | Generate reports |
-
----
-
-### 4.10 Temperature Report
-
-**URL:** `/sites/{id}/reports/temperature` | **Roles:** manager, admin | **Pattern:** Charts + compliance + device data
-**Workflows:** WF-006 (reporting), WF-008 (compliance)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Reports Index | Generate (temperature card) | Site selected |
-| Site Detail | "Temp Report" button | Always |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Summary Cards (3) | Total Readings, Excursions (AlertTriangle icon), Compliance % (CheckCircle2) | Card grid |
-| Compliance by Zone | Horizontal bar chart with 80% and 95% reference lines | Color: green ≥95%, amber ≥80%, red <80% |
-| Per-Zone Sections | Temperature trend chart + device table per zone | Line chart: avg (blue), min (green dashed), max (red dashed) |
-
-#### Table Columns (Device Details per Zone)
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Device | name | Text | No | Visible |
-| Readings | count | Number (tabular-nums) | No | Visible |
-| Min °C | min_temp | Decimal 1 place | No | Visible |
-| Avg °C | avg_temp | Decimal 1 place | No | Visible |
-| Max °C | max_temp | Decimal 1 place | No | Visible |
-| Excursions | excursion_count | Badge (success="None", destructive=count) | No | Visible |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Change date range | From/To inputs + Generate button | Same page (refreshed) | Always | WF-006 |
-| Export PDF | "Export PDF" outline button | File download (new tab) | Always | WF-006 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change |
-|---|---|---|---|
-| Export PDF | GET `/sites/{id}/reports/temperature/download?from=&to=` | — (read) | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Populated** | Report data exists | Full charts + tables | Change range, Export |
-| **No zone data** | Zone has no compliance data | Chart/section hidden | — |
-
----
-
-### 4.11 Energy Report
-
-**URL:** `/sites/{id}/reports/energy` | **Roles:** manager, admin | **Pattern:** Cost breakdown + trends
-**Workflows:** WF-006 (reporting)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Reports Index | Generate (energy card) | Site selected |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Summary KPIs (4) | Total kWh (Zap/amber), Total Cost MXN (DollarSign/emerald), Avg Daily Cost (TrendingUp/blue), vs Baseline % | Card grid |
-| Daily Consumption Chart | Area chart with dual Y-axes: kWh (left) + MXN (right) | Average daily reference line overlay |
-| Per Device Table | Device breakdown by zone | Full width |
-| Daily Totals Table | Day-by-day kWh and cost | Conditional (if data exists) |
-
-#### Table Columns (Per Device)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Device | name + model badge | Text + Badge | No |
-| Zone | zone | Text or "—" | No |
-| Total kWh | total_kwh | Number (tabular-nums, bold) | No |
-| Avg Daily kWh | avg_daily_kwh | Decimal 1 place | No |
-| Peak Current (A) | peak_current | Decimal 1 place | No |
-| Readings | count | Number (muted) | No |
-
-#### Table Columns (Daily Totals)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Date | date | Date string | No |
-| kWh | kwh | Decimal 1 place (bold) | No |
-| Cost (MXN) | cost | $ + decimal 2 places | No |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Change date range | From/To inputs + Generate button | Same page (refreshed) | Always | WF-006 |
-| Export PDF | "Export PDF" outline button | File download | Always | WF-006 |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Populated** | Data exists | All sections with real data | Change range, Export |
-| **No chart data** | No daily data | Chart hidden | — |
-
----
-
-### 4.12 Summary Report
-
-**URL:** `/sites/{id}/reports/summary` | **Roles:** manager, admin | **Pattern:** Fleet health + zone status
-**Workflows:** WF-006 (morning summary)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Site Detail | "Summary" button | Always |
-| Reports Index | Generate (summary card) | Site selected |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Fleet Health | Health percentage | Progress bar (success >80%, warning >50%, destructive ≤50%) |
-| Stats Grid (4) | Total Devices, Online (emerald), Offline (red), Low Battery (amber) | Icon + number + label cards |
-| Alerts Grid (2) | Alerts (24h), Active Alerts (now) | Card grid |
-| Zone Status | Zone cards with temp avg/min/max + status badge | Grid; status: OK=success, Warning=warning, Critical=destructive |
-
-#### Actions
-None (display-only page).
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Populated** | Data loaded | All sections | View only |
-| **No zones** | No zone data | Zone section hidden | — |
-
----
-
-### 4.13 IAQ Module
-
-**URL:** `/sites/{id}/modules/iaq` | **Roles:** manager, admin | **Pattern:** Zone scores + charts
-**Workflows:** WF-011 (module system)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | Module menu item | Module active for site |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Overall Score | Large circular badge (24×24) with score, label, zone count | Colors: ≥80 green "Excellent", ≥60 amber "Good", ≥40 orange "Fair", <40 red "Poor" |
-| Zone Cards | Per zone: name, score, CO2, Temperature, Humidity, TVOC | 3-col grid; per-metric status dots (emerald/amber/red) |
-| Trend Chart | CO2 (red), Temperature (blue), Humidity (green) lines | LineChart (Recharts) |
-
-#### Metric Thresholds
-| Metric | Good | Fair | Poor | Icon |
-|---|---|---|---|---|
-| CO2 | <800 ppm | <1200 | ≥1200 | Wind |
-| Temperature | 20-26°C | 18-28°C | Outside | Thermometer |
-| Humidity | 30-60% | 20-70% | Outside | Droplets |
-| TVOC | <300 ppb | <500 | ≥500 | Zap |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Change period | 24h/7d/30d buttons | Same page (?period=X) | Always |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Populated** | Data loaded | All sections | Change period |
-| **No chart** | No chart data | Chart section hidden | — |
-
----
-
-### 4.14 Industrial Module
-
-**URL:** `/sites/{id}/modules/industrial` | **Roles:** manager, admin | **Pattern:** Machine monitoring
-**Workflows:** WF-011 (module system)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | Module menu item | Module active for site |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| KPI Cards (4) | Devices (Cpu), Vibration Alerts (AlertTriangle/amber), Avg Duty Cycle (Activity/%), Avg Pressure (Gauge/bar) | Card grid |
-| Equipment Grid | Per-device cards: vibration, current, temperature, pressure, duty cycle progress bar | Responsive card grid; last reading timestamp |
-| Compressor Health Table | Device, Duty Cycle %, Degradation Score, Status badge | Status: healthy=success, degraded=warning, critical=destructive |
-| Trends Chart | Vibration (red), Current (blue), Pressure (amber) | LineChart (Recharts) |
-
-#### Table Columns (Compressor Health)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Device | name | Text (bold) | No |
-| Duty Cycle | duty_cycle_pct | % + progress bar (success <60%, warning <80%, destructive ≥80%) | No |
-| Degradation | score | /100 (red >50%, amber >25%, emerald ≤25%) | No |
-| Status | status | Badge (healthy/degraded/critical → success/warning/destructive) | No |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Change period | 24h/7d/30d buttons | Same page (?period=X) | Always |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No devices | EmptyState: "No industrial devices" | — |
-| **No chart data** | No trend data for period | "No data for selected period" | Change period |
-| **Populated** | Data exists | All sections | Change period |
-
----
-
-### 4.15 Command Center
-
-**URL:** `/command-center` | **Roles:** super_admin only | **Pattern:** Global KPI dashboard
-**Workflows:** WF-001 (onboarding overview), WF-004 (device health)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | "Command Center" menu item | super_admin only |
-| CC sub-pages | "Overview" nav button | Always |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| KPI Cards (6) | Organizations, Sites, Devices, Online Devices (green), Active Alerts (red if >0), Open WOs (amber if >0) | Card grid |
-| Platform Health | online_devices / total_devices | Progress bar (success >80%, warning otherwise) |
-| Quick Nav | Alert Queue, Work Orders, Device Health buttons | 3 outline buttons |
-| Organizations Table | Org list with metrics | Full width |
-
-#### Table Columns (Organizations)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Organization | name | Text (bold) | No |
-| Segment | segment | Badge (outline) | No |
-| Plan | plan | Badge (secondary) | No |
-| Sites | site_count | Number (tabular) | No |
-| Devices | device_count | Number (tabular) | No |
-| Online | online_count + health % | Number + progress bar | No |
-| Alerts | active_alerts | Badge (destructive) or "0" | No |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Alert Queue | Quick nav button | CC Alerts `/command-center/alerts` | Always |
-| Work Orders | Quick nav button | CC Work Orders `/command-center/work-orders` | Always |
-| Device Health | Quick nav button | CC Devices `/command-center/devices` | Always |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| CC Alerts `/command-center/alerts` | Quick nav | — |
-| CC Work Orders `/command-center/work-orders` | Quick nav | — |
-| CC Devices `/command-center/devices` | Quick nav | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `CommandCenterSkeleton` — 6 KPI cards, health bar, 3 nav buttons, 6-row table | None |
-| **Empty** | No organizations | EmptyState: "No organizations" | — |
-| **Populated** | Orgs exist | Full dashboard | All actions |
-
----
-
-### 4.16 CC Alerts
-
-**URL:** `/command-center/alerts` | **Roles:** super_admin | **Pattern:** Global alert table
-**Workflows:** WF-003 (alert lifecycle)
-
-#### Table Columns
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Severity | severity | Badge with icon (ShieldAlert/AlertTriangle/Bell) | No |
-| Alert | data.rule_name or rule.name | Text (bold) | No |
-| Site | site.name | Text | No |
-| Device | data.device_name or device.name + zone | Text + subtext | No |
-| Status | status | Badge (active=destructive, acknowledged=warning, resolved=success, dismissed=outline) | No |
-| Triggered | triggered_at | Relative time (formatTimeAgo) | No |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| View alert | Row click | Alert Detail `/alerts/{id}` | Always |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No unresolved alerts | CheckCircle icon + "No unresolved alerts" | — |
-| **Populated** | Alerts exist | Paginated table + critical count badge (animated pulse) | Row click |
-| **Critical highlight** | active + critical | Row background red-50 | — |
-
----
-
-### 4.17 CC Devices
-
-**URL:** `/command-center/devices` | **Roles:** super_admin | **Pattern:** Global device table
-**Workflows:** WF-004 (device health)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| KPI Cards (4) | Total, Online (green), Offline (red if >0), Low Battery (amber if >0) | Card grid |
-| Fleet Health | online / total percentage | Progress bar |
-
-#### Table Columns
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Device | name | Text with online indicator dot (green glow / gray) | No |
-| Model | model | Badge (outline, monospace, text-xs) | No |
-| Site | site.name | Text | No |
-| Status | status | Badge (active=success, provisioned=info, pending=warning, offline=destructive, maintenance=outline) | No |
-| Battery | battery_pct | Dynamic icon + progress bar + % | No |
-| Last Seen | last_reading_at | Relative time or "—" | No |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No devices | Cpu icon + "No devices found" | — |
-| **Populated** | Devices exist | KPIs + paginated table | — |
-
----
-
-### 4.18 CC Work Orders
-
-**URL:** `/command-center/work-orders` | **Roles:** super_admin | **Pattern:** Global WO table
-**Workflows:** WF-005 (work order lifecycle)
-
-#### Table Columns
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Title | title | Text (bold) | No |
-| Type | type | Badge (outline, mapped labels) | No |
-| Priority | priority | Badge (urgent=destructive, high=warning, medium=info, low=outline) | No |
-| Status | status | Badge (open=destructive, assigned=warning, in_progress=info, completed=success, cancelled=outline) | No |
-| Site | site.name | Text | No |
-| Assigned To | assigned_user.name | Text or "—" | No |
-| Created | created_at | Date (localized) | No |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| View WO | Row click | WO Detail `/work-orders/{id}` | Always |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No WOs | Wrench icon + "No work orders found" | — |
-| **Populated** | WOs exist | Paginated table | Row click |
-
----
-
-### 4.19 CC Revenue
-
-**URL:** `/command-center/revenue` | **Roles:** super_admin | **Pattern:** Revenue analytics
-**Workflows:** WF-007 (billing)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| KPI Cards (4) | Total MRR ($X,XXX MXN, green), Active Subscriptions, Collection Rate (%), Overdue Invoices (red if >0) | Card grid |
-| MRR by Segment Chart | Bar chart by segment | Segment colors: cold_chain=blue, retail=amber, industrial=purple, commercial=green, foodservice=red |
-| Revenue Trend Chart | 12-month area chart with gradient fill (blue) | Area chart with $ formatter |
-| Top Organizations | Org table by MRR | Full width |
-
-#### Table Columns (Top Organizations)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Name | name | Text (bold) | No |
-| Segment | segment | Badge (outline) | No |
-| MRR | mrr | "$X,XXX MXN" (right-aligned, bold, tabular) | No |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| View org | Table row click | CC Org Detail `/command-center/{id}` | Always |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No subscription data | DollarSign icon + "No subscription data available" | — |
-| **Populated** | Data exists | Full charts + table | Row click |
-
----
-
-### 4.20 CC Dispatch
-
-**URL:** `/command-center/dispatch` | **Roles:** super_admin | **Pattern:** Field dispatch map
-**Workflows:** WF-005 (work order lifecycle)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| WO List (left panel) | Work order cards with priority, type, title, site, technician assignment | Scrollable list; unassigned cards have amber left border |
-| Map (right panel) | Leaflet map centered on Mexico (23.6, -102.5) with site markers | Red circle = open WOs, gray = no open WOs; popup on click |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Assign technician | Select dropdown per WO card | Same page (assigned) | WO has no assignee |
-| Filter unassigned | "Unassigned" toggle button | Same page (filtered) | Always |
-| View site WOs | Map marker click | Scrolls to first WO in list | Site has open WOs |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change |
-|---|---|---|---|
-| Assign | POST `/work-orders/{id}/status` (assigned_to) | WO: assigned_to set | SM-002: open→assigned |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No WOs | Truck icon + "No work orders found" | — |
-| **Populated** | WOs exist | Split panel: list + map | Assign, Filter |
-
----
-
-### 4.21 CC Org Detail
-
-**URL:** `/command-center/{id}` | **Roles:** super_admin | **Pattern:** Org drill-down
-**Workflows:** WF-001 (client onboarding)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| CC Revenue | Org row click | Always |
-| Command Center | — | — |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Org name, segment badge, plan badge, MRR display | Back button + header |
-| Sites Table | Site list with metrics | Main column |
-| Active Alerts (sidebar) | Alert cards with severity, device, site, time | 320px sidebar |
-| Recent Activity (sidebar) | Activity feed with description, causer, time | 320px sidebar |
-
-#### Table Columns (Sites)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Name | name | Text (bold) | No |
-| Status | status | Badge (active=success, onboarding=warning, else=outline) | No |
-| Devices | device_count | Number (tabular) | No |
-| Online | online_count + health % | Number + progress bar | No |
-| Alerts | active_alerts | Badge (destructive) or "0" | No |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Back | ArrowLeft button | Command Center `/command-center` | Always |
-| View site | Site row click | Site Detail `/sites/{id}` | Always |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty sites** | No sites | Building2 icon + "No sites configured" | — |
-| **No alerts** | No active alerts | "No active alerts" text | — |
-| **Populated** | Data exists | Sites table + sidebars | All actions |
-
----
-
-### 4.22 Partner Portal
-
-**URL:** `/partner` | **Roles:** super_admin only | **Pattern:** Org table + create dialog
-**Workflows:** WF-001 (client onboarding)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | "Partner Portal" menu item | super_admin |
-
-#### Table Columns (Organizations)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Name | name + logo avatar | Text + Avatar | No |
-| Slug | slug | Text (muted) | No |
-| Segment | segment | Badge (retail/cold_chain/industrial/commercial/foodservice) | No |
-| Plan | plan | Badge (starter/standard/enterprise) | No |
-| Sites | site_count | Number | No |
-| Status | status | Badge (active/onboarding/suspended) | No |
-
-#### Form Fields (Create Organization Dialog)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| name | Name | Text | Yes | — | — | Auto-generates slug |
-| slug | Slug | Text | Yes | — | Auto from name | Editable |
-| segment | Segment | Select | No | — | — | Options: retail, cold_chain, industrial, commercial, foodservice |
-| plan | Plan | Select | No | — | — | Options: starter, standard, enterprise |
-| default_timezone | Default Timezone | Text | Yes | — | "America/Mexico_City" | — |
-| default_opening_hour | Opening Hour | Time | Yes | — | "08:00" | — |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Create org | "Create Organization" button | Opens dialog | Always | WF-001 |
-| Submit | "Create Organization" dialog button | Same page (org added) | Form valid | WF-001 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Integrations |
-|---|---|---|---|---|
-| Submit | POST `/partner` | Organization create + BillingProfile create + Subscription create (BR-049) | — | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No organizations | "No organizations" in table | Create org |
-| **Populated** | Orgs exist | Table with data | Create org |
-| **Processing** | Form submitted | "Creating..." button state | Wait |
-
----
-
-### 4.23 Site Onboarding Wizard
-
-**URL:** `/sites/{id}/onboard` | **Roles:** org_admin | **Pattern:** Multi-step wizard (5 steps)
-**Workflows:** WF-001 (client onboarding)
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Settings: Sites | After site creation | site.status=onboarding |
-| Site Detail | "Continue Setup" banner | site.status=onboarding |
-
-#### Form Fields (Step 1: Gateway)
-| Field | Label | Type | Required | Default | Notes |
-|---|---|---|---|---|---|
-| model | Model | Select | Yes | — | Options: UG65, UG67, UG56 (Milesight) |
-| serial | Serial Number | Text | Yes | — | Placeholder: "24E124743C00XXXX" |
-| is_addon | Additional gateway | Switch | No | false | Optional addon flag |
-
-#### Form Fields (Step 2: Devices — batch, per row)
-| Field | Label | Type | Required | Default | Notes |
-|---|---|---|---|---|---|
-| model | Model | Select | Yes | — | Options: EM300-TH, CT101, WS301, GS101, EM300-PT, EM310-UDL, AM307 |
-| dev_eui | DevEUI | Text | Yes | — | Monospace; placeholder "A81758FFFE..." |
-| name | Name | Text | Yes | — | Placeholder "e.g. Cooler A" |
-| zone | Zone | Text | No | — | Placeholder "e.g. Cooler A" |
-| recipe_id | Recipe | Select | No | — | Filtered by sensor model |
-
-#### Form Fields (Step 3: Floor Plans)
-| Field | Label | Type | Required | Default | Notes |
-|---|---|---|---|---|---|
-| name | Floor Name | Text | Yes | — | Placeholder "e.g. Ground Floor" |
-| floor_number | Floor Number | Number | Yes | 1 | Min: 0 |
-| image | Floor Plan Image | File | Yes | — | Accept: image/* |
-
-#### Actions per Step
-| Step | Action | Element | Side Effects | Integrations |
-|---|---|---|---|---|
-| 1. Gateway | "Add Gateway" button | Form submit | Creates Gateway record | INT-001 (ChirpStack) |
-| 2. Devices | "Register Devices" button | Form submit (batch) | Creates Device records, provisions | INT-001 (ChirpStack) |
-| 3. Floor Plans | "Upload" button | File upload | Creates FloorPlan record | — |
-| 4. Modules | Module toggle buttons | Selection | Creates SiteModule records, applies recipes (BR-050) | — |
-| 5. Complete | "Activate Site" button | Status change | Site: onboarding→active (SM-005) | — |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change |
-|---|---|---|---|
-| Add gateway | POST `/sites/{id}/onboard/gateway` | Gateway: create | — |
-| Register devices | POST `/sites/{id}/onboard/devices` | Device: create (batch), auto-provision | SM-004: →pending |
-| Upload floor plan | POST `/sites/{id}/floor-plans` | FloorPlan: create | — |
-| Activate modules | POST `/sites/{id}/onboard/modules` | SiteModule: create, RecipeApplication (BR-050) | — |
-| Complete | POST `/sites/{id}/onboard/complete` | Site: status→active | SM-005: onboarding→active |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Step 1: Gateway** | No gateway registered | Gateway form | Submit gateway |
-| **Step 1: Complete** | Gateway registered | Gateway info + "Next" | Proceed |
-| **Step 2: Devices** | Gateway done | Device batch form + existing list | Submit/Add rows |
-| **Step 3: Floor Plans** | Devices done | Upload form + existing plans | Upload/skip |
-| **Step 4: Modules** | Floor plans done | Module toggle buttons; suggested highlighted | Activate |
-| **Step 5: Review** | Modules activated | Summary checklist + "Activate Site" | Complete |
-| **Provisioning** | ChirpStack call in progress | Spinner + "Registering..." | Wait |
-| **Error** | API failure | Error toast + retry | Retry |
-| **ChirpStack warning** | Not configured | Amber alert banner | Proceed with caution |
-
----
-
-### 4.24 Settings: Sites
-
-**URL:** `/settings/sites` | **Roles:** org_admin (`manage sites` permission) | **Pattern:** Site table + CRUD
-**Workflows:** WF-001 (client onboarding)
-
-#### Table Columns
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Name | name | Text | No | Visible |
-| Status | status | Badge (active=success, draft=outline, suspended=warning) | No | Visible |
-| Timezone | timezone | Text or "—" | No | Visible |
-| Opening Hour | opening_hour | Time or "—" | No | Visible |
-| Devices | device_count | Number | No | Visible |
-| Gateways | gateway_count | Number | No | Visible |
-| Actions | — | Edit/Delete icon buttons | — | Visible |
-
-#### Form Fields (Create/Edit Dialog)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| name | Name | Text | Yes | — | — | — |
-| address | Address | Text | No | — | — | — |
-| latitude | Latitude | Number | No | -90 to 90, step: any | — | — |
-| longitude | Longitude | Number | No | -180 to 180, step: any | — | — |
-| timezone | Timezone | Select | No | — | — | From timezones array |
-| opening_hour | Opening Hour | Time | No | — | — | — |
-| status | Status | Select | Yes | — | draft | Options: draft, active, suspended |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Create site | "Create Site" button | Opens dialog | `Can permission="manage sites"` | WF-001 |
-| Edit | Pencil icon per row | Opens edit dialog | `Can permission="manage sites"` | WF-001 |
-| Delete | Trash icon per row | Confirmation dialog → same page | `Can permission="manage sites"` | — |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change |
-|---|---|---|---|
-| Create | POST `/settings/sites` | Site: create | SM-005: →draft/onboarding |
-| Update | PUT `/settings/sites/{id}` | Site: update | — |
-| Delete | DELETE `/settings/sites/{id}` | Site: soft-delete | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No sites | EmptyState: MapPin icon + message | Create site |
-| **Populated** | Sites exist | Table with CRUD actions | All actions |
-
----
-
-### 4.25 Settings: Gateways
-
-**URL:** `/sites/{id}/gateways` | **Roles:** org_admin (`manage devices` permission) | **Pattern:** Gateway table + CRUD
-**Workflows:** WF-001 (client onboarding)
-
-#### Table Columns
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Model | model | Text (bold) | No | Visible |
-| Serial | serial | Monospace, text-xs, muted | No | Visible |
-| Devices | device_count | Number (tabular-nums) | No | Visible |
-| Status | status | Badge (online/offline/registered) | No | Visible |
-| Type | is_addon | Badge ("Add-on" or "Primary") | No | Visible |
-| Actions | — | View/Delete icon buttons | — | Visible |
-
-#### Form Fields (Create Dialog)
-| Field | Label | Type | Required | Default | Notes |
-|---|---|---|---|---|---|
-| model | Model | Text | Yes | — | Placeholder "e.g. RAK7268C" |
-| serial | Serial Number | Text | Yes | — | Placeholder "e.g. AC1F09FFFE0A1234" |
-| is_addon | Add-on gateway | Switch | No | false | — |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Add gateway | "Add Gateway" button | Opens dialog | Always |
-| View | Eye icon per row | Gateway Detail `/sites/{id}/gateways/{gw_id}` | Always |
-| Delete | Trash icon per row | Confirmation dialog (warns about device count) | Always |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Integrations |
-|---|---|---|---|---|
-| Create | POST `/sites/{id}/gateways` | Gateway: create | — | INT-001 (ChirpStack) |
-| Delete | DELETE `/sites/{id}/gateways/{gw_id}` | Gateway: delete | — | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `GatewaysSkeleton` — 4 skeleton rows | None |
-| **Empty** | No gateways | EmptyState: Router icon + "No gateways" | Add gateway |
-| **Populated** | Gateways exist | Paginated table | All actions |
-
----
-
-### 4.26 Settings: Gateway Detail
-
-**URL:** `/sites/{id}/gateways/{gw_id}` | **Roles:** org_admin | **Pattern:** Gateway info + connected devices
-**Workflows:** WF-001
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Model, status badge, addon badge, serial | — |
-| Connected Devices Table | Devices connected to this gateway | Main column |
-| Details Card (sidebar) | Model, Serial, Status, Type, ChirpStack ID, Last Seen, Registered | Key-value card |
-
-#### Table Columns (Connected Devices)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Device | name | Text with online indicator | No |
-| Model | model | Badge (outline, monospace) | No |
-| Zone | zone | Text or "—" | No |
-| Status | status | Badge | No |
-| Last Seen | last_reading_at | Time ago or "—" | No |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Back | ArrowLeft button | Gateways Index `/sites/{id}/gateways` | Always |
-| View device | Device row click | Device Detail `/sites/{id}/devices/{dev_id}` | Always |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No devices | "No devices connected to this gateway" | — |
-| **Populated** | Devices exist | Table with device list | Row click |
-
----
-
-### 4.27 Settings: Devices
-
-**URL:** `/sites/{id}/devices` | **Roles:** org_admin | **Pattern:** Device table + stats + filters
-**Workflows:** WF-001 (onboarding), WF-002 (data pipeline)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Stats Cards (4) | Total, Online (emerald), Offline (destructive), Low Battery (amber) | Mini-card grid |
-| Filter Bar | Search + Status dropdown + Zone dropdown | Card with flex row |
-
-#### Table Columns
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Device | name | Text with online indicator dot | No | Visible |
-| Model | model | Badge (outline) | No | Visible |
-| DevEUI | dev_eui | Monospace, text-xs, muted | No | Hidden (md+) |
-| Zone | zone | Text or "—" | No | Visible |
-| Status | status | Badge | No | Visible |
-| Battery | battery_pct | Icon + progress bar + % | No | Visible |
-| Signal (RSSI) | rssi | Icon + dBm | No | Hidden (lg) |
-| Last Seen | last_reading_at | Time ago or "—" | No | Visible |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Add device | "Add Device" Link | Same page (?add=true) | Always |
-| Search | Search input + button | Same page (filtered) | Always |
-| Filter status | Status dropdown | Same page (?status=X) | Always |
-| Filter zone | Zone dropdown | Same page (?zone=X) | Zones exist |
-| View device | Row click | Device Detail `/sites/{id}/devices/{dev_id}` | Always |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `DevicesIndexSkeleton` — stats + filters + 6 skeleton rows | None |
-| **Empty** | No devices | EmptyState: Cpu icon + "No devices" | Add device |
-| **Populated** | Devices exist | Stats + filters + paginated table | All actions |
-
----
-
-### 4.28 Settings: Device Detail
-
-**URL:** `/sites/{id}/devices/{dev_id}` | **Roles:** org_admin | **Pattern:** Device info cards
-**Workflows:** WF-001, WF-002
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Online indicator, name, status badge, model + DevEUI | — |
-| Info Cards (4) | Battery (%, icon, progress), Signal (dBm, icon), Zone (name), Last Seen (time ago) | Card grid |
-| Gateway Card | Model (clickable), serial, status badge | Conditional (if gateway) |
-| Recipe Card | Name (clickable), sensor model, rules count | Conditional (if recipe) |
-| Details (sidebar) | Name, Model, DevEUI, Status, Zone, Battery, RSSI, Last Reading, Provisioned, Installed, Registered | Key-value card |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Back | ArrowLeft button | Devices Index `/sites/{id}/devices` | Always |
-| View gateway | Gateway card click | Gateway Detail `/sites/{id}/gateways/{gw_id}` | Gateway exists |
-| View recipe | Recipe card click | Recipe Detail `/recipes/{recipe_id}` | Recipe exists |
-
----
-
-### 4.29 Settings: Alert Rules
-
-**URL:** `/sites/{id}/rules` | **Roles:** org_admin, site_manager (`manage alert rules` permission) | **Pattern:** Rule card grid
-**Workflows:** WF-003 (alert lifecycle)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Total rules count, active rules count | — |
-| Rule Cards | Grid of cards: name with icon, severity badge, type badge, conditions preview (first 3 + "+X more"), device name, cooldown, active toggle | Responsive grid (1→2→3 cols) |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| New rule | "New Rule" button/link | Rule Create `/sites/{id}/rules/create` | `Can permission="manage alert rules"` | WF-003 |
-| Edit rule | Card click | Rule Detail `/sites/{id}/rules/{rule_id}` | `Can permission="manage alert rules"` | WF-003 |
-| Delete | Delete icon on card | Direct DELETE (preserveScroll) | `Can permission="manage alert rules"` | — |
-| Toggle active | Switch on card | PUT with `{active: !rule.active}` | `Can permission="manage alert rules"` | WF-003 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Delete | DELETE `/sites/{id}/rules/{rule_id}` | AlertRule: delete |
-| Toggle | PUT `/sites/{id}/rules/{rule_id}` | AlertRule: active toggle |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No rules | EmptyState: Settings2 icon + "No alert rules configured" + "Create First Rule" | Create rule |
-| **Populated** | Rules exist | Card grid | All actions |
-
----
-
-### 4.30 Settings: Rule Detail
-
-**URL:** `/sites/{id}/rules/{rule_id}` | **Roles:** org_admin, site_manager | **Pattern:** Rule conditions table
-**Workflows:** WF-003
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Name, severity badge, active/inactive badge, type, cooldown | — |
-| Conditions Table | Metric, condition, threshold, duration, severity per condition | Table |
-| Associated Device (conditional) | Icon, name, model+DevEUI, status badge | Clickable card |
-| Details (sidebar) | Rule ID, Name, Type, Severity, Cooldown, Status, Site, Device, Conditions count, Created | Key-value card |
-
-#### Table Columns (Conditions)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Metric | metric | Text (bold) | No |
-| Condition | condition | Badge (outline) | No |
-| Threshold | threshold | Monospace (tabular-nums) | No |
-| Duration | duration_minutes | "X min" or "Instant" | No |
-| Severity | severity | SeverityBadge (dynamic variant) | No |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Back | ArrowLeft button | Rules Index `/sites/{id}/rules` | Always |
-| View device | Device card click | Device Detail `/sites/{id}/devices/{dev_id}` | Device exists |
-
----
-
-### 4.31 Settings: Escalation Chains
-
-**URL:** `/settings/escalation-chains` | **Roles:** org_admin, site_manager (`manage alert rules` permission) | **Pattern:** Chain table + CRUD
-**Workflows:** WF-003 (alert lifecycle)
-
-#### Table Columns
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Name | name | Text (bold) | No | Visible |
-| Site | site.name | Text or "Unknown" | No | Visible |
-| Levels | level_count | Badge with count | No | Visible |
-| Channels | channels | Multiple badges (whatsapp/push/email) | No | Visible |
-| Created | created_at | Date (localized) | No | Visible |
-| Actions | — | Edit/Delete icon buttons | — | Visible |
-
-#### Form Fields (Create/Edit Dialog)
-| Field | Label | Type | Required | Default | Notes |
-|---|---|---|---|---|---|
-| name | Name | Text | Yes | — | Placeholder "e.g. Critical Alert Chain" |
-| site_id | Site | Select | Yes | — | From sites array |
-| levels | Escalation Levels | Dynamic array (≥1) | Yes | 1 level | — |
-
-**Per Level:**
-| Field | Label | Type | Required | Default | Notes |
-|---|---|---|---|---|---|
-| delay_minutes | Delay (minutes) | Number | Yes | 0 (L1), 5+ (others) | min: 0 |
-| channels | Notification Channels | Checkboxes | Yes | — | whatsapp/push/email |
-| user_ids | Users to Notify | Checkbox list | Yes | — | Scrollable, count shown |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Create chain | "Create Chain" button | Opens dialog | `Can permission="manage alert rules"` |
-| Edit | Pencil icon per row | Opens edit dialog | `Can permission="manage alert rules"` |
-| Delete | Trash icon per row | Confirmation dialog | `Can permission="manage alert rules"` |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Create | POST `/settings/escalation-chains` | EscalationChain: create with levels JSON |
-| Update | PUT `/settings/escalation-chains/{id}` | EscalationChain: update |
-| Delete | DELETE `/settings/escalation-chains/{id}` | EscalationChain: delete |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `EscalationChainsSkeleton` — 4 skeleton rows | None |
-| **Empty** | No chains | EmptyState: GitBranch icon + "No escalation chains" | Create chain |
-| **Populated** | Chains exist | Table with CRUD | All actions |
-
----
-
-### 4.32 Settings: Recipes
-
-**URL:** `/recipes` | **Roles:** org_admin | **Pattern:** Recipe card grid
-**Workflows:** WF-011 (module & recipe system)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Recipe Cards | Grid by module: name, sensor_model badge, description, default_rules count | Responsive grid (1→2→3 cols) |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| View recipe | Card click | Recipe Detail `/recipes/{id}` | Always |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No recipes | EmptyState: FlaskConical icon + "No recipes available" | — |
-| **Populated** | Recipes exist | Card grid | Card click |
-
----
-
-### 4.33 Settings: Recipe Detail
-
-**URL:** `/recipes/{id}` | **Roles:** org_admin | **Pattern:** Recipe rules + overrides
-**Workflows:** WF-011
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Name, description, module, sensor_model, editable status, created_at | — |
-| Default Rules Table | Metric, condition, threshold, duration, severity | Table |
-| Override Editor | Site selector + editable threshold/duration table | Conditional (if recipe.editable && sites exist) |
-| Existing Overrides | Per-site override cards with metrics | Grouped by site |
-| Details (sidebar) | Recipe metadata | Key-value card |
-
-#### Table Columns (Default Rules)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Metric | metric | Text (font-medium) | No |
-| Condition | condition | Badge (outline) | No |
-| Threshold | threshold | Monospace (tabular-nums) | No |
-| Duration | duration_minutes | "X min" or "Instant" | No |
-| Severity | severity | SeverityBadge | No |
-
-#### Form Fields (Override Editor, conditional)
-| Field | Label | Type | Required | Notes |
-|---|---|---|---|---|
-| site_id | Site | Select | Yes | From sites array |
-| rules[].threshold | Threshold | Number (step=any) | Yes | Per rule row |
-| rules[].duration_minutes | Duration | Number (min=0) | Yes | Per rule row |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Back | ArrowLeft button | Recipes Index `/recipes` | Always |
-| Save overrides | "Save" button | Same page (overrides saved) | recipe.editable && site selected |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Save overrides | POST `/recipes/{id}/overrides` | RecipeOverride: create/update |
-
----
-
-### 4.34 Settings: Users
-
-**URL:** `/settings/users` | **Roles:** org_admin (`manage users` permission) | **Pattern:** User table + invite
-**Workflows:** WF-009 (user management)
-
-#### Table Columns
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Name | name | Text (font-medium) | No | Visible |
-| Email | email | Text (muted) | No | Visible |
-| Role | role | Badge (org_admin=default, site_manager=secondary, site_viewer=outline, technician=outline) | No | Visible |
-| Sites | sites | Up to 2 badges + "+X more" | No | Visible |
-| App Access | has_app_access | Badge (Yes=success, No=outline) | No | Visible |
-| Actions | — | Edit/Delete icons | — | Visible |
-
-#### Form Fields (Create/Edit Dialog)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| name | Name | Text | Yes | Zod (userSchema) | — | — |
-| email | Email | Email | Yes | Zod | — | — |
-| phone | Phone | Text | No | Zod | — | — |
-| whatsapp | WhatsApp | Text | No | Zod | — | — |
-| password | Password | Password | Create only | Zod | — | Hidden on edit |
-| role | Role | Select | Yes | Zod | — | From roles array |
-| site_ids | Site Access | Checkbox list | No | — | — | Scrollable, toggleable |
-| has_app_access | App Access | Switch | No | — | false | — |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Add user | "Add User" button | Opens create dialog | `Can permission="manage users"` |
-| Edit | Pencil icon per row | Opens edit dialog | `Can permission="manage users"` |
-| Delete | Trash icon per row | Confirmation dialog | `Can permission="manage users"` |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Create | POST `/settings/users` | User: create + role assign + site pivots |
-| Update | PUT `/settings/users/{id}` | User: update + sync role + sync sites |
-| Delete | DELETE `/settings/users/{id}` | User: delete |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `UsersIndexSkeleton` — 6 skeleton rows | None |
-| **Empty** | No users | "No users" centered in table | Add user |
-| **Populated** | Users exist | Table with CRUD | All actions |
-
----
-
-### 4.35 Settings: Organization
-
-**URL:** `/settings/organization` | **Roles:** org_admin (`manage org settings` permission) | **Pattern:** Org settings form
-**Workflows:** WF-012 (white-label branding)
-
-#### Form Fields
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| name | Organization Name | Text | Yes | Zod (organizationSettingsSchema) | Current org name | — |
-| default_timezone | Default Timezone | Text | No | Zod | Current | Placeholder "America/Mexico_City" |
-| default_opening_hour | Default Opening Hour | Time | No | Zod | Current | — |
-| primary_color | Primary Color | Color picker + hex input | No | — | Current | Branding section |
-| secondary_color | Secondary Color | Color picker + hex input | No | — | Current | Branding section |
-| accent_color | Accent Color | Color picker + hex input | No | — | Current | Branding section |
-| font_family | Font Family | Text | No | — | Current | Placeholder "Inter, sans-serif" |
-| logo | Logo URL | Text | No | — | Current | Preview shown if valid URL |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Save | "Save" button | Same page (success toast) | Form valid |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Save | PATCH `/settings/organization` | Organization: update settings + branding |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Default** | Form loaded | Populated form with current values | Edit and save |
-| **Success** | Recently saved | "Saved" text with fade animation | Continue editing |
-| **Logo preview** | Valid logo URL | Image preview below field | — |
-
----
-
-### 4.36 Settings: Billing
-
-**URL:** `/settings/billing` | **Roles:** org_admin | **Pattern:** Billing dashboard + invoice table
-**Workflows:** WF-007 (billing & invoicing)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Subscription Card | Base Fee, Discount %, Devices, Monthly Total (green), Status badge, Contract Type badge, Start date | Summary card |
-| Invoices Table | Period, Subtotal, IVA, Total, Status, CFDI UUID | Full width |
-
-#### Table Columns (Invoices)
-| Column | Field | Format | Sortable |
-|---|---|---|---|
-| Period | period | Text (font-medium) | No |
-| Subtotal | subtotal | $X.XX (tabular-nums) | No |
-| IVA | iva | $X.XX (tabular-nums) | No |
-| Total | total | $X.XX (tabular-nums, font-medium) | No |
-| Status | status | Badge (paid=success, sent=warning, overdue=destructive, draft=outline) | No |
-| CFDI | cfdi_uuid | Text-xs, first 8 chars + "..." | No |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Billing Profiles | "Billing Profiles" button | Billing Profiles `/settings/billing/profiles` | Always | WF-007 |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Billing Profiles `/settings/billing/profiles` | Button click | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `BillingSkeleton` — subscription card + invoice table skeletons | None |
-| **No subscription** | No active subscription | EmptyState: CreditCard icon + "No active subscription" + "Contact account manager" | — |
-| **No invoices** | Subscription active, no invoices | EmptyState in table: FileText icon + "No invoices yet" | — |
-| **Populated** | Subscription + invoices exist | Full dashboard | All actions |
-
----
-
-### 4.37 Settings: Billing Profiles
-
-**URL:** `/settings/billing/profiles` | **Roles:** org_admin | **Pattern:** Profile cards + create form
-**Workflows:** WF-007 (billing)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Profile Cards | Name (Building2 icon), RFC (monospace), Razón Social, Régimen Fiscal, Email, Default badge | 2-col responsive grid |
-
-#### Form Fields (Toggle-able Create Form)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| name | Profile Name | Text | Yes | Zod (billingProfileSchema) | — | Placeholder "e.g. Main Office" |
-| rfc | RFC | Text | Yes | Zod | — | Monospace, uppercase, placeholder "XAXX010101000" |
-| razon_social | Razón Social | Text | Yes | Zod | — | Placeholder "Legal company name"; spans 2 cols |
-| regimen_fiscal | Régimen Fiscal | Text | No | Zod | — | Placeholder "601" |
-| uso_cfdi | Uso CFDI | Text | No | Zod | — | Placeholder "G03" |
-| email_facturacion | Email Facturación | Email | No | Zod | — | Placeholder "facturacion@empresa.com"; spans 2 cols |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| New Profile | Toggle button | Shows/hides form | Always |
-| Save Profile | "Save" button | Same page (profile added) | Form valid |
-| Cancel | "Cancel" button | Hides form | Form visible |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Create | POST `/settings/billing/profiles` | BillingProfile: create |
-
----
-
-### 4.38 Settings: Compliance
-
-**URL:** `/settings/compliance` | **Roles:** org_admin (`manage org settings` permission) | **Pattern:** Calendar view + CRUD
-**Workflows:** WF-008 (compliance calendar)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Event Cards | Grouped by month: type badge, title, site, due date, days until due (color-coded), status badge | Cards in month sections |
-
-**Days Until Due Color Coding:**
-- Overdue: Red
-- <7 days: Red
-- ≤30 days: Amber
-- >30 days: Emerald
-
-#### Filter Controls
-| Filter | Type | Options |
-|---|---|---|
-| Site | Select dropdown | All + site list |
-| Type | Select dropdown | All + cofepris_audit, certificate_renewal, calibration, inspection, permit_renewal |
-| Status | Select dropdown | All + upcoming, overdue, completed |
-
-#### Form Fields (Create/Edit Dialog)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| title | Title | Text | Yes | Zod (complianceEventSchema) | — | Placeholder "e.g. Annual COFEPRIS Audit" |
-| type | Type | Select | Yes | Zod | — | Type options from enum |
-| site_id | Site | Select | Yes | Zod | — | From sites array |
-| due_date | Due Date | Date | Yes | Zod | — | — |
-| description | Description | Textarea (rows=3) | No | Zod | — | Placeholder "Optional notes..." |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Add event | "Add Event" button | Opens dialog | `Can permission="manage org settings"` | WF-008 |
-| Complete | CheckCircle2 icon (green) | Same page (status→completed) | status ≠ completed/cancelled; `Can` guarded | WF-008 |
-| Edit | Pencil icon | Opens edit dialog | `Can permission="manage org settings"` | WF-008 |
-| Delete | Trash icon | Confirmation dialog | `Can permission="manage org settings"` | — |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change |
-|---|---|---|---|
-| Create | POST `/settings/compliance` | ComplianceEvent: create | SM-006: →upcoming |
-| Update | PUT `/settings/compliance/{id}` | ComplianceEvent: update | — |
-| Complete | POST `/settings/compliance/{id}/complete` | ComplianceEvent: status→completed | SM-006: →completed |
-| Delete | DELETE `/settings/compliance/{id}` | ComplianceEvent: delete | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | `ComplianceSkeleton` — filter bar + 2 month groups with 3 event skeletons each | None |
-| **Empty** | No events (or filtered out) | EmptyState: CalendarCheck icon + "No compliance events scheduled" | Add event |
-| **Populated** | Events exist | Grouped event cards with filters | All actions |
-
----
-
-### 4.39 Settings: Modules
-
-**URL:** `/sites/{id}/modules` | **Roles:** org_admin (`manage devices` permission) | **Pattern:** Module card grid
-**Workflows:** WF-011 (module & recipe system)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Module Cards | Emoji icon, name, active badge, description, recipe badges (up to 4 + "+X more") | Responsive grid (2→3 cols); inactive modules at opacity-60 |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Toggle module | Switch per card | Same page (toggled) | Always |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Toggle | POST `/sites/{id}/modules/{mod_id}/toggle` | SiteModule: toggle active state |
-
----
-
-### 4.40 Settings: Profile
-
-**URL:** `/settings/profile` | **Roles:** All | **Pattern:** Profile form
-
-#### Form Fields
-| Field | Label | Type | Required | Validation | Default |
-|---|---|---|---|---|---|
-| name | Name | Text | Yes | — | auth.user.name |
-| email | Email address | Email | Yes | — | auth.user.email |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Save | "Save" button | Same page (success toast) | Form valid |
-| Resend verification | Link text | Same page (status updated) | Email unverified |
-| Delete account | Delete section | Account deletion flow | Always |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Save | PATCH `/settings/profile` | User: update name/email |
-| Delete | DELETE `/settings/profile` | User: soft-delete |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Default** | Form loaded | Populated form | Edit and save |
-| **Success** | Recently saved | "Saved" fade animation | Continue |
-| **Email unverified** | email_verified_at is null | Warning + "Resend" link | Resend verification |
-
----
-
-### 4.41 Settings: Password
-
-**URL:** `/settings/password` | **Roles:** All | **Pattern:** Password form
-
-#### Form Fields
-| Field | Label | Type | Required | Validation |
-|---|---|---|---|---|
-| current_password | Current password | Password | Yes | — |
-| password | New password | Password | Yes | — |
-| password_confirmation | Confirm password | Password | Yes | Must match |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Save | "Save password" button | Same page (success + form reset) | Form valid |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Save | PUT `/settings/password` (throttled: 6/min) | User: update password |
-
----
-
-### 4.42 Settings: Appearance
-
-**URL:** `/settings/appearance` | **Roles:** All | **Pattern:** Theme selector
-
-#### Data Displayed
-Delegated to `AppearanceTabs` component — Light/Dark/System theme selection.
-
----
-
-### 4.43 Settings: Two-Factor
-
-**URL:** `/settings/two-factor` | **Roles:** All | **Pattern:** 2FA setup
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Status | 2FA Enabled/Disabled badge | — |
-| QR Code | SVG (during setup) | Modal |
-| Manual Key | Text (during setup) | Modal |
-| Recovery Codes | Code list | Managed by TwoFactorRecoveryCodes component |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Enable 2FA | "Enable 2FA" button | Setup modal | 2FA not set up |
-| Continue Setup | "Continue Setup" button | Setup modal | Setup data exists but not confirmed |
-| Disable 2FA | "Disable 2FA" button (destructive) | Same page (2FA removed) | 2FA enabled |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Enabled** | 2FA active | "Enabled" badge + recovery codes + "Disable" button | Disable, view recovery codes |
-| **Disabled** | 2FA not set up | "Disabled" badge + "Enable" button | Enable |
-| **Setup modal** | Modal open | QR code + manual key entry | Confirm setup |
-
----
-
-### 4.44 Settings: API Keys
-
-**URL:** `/settings/api-keys` | **Roles:** org_admin (`manage org settings` permission) | **Pattern:** Key table + CRUD
-**Workflows:** WF-010 (integration export)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Key Count | Total in header | — |
-| New Key Display | One-time key in green card | Highlighted; shown only once after creation |
-| Key Table | Name, Key prefix (masked), Permissions (badges, first 3 + "+N"), Rate limit, Last used, Active badge | Full width |
-
-#### Form Fields (Toggle-able Create Form)
-| Field | Label | Type | Required | Validation | Notes |
-|---|---|---|---|---|---|
-| name | Name | Text | Yes | Zod (apiKeySchema) | Placeholder "e.g. Production" |
-| rate_limit | Rate Limit (req/min) | Number | Yes | Zod | Min: 1, Max: 1000 |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| New Key | Toggle button | Shows form | `Can permission="manage org settings"` |
-| Create | "Create" button | Same page (key created, displayed once) | Form valid |
-| Delete | Trash icon per key | DELETE request | `Can permission="manage org settings"` |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Create | POST `/settings/api-keys` | ApiKey: create + return plaintext key once |
-| Delete | DELETE `/settings/api-keys/{id}` | ApiKey: delete |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty** | No keys | "No API keys" in table | Create key |
-| **New key** | Just created | Green card with full key (one-time) | Copy key |
-| **Populated** | Keys exist | Table with masked keys | Create, Delete |
-
----
-
-### 4.45 Settings: Integrations
-
-**URL:** `/settings/integrations` | **Roles:** org_admin (`manage org settings` permission) | **Pattern:** Integration cards
-**Workflows:** WF-010 (integration export)
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Integration Cards | SAP (blue/database icon), CONTPAQi (green/spreadsheet icon) — name, description, active badge, schedule, last export | 2 cards |
-
-#### Form Fields (per Card, conditional on active=true)
-| Field | Label | Type | Required | Notes |
-|---|---|---|---|---|
-| schedule_cron | Schedule (cron) | Text | No | Monospace, placeholder "0 6 * * *" |
-| active | Toggle | Switch | No | Right-side toggle |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Toggle | Switch per card | Same page (enabled/disabled) | Always |
-| Save | "Save" button per card | Same page (schedule saved) | Card is active |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Save | POST `/settings/integrations` | Integration: update schedule + active |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Inactive** | Integration disabled | Card at 70% opacity, toggle off, no schedule form | Toggle on |
-| **Active** | Integration enabled | Full opacity, toggle on, schedule form + last export | Save schedule |
-
----
-
-### 4.46 Activity Log
-
-**URL:** `/activity-log` | **Roles:** manager, admin (`view activity log` permission) | **Pattern:** Timeline view
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Total Events | Count badge | — |
-| Activity Timeline | Events grouped by date: Today (amber), Yesterday (sky), other dates (formatted) | Grouped sections |
-| Per Event | Causer avatar+name, event type badge, description, timestamp (relative + tooltip), model reference (#ID), property changes (expandable) | Timeline items |
-
-**Event Type Badges:** created, updated, deleted, login, logout
-
-**Property Changes (Expandable):**
-- Field name, old value (red strikethrough), new value (green)
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Filter events | Dropdown (All/Created/Updated/Deleted/Login/Logout) | Same page (?event=X) | Always |
-| Refresh | "Refresh" button | Same page (reloaded) | Always |
-| Load more | "Load More Events" button | Same page (next page appended) | current_page < last_page |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | Skeleton placeholders | None |
-| **Empty** | No activity | "No Activity Yet" EmptyState | — |
-| **Refreshing** | Refresh in progress | Spinner on button | Wait |
-| **Populated** | Events exist | Timeline with grouped entries | Filter, Refresh, Load More |
-
----
-
-### 4.47 Notifications
-
-**URL:** `/notifications` | **Roles:** All | **Pattern:** Notification list with filters
-**Workflows:** ALL
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Total count, unread count (if >0) | — |
-| Filter | Dropdown (All/Unread/Read) | — |
-| Grouped Notifications | Notifications grouped by date | Date headers + NotificationItem components |
-| Pagination | Previous/Next buttons + "Page X of Y" | Conditional (last_page > 1) |
-
-#### Actions
-| Action | Element | Leads To | Condition |
-|---|---|---|---|
-| Mark all read | "Mark all read" button (CheckCheck icon) | Same page (all marked) | unreadCount > 0 |
-| Delete read | "Delete read" button (Trash2 icon) | Confirmation dialog → same page | Any read notification exists |
-| Filter | Dropdown (All/Unread/Read) | Same page (?filter=X) | Always |
-| Mark single read | NotificationItem action | Same page (item marked) | Item is unread |
-| Delete single | NotificationItem action | Same page (item removed) | Always |
-| Previous page | Previous button | Same page (?page=X-1) | current_page > 1 |
-| Next page | Next button | Same page (?page=X+1) | current_page < last_page |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations |
-|---|---|---|
-| Mark all read | POST `/notifications/mark-all-as-read` | All notifications: read_at=now |
-| Delete read | DELETE `/notifications/read/delete-all` | Read notifications: deleted |
-| Mark single | POST `/notifications/{id}/mark-as-read` | Notification: read_at=now |
-| Delete single | DELETE `/notifications/{id}` | Notification: deleted |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Empty (all)** | No notifications at all | "No notifications" message | — |
-| **Empty (unread)** | Filter=unread, none match | "No unread notifications" | Change filter |
-| **Empty (read)** | Filter=read, none match | "No read notifications" | Change filter |
-| **Populated** | Notifications exist | Grouped list with pagination | All actions |
-
----
-
-## 5. Workflow-to-UI Matrix
-
-| Workflow | Step 1 | Step 2 | Step 3 | Step 4 | Step 5 | Terminal |
-|---|---|---|---|---|---|---|
-| WF-001 Onboard | Partner Portal (create org) | Settings: Sites (create site) | Onboarding Wizard (4 steps) | — | — | Site Detail (active) |
-| WF-002 Data Pipeline | — (system) | Dashboard (live KPIs) | Site Detail (zone grid) | Zone Detail (chart) | Device Detail (readings) | — |
-| WF-003 Alert | Dashboard (badge) | Alerts Index (table) | Alert Detail (review) | Acknowledge/Resolve | — | Alerts Index (resolved) |
-| WF-004 Health | — (system) | Dashboard (offline badge) | Device Detail (offline) | Auto WO created | — | WO completed |
-| WF-005 Work Order | Work Orders Index (view) | WO Detail (assign) | WO Detail (start) | WO Detail (complete) | — | WO Index (completed) |
-| WF-006 Summaries | — (system) | Notification (push/email) | Reports Index | Temp/Energy Report | Download PDF | — |
-| WF-007 Billing | Settings: Billing | Billing Profiles | Generate Invoice | Mark Paid | Download PDF/XML | Billing (paid) |
-| WF-008 Compliance | Settings: Compliance | Add Event | Wait (reminders) | Mark Complete | — | Compliance (completed) |
-| WF-009 Users | Settings: Users | Add User | Assign Sites | — | — | Users (active) |
-| WF-010 Integrations | Settings: Integrations | Configure | API Keys | Export | — | Integrations (synced) |
-| WF-011 Modules | Onboarding Step 3 | Toggle modules | Recipes auto-applied | Module dashboard | — | Module (active) |
-| WF-012 Branding | Settings: Org | Update colors/logo | — | — | — | All pages (branded) |
-
-### Screen Coverage Check
-
-| Screen | Defined | Content Listed | Actions Listed | States Listed | In ≥1 Workflow |
-|---|---|---|---|---|---|
-| Dashboard | ✅ | ✅ (Data Displayed) | ✅ (6) | ✅ (4) | ✅ WF-002,003,004 |
-| Alerts Index | ✅ | ✅ (7 columns) | ✅ (9) | ✅ (5) | ✅ WF-003 |
-| Alert Detail | ✅ | ✅ (Data Displayed) | ✅ (3) | ✅ (4) | ✅ WF-003 |
-| Work Orders Index | ✅ | ✅ (7 columns) | ✅ (7) | ✅ (4) | ✅ WF-005 |
-| Work Order Detail | ✅ | ✅ (Data Displayed) | ✅ (7) | ✅ (6) | ✅ WF-005 |
-| Site Detail | ✅ | ✅ (Data Displayed) | ✅ (6) | ✅ (5) | ✅ WF-001,002,004 |
-| Zone Detail | ✅ | ✅ (6 columns) | ✅ (4) | ✅ (4) | ✅ WF-002,003 |
-| Device Detail | ✅ | ✅ (Data Displayed) | ✅ (4) | ✅ (4) | ✅ WF-002,003,004 |
-| Reports Index | ✅ | ✅ (Form Fields) | ✅ (1) | ✅ (3) | ✅ WF-006 |
-| Temperature Report | ✅ | ✅ (6 columns) | ✅ (2) | ✅ (2) | ✅ WF-006,008 |
-| Energy Report | ✅ | ✅ (6+3 columns) | ✅ (2) | ✅ (2) | ✅ WF-006 |
-| Summary Report | ✅ | ✅ (Data Displayed) | ✅ (0) | ✅ (2) | ✅ WF-006 |
-| IAQ Module | ✅ | ✅ (Data Displayed) | ✅ (1) | ✅ (2) | ✅ WF-011 |
-| Industrial Module | ✅ | ✅ (4 columns) | ✅ (1) | ✅ (3) | ✅ WF-011 |
-| Command Center | ✅ | ✅ (7 columns) | ✅ (3) | ✅ (3) | ✅ WF-001,004 |
-| CC Alerts | ✅ | ✅ (6 columns) | ✅ (1) | ✅ (3) | ✅ WF-003 |
-| CC Devices | ✅ | ✅ (6 columns) | ✅ (0) | ✅ (2) | ✅ WF-004 |
-| CC Work Orders | ✅ | ✅ (7 columns) | ✅ (1) | ✅ (2) | ✅ WF-005 |
-| CC Revenue | ✅ | ✅ (3 columns) | ✅ (1) | ✅ (2) | ✅ WF-007 |
-| CC Dispatch | ✅ | ✅ (Data Displayed) | ✅ (3) | ✅ (2) | ✅ WF-005 |
-| CC Org Detail | ✅ | ✅ (5 columns) | ✅ (2) | ✅ (3) | ✅ WF-001 |
-| Partner Portal | ✅ | ✅ (6 columns + 6 fields) | ✅ (2) | ✅ (3) | ✅ WF-001 |
-| Site Onboarding | ✅ | ✅ (Fields per step) | ✅ (5 per step) | ✅ (9) | ✅ WF-001 |
-| Settings: Sites | ✅ | ✅ (6 columns + 7 fields) | ✅ (3) | ✅ (2) | ✅ WF-001 |
-| Settings: Gateways | ✅ | ✅ (5 columns + 3 fields) | ✅ (3) | ✅ (3) | ✅ WF-001 |
-| Settings: Gateway Detail | ✅ | ✅ (5 columns) | ✅ (2) | ✅ (2) | ✅ WF-001 |
-| Settings: Devices | ✅ | ✅ (8 columns) | ✅ (5) | ✅ (3) | ✅ WF-001,002 |
-| Settings: Device Detail | ✅ | ✅ (Data Displayed) | ✅ (3) | ✅ (1) | ✅ WF-001,002 |
-| Settings: Rules | ✅ | ✅ (Card Data) | ✅ (4) | ✅ (2) | ✅ WF-003 |
-| Settings: Rule Detail | ✅ | ✅ (5 columns) | ✅ (2) | ✅ (1) | ✅ WF-003 |
-| Settings: Escalation Chains | ✅ | ✅ (5 columns + 3+ fields) | ✅ (3) | ✅ (3) | ✅ WF-003 |
-| Settings: Recipes | ✅ | ✅ (Card Data) | ✅ (1) | ✅ (2) | ✅ WF-011 |
-| Settings: Recipe Detail | ✅ | ✅ (5 columns + 3 fields) | ✅ (2) | ✅ (2) | ✅ WF-011 |
-| Settings: Users | ✅ | ✅ (5 columns + 8 fields) | ✅ (3) | ✅ (3) | ✅ WF-009 |
-| Settings: Organization | ✅ | ✅ (8 fields) | ✅ (1) | ✅ (3) | ✅ WF-012 |
-| Settings: Billing | ✅ | ✅ (6 columns) | ✅ (1) | ✅ (4) | ✅ WF-007 |
-| Settings: Billing Profiles | ✅ | ✅ (6 fields) | ✅ (3) | ✅ (1) | ✅ WF-007 |
-| Settings: Compliance | ✅ | ✅ (5 fields) | ✅ (4) | ✅ (3) | ✅ WF-008 |
-| Settings: Modules | ✅ | ✅ (Card Data) | ✅ (1) | ✅ (1) | ✅ WF-011 |
-| Settings: API Keys | ✅ | ✅ (2 fields) | ✅ (3) | ✅ (3) | ✅ WF-010 |
-| Settings: Integrations | ✅ | ✅ (2 fields) | ✅ (2) | ✅ (2) | ✅ WF-010 |
-| Activity Log | ✅ | ✅ (Data Displayed) | ✅ (3) | ✅ (4) | ✅ utility |
-| Notifications | ✅ | ✅ (Data Displayed) | ✅ (7) | ✅ (4) | ✅ ALL |
-
-**All 47 operational screens fully specified.** Auth pages (Login, Register, Forgot Password, Reset Password) and utility settings (Profile, Password, Appearance, Two-Factor) are framework-standard and listed but not workflow-critical.
-
-### Orphan Check
-
-**Screens not in any workflow:**
-- Settings: Profile — utility (self-service)
-- Settings: Password — utility (self-service)
-- Settings: Appearance — utility (self-service)
-- Settings: Two-Factor — utility (self-service)
-- Activity Log — observability tool (not workflow-driven)
-- Welcome page — public landing (not authenticated)
-
-These are correctly workflow-independent.
-
-**Workflows with no dedicated screen (backend-only):**
-- WF-002 Sensor Data Pipeline — backend processing, surfaces data on Dashboard/Site/Zone/Device screens
-- WF-004 Device Health Monitoring — backend job, surfaces via Dashboard alerts and auto-created work orders
-- WF-006 Morning Summaries — backend scheduled job, delivered via push/email notifications
-
----
-
-## 6. Interaction Conventions
-
-| Pattern | Decision | Rationale |
-|---|---|---|
-| **Data tables** | Paginated server-side with filter dropdowns + search | Large datasets need server pagination |
-| **Create/Edit forms** | Modal dialogs for simple entities (site, user, escalation chain), dedicated page for complex (onboarding wizard) | Modals for ≤5-7 fields, pages for wizards |
-| **Delete actions** | `ConfirmationDialog` with entity name and warning | Prevents accidental deletion |
-| **Status changes** | Inline buttons on detail page (Acknowledge, Resolve, Start, Complete) | Fast — no navigation needed |
-| **Bulk operations** | Not currently implemented (single-item actions only) | Simplicity — bulk added when user demand warrants |
-| **Filters** | Tab bar for status + dropdown for severity/priority + date range picker | Most common filter is one-click accessible |
-| **Success feedback** | Sonner toast (auto-dismiss 5s) | Non-blocking, handled globally via `useFlashMessages` |
-| **Error feedback** | Inline validation errors + error toast for API failures | Inline for field errors, toast for system errors |
-| **Navigation after create** | Redirect to index/parent page | "Done → back to list" mental model |
-| **Navigation after update** | Stay on current page with success toast | Update = continue working on same entity |
-| **Loading states** | Exported `*Skeleton` components matching content layout | Prevents layout shift; 13 pages have skeletons |
-| **Empty states** | `EmptyState` component with icon + title + description + optional CTA | Guides user to next action; 10+ pages use this |
-| **Charts** | Recharts with 3 period options (24h/7d/30d) | Covers operational, weekly, and monthly views |
-| **Maps** | Leaflet with dynamic loading (dashboard, dispatch) | Avoids loading map library on non-map pages |
-| **Real-time updates** | Reverb WebSocket via `use-realtime-notifications` hook | Live notification bell + dashboard KPI updates |
-| **i18n** | All user-facing text via `t()` function (en/es) | Bilingual platform (Mexico market) |
-| **Destructive confirmations** | `ConfirmationDialog` component with warning message | Standard across all delete/deactivate actions |
-| **Theme** | Light/Dark/System via `useAppearance()` hook | User preference persisted in localStorage |
-| **File uploads** | Single + batch upload via `FileUploadController` with allowed-types validation | Throttled (20/min single, 10/min batch) |
-| **PDF reports** | Server-side via Blade templates + dompdf | Consistent formatting across browsers |
-| **Permission guards** | `<Can permission="...">` wrapper hides unauthorized elements | Eliminates 403 UX errors |
-| **Form validation** | `useValidatedForm` (Inertia useForm + Zod) for standard forms | Pre-submit client validation; 7 forms migrated |
-
----
-
-*This document is the blueprint for Phase 6 (task planning) and Phase 7 (feature specs). Every task and spec should reference specific workflow IDs and screen definitions from this document.*
-
----
-
-# Phase 10: Operational Completeness — Workflow UX Design
-
-> **Generated:** 2026-03-19 | Phase 5b --focus phase-10
-> **Input:** Phase 5 System Behavior Spec (BR-055→BR-100, SM-011→SM-013, PM-004, NT-012→NT-020, VL-011→VL-018)
-> **Scope:** 14 new workflows (WF-013→WF-026), 9 new screens, 4 screen extensions
-
----
-
-## P10-1. Workflow Catalog (Phase 10)
-
-| WF | Name | Trigger | Primary Actor | Workflows Modified |
-|---|---|---|---|---|
-| WF-013 | Corrective Action | Alert excursion (critical/high) | site_viewer, technician, site_manager | Extends WF-003 |
-| WF-014 | Device Replacement | Device fails / battery dead | technician, site_manager | Extends WF-004 |
-| WF-015 | Data Export & Offboarding | org_admin requests export | org_admin | New |
-| WF-016 | Alert Analytics & Tuning | org_admin/site_manager navigates to analytics | org_admin, site_manager | Extends WF-003 |
-| WF-017 | Scheduled Report Delivery | Cron fires at scheduled time | System | Extends WF-006 |
-| WF-018 | Maintenance Windows | site_manager creates window | site_manager, org_admin | Modifies WF-003 (alert suppression) |
-| WF-019 | Mass Offline Detection | >50% devices offline in 5 min | System | Modifies WF-004 |
-| WF-020 | Upstream Outage Declaration | super_admin declares outage | super_admin | Global — modifies WF-003, WF-004 |
-| WF-021 | LFPDPPP Consent | User first login or policy update | All users | New (middleware) |
-| WF-022 | Site Template Cloning | org_admin creates/applies template | org_admin | Extends WF-001 |
-| WF-023 | Health Check | External monitor polls `/health` | System (external) | New (no UI for end users) |
-| WF-024 | Alert Delivery Monitoring | super_admin views delivery health | super_admin | Extends Command Center |
-| WF-025 | Zero Readings Detection | Cron fires every 5 min | System | New (backend-only) |
-| WF-026 | Dashboard Action Cards | User lands on dashboard | All users | Extends Dashboard |
-
----
-
-## P10-2. User Journeys
-
-### WF-013: Corrective Action
-
-#### Journey: site_viewer / technician (on-site)
-1. **Alert push notification** → tap → **Alert Detail** page
-2. See excursion details: device, reading, threshold, duration
-3. Scroll to **"Corrective Action"** section → click **"Log Action"**
-4. Fill textarea: "Moved product to backup cooler, checked compressor, called technician"
-5. Submit → success toast "Corrective action logged"
-6. Section updates: shows logged action with timestamp, user name, "Pending verification" badge
-
-#### Journey: site_manager (verification)
-1. **Alert Detail** page (reviewing resolved alert)
-2. See corrective action section: action text, logged by, logged at
-3. Click **"Verify"** button → confirmation dialog
-4. Confirm → success toast "Corrective action verified"
-5. Section updates: shows green "Verified" badge, verified_by, verified_at
-
-#### Failure Paths
-- Submit empty text → inline validation "Describe the action taken (min 10 characters)"
-- Same user tries to verify → error toast "Must be verified by a different user" (BR-057)
-- Alert already has corrective action → "Log Additional Action" button (allows multiple)
-
-### WF-014: Device Replacement
-
-#### Journey: technician (on-site, mobile-first)
-1. **Device Detail** page → device is offline or battery dead
-2. Click **"Replace Device"** button in header actions
-3. **Replacement Dialog** opens: old device info shown read-only
-4. Enter `new_dev_eui` (scan QR on mobile) + `new_app_key` + optionally change model
-5. Click "Replace" → processing state (ChirpStack provisioning)
-6. Success → toast "Device replaced. New device pending activation."
-7. Old device shows "Replaced" badge; new device card appears in zone view
-
-#### Failure Paths
-- dev_eui already registered → inline error "DevEUI already registered"
-- ChirpStack provisioning fails → error toast "Could not provision — check network" + retry
-- Device is already `replaced` → button hidden (cannot replace a replaced device)
-
-### WF-015: Data Export & Offboarding
-
-#### Journey: org_admin
-1. **Settings** → **Data Export** page
-2. See export options: date range, format (ZIP)
-3. Click **"Request Export"** → confirmation dialog with estimated size
-4. Confirm → toast "Export queued — you'll receive an email when ready"
-5. Page shows export status card: "Processing... (estimated 10 minutes)"
-6. (Later) Email arrives with download link → click → downloads ZIP
-
-#### Failure Paths
-- Export already in progress → button disabled, status shows "In progress"
-- Export fails → email notification + status card shows "Failed" with retry button
-- Link expired (>48h) → "Link expired. Request a new export."
-
-### WF-016: Alert Analytics & Tuning
-
-#### Journey: org_admin / site_manager
-1. **Sidebar** → **Analytics** → **Alert Tuning** page
-2. See overview: total alerts this period, dismissal rate, avg response time
-3. **Noisiest Rules** table: top 10 rules by alert count, with "Tune" link
-4. Click "Tune" → navigates to **Settings: Rule Detail** for that rule (threshold adjustment)
-5. **Trends** chart: 30/90 day alert volume trend
-6. **Response Time** by site: bar chart showing avg time from alert→acknowledge
-
-### WF-017: Scheduled Report Delivery
-
-#### Journey: org_admin (setup)
-1. **Settings** → **Report Schedules** page
-2. Click **"Add Schedule"** → dialog opens
-3. Select: report type, site (or org-wide), frequency, day/time, recipients
-4. Submit → toast "Schedule created"
-5. Schedule appears in table with active toggle
-
-#### Journey: System (execution)
-1. `SendScheduledReports` job runs daily
-2. For each active schedule matching today's criteria: generate PDF → email to recipients
-3. NT-014 fires with attached PDF
-
-### WF-018: Maintenance Windows
-
-#### Journey: site_manager
-1. **Settings** → **Maintenance Windows** page
-2. Click **"Add Window"** → dialog opens
-3. Fill: title ("Walk-in Cooler Cleaning"), site, zone, recurrence, start time, duration
-4. Submit → toast "Maintenance window created"
-5. During active window: alerts suppressed for zone (BR-073)
-6. Activity log: "Maintenance window active: Walk-in Cooler cleaning 2-4pm"
-
-### WF-020: Upstream Outage Declaration
-
-#### Journey: super_admin
-1. **Command Center** → sees mass offline across multiple orgs
-2. Click **"Declare Outage"** button (new, in header actions)
-3. Dialog: reason text, affected services checkboxes (ChirpStack, Twilio, MQTT, etc.)
-4. Submit → banner appears on all dashboards: "Platform experiencing upstream issues"
-5. All offline alerts suppressed platform-wide (BR-080)
-6. When resolved: click **"End Outage"** → dialog confirms → banner removed
-7. Summary email: "Outage lasted X hours. N alerts were suppressed."
-
-### WF-021: LFPDPPP Consent
-
-#### Journey: Any user (first login)
-1. Login → middleware detects `privacy_accepted_at` is null
-2. Redirect to **Privacy Consent** interstitial page
-3. Page shows privacy policy text + "I Accept" button + "Log Out" link
-4. Click "I Accept" → stores `privacy_accepted_at` + `privacy_policy_version` → redirect to Dashboard
-
-### WF-022: Site Template Cloning
-
-#### Journey: org_admin
-1. **Settings** → **Site Templates** page
-2. Click **"Create Template"** → dialog opens
-3. Select a "golden" source site → system captures: modules, zones, recipes, escalation chain
-4. Name the template → Submit → toast "Template saved"
-5. During **Site Onboarding** (WF-001), step 1 offers "Start from template" dropdown
-6. Selecting template pre-fills modules, zones, recipes, escalation → technician only needs hardware setup
-
-### WF-026: Dashboard Action Cards
-
-#### Journey: All users
-1. Land on **Dashboard**
-2. Above site grid, see **"Needs Attention"** section with action cards:
-   - "X alerts need acknowledgment" → link to Alerts Index (filtered: status=active)
-   - "X work orders overdue" → link to Work Orders Index (filtered: status=overdue)
-   - "X sensors battery critical" → link to Device list (filtered: battery < 20%)
-3. Cards only appear when count > 0
-4. Role-filtered per BR-100
-
----
-
-## P10-3. Screen Inventory (Phase 10 Additions)
-
-### New Screens
-
-| Screen | URL Pattern | Workflows | Roles | Pattern |
-|---|---|---|---|---|
-| Alert Analytics | `/analytics/alerts` | WF-016 | org_admin, site_manager | Dashboard/stats |
-| Maintenance Windows | `/settings/maintenance-windows` | WF-018 | org_admin, site_manager | Filterable data table + dialog |
-| Report Schedules | `/settings/report-schedules` | WF-017 | org_admin | Filterable data table + dialog |
-| Site Templates | `/settings/site-templates` | WF-022 | org_admin | Card grid + dialog |
-| Data Export | `/settings/export-data` | WF-015 | org_admin | Form + status card |
-| Privacy Consent | `/privacy/accept` | WF-021 | All (unauthenticated layout) | Interstitial |
-
-### Extended Screens (Phase 10 additions to existing screens)
-
-| Screen | Existing URL | New Section | Workflows |
-|---|---|---|---|
-| Alert Detail | `/alerts/{id}` | Corrective Action section + form | WF-013 |
-| Dashboard | `/dashboard` | "Needs Attention" action cards above site grid | WF-026 |
-| Device Detail | `/devices/{id}` (or settings) | "Replace Device" button + dialog | WF-014 |
-| Command Center | `/command-center` | "Declare Outage" button + Delivery Health section | WF-020, WF-024 |
-
-### High-Traffic Screens (3+ workflows)
-
-| Screen | Workflow Count | Note |
-|---|---|---|
-| **Dashboard** (extended) | WF-002, WF-003, WF-004, **WF-026** | +1 workflow (action cards) |
-| **Alert Detail** (extended) | WF-003, **WF-013** | +1 workflow (corrective actions) |
-| **Command Center** (extended) | WF-001, WF-004, **WF-020**, **WF-024** | +2 workflows (outage, delivery monitoring) |
-| **Device Detail** (extended) | WF-002, WF-003, WF-004, **WF-014** | +1 workflow (replacement) |
-
----
-
-## P10-4. Screen Details — Per-Screen Specs
-
-### 4.48 Alert Detail — Corrective Action Extension
-
-**URL:** `/alerts/{id}` (existing page, new section)
-**Roles:** All (view), site_viewer+ (log action), site_manager+ (verify)
-**Pattern:** Detail section with inline form
-**Workflows:** WF-013
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| (Same as existing Alert Detail) | — | — |
-| Push notification | "Corrective action required" | NT-012 reminder |
-
-#### Data Displayed (New Section: "Corrective Actions")
-| Section | Content | Format |
-|---|---|---|
-| Section Header | "Corrective Actions" with count badge | Card below Notification Log |
-| Action Entry | action_taken text, taken_by name, taken_at relative time, status badge | List of entries; verified=green badge, pending=amber badge |
-| Verification Info | verified_by name, verified_at relative time | Shown only when verified |
-| Empty State | "No corrective action logged" + CTA button | When alert has severity critical/high but no actions |
-
-#### Form Fields (Inline Form — "Log Corrective Action")
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| action_taken | What action was taken? | textarea | ✅ | min:10, max:2000 | — | Placeholder: "Describe what was done to address this excursion..." |
-| notes | Additional notes | textarea | ❌ | max:1000 | — | Optional context |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Log action | "Log Corrective Action" button → inline form | Same page (form appears) | Alert severity=critical/high; `Can permission="log corrective actions"` | WF-013 |
-| Submit action | "Submit" button in form | Same page (action appended) | Form valid | WF-013 |
-| Cancel form | "Cancel" link | Same page (form hidden) | Form open | — |
-| Verify action | "Verify" button on action entry | Same page (status updated) | `Can permission="verify corrective actions"`; different user than taken_by | WF-013 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Submit action | POST `/alerts/{id}/corrective-actions` | corrective_actions: create | SM-011: → logged | — |
-| Verify action | POST `/alerts/{id}/corrective-actions/{ca_id}/verify` | corrective_actions: verified_by=user, verified_at=now | SM-011: logged→verified | — |
-
-#### Role Differences
-| Element | super_admin | org_admin | site_manager | site_viewer | technician |
-|---|---|---|---|---|---|
-| View actions | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Log action button | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Verify button | ✅ | ✅ | ✅ | Hidden | Hidden |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **No actions (prompt)** | Alert critical/high, no actions logged | Warning card: "This excursion requires a corrective action for compliance" + "Log Action" CTA | Log action |
-| **Actions logged** | ≥1 action exists | Action list with status badges | Verify (if different user), Log additional |
-| **All verified** | All actions have verified status | Green section header: "Corrective Actions (Verified ✓)" | View only |
-| **Form open** | User clicked "Log Action" | Inline form below action list | Submit / Cancel |
-| **Non-applicable** | Alert severity=medium/low | Section hidden entirely | — |
-
----
-
-### 4.49 Dashboard — Action Cards Extension
-
-**URL:** `/dashboard` (existing page, new section)
-**Roles:** All (filtered by permissions per BR-100)
-**Pattern:** Action card row above site grid
-**Workflows:** WF-026
-
-#### Data Displayed (New Section: "Needs Attention")
-| Card | Content | Icon | Color | Link Target | Condition |
-|---|---|---|---|---|---|
-| Unacknowledged Alerts | "X alerts need acknowledgment" | AlertTriangle | Red/destructive | `/alerts?status=active` | count > 0; `view alerts` permission |
-| Overdue Work Orders | "X work orders overdue" | Clock | Amber/warning | `/work-orders?status=overdue` | count > 0; `view work orders` permission |
-| Critical Battery | "X sensors battery critical" | BatteryLow | Amber/warning | `/settings/devices?battery=critical` | count > 0; `view devices` permission |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Click alert card | Card link | Alerts Index (filtered: status=active) | Always visible when count > 0 | WF-003 |
-| Click WO card | Card link | Work Orders Index (filtered: overdue) | `view work orders` permission | WF-005 |
-| Click battery card | Card link | Device list (filtered: battery critical) | `view devices` permission | WF-004 |
-
-#### Role Differences
-| Card | super_admin | org_admin | site_manager | site_viewer | technician |
-|---|---|---|---|---|---|
-| Alerts | ✅ | ✅ | ✅ | ✅ (view only) | ✅ |
-| Work Orders | ✅ | ✅ | ✅ | Hidden | ✅ |
-| Battery | ✅ | ✅ | ✅ | Hidden | ✅ |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **All clear** | All counts = 0 | Section hidden (no cards) | — |
-| **Attention needed** | ≥1 count > 0 | Visible cards in row: `grid gap-3 sm:grid-cols-3` | Click to navigate |
-
----
-
-### 4.50 Device Detail — Replacement Extension
-
-**URL:** `/devices/{id}` or `/settings/devices/{id}` (existing page, new action)
-**Roles:** technician, site_manager, org_admin (`manage devices` permission)
-**Pattern:** Dialog from header action button
-**Workflows:** WF-014
-
-#### Actions (New)
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Replace device | "Replace" button in header actions dropdown | Replacement dialog (same page) | Device status=active or offline; `manage devices` or `complete work orders` permission | WF-014 |
-
-#### Form Fields (Replacement Dialog)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| — | Old Device | read-only display | — | — | Current device name, dev_eui, model | Gray card at top of dialog |
-| new_dev_eui | New DevEUI | text input | ✅ | max:16, unique, different from current | — | Placeholder: "Scan or enter DevEUI" |
-| new_app_key | New AppKey | text input | ✅ | max:32 | — | Placeholder: "Enter OTAA AppKey" |
-| new_model | New Model | select | ❌ | in: sensor model list | Old device's model | Options: EM300-TH, CT101, WS301, AM307, VS121, EM300-MCS, WS202 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Submit replacement | POST `/devices/{id}/replace` | Old device: status→replaced, replaced_at, replaced_by_device_id. New device: created with config transfer (zone, floor_x/y, recipe, alert rules) | SM-004 ext: active/offline→replaced (old). SM-004: →pending (new) | Activity log entry (BR-063) |
-
-#### Screen States (Dialog)
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Default** | Dialog opened | Old device info card + empty form fields | Fill and submit |
-| **Validating** | Submit with errors | Inline errors per field | Fix and retry |
-| **Processing** | Submitted, provisioning | Spinner + "Provisioning in ChirpStack..." + disabled fields | Wait |
-| **Success** | Provisioning complete | Success icon + "Device replaced. New device pending activation." + Close button | Close dialog |
-| **Error** | Provisioning failed | Error message + "Retry" button | Retry or cancel |
-
----
-
-### 4.51 Command Center — Outage & Delivery Extensions
-
-**URL:** `/command-center` (existing page, new elements)
-**Roles:** super_admin
-**Workflows:** WF-020, WF-024
-
-#### Data Displayed (New Elements)
-
-**Outage Banner (when active)**
-| Section | Content | Format |
-|---|---|---|
-| Outage Banner | "⚠️ Platform outage declared: [reason]. Monitoring degraded since [time]." + "End Outage" button | Full-width destructive banner above KPI cards |
-
-**Delivery Health Cards (new section below quick nav)**
-| Card | Content | Format |
-|---|---|---|
-| WhatsApp Delivery | sent / delivered / failed (24h) | 3 numbers with success/fail colors |
-| Push Delivery | sent / delivered / failed (24h) | Same format |
-| Email Delivery | sent / bounced (24h) | Same format |
-
-#### Actions (New)
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Declare Outage | "Declare Outage" destructive button in header | Outage dialog | No active outage | WF-020 |
-| End Outage | "End Outage" button in banner | Confirmation dialog → banner removed | Active outage exists | WF-020 |
-
-#### Form Fields (Outage Declaration Dialog)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| reason | Reason | textarea | ✅ | min:5, max:500 | — | "Describe the outage..." |
-| affected_services | Affected Services | checkbox group | ✅ | ≥1 selected | — | Options: ChirpStack, Twilio, MQTT, Redis, Database, Other |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Declare Outage | POST `/command-center/outage` | outage_declarations: create | SM-013: →active | NT-015 (banner to all orgs), suppress all offline alerts |
-| End Outage | DELETE `/command-center/outage` | outage_declarations: resolved_at=now | SM-013: active→resolved | NT-016 (resume + missed alert summary) |
-
----
-
-### 4.52 Alert Analytics & Tuning Dashboard
-
-**URL:** `/analytics/alerts`
-**Roles:** org_admin, site_manager
-**Pattern:** Dashboard/stats with tables and charts
-**Workflows:** WF-016
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | "Analytics" → "Alert Tuning" menu item | org_admin or site_manager |
-| Alert Detail | "View analytics for this rule" link | Future enhancement |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Summary Cards (4) | Total alerts (period), Dismissal rate (%), Avg response time, Auto-resolved % | KPI card row: `grid-cols-2 gap-3 sm:grid-cols-4` |
-| Noisiest Rules | Top 10 rules by alert count this week | Data table |
-| Alert Trends | 30/90 day alert volume line chart | Recharts area chart with period toggle |
-| Response Time by Site | Avg time from alert→acknowledge per site | Horizontal bar chart |
-| Resolution Breakdown | Auto-resolved vs Manual vs Work Order vs Dismissed | Donut chart |
-| Suggested Tuning | Rules firing >50x/week with recommendation | Card list with "Tune" action |
-
-#### Table Columns (Noisiest Rules)
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Rule | rule_name | Text (link to rule detail) | ❌ | Visible |
-| Site | site_name | Text | ❌ | Hidden |
-| Alerts/Week | alert_count | Number (bold) | ✅ | Visible |
-| Dismissal Rate | dismissed / total (%) | Percentage with progress bar | ✅ | Hidden |
-| Avg Response | avg_response_minutes | Duration (e.g., "12 min") | ✅ | Hidden |
-| Action | — | "Tune" outline button | — | Visible |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Tune rule | "Tune" button on noisy rule row | Settings: Rule Detail `/sites/{id}/rules/{id}` | Always | WF-003 |
-| Change period | 30d / 90d toggle buttons | Same page (re-render) | Always | — |
-| Filter by site | Site dropdown | Same page (filtered) | Multiple sites | — |
-
-#### Outbound Navigation
-| Destination | Trigger | Data Passed |
-|---|---|---|
-| Settings: Rule Detail | "Tune" button | rule ID, site ID |
-
-#### Role Differences
-| Element | org_admin | site_manager |
-|---|---|---|
-| Data scope | All org sites | Assigned sites only |
-| "Tune" action | All rules | Rules on assigned sites |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | Skeleton cards + skeleton table + skeleton charts | None |
-| **Empty** | No alerts in selected period | "No alerts in this period — that's a good thing!" with suggestion to expand date range | Change period |
-| **Populated** | Alerts exist | Full dashboard with all sections | All actions |
-
----
-
-### 4.53 Settings: Maintenance Windows
-
-**URL:** `/settings/maintenance-windows`
-**Roles:** org_admin, site_manager (`manage maintenance windows`)
-**Pattern:** Filterable data table + create/edit dialog
-**Workflows:** WF-018
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Settings sidebar | "Maintenance Windows" menu item | `manage maintenance windows` permission |
-
-#### Table Columns
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Title | title | Text (bold) | ❌ | Visible |
-| Site | site.name | Text | ❌ | Visible |
-| Zone | zone | Text or "Entire site" (italic muted) | ❌ | Hidden |
-| Schedule | recurrence_rule + start_time | Human-readable: "Tuesdays 2:00 PM – 4:00 PM" | ❌ | Visible |
-| Duration | duration_minutes | "2 hours" or "45 min" | ❌ | Hidden |
-| Suppress Alerts | suppress_alerts | Toggle switch (inline edit) | ❌ | Hidden |
-| Actions | — | Edit / Delete buttons | — | Visible |
-
-#### Form Fields (Create/Edit Dialog)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| site_id | Site | select | ✅ | must exist, user has access | Current site (if single) | Options: accessible sites |
-| zone | Zone | select | ❌ | nullable | null (entire site) | Options: zones from selected site + "Entire site" |
-| title | Title | text input | ✅ | max:255 | — | e.g., "Walk-in cooler cleaning" |
-| recurrence_rule | Recurrence | select + config | ✅ | valid rule | weekly | Options: Once, Daily, Weekly (day picker), Monthly (date picker) |
-| start_time | Start Time | time picker | ✅ | format:HH:mm | — | — |
-| duration_minutes | Duration | number input | ✅ | min:15, max:480 | 60 | Suffix: "minutes" |
-| suppress_alerts | Suppress Alerts | toggle | ✅ | boolean | true | — |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Add window | "Add Window" primary button | Create dialog | Permission check | WF-018 |
-| Edit | Pencil icon on row | Edit dialog (pre-filled) | Permission check | WF-018 |
-| Delete | Trash icon on row | ConfirmationDialog → same page | Permission check | WF-018 |
-| Toggle suppress | Inline switch | Same page (updated) | Permission check | WF-018 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Create | POST `/settings/maintenance-windows` | maintenance_windows: create | — | Activity log |
-| Update | PUT `/settings/maintenance-windows/{id}` | maintenance_windows: update | — | Activity log |
-| Delete | DELETE `/settings/maintenance-windows/{id}` | maintenance_windows: soft-delete | — | Activity log |
-
-#### Role Differences
-| Element | org_admin | site_manager |
-|---|---|---|
-| Site dropdown | All org sites | Assigned sites only |
-| CRUD actions | All windows | Windows on assigned sites |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | Skeleton table | None |
-| **Empty** | No windows configured | EmptyState: Clock icon + "No maintenance windows" + "Add Window" CTA | Add window |
-| **Populated** | Windows exist | Data table with pagination | All actions |
-| **Active Window Indicator** | A window is currently active | Row highlighted amber + "Active now" badge | — |
-
----
-
-### 4.54 Settings: Report Schedules
-
-**URL:** `/settings/report-schedules`
-**Roles:** org_admin (`manage report schedules`)
-**Pattern:** Data table + create/edit dialog
-**Workflows:** WF-017
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Settings sidebar | "Report Schedules" menu item | `manage report schedules` permission |
-
-#### Table Columns
-| Column | Field | Format | Sortable | Mobile |
-|---|---|---|---|---|
-| Report Type | type | Badge (temperature_compliance=blue, energy_summary=green, alert_summary=amber, executive_overview=purple) | ❌ | Visible |
-| Scope | site.name or "Organization-wide" | Text | ❌ | Visible |
-| Frequency | frequency + day_of_week + time | "Weekly, Monday 08:00 AM" | ❌ | Visible |
-| Recipients | recipients_json | Comma-separated emails (truncated) | ❌ | Hidden |
-| Active | active | Toggle switch (inline) | ❌ | Visible |
-| Actions | — | Edit / Delete | — | Visible |
-
-#### Form Fields (Create/Edit Dialog)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| type | Report Type | select | ✅ | in: valid types | temperature_compliance | Options: Temperature Compliance, Energy Summary, Alert Summary, Executive Overview |
-| site_id | Site | select | ❌ | nullable, exists if set | null (org-wide) | Options: accessible sites + "Organization-wide" |
-| frequency | Frequency | select | ✅ | in: daily,weekly,monthly | weekly | — |
-| day_of_week | Day | select | Required if weekly | 0-6 | 1 (Monday) | Only shown when frequency=weekly |
-| time | Time | time picker | ✅ | format:HH:mm | 08:00 | — |
-| recipients_json | Recipients | email tag input | ✅ | array of emails, min:1, max:10 | org_admin email | Tag input: type email + Enter to add |
-| active | Active | toggle | ❌ | boolean | true | — |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Add schedule | "Add Schedule" primary button | Create dialog | Permission check | WF-017 |
-| Edit | Pencil icon | Edit dialog (pre-filled) | Permission check | WF-017 |
-| Delete | Trash icon | ConfirmationDialog | Permission check | WF-017 |
-| Toggle active | Inline switch | Same page (updated) | Permission check | WF-017 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Create | POST `/settings/report-schedules` | report_schedules: create | — | — |
-| Update | PUT `/settings/report-schedules/{id}` | report_schedules: update | — | — |
-| Delete | DELETE `/settings/report-schedules/{id}` | report_schedules: delete | — | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | Skeleton table | None |
-| **Empty** | No schedules | EmptyState: Calendar icon + "No report schedules" + "Automated reports ensure compliance" + CTA | Add schedule |
-| **Populated** | Schedules exist | Data table | All actions |
-
----
-
-### 4.55 Settings: Site Templates
-
-**URL:** `/settings/site-templates`
-**Roles:** org_admin (`manage site templates`)
-**Pattern:** Card grid + create dialog
-**Workflows:** WF-022
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Settings sidebar | "Site Templates" menu item | `manage site templates` permission |
-| Site Onboarding (step 1) | "Manage Templates" link | org_admin |
-
-#### Data Displayed (Card Grid)
-| Card Element | Content | Format |
-|---|---|---|
-| Template Name | name | Card title (bold) |
-| Description | description | Card subtitle (muted) |
-| Modules | activated module names | Badge list (outline) |
-| Zones | zone count | "X zones configured" |
-| Recipes | recipe count | "X recipes assigned" |
-| Created | created_at | Relative date |
-| Actions | Edit / Delete / "Apply to Site" | Button row at card bottom |
-
-#### Form Fields (Create Template Dialog)
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| source_site_id | Source Site | select | ✅ | must be active org site | — | "Capture config from this site" |
-| name | Template Name | text input | ✅ | max:255, unique per org | Source site name + " Template" | — |
-| description | Description | textarea | ❌ | max:1000 | — | — |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Create template | "Create Template" primary button | Create dialog | Permission | WF-022 |
-| Edit | Pencil icon on card | Edit dialog | Permission | WF-022 |
-| Delete | Trash icon on card | ConfirmationDialog | Permission | WF-022 |
-| Apply to site | "Apply" button on card | Site selector dialog → applies template | Permission | WF-022 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Create | POST `/settings/site-templates` | site_templates: create (captures config from source site) | — | Activity log |
-| Apply | POST `/settings/site-templates/{id}/apply` | target site: modules, zones, recipes, escalation chain updated | — | Activity log |
-| Delete | DELETE `/settings/site-templates/{id}` | site_templates: delete | — | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Loading** | Initial load | Skeleton cards | None |
-| **Empty** | No templates | EmptyState: Copy icon + "No site templates" + "Templates speed up onboarding" + CTA | Create template |
-| **Populated** | Templates exist | Card grid (responsive 1→2→3 cols) | All actions |
-
----
-
-### 4.56 Settings: Data Export
-
-**URL:** `/settings/export-data`
-**Roles:** org_admin (`export organization data`)
-**Pattern:** Form + status card
-**Workflows:** WF-015
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Settings sidebar | "Data Export" menu item | `export organization data` permission |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Export Info Card | "Download all your organization's data as a ZIP file. Includes sensor readings, alerts, work orders, compliance events, users, and invoices." | Info card with FileDown icon |
-| Date Range | From / To date pickers | Optional; defaults: org creation date → today |
-| Format | ZIP (only option) | Select (disabled, single option) |
-| Previous Exports | Table of past exports with status, date, size, download link | Mini table (if any exports exist) |
-
-#### Table Columns (Previous Exports)
-| Column | Field | Format |
-|---|---|---|
-| Date | created_at | Date (DD/MM/YYYY HH:mm) |
-| Status | status | Badge: queued=secondary, processing=warning, completed=success, failed=destructive, expired=outline |
-| Size | file_size | "45.2 MB" or "—" |
-| Action | — | "Download" link (completed only) or "Retry" (failed only) |
-
-#### Form Fields
-| Field | Label | Type | Required | Validation | Default | Notes |
-|---|---|---|---|---|---|---|
-| date_from | From | date picker | ❌ | ≤ date_to | Org creation date | — |
-| date_to | To | date picker | ❌ | ≥ date_from | Today | — |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Request Export | "Request Export" primary button | Confirmation dialog → same page (status card) | No active export | WF-015 |
-| Download | "Download" link on completed export | File download (no navigation) | Export status=completed, < 48h | WF-015 |
-| Retry | "Retry" link on failed export | Same page (re-queued) | Export status=failed, < 3 retries | WF-015 |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Request Export | POST `/settings/export-data` | data_exports: create (status=queued) | SM-012: →queued | Job dispatched |
-| Download | GET `/settings/export-data/{id}/download` | — (read only) | — | — |
-| Retry | POST `/settings/export-data/{id}/retry` | data_exports: status→queued, attempts++ | SM-012: failed→queued | Job re-dispatched |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Ready** | No active export | Info card + date range + "Request Export" button | Request export |
-| **Processing** | Export queued or processing | Status card: progress indicator + "Processing... you'll receive an email when ready" | Wait |
-| **Completed** | Export done | Status card: green check + file size + "Download" link + expiry countdown | Download |
-| **Failed** | Export failed | Status card: red X + error message + "Retry" button | Retry |
-| **Rate Limited** | Active export exists | "Request Export" button disabled + message: "An export is already in progress" | Wait |
-
----
-
-### 4.57 Privacy Consent (Interstitial)
-
-**URL:** `/privacy/accept`
-**Roles:** All (unauthenticated layout — no sidebar/header)
-**Pattern:** Interstitial page (full screen, centered card)
-**Workflows:** WF-021
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Any authenticated route | `EnsurePrivacyConsent` middleware redirect | `privacy_accepted_at` null or policy version mismatch |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Header | Astrea logo + "Privacy Policy" title | Centered, above card |
-| Policy Text | Privacy policy content (scrollable) | Card with max-height and overflow-y-auto |
-| Version | Policy version number | Muted text below policy |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Accept | "I Accept" primary button | Dashboard (or intended route) | Always | WF-021 |
-| Log Out | "Log Out" ghost link | Login page | Always | — |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | State Change | Notifications |
-|---|---|---|---|---|
-| Accept | POST `/privacy/accept` | user: privacy_accepted_at=now, privacy_policy_version=current | — | — |
-
-#### Screen States
-| State | Condition | What User Sees | User Action Available |
-|---|---|---|---|
-| **Default** | Middleware redirected here | Policy text + Accept button + Log Out link | Accept or Log Out |
-| **Submitting** | Accept clicked | Button disabled + spinner | Wait |
-
----
-
-## P10-5. Workflow-to-UI Matrix (Phase 10)
-
-| Workflow | Step 1 | Step 2 | Step 3 | Step 4 | Terminal |
-|---|---|---|---|---|---|
-| WF-013 Corrective Action | Alert notification (push) | Alert Detail (review excursion) | Log corrective action (inline form) | Verify action (different user) | Alert Detail (verified ✓) |
-| WF-014 Device Replacement | Device Detail (offline/dead) | "Replace" → Replacement Dialog | Enter new DevEUI + AppKey | Provisioning... | Device Detail (new device pending) |
-| WF-015 Data Export | Settings: Data Export | Select date range → Request | Processing... (email notification) | Download ZIP | Data Export (completed) |
-| WF-016 Alert Analytics | Sidebar → Alert Tuning | Review noisiest rules | "Tune" → Rule Detail | Adjust threshold | Rules updated |
-| WF-017 Report Schedule | Settings: Report Schedules | Add Schedule dialog | Configure type/frequency/recipients | — | Schedule active |
-| WF-018 Maintenance Window | Settings: Maint. Windows | Add Window dialog | Configure recurrence/zone | — | Window active (alerts suppressed) |
-| WF-020 Outage Declaration | Command Center | "Declare Outage" dialog | Fill reason + services | — | Banner active (alerts suppressed) |
-| WF-021 Privacy Consent | Login → middleware redirect | Privacy Consent page | "I Accept" | — | Dashboard |
-| WF-022 Site Template | Settings: Site Templates | Create from source site | — | Apply to new site (onboarding) | Site pre-configured |
-| WF-026 Action Cards | Dashboard load | "Needs Attention" cards | Click card → filtered list | — | Issue addressed |
-
-### Screen Coverage Check (Phase 10)
-
-| Screen | Defined | Content Listed | Actions Listed | States Listed | In ≥1 Workflow |
-|---|---|---|---|---|---|
-| Alert Detail (ext) | ✅ 4.48 | ✅ (form + display) | ✅ (4) | ✅ (5) | ✅ (WF-013) |
-| Dashboard (ext) | ✅ 4.49 | ✅ (3 cards) | ✅ (3) | ✅ (2) | ✅ (WF-026) |
-| Device Detail (ext) | ✅ 4.50 | ✅ (4 fields) | ✅ (1) | ✅ (5) | ✅ (WF-014) |
-| Command Center (ext) | ✅ 4.51 | ✅ (banner + 3 cards) | ✅ (2) | ✅ (2) | ✅ (WF-020, WF-024) |
-| Alert Analytics | ✅ 4.52 | ✅ (6 sections) | ✅ (3) | ✅ (3) | ✅ (WF-016) |
-| Maintenance Windows | ✅ 4.53 | ✅ (7 columns + 7 fields) | ✅ (4) | ✅ (4) | ✅ (WF-018) |
-| Report Schedules | ✅ 4.54 | ✅ (6 columns + 7 fields) | ✅ (4) | ✅ (3) | ✅ (WF-017) |
-| Site Templates | ✅ 4.55 | ✅ (6 card elements + 3 fields) | ✅ (4) | ✅ (3) | ✅ (WF-022) |
-| Data Export | ✅ 4.56 | ✅ (4 sections + 2 fields) | ✅ (3) | ✅ (5) | ✅ (WF-015) |
-| Privacy Consent | ✅ 4.57 | ✅ (3 sections) | ✅ (2) | ✅ (2) | ✅ (WF-021) |
-
-### Backend-Only Workflows (No Dedicated Screen)
-
-| Workflow | Reason | Triggered From |
-|---|---|---|
-| WF-019 Mass Offline Detection | System job — no UI trigger | `CheckDeviceHealth` (enhanced) |
-| WF-023 Health Check | External monitoring — no user-facing screen | External service polls `/health` |
-| WF-025 Zero Readings Detection | System job — super_admin notified via push/email | `DetectPlatformOutage` cron job |
-
----
-
-## P10-6. Interaction Conventions (Phase 10 Additions)
-
-| Pattern | Decision | Rationale |
-|---|---|---|
-| **Inline section forms** | Corrective action uses inline form within Alert Detail (not modal, not separate page) | Context-critical: user needs to see excursion details while logging action |
-| **Replacement dialog** | Device replacement uses modal dialog (not separate page) | 3 fields only; user needs to see old device info in background |
-| **Outage banner** | Full-width destructive banner at top of Command Center (Reverb broadcast to all pages) | Must be impossible to miss; affects all operations |
-| **Action cards** | Dashboard cards appear above site grid only when count > 0 | Non-intrusive when all clear; immediately visible when action needed |
-| **Status card (async jobs)** | Data Export page shows status card with progress/result instead of navigating away | User stays on page, can see result when job completes |
-| **Inline toggles** | Maintenance window suppress_alerts and report schedule active use inline toggle switches | Quick enable/disable without opening edit dialog |
-| **Interstitial pages** | Privacy consent uses full-screen centered card (no sidebar) | Legal requirement; user cannot dismiss or navigate around it |
-| **Email tag input** | Report schedule recipients uses tag-style email input (type + Enter) | Multiple recipients, clear visual of who receives reports |
-
----
-
-## Phase 11: Operational Excellence — Screen Designs
-
-> Added: 2026-03-23 (Phase 5b). 3 new pages + 4 page modifications for Phase 11 P0+P1 features.
-
----
-
-### NEW: Site Comparison & Ranking
-
-**URL:** `/sites/compare`
-**Roles:** org_admin (all org sites), site_manager (assigned sites)
-**Pattern:** Dashboard with ranking table + comparison charts
-**Workflows:** WF-NEW (Site Comparison)
-**Rules:** BR-115, BR-116, BR-117, BR-118
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | "Site Comparison" menu item | org_admin, site_manager |
-| Dashboard | "Compare Sites" link in site grid header | 2+ sites |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Metric Selector | Dropdown: compliance %, alert count, avg response time, device uptime %, energy cost | Select component, default: compliance % |
-| Period Selector | 30 / 90 / 365 days | Button group |
-| Ranking Table | Sites ranked by selected metric. Columns: Rank, Site Name, Metric Value, Trend (vs previous period), Status Badge | DataTable, sortable by any column |
-| Comparison Chart | Line chart overlaying selected sites (2-5) over time for chosen metric | Recharts LineChart, one series per site, legend with checkboxes |
-| Summary Cards | Best performing site, worst performing site, org average | 3 stat cards above table |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Change metric | Metric selector dropdown | Same page, re-ranked | Always | — |
-| Change period | Period button group | Same page, recalculated | Always | — |
-| Select sites for chart | Checkbox in table rows (max 5) | Chart updates with selected sites | Always | — |
-| View site detail | Site name click in table | `/sites/{id}` | Always | — |
-| Export as PDF | "Export PDF" button (top-right) | Download PDF | org_admin only | BR-118 |
-
-#### Role Differences
-| Element | org_admin | site_manager |
-|---|---|---|
-| Sites shown | All org sites | Assigned sites only |
-| Export PDF | ✅ Visible | ❌ Hidden |
-| Energy cost metric | ✅ Visible | ✅ Visible |
-
-#### Screen States
-| State | Condition | What User Sees |
-|---|---|---|
-| Loading | Initial fetch | Skeleton cards + skeleton table |
-| Empty | <2 sites | "Site comparison requires at least 2 sites." + CTA to sites settings |
-| Populated | 2+ sites | Full ranking table + chart |
-| Chart active | 2-5 sites checked | Chart section expands with line chart |
-
----
-
-### NEW: SLA & KPI Dashboard
-
-**URL:** `/analytics/performance`
-**Roles:** org_admin only
-**Pattern:** Analytics dashboard with KPI cards, trend charts, export
-**Workflows:** WF-NEW (SLA Dashboard)
-**Rules:** BR-119, BR-120, BR-121
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Sidebar | "Performance" under Analytics section | org_admin |
-| Dashboard | "View Performance" link on KPI cards | org_admin |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| KPI Cards (5) | Avg response time (min), alerts resolved within SLA (%), device uptime (%), sensor coverage (%), compliance score | Stat cards with value + trend indicator (↑ green / ↓ red) |
-| Trend Charts | Each KPI over selected period (30/90/365d) | Recharts AreaChart, one chart per KPI in 2-column grid |
-| Site Breakdown | Table: site name, each KPI value, overall score | DataTable, sortable, color-coded cells (green/amber/red) |
-| Savings Estimate | "Estimated cost savings" card: alerts prevented × avg incident cost (configurable) | Card with calculated value + methodology link |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Change period | Period selector (30/90/365d) | Same page, recalculated | Always | — |
-| Export ROI Report | "Export ROI Report" button | Download PDF | Always | BR-121 |
-| View site detail | Site name in breakdown table | `/sites/{id}` | Always | — |
-| Configure avg incident cost | "Configure" link on savings card | Modal with cost input | org_admin | — |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | Notifications |
-|---|---|---|---|
-| Export ROI Report | GET `/analytics/performance/export` | — (read only) | — |
-| Configure incident cost | PUT `/settings/organization` | org.settings.avg_incident_cost | — |
-
-#### Screen States
-| State | Condition | What User Sees |
-|---|---|---|
-| Loading | Initial fetch | Skeleton cards + skeleton charts |
-| Populated | Data available | Full dashboard |
-| No data (new org) | <7 days of data | "Performance data requires at least 7 days of monitoring." |
-
----
-
-### NEW: Site Event Timeline
-
-**URL:** `/sites/{id}/timeline`
-**Roles:** org_admin, site_manager (if site assigned)
-**Pattern:** Chronological event feed with filters
-**Workflows:** WF-NEW (Site Timeline)
-**Rules:** BR-127, BR-128, BR-129, BR-130
-
-#### Inbound Navigation
-| From | Element | Condition |
-|---|---|---|
-| Site Detail | "View Timeline" button/link | org_admin, site_manager |
-| Alert Detail | "View in Timeline" link | When viewing alert for this site |
-
-#### Data Displayed
-| Section | Content | Format |
-|---|---|---|
-| Date Range Picker | Start date, end date (default: last 7 days) | Date range picker component |
-| Filter Bar | Event type checkboxes: Readings, Alerts, Work Orders, Activity Log, Corrective Actions | Toggle chips/checkboxes |
-| Zone Filter | Dropdown: All zones, or specific zone | Select component |
-| Timeline Feed | Chronological list of events, grouped by hour. Each event: icon (type), timestamp, description, actor (if human), link to detail | Vertical timeline component with colored type indicators |
-| Summary Bar | Total events in range, breakdown by type (pill counts) | Horizontal bar above timeline |
-
-#### Event Types in Timeline
-| Type | Icon | Color | Content | Link |
-|---|---|---|---|---|
-| Sensor Reading | Thermometer | Blue | "Zone X: avg 4.2°C (hourly)" | — (aggregated, no detail link) |
-| Alert Triggered | AlertTriangle | Red/Amber | "CRITICAL: Temp alta Walk-in Cooler" | `/alerts/{id}` |
-| Alert Resolved | CheckCircle | Green | "Alert resolved (auto — 2 normal readings)" | `/alerts/{id}` |
-| Work Order | Wrench | Purple | "WO created: Battery replace — Sensor #7" | `/work-orders/{id}` |
-| Activity Log | FileText | Gray | "Alert rule updated by admin@example.com" | — |
-| Corrective Action | Shield | Teal | "CA logged: Replaced thermostat seal" | `/alerts/{id}` |
-
-#### Actions
-| Action | Element | Leads To | Condition | Workflow |
-|---|---|---|---|---|
-| Change date range | Date picker | Same page, reloaded | Always | — |
-| Filter by type | Checkboxes | Same page, filtered | Always | — |
-| Filter by zone | Zone dropdown | Same page, filtered | Always | — |
-| Click event | Event card | Detail page (alert, WO, etc.) | If linkable | — |
-
-#### Screen States
-| State | Condition | What User Sees |
-|---|---|---|
-| Loading | Fetching events | Skeleton timeline (6 placeholder items) |
-| Populated | Events found | Full timeline with events grouped by hour |
-| Empty (no events) | No events in range | "No events in this date range." + suggest expanding range |
-| Empty (filtered) | Filters exclude all events | "No events match your filters." + "Clear filters" |
-
----
-
-### MODIFY: Alerts Index — Bulk Operations
-
-**Existing page:** `pages/alerts/index.tsx`
-**New rules:** BR-106, BR-108, BR-109, BR-110
-
-#### New Elements
-| Element | Description | Condition |
-|---|---|---|
-| Row checkboxes | Checkbox on each alert row + "Select all" in header | Always visible |
-| Floating action bar | Bottom bar appears when 1+ rows selected. Shows: "{N} selected" + action buttons | ≥1 row checked |
-| "Acknowledge Selected" button | In floating bar. Bulk acknowledges selected alerts. | site_viewer+ (has `acknowledge alerts` permission) |
-| "Resolve Selected" button | In floating bar. Bulk resolves selected alerts. | site_manager+ (cannot be site_viewer) |
-
-#### Action Side Effects (Bulk)
-| Action | API Endpoint | Data Mutations | Notifications |
-|---|---|---|---|
-| Bulk acknowledge | POST `/alerts/bulk-acknowledge` body: `{ids: [...]}` | Alert status → acknowledged (per-item, skip failures) | Toast: "X of Y alerts acknowledged" |
-| Bulk resolve | POST `/alerts/bulk-resolve` body: `{ids: [...]}` | Alert status → resolved (per-item, skip failures) | Toast: "X of Y alerts resolved" |
-
----
-
-### MODIFY: Work Orders Index — Bulk Assign
-
-**Existing page:** `pages/work-orders/index.tsx`
-**New rules:** BR-107, BR-108, BR-109, BR-110
-
-#### New Elements
-| Element | Description | Condition |
-|---|---|---|
-| Row checkboxes | Checkbox on each WO row | site_manager+ |
-| Floating action bar | "{N} selected" + "Assign to..." button | ≥1 row checked |
-| "Assign to..." button | Opens dropdown of technicians in org → select one → bulk assign | site_manager+ |
-
-#### Action Side Effects (Bulk)
-| Action | API Endpoint | Data Mutations | Notifications |
-|---|---|---|---|
-| Bulk assign | POST `/work-orders/bulk-assign` body: `{ids: [...], assigned_to: userId}` | WO assigned_to updated, status → assigned (per-item) | NT-023: Push to assigned technician |
-
----
-
-### MODIFY: Alert Detail — Snooze Button
-
-**Existing page:** `pages/alerts/show.tsx`
-**New rules:** BR-102, BR-105
-
-#### New Elements
-| Element | Description | Condition |
-|---|---|---|
-| "Snooze" button | Next to Acknowledge/Resolve buttons. Opens dropdown: 30min, 1h, 2h, 4h, 8h | Alert status = active or acknowledged |
-| Snooze indicator | Badge below alert header: "Snoozed until 14:30" with "Cancel snooze" link | Alert is snoozed by current user |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | Notifications |
-|---|---|---|---|
-| Snooze alert | POST `/alerts/{id}/snooze` body: `{duration_minutes: 120}` | Create snooze record (alert_id, user_id, expires_at) | NT-024 when snooze expires (if alert still active) |
-| Cancel snooze | DELETE `/alerts/{id}/snooze` | Delete snooze record | — |
-
----
-
-### MODIFY: Settings — User Management (Deactivation)
-
-**Existing page:** `pages/settings/users/index.tsx`
-**New rules:** BR-122, BR-123, BR-124, BR-125, BR-126
-
-#### New Elements
-| Element | Description | Condition |
-|---|---|---|
-| "Deactivate" action | In user row dropdown menu. Opens ConfirmationDialog with warning about WO reassignment. | org_admin, cannot deactivate self |
-| "Reactivate" action | In user row dropdown for deactivated users. | org_admin |
-| Status badge | "Active" (green) / "Deactivated" (gray) badge on user row | Always |
-| Filter: active/deactivated | Tab or toggle to show/hide deactivated users | org_admin |
-
-#### Action Side Effects
-| Action | API Endpoint | Data Mutations | Notifications |
-|---|---|---|---|
-| Deactivate | POST `/settings/users/{id}/deactivate` | User: set deactivated_at. WOs: reassign to site_manager. Escalation chains: remove user. | NT-022: org_admin notified of gaps |
-| Reactivate | POST `/settings/users/{id}/reactivate` | User: clear deactivated_at. | Activity log entry |
-
----
-
-### MODIFY: Settings — Profile (Quiet Hours + Notification Prefs)
-
-**Existing page:** `pages/settings/profile.tsx`
-**New rules:** BR-103, BR-111, BR-112, BR-114
-
-#### New Sections (appended to profile page)
-
-**Section: Quiet Hours**
-| Field | Label | Type | Default | Notes |
-|---|---|---|---|---|
-| quiet_hours_start | Start time | Time picker (H:i) | — (disabled) | Enable via toggle |
-| quiet_hours_end | End time | Time picker (H:i) | — (disabled) | Must differ from start |
-| quiet_hours_tz | Timezone | Select | User's org default timezone | Auto-detected |
-
-**Section: Notification Preferences**
-| Field | Label | Type | Default | Notes |
-|---|---|---|---|---|
-| notify_whatsapp | WhatsApp alerts | Toggle switch | On | |
-| notify_push | Push notifications | Toggle switch | On | |
-| notify_email | Email notifications | Toggle switch | On | |
-| notify_min_severity | Minimum severity | Select: All / Medium+ / High+ / Critical only | All | |
-
-Note: "Escalation chain notifications override these preferences" help text below toggles.
-
----
-
-### Phase 11 Screen Inventory Update
-
-| Screen | URL | Type | Workflows | Roles |
-|---|---|---|---|---|
-| Site Comparison | `/sites/compare` | NEW | WF-NEW | org_admin, site_manager |
-| SLA Dashboard | `/analytics/performance` | NEW | WF-NEW | org_admin |
-| Site Timeline | `/sites/{id}/timeline` | NEW | WF-NEW | org_admin, site_manager |
-| Alerts Index | `/alerts` | MODIFIED | WF-003 ext | All (bulk: site_viewer+) |
-| Work Orders Index | `/work-orders` | MODIFIED | WF-004 ext | site_manager+ |
-| Alert Detail | `/alerts/{id}` | MODIFIED | WF-003 ext | All |
-| Users Index | `/settings/users` | MODIFIED | WF-009 ext | org_admin |
-| Profile Settings | `/settings/profile` | MODIFIED | WF-009 ext | All |
-
-### Phase 11 Navigation Updates
-
-Add to `resources/js/config/navigation.ts`:
-
-```typescript
-// Under Analytics group (existing)
-{ title: 'Performance', href: '/analytics/performance', icon: TrendingUp, requiredPermission: 'view performance analytics' },
-
-// Under Sites group or new Compare section
-{ title: 'Compare Sites', href: '/sites/compare', icon: BarChart3, requiredPermission: 'view site comparison' },
-```
-
-Site Timeline accessed via button on Site Detail page (not sidebar nav).
+> **Astrea IoT Platform** — Complete screen-level UX specification for all 72 frontend pages.
+> Regenerated: 2026-03-24 | Updated after massive build session (62 gaps resolved, 7 new pages)
+> Cross-references: SYSTEM_BEHAVIOR_SPEC.md, ASTREA_WORKFLOWS.md, ASTREA_FEATURE_SPECS.md
+
+---
+
+## Table of Contents
+
+1. [Screen Inventory](#1-screen-inventory)
+2. [Screen Detail — Core (21 pages)](#2-screen-detail--core-21-pages)
+3. [Screen Detail — Settings (27 pages)](#3-screen-detail--settings-27-pages)
+4. [Screen Detail — Auth (8 pages)](#4-screen-detail--auth-8-pages)
+5. [Screen Detail — Command Center (8 pages)](#5-screen-detail--command-center-8-pages)
+6. [Screen Detail — Modules (3 pages)](#6-screen-detail--modules-3-pages)
+7. [Interaction Conventions](#7-interaction-conventions)
+8. [Cross-Cutting Issues](#8-cross-cutting-issues)
+
+---
+
+## 1. Screen Inventory
+
+Master table of all 72 pages sorted by area.
+
+| # | Page | URL | Pattern | Roles | Primary Workflow |
+|---|------|-----|---------|-------|-----------------|
+| **Core** | | | | | |
+| 1 | Dashboard | `/dashboard` | Dashboard | All authenticated | WF-004 Device Health |
+| 2 | Alerts Index | `/alerts` | Index table + bulk | All authenticated | WF-003 Alert Lifecycle |
+| 3 | Alert Show | `/alerts/{alert}` | Detail 2-column | All authenticated | WF-003 Alert Lifecycle |
+| 4 | Sites Index | `/sites` | Card grid | All authenticated | WF-001 Onboarding |
+| 5 | Site Show | `/sites/{site}` | Detail/Dashboard 2-col | All authenticated | WF-004 Device Health |
+| 6 | Zone Detail | `/sites/{site}/zones/{zone}` | Detail + chart | All authenticated | WF-002 Sensor Pipeline |
+| 7 | Site Comparison | `/sites/compare` | Analytics/ranking | All authenticated | WF-004 Device Health |
+| 8 | Site Timeline | `/sites/{site}/timeline` | Chronological feed | All authenticated | WF-003 Alert Lifecycle |
+| 9 | Site Audit | `/sites/{site}/audit` | Compliance report | All authenticated | WF-008 Compliance |
+| 9a | Temperature Verification | `/sites/{site}/verifications` | Form + checklist | All authenticated | WF-008 Compliance |
+| 10 | Devices Index | `/devices` | Index table + filters | All authenticated | WF-004 Device Health |
+| 11 | Device Show | `/devices/{device}` | Detail + chart 2-col | All authenticated | WF-004 Device Health |
+| 12 | Work Orders Index | `/work-orders` | Index table + bulk | All authenticated | WF-005 WO Lifecycle |
+| 13 | Work Order Show | `/work-orders/{workOrder}` | Detail + forms 2-col | All authenticated | WF-005 WO Lifecycle |
+| 14 | Activity Log | `/activity-log` | Chronological feed | All authenticated | WF-009 User Mgmt |
+| 15 | Notifications | `/notifications` | Notification feed | All authenticated | — |
+| 16 | Alert Tuning | `/analytics/alerts` | Analytics dashboard | All authenticated | WF-003 Alert Lifecycle |
+| 17 | Performance | `/analytics/performance` | Analytics dashboard | All authenticated | WF-004 Device Health |
+| 18 | Reports Index | `/reports` | Report launcher | All authenticated | WF-006 Summaries |
+| 19 | Temperature Report | `/sites/{site}/reports/temperature` | Report + charts | All authenticated | WF-006 Summaries |
+| 20 | Energy Report | `/sites/{site}/reports/energy` | Report + charts | All authenticated | WF-006 Summaries |
+| 21 | Morning Summary | `/sites/{site}/reports/summary` | Read-only report | All authenticated | WF-006 Summaries |
+| 21a | Device Inventory Report | `/sites/{site}/reports/inventory` | Report + table | All authenticated | WF-006 Summaries |
+| **Settings** | | | | | |
+| 22 | Profile | `/settings/profile` | Form (3 sections) | All authenticated | WF-009 User Mgmt |
+| 23 | Password | `/settings/password` | Form | All authenticated | WF-009 User Mgmt |
+| 24 | Appearance | `/settings/appearance` | Tabs | All authenticated | WF-012 White-Label |
+| 25 | Two-Factor | `/settings/two-factor` | Setup modal | All authenticated | WF-009 User Mgmt |
+| 26 | Organization | `/settings/organization` | Form | Can "manage org settings" | WF-012 White-Label |
+| 27 | Sites Settings | `/settings/sites` | CRUD table | Can "manage sites" | WF-001 Onboarding |
+| 27a | Batch Site Import | `/settings/sites/batch-import` | Form + CSV upload | Can "manage sites" | WF-001 Onboarding |
+| 28 | Onboarding Wizard | `/sites/{site}/onboard` | Stepper (5 steps) | Can "manage sites" | WF-001 Onboarding |
+| 29 | Gateways | `/settings/sites/{site}/gateways` | CRUD table | Can "manage devices" | WF-001 Onboarding |
+| 30 | Gateway Show | `/settings/sites/{site}/gateways/{gateway}` | Read-only detail | Can "manage devices" | WF-004 Device Health |
+| 31 | Devices (site-scoped) | `/settings/sites/{site}/devices` | Stats + table | Can "manage devices" (add) | WF-004 Device Health |
+| 32 | Device Show (site-scoped) | `/settings/sites/{site}/devices/{device}` | Read-only detail | All authenticated | WF-004 Device Health |
+| 33 | Users | `/settings/users` | CRUD table | Can "manage users" | WF-009 User Mgmt |
+| 34 | Alert Rules | `/settings/sites/{site}/alert-rules` | Card grid + toggle | Can "manage alert rules" | WF-003 Alert Lifecycle |
+| 35 | Alert Rule Show | `/settings/sites/{site}/alert-rules/{rule}` | Read-only detail | All authenticated | WF-003 Alert Lifecycle |
+| 35a | Alert Rule Create | `/sites/{site}/rules/create` | Form (RuleBuilder) | Can "manage alert rules" | WF-003 Alert Lifecycle |
+| 35b | Alert Rule Edit | `/sites/{site}/rules/{rule}/edit` | Form (RuleBuilder) | Can "manage alert rules" | WF-003 Alert Lifecycle |
+| 36 | Escalation Chains | `/settings/sites/{site}/escalation-chains` | CRUD table | Can "manage alert rules" | WF-003 Alert Lifecycle |
+| 37 | Compliance | `/settings/compliance` | Filtered event list | Can "manage org settings" | WF-008 Compliance |
+| 38 | Maintenance Windows | `/settings/sites/{site}/maintenance-windows` | Card list | Can "manage maintenance windows" | WF-004 Device Health |
+| 39 | Report Schedules | `/settings/report-schedules` | Card list | Can "manage report schedules" (create) | WF-006 Summaries |
+| 40 | Site Templates | `/settings/site-templates` | Card grid | All authenticated | WF-001 Onboarding |
+| 41 | Export Data | `/settings/export` | Form + history | All authenticated | WF-010 Integration Export |
+| 42 | Integrations | `/settings/integrations` | Card list | All authenticated | WF-010 Integration Export |
+| 43 | API Keys | `/settings/api-keys` | Form + table | All authenticated | WF-010 Integration Export |
+| 44 | Billing | `/settings/billing` | Subscription + invoices | Can "manage org settings" | WF-007 Billing |
+| 45 | Billing Profiles | `/settings/billing/profiles` | Form + list | Can "manage org settings" | WF-007 Billing |
+| 46 | Modules | `/settings/sites/{site}/modules` | Toggle cards | All authenticated | WF-011 Module & Recipe |
+| 47 | Recipes | `/settings/recipes` | Read-only card grid | All authenticated | WF-011 Module & Recipe |
+| 48 | Recipe Show | `/settings/recipes/{recipe}` | Detail + overrides | All authenticated | WF-011 Module & Recipe |
+| **Auth** | | | | | |
+| 49 | Login | `/login` | Auth form | Unauthenticated | WF-009 User Mgmt |
+| 50 | Register | `/register` | Auth form | Unauthenticated | WF-009 User Mgmt |
+| 51 | Forgot Password | `/forgot-password` | Auth form | Unauthenticated | WF-009 User Mgmt |
+| 52 | Reset Password | `/reset-password` | Auth form | Unauthenticated | WF-009 User Mgmt |
+| 53 | Verify Email | `/verify-email` | Gate | Authenticated unverified | WF-009 User Mgmt |
+| 54 | Confirm Password | `/confirm-password` | Gate | Authenticated | WF-009 User Mgmt |
+| 55 | Two-Factor Challenge | `/two-factor-challenge` | Dual-mode form | Authenticating | WF-009 User Mgmt |
+| 56 | Privacy Accept | `/privacy/accept` | Policy gate | Authenticated | WF-009 User Mgmt |
+| **Command Center** | | | | | |
+| 57 | CC Index | `/command-center` | Dashboard | Astrea roles only | WF-004 Device Health |
+| 58 | CC Alerts | `/command-center/alerts` | Table (read-only) | Astrea roles only | WF-003 Alert Lifecycle |
+| 59 | CC Devices | `/command-center/devices` | Stats + table | Astrea roles only | WF-004 Device Health |
+| 60 | CC Dispatch | `/command-center/dispatch` | Split panel + map | Astrea roles only | WF-005 WO Lifecycle |
+| 61 | CC Revenue | `/command-center/revenue` | Charts + table | Astrea roles only | WF-007 Billing |
+| 62 | CC Work Orders | `/command-center/work-orders` | Table | Astrea roles only | WF-005 WO Lifecycle |
+| 63 | CC Org Show | `/command-center/organizations/{org}` | Detail 2-column | Astrea roles only | WF-001 Onboarding |
+| 64 | Partner Portal | `/partner` | Org table + create | super_admin only | WF-001 Onboarding |
+| **Modules** | | | | | |
+| 65 | IAQ Dashboard | `/modules/iaq` | Module dashboard | All authenticated | WF-011 Module & Recipe |
+| 66 | Industrial Dashboard | `/modules/industrial` | Module dashboard | All authenticated | WF-011 Module & Recipe |
+| 67 | Welcome (DEAD) | `/welcome` | Orphaned boilerplate | — | — |
+| **New Pages** | | | | | |
+| 68 | Platform Status | `/status` | Public status page | All (public) | — |
+
+---
+
+## 2. Screen Detail — Core (21 pages)
+
+### 2.1 Dashboard
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/dashboard` |
+| **Pattern** | Dashboard |
+| **Props** | `kpis: DashboardKPIs`, `siteStats: SiteStat[]`, `actionCards: ActionCards` |
+
+**Content:**
+- Hero header displaying current organization name
+- 4 StatCards: Total Devices, Online, Active Alerts, Open Work Orders
+- CircularProgress gauge for fleet health percentage
+- "Needs Attention" card: unacknowledged alerts, overdue work orders, critical battery devices
+- Sites section: grid/map toggle rendering SiteCards
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Toggle Grid/Map | Button | None | Re-renders sites section |
+| ActionItem click | Card click | None | Filtered list (alerts/WOs/devices) |
+| SiteCard click | Card click | None | `/sites/{id}` |
+
+**Filters:** None.
+
+**Role Differences:** None — all roles see the same dashboard scoped to their accessible sites.
+
+**Screen States:**
+- `DashboardSkeleton` — exported, shows placeholder cards
+- `EmptyState` — when organization has no sites
+
+**Navigation:**
+- In: Sidebar "Dashboard" link, post-login redirect
+- Out: Site cards, action items, Needs Attention links
+
+---
+
+### 2.2 Alerts Index
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/alerts` |
+| **Pattern** | Index table with bulk actions |
+| **Props** | `alerts: PaginatedAlerts`, `filters` |
+
+**Content:**
+- Header with severity pill counts
+- Filter bar: severity select, status select, date range picker
+- Table columns: checkbox, severity badge, alert name, device + zone, reading (metric:value/threshold), status badge, relative time, action buttons
+- Pagination component
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Row click | Table row | None | `/alerts/{id}` |
+| Acknowledge | Button per-row | Can "acknowledge alerts" | PATCH inline |
+| Resolve | Button per-row | Can "acknowledge alerts" | PATCH inline |
+| Dismiss | Button per-row | Can "manage alert rules" | DELETE inline |
+| Bulk Acknowledge | BulkActionBar | Can "acknowledge alerts" + rows selected | PATCH batch |
+| Bulk Resolve | BulkActionBar | Can "acknowledge alerts" + rows selected | PATCH batch |
+
+**Filters:** severity, status, date range — all server-side via query params.
+
+**Role Differences:** Dismiss button only visible to users with "manage alert rules" permission.
+
+**Screen States:**
+- `AlertIndexSkeleton` — exported
+- Empty with filters applied
+- Empty with no filters (no alerts at all)
+
+**Navigation:**
+- In: Sidebar "Alerts", Dashboard action cards, Site/Zone alert links
+- Out: Row click to Alert Show
+
+---
+
+### 2.3 Alert Show
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/alerts/{alert}` |
+| **Pattern** | Detail view, 2-column layout |
+| **Props** | `alert` (with `notifications`), `userSnooze` |
+
+**Content — Main Column:**
+- Header: rule name, severity badge, status badge, snooze indicator (if snoozed)
+- Trigger Details card: device name, zone, metric, measured value
+- Notification Log card: channel icons (email/sms/push/whatsapp), delivery status per recipient
+- Corrective Actions card (critical/high only): warning banner if none logged, log form, verify button
+
+**Content — Sidebar:**
+- Timeline: triggered → acknowledged → resolved (vertical stepper)
+- Details card: alert metadata
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Back | Button | None | `/alerts` |
+| Acknowledge | Button | Can "acknowledge alerts" | PATCH |
+| Resolve | Button | Can "acknowledge alerts" | PATCH |
+| Snooze | Dropdown | None | POST (30m/1h/2h/4h/8h options) |
+| Cancel snooze | Button | Currently snoozed | DELETE snooze |
+| Dismiss | Button | Can "manage alert rules" | DELETE |
+| Log corrective action | Form submit | Can "log corrective actions" | POST |
+| Verify corrective action | Button | Can "verify corrective actions" + different user than logger | PATCH |
+
+**Filters:** None.
+
+**Role Differences:** Corrective action log/verify buttons gated by separate permissions; verify requires a different user than the one who logged it.
+
+**Screen States:**
+- **No skeleton** (gap)
+- Snoozed state: snooze indicator visible, cancel snooze button shown
+- No notifications: hides Notification Log card entirely
+
+**Navigation:**
+- In: Alerts Index row click, Site/Zone alert cards, Alert Tuning links
+- Out: Back to Alerts Index, device link to Device Show
+
+---
+
+### 2.4 Sites Index
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites` |
+| **Pattern** | Card grid |
+| **Props** | `sites: SiteRow[]` |
+
+**Content:**
+- Header with total site count
+- Card grid: each card shows site name, device count, status badge, online ratio with progress bar, active alert count
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Card click | Card | None | `/sites/{id}` |
+
+**Filters:** None.
+
+**Role Differences:** None.
+
+**Screen States:**
+- **No skeleton** (gap)
+- **No empty state** (gap)
+
+**Navigation:**
+- In: Sidebar "Sites"
+- Out: Card click to Site Show
+
+---
+
+### 2.5 Site Show
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites/{site}` |
+| **Pattern** | Detail/Dashboard, 2-column layout |
+| **Props** | `site`, `kpis: SiteKPIs`, `zones: ZoneSummary[]`, `activeAlerts`, `floorPlans` |
+
+**Content — Main Column:**
+- Header: site name, status badge, timezone, report quick-links
+- 5 StatCards (site-level KPIs)
+- CircularProgress fleet health gauge
+- FloorPlanView (if floor plans uploaded)
+- Zones grid: ZoneCard with temperature reading + device progress bar
+
+**Content — Sidebar:**
+- Active Alerts list
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Temperature Report link | Button | None | `/sites/{id}/reports/temperature` |
+| Summary Report link | Button | None | `/sites/{id}/reports/summary` |
+| Zone card click | Card | None | `/sites/{id}/zones/{zone}` |
+| Alert card click | Card | None | `/alerts/{id}` |
+| View all alerts | Link | None | `/alerts` (filtered) |
+
+**Filters:** None.
+
+**Role Differences:** None.
+
+**Screen States:**
+- `SiteShowSkeleton` — exported
+- Empty zones: message when no zones configured
+- Empty alerts: message when no active alerts
+
+**Navigation:**
+- In: Sites Index card click, Dashboard SiteCard, CC Org Show site row
+- Out: Zone cards, alert cards, report links
+
+---
+
+### 2.6 Zone Detail
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites/{site}/zones/{zone}` |
+| **Pattern** | Detail with chart |
+| **Props** | `site`, `zone`, `devices`, `summary`, `alerts`, `chartData`, `period` |
+
+**Content:**
+- Header: zone name, device count breakdown (online/total)
+- ZoneChart: Recharts AreaChart with period toggle (24h / 7d / 30d)
+- Metric summary cards
+- Devices table columns: name + online dot, model, status, battery %, signal strength, last seen
+- Alerts sidebar
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Period toggle | Button group | None | Re-fetches chartData via Inertia visit |
+| Device row click | Table row | None | `/devices/{id}` |
+| Alert card click | Card | None | `/alerts/{id}` |
+
+**Filters:** Period toggle (24h / 7d / 30d).
+
+**Role Differences:** None.
+
+**Screen States:**
+- **No skeleton** (gap)
+- Chart empty: text message when no data for period
+- Alerts empty: text message
+
+**Navigation:**
+- In: Site Show zone card click
+- Out: Device row to Device Show, alert card to Alert Show
+
+---
+
+### 2.7 Site Comparison
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites/compare` |
+| **Pattern** | Analytics/ranking |
+| **Props** | `rankings`, `metric`, `days`, `sites` |
+
+**Content:**
+- Summary cards: best site, average value, worst site
+- Ranking table: rank circle, site name, metric value, vs-average badge (above/below)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Metric select | Dropdown | None | Re-fetches rankings |
+| Period toggle | Button group | 30d / 90d / 365d | Re-fetches rankings |
+| Row click | Table row | None | `/sites/{id}` |
+
+**Filters:** Metric select, period toggle — server-side.
+
+**Role Differences:** None.
+
+**Screen States:**
+- `SiteComparisonSkeleton` — exported
+- Empty state: shown when organization has fewer than 2 sites
+
+**Navigation:**
+- In: Sidebar "Analytics > Site Comparison" (or equivalent)
+- Out: Row click to Site Show
+
+---
+
+### 2.8 Site Timeline
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites/{site}/timeline` |
+| **Pattern** | Chronological feed |
+| **Props** | `site`, `events`, `totalEvents`, `zones`, `filters` |
+
+**Content:**
+- Header with total event count
+- Filter bar: date range picker, event type select, zone select
+- Timeline: events grouped by hour, each with type icon, description, and optional "View details" link
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Date filter | DateRangePicker | None | Re-fetches events |
+| Type filter | Select | None | Re-fetches events |
+| Zone filter | Select | None | Re-fetches events |
+| View details | Link on event | When event.link present | `event.link` (varies: alert, WO, etc.) |
+
+**Filters:** Date range, event type, zone — all server-side.
+
+**Role Differences:** None.
+
+**Screen States:**
+- `SiteTimelineSkeleton` — exported
+- Empty state when no events match filters
+
+**Navigation:**
+- In: Site Show navigation
+- Out: Event detail links to various pages (alerts, work orders, etc.)
+
+---
+
+### 2.9 Site Audit
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites/{site}/audit` |
+| **Pattern** | Compliance report |
+| **Props** | `site`, `days`, `summary`, `zones`, `excursions`, `correctiveActions`, `calibrations`, `monitoringGaps` |
+
+**Content:**
+- 5 summary cards (compliance score, excursions, corrective actions, calibrations, gaps)
+- Temperature Excursions table: date, zone, device, duration, max deviation
+- Corrective Actions table: date, action taken, user, status
+- Sensor Calibrations table: device, last calibrated, next due, status
+- Monitoring Gaps table (conditional — only shown if gaps exist)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Period toggle | Button group | 90d / 180d / 365d | Re-fetches all data |
+| Excursion row click | Table row | None | `/alerts/{id}` |
+
+**Filters:** Period toggle — server-side.
+
+**Role Differences:** None.
+
+**Screen States:**
+- **No skeleton** (gap)
+
+**Navigation:**
+- In: Site Show navigation
+- Out: Excursion rows to Alert Show
+
+---
+
+### 2.10 Devices Index
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/devices` |
+| **Pattern** | Index table with filters |
+| **Props** | `devices: PaginatedDevices`, `sites`, `filters` |
+
+**Content:**
+- Header with total device count
+- Filter bar: site select, status select, search input
+- Table columns: name, model (mono font), site, zone, status badge, battery % (mono font), last seen date
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Row click | Table row | None | `/devices/{id}` |
+| Site filter | Select | None | Re-fetches with filter |
+| Status filter | Select | None | Re-fetches with filter |
+| Search | Input | None | Re-fetches with debounced query |
+
+**Filters:** Site, status, search — all server-side.
+
+**Role Differences:** None.
+
+**Screen States:**
+- **No skeleton** (gap — only empty states)
+- Empty with filters: "No devices match your filters"
+- Empty without filters: "No devices found"
+
+**Navigation:**
+- In: Sidebar "Devices"
+- Out: Row click to Device Show
+
+---
+
+### 2.11 Device Show
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/devices/{device}` |
+| **Pattern** | Detail with chart, 2-column layout |
+| **Props** | `device`, `chartData`, `latestReadings`, `alerts`, `availableMetrics`, `period`, `metric` |
+
+**Content — Main Column:**
+- Header: device name, model, status badge, dev_eui
+- 4 StatCards: battery level, signal strength, last seen, alert count
+- Chart with period/metric toggle controls (Recharts)
+- Latest readings grid (metric name → current value)
+
+**Content — Sidebar:**
+- Device info card (model, firmware, zone, site)
+- Alert history sidebar (recent alerts for this device)
+- Replacement dialog (modal)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Period toggle | Button group | None | Re-fetches chartData |
+| Metric select | Dropdown | None | Re-fetches chartData |
+| Replace device | Button → dialog | Can "manage devices" | POST replacement |
+| Alert history click | List item | None | `/alerts/{id}` |
+
+**Filters:** Period, metric — server-side.
+
+**Role Differences:** Replace button only visible with "manage devices" permission.
+
+**Screen States:**
+- `DeviceShowSkeleton` — exported
+- Chart empty: message when no readings for selected period/metric
+- Alert history empty: message when no alerts
+
+**Navigation:**
+- In: Devices Index row click, Zone Detail device row
+- Out: Alert history links to Alert Show
+
+---
+
+### 2.12 Work Orders Index
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/work-orders` |
+| **Pattern** | Index table with bulk actions |
+| **Props** | `workOrders: PaginatedWorkOrders`, `filters`, `isTechnician`, `technicians` |
+
+**Content:**
+- Header with status counts
+- "New Work Order" button (disabled — placeholder for future)
+- Filter bar: "My WOs" toggle, status select, priority select, type select
+- Table columns: checkbox, title, type badge, priority badge, status badge, assigned to, site, created date (mono font)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Row click | Table row | None | `/work-orders/{id}` |
+| New Work Order | Button | Can "manage work orders" | Currently disabled |
+| Bulk assign | Technician select in BulkActionBar | Rows selected + Can "manage work orders" | PATCH batch |
+| My WOs toggle | Toggle | `isTechnician` | Filters to assigned WOs |
+
+**Filters:** My WOs toggle, status, priority, type — server-side.
+
+**Role Differences:**
+- `isTechnician`: checkboxes hidden, "My WOs" toggle visible
+- Can "manage work orders": New button visible (disabled), bulk assign available
+
+**Screen States:**
+- `WorkOrderIndexSkeleton` — exported
+- Empty with filters
+- Empty without filters
+
+**Navigation:**
+- In: Sidebar "Work Orders", Dashboard action cards
+- Out: Row click to Work Order Show
+
+---
+
+### 2.13 Work Order Show
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/work-orders/{workOrder}` |
+| **Pattern** | Detail with forms, 2-column layout |
+| **Props** | `workOrder` (with `site`, `device`, `assigned_user`, `photos`, `notes`) |
+
+**Content — Main Column:**
+- Header: title, priority badge, status badge
+- Status action buttons (contextual based on current status)
+- Details card (type, description, device, site)
+- Photos grid with upload dropzone
+- Notes list with inline add-note form
+
+**Content — Sidebar:**
+- Timeline (status history)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Assign | Button/Select | Can "manage work orders" | PATCH |
+| Start work | Button | Can "complete work orders" + status=assigned | PATCH |
+| Complete | Button | Can "complete work orders" + status=in_progress | PATCH |
+| Cancel | Button | Can "manage work orders" | PATCH |
+| Upload photo | Dropzone | Status not completed/cancelled | POST |
+| Add note | Form submit | Status not completed/cancelled | POST |
+
+**Filters:** None.
+
+**Role Differences:**
+- Can "manage work orders": Assign and Cancel buttons
+- Can "complete work orders": Start and Complete buttons
+- Completed/cancelled status: hides upload and note form
+
+**Screen States:**
+- **No skeleton** (gap)
+
+**Navigation:**
+- In: Work Orders Index row click, CC Work Orders row click, CC Dispatch WO list
+- Out: Device link, site link
+
+---
+
+### 2.14 Activity Log
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/activity-log` |
+| **Pattern** | Chronological feed |
+| **Props** | `activities` (paginated), `filters` |
+
+**Content:**
+- Header with total activity count
+- Event type filter
+- Timeline grouped by date, each entry with expandable change diff
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Event type filter | Select | None | Re-fetches activities |
+| Refresh | Button | None | Re-fetches activities |
+| Load more | Button/scroll | More pages available | Appends next page |
+
+**Filters:** Event type — server-side.
+
+**Role Differences:** None.
+
+**Screen States:**
+- **No skeleton** (gap — only custom EmptyState)
+- Custom EmptyState when no activities match filter
+- Uses `window.confirm` for destructive actions (gap — should use ConfirmationDialog)
+
+**Navigation:**
+- In: Sidebar "Activity Log"
+- Out: None (self-contained)
+
+---
+
+### 2.15 Notifications
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/notifications` |
+| **Pattern** | Notification feed |
+| **Props** | `notifications` (paginated), `filter` |
+
+**Content:**
+- Header with total/unread counts
+- "Mark all read" and "Delete read" bulk action buttons
+- Filter: all / unread / read
+- Notification list grouped by date
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Mark all read | Button | Unread notifications exist | PATCH batch |
+| Delete read | Button | Read notifications exist | DELETE batch |
+| Mark single read/unread | Button per-notification | None | PATCH |
+| Delete single | Button per-notification | None | DELETE |
+| Pagination | Button | More pages | Loads next page |
+
+**Filters:** all / unread / read — client-side or query param.
+
+**Role Differences:** None.
+
+**Screen States:**
+- Empty per filter type (different message for all/unread/read)
+- Uses `window.confirm` for delete (gap — should use ConfirmationDialog)
+
+**Navigation:**
+- In: Header notification bell, Sidebar
+- Out: Notification click → linked resource
+
+---
+
+### 2.16 Alert Tuning
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/analytics/alerts` |
+| **Pattern** | Analytics dashboard |
+| **Props** | `summary`, `noisiest_rules`, `trend`, `resolution_breakdown`, `suggested_tuning`, `sites`, `filters` |
+
+**Content:**
+- 4 KPI cards (total alerts, noise ratio, MTTR, auto-resolved %)
+- Noisiest Rules table: rule name, site, fire count, false positive %, "Tune" link
+- Trend chart: CSS-rendered bar chart (alerts over time)
+- Resolution Breakdown: horizontal bars by resolution type
+- Suggested Tuning cards: AI-generated recommendations per rule
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Site filter | Select | None | Re-fetches all data |
+| Period toggle | Button group | 30d / 90d | Re-fetches all data |
+| Tune link | Table link | None | `/sites/{site_id}/rules/{rule_id}` |
+
+**Filters:** Site, period — server-side.
+
+**Role Differences:** None.
+
+**Screen States:**
+- `EmptyState` when no alerts exist in the period
+
+**Navigation:**
+- In: Sidebar "Analytics > Alert Tuning"
+- Out: Tune links to Alert Rule settings
+
+---
+
+### 2.17 Performance
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/analytics/performance` |
+| **Pattern** | Analytics dashboard |
+| **Props** | `summary`, `trend`, `siteBreakdown`, `days` |
+
+**Content:**
+- 4 KPI cards with target indicators (uptime, MTTR, compliance, device health)
+- Trend chart: CSS-rendered bar chart
+- Site Breakdown table: site name, uptime %, alerts, MTTR, compliance score
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Period toggle | Button group | 30d / 90d / 365d | Re-fetches all data |
+| Row click | Table row | None | `/sites/{id}` |
+
+**Filters:** Period — server-side.
+
+**Role Differences:** None.
+
+**Screen States:**
+- `PerformanceSkeleton` — exported
+- Empty table state
+
+**Navigation:**
+- In: Sidebar "Analytics > Performance"
+- Out: Row click to Site Show
+
+---
+
+### 2.18 Reports Index
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/reports` |
+| **Pattern** | Report launcher |
+| **Props** | `sites` |
+
+**Content:**
+- 3 report type cards:
+  1. **Temperature Report** — site select, date range, Generate button
+  2. **Energy Report** — site select, date range, Generate button
+  3. **Morning Summary** — site select, Generate button (no date range)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Generate Temperature | Button | Site + dates selected | Navigate to `/sites/{id}/reports/temperature?from=&to=` |
+| Generate Energy | Button | Site + dates selected | Navigate to `/sites/{id}/reports/energy?from=&to=` |
+| Generate Summary | Button | Site selected | Navigate to `/sites/{id}/reports/summary` |
+
+**Filters:** None (selection controls, not filters).
+
+**Role Differences:** None.
+
+**Screen States:**
+- `ReportsIndexSkeleton` — exported
+- No sites: informational message
+
+**Navigation:**
+- In: Sidebar "Reports"
+- Out: Generate navigates to respective report page
+
+---
+
+### 2.19 Temperature Report
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites/{site}/reports/temperature` |
+| **Pattern** | Report view with charts |
+| **Props** | `site`, `report: TemperatureReport`, `from`, `to` |
+
+**Content:**
+- Summary cards (compliance %, excursion count, etc.)
+- Compliance by Zone: horizontal bar chart
+- Per-zone sections: trend line chart + device table (device name, min, max, avg, excursions)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Export PDF | Button | None | Triggers PDF generation/download |
+| Date range + Generate | Controls | None | Re-fetches report with new range |
+
+**Filters:** Date range — server-side (from, to query params).
+
+**Role Differences:** None.
+
+**Screen States:**
+- **No skeleton** (gap)
+
+**Navigation:**
+- In: Reports Index generate, Site Show report link
+- Out: Export PDF (download)
+
+---
+
+### 2.20 Energy Report
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites/{site}/reports/energy` |
+| **Pattern** | Report view with charts |
+| **Props** | `site`, `report: EnergyReport`, `from`, `to` |
+
+**Content:**
+- 4 KPI cards (total kWh, total cost, avg daily, peak day)
+- Daily Consumption area chart (dual axis: kWh + cost)
+- Per-device table: device name, total kWh, avg daily, peak
+- Daily Totals table: date, kWh, cost
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Export PDF | Button | None | Triggers PDF download |
+| Export PDF (duplicate) | Button | None | **BUG**: second Export PDF button rendered |
+| Date range + Generate | Controls | None | Re-fetches report |
+
+**Filters:** Date range — server-side.
+
+**Role Differences:** None.
+
+**Screen States:**
+- **No skeleton** (gap)
+
+**Navigation:**
+- In: Reports Index generate
+- Out: Export PDF (download)
+
+---
+
+### 2.21 Morning Summary
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites/{site}/reports/summary` |
+| **Pattern** | Read-only report |
+| **Props** | `site`, `summary: MorningSummary` |
+
+**Content:**
+- Fleet health score
+- 4 device stat cards (total, online, offline, critical battery)
+- 2 alert stat cards (active, unacknowledged)
+- Zone status cards (per-zone current status)
+
+**Actions:** None — fully read-only.
+
+**Filters:** None.
+
+**Role Differences:** None.
+
+**Screen States:**
+- **No skeleton** (gap)
+
+**Navigation:**
+- In: Reports Index generate, Site Show summary link
+- Out: None
+
+---
+
+## 3. Screen Detail — Settings (27 pages)
+
+### 3.1 Profile
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/profile` |
+| **Pattern** | Form (3 sections) |
+| **Props** | User data via shared auth |
+
+**Content — Section 1: Personal Info:**
+- Fields: name, email, phone
+- Submit → PATCH `/user/profile-information`
+
+**Content — Section 2: Quiet Hours:**
+- Fields: enabled toggle, start time, end time
+- Submit → PATCH (same endpoint)
+
+**Content — Section 3: Notification Preferences:**
+- Channel toggles: email, SMS, push, WhatsApp per notification type
+- Submit → PATCH (same endpoint)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Save each section | Form submit | Validation passes | PATCH `/user/profile-information` |
+
+**Filters:** None.
+
+**Role Differences:** None.
+
+**Screen States:** Standard form states (pristine, dirty, submitting, validation errors).
+
+**Navigation:**
+- In: Sidebar "Settings > Profile", header user menu
+- Out: None (stays on page after save)
+
+---
+
+### 3.2 Password
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/password` |
+| **Pattern** | Form |
+| **Props** | None (Fortify endpoint) |
+
+**Content:**
+- Fields: current_password, password, password_confirmation
+- Submit → PUT `/user/password` (Fortify)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Update password | Form submit | Validation passes | PUT `/user/password` |
+
+**Filters:** None. **Role Differences:** None.
+
+**Screen States:** Standard form states.
+
+**Navigation:**
+- In: Settings sidebar "Password"
+- Out: None
+
+---
+
+### 3.3 Appearance
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/appearance` |
+| **Pattern** | Tabs |
+| **Props** | None (reads from `useAppearance` hook) |
+
+**Content:**
+- Delegates entirely to `AppearanceTabs` component
+- Theme options: light, dark, system
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Set theme | Card click | None | Persists to localStorage/cookie |
+
+**Filters:** None. **Role Differences:** None. **Screen States:** Selected state on active theme card.
+
+**Navigation:**
+- In: Settings sidebar "Appearance"
+- Out: None
+
+---
+
+### 3.4 Two-Factor Authentication
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/two-factor` |
+| **Pattern** | Setup modal flow |
+| **Props** | 2FA status from shared auth |
+
+**Content:**
+- Status card: enabled/disabled indicator
+- Enable flow: QR code display → TOTP code confirmation → recovery codes display
+- Disable flow: confirmation → TOTP code entry → disabled
+- Recovery codes: view/regenerate
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Enable 2FA | Button | 2FA not enabled | POST → shows QR modal |
+| Confirm setup | Form submit | QR displayed, code entered | POST confirm |
+| Disable 2FA | Button | 2FA enabled | DELETE |
+| View recovery codes | Button | 2FA enabled | GET |
+| Regenerate codes | Button | 2FA enabled | POST |
+
+**Filters:** None. **Role Differences:** None.
+
+**Screen States:** Disabled state, setup-in-progress state, enabled state.
+
+**Navigation:**
+- In: Settings sidebar "Two-Factor Authentication"
+- Out: None
+
+---
+
+### 3.5 Organization
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/organization` |
+| **Pattern** | Form |
+| **Props** | Organization data via shared `current_organization` |
+
+**Content:**
+- Fields: name, timezone select, opening_hour time input
+- Branding section: primary_color color picker, secondary_color color picker, font select, logo upload
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Save | Form submit | Validation passes | PATCH organization |
+
+**Filters:** None.
+
+**Role Differences:** Entire page gated — Can "manage org settings" required.
+
+**Screen States:** Standard form states.
+
+**Navigation:**
+- In: Settings sidebar "Organization"
+- Out: None
+
+---
+
+### 3.6 Sites Settings
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites` |
+| **Pattern** | CRUD table with dialog |
+| **Props** | `sites` list |
+
+**Content:**
+- Table columns: name, address, timezone, status badge, device count, action buttons
+- SiteForm dialog: name, address, timezone, opening_hour
+- "Onboard" button per site (when status = onboarding)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Add Site | Button → dialog | Can "manage sites" | POST via SiteForm |
+| Edit Site | Button → dialog | Can "manage sites" | PATCH via SiteForm |
+| Delete Site | Button → confirm | Can "manage sites" | DELETE |
+| Onboard | Button | Can "manage sites" + site.status=onboarding | Navigate to `/sites/{id}/onboard` |
+
+**Filters:** None.
+
+**Role Differences:** All CRUD actions gated by "manage sites" permission.
+
+**Screen States:** Empty table state, dialog open/submitting.
+
+**Navigation:**
+- In: Settings sidebar "Sites"
+- Out: Onboard button to Onboarding Wizard
+
+---
+
+### 3.7 Onboarding Wizard
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/sites/{site}/onboard` |
+| **Pattern** | Stepper (5 steps) |
+| **Props** | `site`, existing gateways/devices/modules |
+
+**Content — Steps:**
+1. **Gateway**: Enter serial, model → register via ChirpStack API
+2. **Devices**: Enter device details (name, dev_eui, model, app_key, zone) → register
+3. **Floor Plans**: Upload floor plan images, place device markers
+4. **Modules**: Toggle modules (cold_chain, energy, iaq, industrial) → auto-apply recipes
+5. **Complete**: Review summary → "Complete Onboarding" (validates >= 1 gateway, >= 1 device, >= 1 module)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Register Gateway | Button | Step 1, form valid | POST ChirpStack |
+| Register Devices | Button | Step 2, form valid | POST |
+| Upload Floor Plan | Dropzone | Step 3 | POST |
+| Activate Modules | Button | Step 4, >= 1 selected | POST |
+| Complete Onboarding | Button | Step 5, all requirements met | PATCH site status → active |
+| Step navigation | Stepper | Previous steps completed | Client-side step change |
+
+**Filters:** None.
+
+**Role Differences:** Entire page gated — Can "manage sites".
+
+**Screen States:** Per-step validation states, ChirpStack API error toasts, completion summary.
+
+**Navigation:**
+- In: Sites Settings "Onboard" button
+- Out: Complete → `/sites/{id}`
+
+---
+
+### 3.8 Gateways
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites/{site}/gateways` |
+| **Pattern** | CRUD table |
+| **Props** | `site`, `gateways` list |
+
+**Content:**
+- Table columns: name, serial, model, status badge, connected devices count, last seen, actions
+- Gateway form dialog
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Add Gateway | Button → dialog | Can "manage devices" | POST |
+| Edit Gateway | Button → dialog | Can "manage devices" | PATCH |
+| Delete Gateway | Button → confirm | Can "manage devices" | DELETE |
+| Row click | Table row | None | `/settings/sites/{site}/gateways/{gateway}` |
+
+**Filters:** None.
+
+**Role Differences:** All CRUD gated by "manage devices".
+
+**Screen States:** Empty table, dialog states.
+
+**Navigation:**
+- In: Settings sidebar (site-scoped)
+- Out: Row click to Gateway Show
+
+---
+
+### 3.9 Gateway Show
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites/{site}/gateways/{gateway}` |
+| **Pattern** | Read-only detail |
+| **Props** | `site`, `gateway` (with connected devices) |
+
+**Content:**
+- Gateway details card: name, serial, model, firmware, status, last seen
+- Connected devices table: device name, model, status, last seen
+
+**Actions:** None (read-only).
+
+**Filters:** None. **Role Differences:** None. **Screen States:** Empty devices table.
+
+**Navigation:**
+- In: Gateways table row click
+- Out: Device links (if clickable)
+
+---
+
+### 3.10 Devices (Site-Scoped Settings)
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites/{site}/devices` |
+| **Pattern** | Stats bar + filter + table |
+| **Props** | `site`, `devices`, stats |
+
+**Content:**
+- Stats bar: total, online, offline, critical battery
+- Filter bar: status, search
+- Table columns: name, model, status, battery, signal, last seen, actions
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Add Device | Button → dialog | Can "manage devices" | POST |
+| Row click | Table row | None | `/settings/sites/{site}/devices/{device}` |
+
+**Filters:** Status, search.
+
+**Role Differences:** Add button gated by "manage devices".
+
+**Screen States:** Empty table with/without filters.
+
+**Navigation:**
+- In: Settings sidebar (site-scoped)
+- Out: Row click to Device Show (site-scoped)
+
+---
+
+### 3.11 Device Show (Site-Scoped Settings)
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites/{site}/devices/{device}` |
+| **Pattern** | Read-only detail |
+| **Props** | `site`, `device` (with gateway, recipe) |
+
+**Content:**
+- Device details: name, dev_eui, model, firmware, zone, status, battery, signal
+- Gateway link
+- Recipe link (if assigned)
+
+**Actions:** None (read-only).
+
+**Filters:** None. **Role Differences:** None.
+
+**Screen States:** Standard detail.
+
+**Navigation:**
+- In: Devices (site-scoped) row click
+- Out: Gateway link, Recipe link
+
+---
+
+### 3.12 Users
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/users` |
+| **Pattern** | CRUD table with dialog |
+| **Props** | `users`, `roles`, `sites` |
+
+**Content:**
+- Table columns: name, email, role badge, site access, app access, status, actions
+- UserForm dialog: name, email, role select, site access multi-select, app access toggle
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Add User | Button → dialog | Can "manage users" | POST |
+| Edit User | Button → dialog | Can "manage users" | PATCH |
+| Delete User | Button → confirm | Can "manage users" | DELETE |
+
+**Filters:** None.
+
+**Role Differences:** Entire page gated by "manage users". Role select options filtered by `RoleDefinitions.assignable` for current user's role.
+
+**Screen States:** Empty table, dialog states.
+
+**Navigation:**
+- In: Settings sidebar "Users"
+- Out: None
+
+---
+
+### 3.13 Alert Rules
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites/{site}/alert-rules` |
+| **Pattern** | Card grid with toggle/edit/delete |
+| **Props** | `site`, `rules` |
+
+**Content:**
+- Card grid: each card shows rule name, metric, operator + threshold, severity badge, enabled toggle
+- Edit/delete actions per card
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Add Rule | Button → form/dialog | Can "manage alert rules" | POST |
+| Toggle enable/disable | Switch | Can "manage alert rules" | PATCH |
+| Edit | Button | Can "manage alert rules" | Navigate or dialog |
+| Delete | Button → confirm | Can "manage alert rules" | DELETE |
+| Card click | Card | None | `/settings/sites/{site}/alert-rules/{rule}` |
+
+**Filters:** None.
+
+**Role Differences:** All actions gated by "manage alert rules".
+
+**Screen States:** Empty state when no rules.
+
+**Navigation:**
+- In: Settings sidebar (site-scoped), Alert Tuning "Tune" links
+- Out: Card click to Alert Rule Show
+
+---
+
+### 3.14 Alert Rule Show
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites/{site}/alert-rules/{rule}` |
+| **Pattern** | Read-only detail |
+| **Props** | `site`, `rule` |
+
+**Content:**
+- Rule details: name, metric, operator, threshold, severity, hysteresis, cooldown, enabled status
+- Escalation chain link (if assigned)
+- **NO EDIT FORM** — edit button routes here but no inline editing exists
+
+**Actions:** None (read-only). **BUG:** Edit action from Alert Rules grid navigates here but there is no edit form.
+
+**Filters:** None. **Role Differences:** None.
+
+**Screen States:** Standard detail.
+
+**Navigation:**
+- In: Alert Rules card click, Alert Tuning "Tune" link
+- Out: Escalation chain link
+
+---
+
+### 3.15 Escalation Chains
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites/{site}/escalation-chains` |
+| **Pattern** | CRUD table with LevelBuilder |
+| **Props** | `site`, `chains` |
+
+**Content:**
+- Table columns: name, levels count, actions
+- Chain form with LevelBuilder: ordered levels, each with delay (minutes), recipients (users), channels (email/sms/push/whatsapp)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Add Chain | Button → form | Can "manage alert rules" | POST |
+| Edit Chain | Button → form | Can "manage alert rules" | PATCH |
+| Delete Chain | Button → confirm | Can "manage alert rules" | DELETE |
+
+**Filters:** None.
+
+**Role Differences:** All actions gated by "manage alert rules".
+
+**Screen States:** Empty table state.
+
+**Navigation:**
+- In: Settings sidebar (site-scoped)
+- Out: None
+
+---
+
+### 3.16 Compliance
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/compliance` |
+| **Pattern** | Client-side filtered event list |
+| **Props** | `events` |
+
+**Content:**
+- Events grouped by month
+- Each event: type, description, date, status
+- Client-side filtering (not server-side pagination)
+
+**Actions:** View only — no create/edit.
+
+**Filters:** Client-side type/date filtering.
+
+**Role Differences:** Page gated — Can "manage org settings".
+
+**Screen States:** Empty state when no events.
+
+**Navigation:**
+- In: Settings sidebar "Compliance"
+- Out: None
+
+---
+
+### 3.17 Maintenance Windows
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites/{site}/maintenance-windows` |
+| **Pattern** | Card list with dialog |
+| **Props** | `site`, `windows` |
+
+**Content:**
+- Card list: each window shows title, schedule, suppress_alerts toggle, status
+- WindowFormDialog: title, description, start, end, recurrence, suppress_alerts
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Add Window | Button → dialog | Can "manage maintenance windows" | POST |
+| Edit Window | Button → dialog | Can "manage maintenance windows" | PATCH |
+| Delete Window | Button → confirm | Can "manage maintenance windows" | DELETE |
+| Toggle suppress | Switch | **No permission gate** (gap) | PATCH |
+
+**Filters:** None.
+
+**Role Differences:** CRUD gated by "manage maintenance windows", but suppress toggle is ungated.
+
+**Screen States:** Empty state.
+
+**Navigation:**
+- In: Settings sidebar (site-scoped)
+- Out: None
+
+---
+
+### 3.18 Report Schedules
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/report-schedules` |
+| **Pattern** | Card list |
+| **Props** | `schedules`, `sites` |
+
+**Content:**
+- Card list: report type, site, frequency, recipient, enabled toggle, actions
+- Schedule form: report type select, site select, frequency select, recipient email
+- **Note:** Only 1 recipient captured despite model supporting array
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Add Schedule | Button → form | Can "manage report schedules" | POST |
+| Toggle enable/disable | Switch | **No permission gate** (gap) | PATCH |
+| Delete | Button | **No permission gate** (gap) | DELETE |
+
+**Filters:** None.
+
+**Role Differences:** Only create action properly gated.
+
+**Screen States:** Empty state.
+
+**Navigation:**
+- In: Settings sidebar "Report Schedules"
+- Out: None
+
+---
+
+### 3.19 Site Templates
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/site-templates` |
+| **Pattern** | Card grid |
+| **Props** | `templates`, `sites` |
+
+**Content:**
+- Card grid: template name, source site, device count, module list
+- Create from source site dialog
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Create Template | Button → dialog | None | POST (from source site) |
+| Delete Template | Button | **No permission gate** (gap) | DELETE |
+
+**Filters:** None.
+
+**Role Differences:** No permission gates on any action.
+
+**Screen States:** Empty state.
+
+**Navigation:**
+- In: Settings sidebar "Site Templates"
+- Out: None
+
+---
+
+### 3.20 Export Data
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/export` |
+| **Pattern** | Form + history list |
+| **Props** | `exports` (history), `sites` |
+
+**Content:**
+- Export request form: site select, data type select, date range, format (CSV/Excel)
+- Export history list: requested date, site, type, format, status, download link
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Request Export | Form submit | Form valid | POST |
+| Download | Link | Export status = completed | Download file |
+
+**Filters:** None.
+
+**Role Differences:** **No permission checks** (gap).
+
+**Screen States:** Empty history, export in-progress state.
+
+**Navigation:**
+- In: Settings sidebar "Export Data"
+- Out: Download links
+
+---
+
+### 3.21 Integrations
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/integrations` |
+| **Pattern** | Card list |
+| **Props** | `integrations` |
+
+**Content:**
+- Integration cards:
+  1. **SAP**: enabled toggle, cron schedule input
+  2. **CONTPAQi**: enabled toggle, cron schedule input
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Toggle integration | Switch | None | PATCH |
+| Update schedule | Input + save | None | PATCH |
+
+**Filters:** None. **Role Differences:** None. **Screen States:** Disabled/enabled per integration.
+
+**Navigation:**
+- In: Settings sidebar "Integrations"
+- Out: None
+
+---
+
+### 3.22 API Keys
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/api-keys` |
+| **Pattern** | Form + table |
+| **Props** | `apiKeys` |
+
+**Content:**
+- Create form: name input → Generate button → displays token once
+- Table columns: name, last used, created, actions (delete)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Generate Key | Form submit | Name provided | POST → shows token |
+| Delete Key | Button | **No confirmation dialog** (gap) | DELETE |
+
+**Filters:** None. **Role Differences:** None.
+
+**Screen States:** Empty table, token display (one-time).
+
+**Navigation:**
+- In: Settings sidebar "API Keys"
+- Out: None
+
+---
+
+### 3.23 Billing
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/billing` |
+| **Pattern** | Subscription card + invoices table |
+| **Props** | `subscription`, `invoices` |
+
+**Content:**
+- Subscription card: plan name, status, monthly amount, next billing date
+- Invoices table: date, amount, status badge, download link
+- Generate invoice button
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Generate Invoice | Button | None | POST |
+| Download Invoice | Link | Invoice exists | Download PDF |
+| Manage Profiles | Link | None | Navigate to `/settings/billing/profiles` |
+
+**Filters:** None.
+
+**Role Differences:** Entire page gated — Can "manage org settings".
+
+**Screen States:** Empty invoices table.
+
+**Navigation:**
+- In: Settings sidebar "Billing"
+- Out: Billing Profiles link, invoice downloads
+
+---
+
+### 3.24 Billing Profiles
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/billing/profiles` |
+| **Pattern** | Form + list |
+| **Props** | `profiles` |
+
+**Content:**
+- Profile form (Mexican fiscal fields): razon_social, RFC, regimen_fiscal, uso_CFDI, domicilio_fiscal
+- Existing profiles list (read-only)
+- **No edit/delete for existing profiles** (gap)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Create Profile | Form submit | Valid fiscal fields | POST |
+
+**Filters:** None.
+
+**Role Differences:** Gated by "manage org settings".
+
+**Screen States:** Empty list, form validation.
+
+**Navigation:**
+- In: Billing page link
+- Out: Back to Billing
+
+---
+
+### 3.25 Modules
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/sites/{site}/modules` |
+| **Pattern** | Toggle cards |
+| **Props** | `site`, `modules` |
+
+**Content:**
+- Module cards: cold_chain, energy, iaq, industrial
+- Each card: name, description, enabled toggle
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Toggle module | Switch | **No permission gate** (gap) | PATCH |
+
+**Filters:** None.
+
+**Role Differences:** **No permission gate** — any authenticated user can toggle modules.
+
+**Screen States:** Enabled/disabled per module.
+
+**Navigation:**
+- In: Settings sidebar (site-scoped)
+- Out: None
+
+---
+
+### 3.26 Recipes
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/recipes` |
+| **Pattern** | Read-only card grid |
+| **Props** | `recipes` |
+
+**Content:**
+- Card grid: recipe name, module, description, threshold count
+- Cards are clickable
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Card click | Card | None | `/settings/recipes/{recipe}` |
+
+**Filters:** None. **Role Differences:** None.
+
+**Screen States:** Empty state.
+
+**Navigation:**
+- In: Settings sidebar "Recipes"
+- Out: Card click to Recipe Show
+
+---
+
+### 3.27 Recipe Show
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/settings/recipes/{recipe}` |
+| **Pattern** | Detail + threshold overrides |
+| **Props** | `recipe`, `editable` flag |
+
+**Content:**
+- Recipe details: name, module, description
+- Default thresholds list
+- Override thresholds editor (when `editable` is true): per-threshold value inputs
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Save Overrides | Form submit | `editable` flag is true | PATCH |
+
+**Filters:** None.
+
+**Role Differences:** `editable` flag controls whether override editor is shown.
+
+**Screen States:** Read-only mode, editable mode.
+
+**Navigation:**
+- In: Recipes card click, Device Show (site-scoped) recipe link
+- Out: Back to Recipes
+
+---
+
+## 4. Screen Detail — Auth (8 pages)
+
+### 4.1 Login
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/login` |
+| **Pattern** | Auth form |
+| **Props** | `canRegister`, `status` |
+
+**Content:**
+- Fields: email, password, "Keep me signed in" checkbox
+- Submit button with Spinner during processing
+- Links: Forgot password, Register (if `canRegister`)
+- **Note:** `canRegister` prop exists but is currently unused (registration may be disabled)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Login | Form submit | Valid credentials | POST `/login` → `/dashboard` |
+| Forgot password | Link | None | `/forgot-password` |
+| Register | Link | `canRegister` | `/register` |
+
+**Screen States:** Validation errors, processing spinner, status message (e.g., after password reset).
+
+**Navigation:**
+- In: `/` redirects here, logout redirect
+- Out: Success → `/dashboard`, links to register/forgot-password
+
+---
+
+### 4.2 Register
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/register` |
+| **Pattern** | Auth form |
+| **Props** | None |
+
+**Content:**
+- Fields: name, email, password, password_confirmation
+- Submit button with Spinner
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Register | Form submit | Valid fields | POST `/register` → `/dashboard` |
+| Login link | Link | None | `/login` |
+
+**Screen States:** Validation errors, processing.
+
+**Navigation:**
+- In: Login page register link
+- Out: Success → `/dashboard` (may redirect to verify-email)
+
+---
+
+### 4.3 Forgot Password
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/forgot-password` |
+| **Pattern** | Auth form |
+| **Props** | `status` |
+
+**Content:**
+- Fields: email
+- Submit button
+- **Design inconsistency:** Uses `LoaderCircle` instead of `Spinner` used in all other auth forms
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Send reset link | Form submit | Valid email | POST `/forgot-password` |
+| Back to login | Link | None | `/login` |
+
+**Screen States:** Validation errors, processing (LoaderCircle), success status message.
+
+**Navigation:**
+- In: Login "Forgot password" link
+- Out: Success shows status, link back to login
+
+---
+
+### 4.4 Reset Password
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/reset-password` |
+| **Pattern** | Auth form |
+| **Props** | `token`, `email` |
+
+**Content:**
+- Fields: email (pre-filled, read-only), password, password_confirmation
+- Hidden: token
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Reset password | Form submit | Valid fields | POST `/reset-password` → `/login` |
+
+**Screen States:** Validation errors, processing.
+
+**Navigation:**
+- In: Email reset link (with token)
+- Out: Success → `/login` with status message
+
+---
+
+### 4.5 Verify Email
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/verify-email` |
+| **Pattern** | Gate |
+| **Props** | `status` |
+
+**Content:**
+- Informational message about email verification requirement
+- "Resend verification email" button
+- Logout link
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Resend | Button | None | POST `/email/verification-notification` |
+| Logout | Link | None | POST `/logout` |
+
+**Screen States:** Standard, resend success status.
+
+**Navigation:**
+- In: Automatic redirect when email unverified
+- Out: Verify via email link → `/dashboard`
+
+---
+
+### 4.6 Confirm Password
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/confirm-password` |
+| **Pattern** | Re-auth gate |
+| **Props** | None |
+
+**Content:**
+- Explanation text
+- Fields: password
+- Submit button
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Confirm | Form submit | Valid password | POST → intended route |
+
+**Screen States:** Validation errors, processing.
+
+**Navigation:**
+- In: Automatic redirect for sensitive actions
+- Out: Success → originally intended route
+
+---
+
+### 4.7 Two-Factor Challenge
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/two-factor-challenge` |
+| **Pattern** | Dual-mode form |
+| **Props** | None |
+
+**Content:**
+- Mode toggle: TOTP code vs Recovery code
+- TOTP mode: 6-digit code input
+- Recovery mode: recovery code text input
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Submit TOTP | Form submit | 6-digit code | POST `/two-factor-challenge` |
+| Submit Recovery | Form submit | Recovery code | POST `/two-factor-challenge` |
+| Toggle mode | Link | None | Client-side mode switch |
+
+**Screen States:** Validation errors, processing, mode toggle.
+
+**Navigation:**
+- In: Automatic redirect after login when 2FA enabled
+- Out: Success → `/dashboard`
+
+---
+
+### 4.8 Privacy Accept
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/privacy/accept` |
+| **Pattern** | Policy acceptance gate |
+| **Props** | Policy content |
+
+**Content:**
+- LFPDPPP (Mexican federal privacy law) policy text
+- Accept checkbox
+- Submit button
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Accept | Button | Checkbox checked | POST → `/dashboard` |
+
+**Screen States:** Unchecked (button disabled), checked (button enabled), processing.
+
+**Navigation:**
+- In: Automatic redirect when privacy not accepted
+- Out: Success → `/dashboard`
+
+---
+
+## 5. Screen Detail — Command Center (8 pages)
+
+All Command Center pages are restricted to Astrea roles (super_admin, support, account_manager, technician).
+
+### 5.1 CC Index
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/command-center` |
+| **Pattern** | Dashboard |
+| **Props** | KPIs, org table data, outage info, delivery health |
+
+**Content:**
+- 6 KPI cards (total orgs, total sites, total devices, active alerts, open WOs, fleet health)
+- Organization table: name, sites, devices, alerts, health score
+- Outage declaration dialog
+- Delivery health section (notification delivery stats)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Declare Outage | Button → dialog | None | POST outage declaration |
+| Org row click | Table row | None | `/command-center/organizations/{org}` |
+
+**Filters:** None.
+
+**Role Differences:** All Astrea roles can access; outage declaration may be further restricted.
+
+**Screen States:** Active outage banner, normal state.
+
+**Navigation:**
+- In: Sidebar "Command Center"
+- Out: Org rows to CC Org Show, sub-nav to CC sub-pages
+
+---
+
+### 5.2 CC Alerts
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/command-center/alerts` |
+| **Pattern** | Paginated table (read-only) |
+| **Props** | `alerts` (paginated) |
+
+**Content:**
+- Alert table: severity, alert name, organization, site, device, status, time
+- Pagination
+
+**Actions:** View-only — no acknowledge/resolve/dismiss from CC level.
+
+**Filters:** Standard pagination.
+
+**Role Differences:** Astrea roles only.
+
+**Screen States:** Empty state.
+
+**Navigation:**
+- In: CC sub-navigation
+- Out: None (read-only — no drill-down)
+
+---
+
+### 5.3 CC Devices
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/command-center/devices` |
+| **Pattern** | Stats + paginated table |
+| **Props** | Stats, `devices` (paginated) |
+
+**Content:**
+- Stats bar: total devices, online, offline, critical
+- Device table: name, model, organization, site, status, battery, last seen
+- **No row click action** (gap — cannot drill down to device)
+
+**Actions:** View-only.
+
+**Filters:** Pagination.
+
+**Role Differences:** Astrea roles only.
+
+**Screen States:** Empty state.
+
+**Navigation:**
+- In: CC sub-navigation
+- Out: **None** (gap — rows are not clickable)
+
+---
+
+### 5.4 CC Dispatch
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/command-center/dispatch` |
+| **Pattern** | Split panel (list + map) |
+| **Props** | Work orders, technicians, site coordinates |
+
+**Content — Left Panel:**
+- Work order list: title, priority, status, site, assigned technician
+- Technician assignment select per WO
+
+**Content — Right Panel:**
+- Leaflet map with site markers and technician locations
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Assign Technician | Select per WO | None | PATCH work order |
+| WO click | List item | None | Highlights on map / expands detail |
+
+**Filters:** None explicit.
+
+**Role Differences:** Astrea roles only.
+
+**Screen States:** Empty WO list, map loading.
+
+**Navigation:**
+- In: CC sub-navigation
+- Out: WO details may link to Work Order Show
+
+---
+
+### 5.5 CC Revenue
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/command-center/revenue` |
+| **Pattern** | Charts + table |
+| **Props** | MRR data, org breakdown |
+
+**Content:**
+- MRR charts (monthly recurring revenue trends)
+- Organization table: name, plan, MRR, device count, status
+- Drill-down capability
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Org row click | Table row | None | Drill-down detail (inline or CC Org Show) |
+
+**Filters:** Period selection.
+
+**Role Differences:** Astrea roles only.
+
+**Screen States:** Empty when no billing data.
+
+**Navigation:**
+- In: CC sub-navigation
+- Out: Org drill-down
+
+---
+
+### 5.6 CC Work Orders
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/command-center/work-orders` |
+| **Pattern** | Paginated table |
+| **Props** | `workOrders` (paginated) |
+
+**Content:**
+- Table: title, type, priority, status, organization, site, assigned technician, created date
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Row click | Table row | None | `/work-orders/{id}` |
+
+**Filters:** Pagination.
+
+**Role Differences:** Astrea roles only.
+
+**Screen States:** Empty state.
+
+**Navigation:**
+- In: CC sub-navigation
+- Out: Row click to Work Order Show (main app)
+
+---
+
+### 5.7 CC Org Show
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/command-center/organizations/{org}` |
+| **Pattern** | Detail, 2-column layout |
+| **Props** | `organization`, sites, alerts, activities |
+
+**Content — Main Column:**
+- Organization header: name, segment, plan
+- Sites table: name, status, device count, health score
+
+**Content — Sidebar:**
+- Active alerts list
+- Recent activity feed
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Site row click | Table row | None | `/sites/{id}` |
+
+**Filters:** None.
+
+**Role Differences:** Astrea roles only.
+
+**Screen States:** Empty sites, empty alerts, empty activity.
+
+**Navigation:**
+- In: CC Index org row click, Partner Portal org row click
+- Out: Site rows to Site Show
+
+---
+
+### 5.8 Partner Portal
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/partner` |
+| **Pattern** | Org table + create dialog |
+| **Props** | `organizations` |
+
+**Content:**
+- Organization table: name, segment, sites count, devices count, status, MRR
+- Create Organization dialog: name, segment select, plan select
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Create Organization | Button → dialog → submit | super_admin only | POST |
+| Org row click | Table row | None | `/command-center/organizations/{org}` |
+
+**Filters:** None.
+
+**Role Differences:** super_admin only — other Astrea roles cannot access.
+
+**Screen States:** Empty table, dialog processing state.
+- **Design inconsistency:** Create dialog uses "Creating..." text instead of Spinner component
+
+**Navigation:**
+- In: Sidebar "Partner Portal"
+- Out: Org row to CC Org Show
+
+---
+
+## 6. Screen Detail — Modules (3 pages)
+
+### 6.1 IAQ Dashboard
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/modules/iaq` |
+| **Pattern** | Module dashboard |
+| **Props** | IAQ data, zones, chartData |
+
+**Content:**
+- IAQ score ring (overall air quality index)
+- Zone cards: zone name, current AQI score, primary pollutant
+- Trend chart with period toggle (Recharts)
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Period toggle | Button group | None | Re-fetches chart data |
+
+**Filters:** Period toggle.
+
+**Role Differences:** None (module must be enabled for site).
+
+**Screen States:** Standard module dashboard.
+
+**Bugs:**
+- Uses `window.location.search` for reading query params — not SSR-safe (should use Inertia page props)
+
+**Navigation:**
+- In: Sidebar "Modules > IAQ" (when module enabled)
+- Out: Zone cards may link to Zone Detail
+
+---
+
+### 6.2 Industrial Dashboard
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/modules/industrial` |
+| **Pattern** | Module dashboard |
+| **Props** | KPIs, equipment data, compressor health, chartData |
+
+**Content:**
+- KPI cards (OEE, uptime, energy efficiency, etc.)
+- Equipment cards: machine name, status, current metrics
+- Compressor health section
+- Trend chart with period toggle
+
+**Actions:**
+| Action | Trigger | Condition | Target |
+|--------|---------|-----------|--------|
+| Period toggle | Button group | None | Re-fetches chart data |
+
+**Filters:** Period toggle.
+
+**Role Differences:** None (module must be enabled for site).
+
+**Screen States:** Standard module dashboard.
+
+**Bugs:**
+- KPICard uses dynamic Tailwind classes (e.g., `text-${color}-500`) — will not be included in CSS purge; must use static class mapping
+
+**Navigation:**
+- In: Sidebar "Modules > Industrial" (when module enabled)
+- Out: Equipment cards may link to device details
+
+---
+
+### 6.3 Welcome (DEAD PAGE)
+
+| Field | Value |
+|-------|-------|
+| **URL** | `/welcome` |
+| **Pattern** | Orphaned Laravel boilerplate |
+| **Props** | None |
+
+**Content:** Default Laravel welcome page markup.
+
+**Status:** DEAD — `/` redirects to `/login`, this page is unreachable via normal navigation. Should be deleted.
+
+---
+
+## 7. Interaction Conventions
+
+### 7.1 Layout System
+
+| Layout | Usage | Structure |
+|--------|-------|-----------|
+| `AppLayout` | All authenticated pages | Sidebar + header + content area |
+| `AuthLayout` | Login, register, password flows | Centered card (variants: card, simple, split) |
+| `SettingsLayout` | All `/settings/*` pages | AppLayout + settings sidebar |
+
+### 7.2 Table Patterns
+
+| Pattern | Description | Used In |
+|---------|-------------|---------|
+| Index Table | Paginated, server-side filters, row click navigates | Alerts, Devices, Work Orders |
+| CRUD Table | Add/edit via dialog, delete with confirm | Sites Settings, Users, Gateways, Escalation Chains |
+| Bulk Action Table | Checkbox column + BulkActionBar | Alerts (ack/resolve), Work Orders (assign) |
+| Read-only Table | No actions, informational | CC Alerts, CC Devices, invoices |
+| Stats + Table | Stats bar above table | Devices (site-scoped), CC Devices |
+
+**Table column conventions:**
+- Mono font: `dev_eui`, model codes, battery %, dates
+- Badges: severity (red/orange/yellow), status (green/gray/red), priority (similar to severity), type (blue/purple)
+- Relative time: "2 hours ago" format for last seen / triggered at
+- Checkbox column: always first when present
+
+### 7.3 Card Patterns
+
+| Pattern | Description | Used In |
+|---------|-------------|---------|
+| StatCard | Icon + label + value + optional trend | Dashboard, Site Show, reports |
+| SiteCard | Site summary for grid display | Dashboard, Sites Index |
+| ZoneCard | Zone status with temp + progress | Site Show |
+| ActionCard | Clickable count + label, navigates to filtered list | Dashboard "Needs Attention" |
+| ModuleCard | Name + description + enable toggle | Modules Settings |
+| ReportCard | Type + form controls + Generate button | Reports Index |
+
+### 7.4 Form Patterns
+
+| Pattern | When to Use | Implementation |
+|---------|-------------|----------------|
+| `useValidatedForm` + Zod | Standard forms (recommended) | Inertia `useForm` wrapped with Zod schema |
+| Inertia `useForm` (plain) | Simple forms, legacy | Direct `useForm` without schema |
+| `form-rhf` (React Hook Form) | Complex multi-step forms | Import from `@/components/ui/form-rhf` |
+
+**Current inconsistency:** Some pages use `useValidatedForm` + Zod while others use plain `useForm`. Standard should be `useValidatedForm` + Zod for all new forms.
+
+### 7.5 Dialog Patterns
+
+| Pattern | Description | Used In |
+|---------|-------------|---------|
+| `ConfirmationDialog` | Destructive action confirmation | Delete actions (most pages) |
+| Form Dialog | Dialog containing a form | SiteForm, UserForm, WindowFormDialog |
+| Info Dialog | Read-only content in dialog | Recovery codes, token display |
+
+**Gap:** Some destructive actions use `window.confirm` instead of `ConfirmationDialog`:
+- Notifications page (mark read, delete)
+- Activity log
+
+**Gap:** API key delete has no confirmation at all.
+
+### 7.6 Loading States
+
+| State | Implementation | Convention |
+|-------|---------------|------------|
+| Page skeleton | `*Skeleton` component exported from page | Rendered by Inertia suspense |
+| Button loading | `Spinner` component inside button | Shown during `processing` state |
+| Inline loading | `LoaderCircle` from lucide-react | **Inconsistency** — only used in forgot-password |
+
+**Skeleton coverage (21 of 67 pages):**
+- Has skeleton: Dashboard, Alerts Index, Site Show, Site Comparison, Site Timeline, Work Orders Index, Performance, Reports Index, Device Show
+- **Missing skeleton (critical gaps):** Alert Show, Sites Index, Zone Detail, Site Audit, Work Order Show, Devices Index, all reports, all CC pages, all module dashboards, all settings pages
+
+### 7.7 Empty States
+
+| Type | Convention |
+|------|-----------|
+| No data at all | Illustration + message + CTA button (when applicable) |
+| No results (filters active) | Message + "Clear filters" link |
+| Conditional section empty | Inline text message (e.g., "No alerts") |
+
+**Gap:** Sites Index has no empty state at all.
+
+### 7.8 Navigation Conventions
+
+- **Sidebar**: Primary navigation, collapsible, configured in `resources/js/config/navigation.ts`
+- **Breadcrumbs**: Present on detail pages (via `BreadcrumbItem[]` prop)
+- **Back button**: Present on detail views (Alert Show, Work Order Show)
+- **Row click**: Tables navigate to detail view on row click
+- **Card click**: Card grids navigate to detail view on card click
+- **Links**: Inline text links for cross-references (device → alert, site → zone)
+
+### 7.9 Toast & Flash Messages
+
+- **Server-side flash**: Automatically displayed as Sonner toasts via `useFlashMessages` hook
+- **Client-side toast**: `toast` from `sonner` for immediate feedback
+- **Error handling**: `handleInertiaErrors` utility for standardized error toasts
+
+### 7.10 Permission UI Pattern
+
+| Approach | Description | Used In |
+|----------|-------------|---------|
+| Hide element | Button/action not rendered | Most CRUD actions |
+| Disable element | Button rendered but disabled | "New Work Order" button |
+| Hide page section | Entire card/section not rendered | Corrective actions (severity-gated) |
+| Gate entire page | Redirect or 403 if no permission | Organization settings, Billing |
+
+### 7.11 Chart Conventions
+
+- **Library**: Recharts (AreaChart, BarChart, LineChart)
+- **Period toggle**: Button group with preset options (24h/7d/30d or 30d/90d/365d)
+- **Metric select**: Dropdown for multi-metric charts (Device Show)
+- **Empty chart**: Text message centered in chart area
+- **Responsive**: Charts fill container width
+
+### 7.12 Badge System
+
+| Badge Type | Colors | Used For |
+|------------|--------|----------|
+| Severity | red (critical), orange (high), yellow (medium), blue (low) | Alerts, work order priority |
+| Status | green (active/online/resolved), gray (inactive/offline), red (critical), yellow (pending) | Devices, sites, alerts, work orders |
+| Type | blue, purple, teal (varies) | Work order type, report type |
+| Role | Per-role color | User management |
+
+---
+
+## 8. Cross-Cutting Issues
+
+### 8.1 Duplicated Utilities (Extract to Shared)
+
+| Utility | Duplicated In | Recommended Location |
+|---------|--------------|---------------------|
+| `formatTimeAgo()` | 6+ page files | `@/utils/formatters.ts` |
+| `isOnline()` (15-min threshold) | 5+ page files | `@/utils/deviceHelpers.ts` |
+| `formatMXN()` | 2 CC files | `@/utils/formatters.ts` |
+| `KPICard` component | 4+ CC files | `@/components/ui/kpi-card.tsx` |
+| `SeverityBadge` | Alerts + CC pages | `@/components/ui/severity-badge.tsx` |
+| `StatusBadge` | Multiple pages | `@/components/ui/status-badge.tsx` |
+
+### 8.2 Permission Gaps
+
+| Page | Action | Current State | Required Fix |
+|------|--------|--------------|-------------|
+| Modules toggle | Toggle module on/off | No permission gate | Gate with Can "manage org settings" or new permission |
+| Maintenance Windows | Suppress alerts toggle | No permission gate | Gate with Can "manage maintenance windows" |
+| Report Schedules | Toggle enable + Delete | No permission gate | Gate with Can "manage report schedules" |
+| Site Templates | Delete template | No permission gate | Gate with Can "manage sites" or new permission |
+| Export Data | All actions | No permission checks | Gate with Can "export data" |
+| API Keys | Delete | No confirmation dialog | Add ConfirmationDialog |
+| Notifications | Delete actions | Uses window.confirm | Replace with ConfirmationDialog |
+| Activity Log | Destructive actions | Uses window.confirm | Replace with ConfirmationDialog |
+
+### 8.3 Missing Skeleton/Loading States
+
+**Priority 1 (high-traffic pages):**
+- Sites Index — no skeleton, no empty state
+- Devices Index — no skeleton
+- Alert Show — no skeleton
+- Work Order Show — no skeleton
+
+**Priority 2 (moderate traffic):**
+- Zone Detail — no skeleton
+- Site Audit — no skeleton
+- Activity Log — no skeleton
+- All report pages (Temperature, Energy, Summary)
+
+**Priority 3 (lower traffic):**
+- All CC pages — no skeletons
+- All module dashboards — no skeletons
+- Most settings pages — no skeletons
+
+### 8.4 Confirmed Bugs
+
+| # | Page | Bug | Severity |
+|---|------|-----|----------|
+| 1 | Energy Report | Duplicate "Export PDF" button rendered | Low |
+| 2 | Alert Rule Show | No edit form — edit button from Alert Rules navigates here but only shows read-only detail | Medium |
+| 3 | Billing Profiles | No edit/delete for existing profiles — can only create | Medium |
+| 4 | IAQ Dashboard | Uses `window.location.search` — not SSR-safe | Medium |
+| 5 | Industrial Dashboard | KPICard uses dynamic Tailwind classes (`text-${color}-500`) — won't survive CSS purge | Medium |
+| 6 | CC Devices | No row click action — cannot drill down to individual device | Low |
+| 7 | Welcome page | Orphaned Laravel boilerplate — unreachable, should be deleted | Low |
+
+### 8.5 Design Inconsistencies
+
+| # | Issue | Location | Standard |
+|---|-------|----------|----------|
+| 1 | `LoaderCircle` instead of `Spinner` | Forgot Password form | Use `Spinner` (all other auth forms do) |
+| 2 | "Creating..." text instead of `Spinner` | Partner Portal create dialog | Use `Spinner` component |
+| 3 | `Select` components aliased with abbreviated names | Report Schedules | Use consistent import aliases |
+| 4 | Mixed form patterns (`useValidatedForm` vs plain `useForm`) | Various settings pages | Standardize on `useValidatedForm` + Zod |
+| 5 | Report Schedules only captures 1 recipient | Report Schedules | Model supports array — UI should allow multiple |
+
+### 8.6 Recommended Improvements
+
+1. **Create shared utility module** — Extract all duplicated formatters and helpers (Section 8.1)
+2. **Audit all permission gates** — Add missing gates per Section 8.2
+3. **Add skeletons to high-traffic pages** — Prioritize per Section 8.3
+4. **Fix confirmed bugs** — Address all 7 bugs in Section 8.4
+5. **Standardize form pattern** — Migrate all forms to `useValidatedForm` + Zod
+6. **Replace all window.confirm** — Use `ConfirmationDialog` component consistently
+7. **Delete Welcome page** — Remove orphaned boilerplate
+8. **Add Alert Rule edit form** — Currently read-only detail with no editing capability
+
+---
+
+> **Document generated:** 2026-03-23
+> **Pages audited:** 67 (21 Core + 27 Settings + 8 Auth + 8 Command Center + 3 Modules)
+> **Audit agents:** 3 parallel agents reading all page components
+> **Cross-references:** SYSTEM_BEHAVIOR_SPEC.md, ASTREA_WORKFLOWS.md, ASTREA_FEATURE_SPECS.md

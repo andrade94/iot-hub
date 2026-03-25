@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +14,7 @@ import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { useValidatedForm } from '@/hooks/use-validated-form';
+import { formatTimeAgo } from '@/utils/date';
 import { siteSchema } from '@/utils/schemas';
 import { Head, router } from '@inertiajs/react';
 import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -48,6 +50,19 @@ const statusBadgeVariant: Record<string, 'success' | 'outline' | 'warning'> = {
     suspended: 'warning',
 };
 
+/* ── Section Divider ──────────────────────────────── */
+
+function SectionDivider({ label }: { label: string }) {
+    return (
+        <div className="flex items-center gap-3">
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                {label}
+            </span>
+            <div className="h-px flex-1 bg-border" />
+        </div>
+    );
+}
+
 export default function SitesIndex({ sites, timezones }: Props) {
     const { t } = useLang();
     const [showCreate, setShowCreate] = useState(false);
@@ -67,108 +82,133 @@ export default function SitesIndex({ sites, timezones }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Sites')} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('Sites')}</h1>
-                        <p className="text-sm text-muted-foreground">{sites.length} {t('site(s)')}</p>
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ── Header ──────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative flex items-center justify-between p-6 md:p-8">
+                            <div>
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('Site Management')}
+                                </p>
+                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                    {t('Sites')}
+                                </h1>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    <span className="font-mono tabular-nums font-medium text-foreground">{sites.length}</span>{' '}
+                                    {t('site(s) configured')}
+                                </p>
+                            </div>
+                            <Can permission="manage sites">
+                                <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                                    <DialogTrigger asChild>
+                                        <Button><Plus className="mr-2 h-4 w-4" />{t('Create Site')}</Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-lg">
+                                        <DialogHeader>
+                                            <DialogTitle>{t('Create Site')}</DialogTitle>
+                                        </DialogHeader>
+                                        <SiteForm
+                                            timezones={timezones}
+                                            onSuccess={() => setShowCreate(false)}
+                                        />
+                                    </DialogContent>
+                                </Dialog>
+                            </Can>
+                        </div>
                     </div>
-                    <Can permission="manage sites">
-                        <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                            <DialogTrigger asChild>
-                                <Button><Plus className="mr-2 h-4 w-4" />{t('Create Site')}</Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-lg">
-                                <DialogHeader>
-                                    <DialogTitle>{t('Create Site')}</DialogTitle>
-                                </DialogHeader>
-                                <SiteForm
-                                    timezones={timezones}
-                                    onSuccess={() => setShowCreate(false)}
-                                />
-                            </DialogContent>
-                        </Dialog>
-                    </Can>
-                </div>
+                </FadeIn>
 
-                <Card className="flex-1">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{t('Name')}</TableHead>
-                                <TableHead>{t('Status')}</TableHead>
-                                <TableHead>{t('Timezone')}</TableHead>
-                                <TableHead>{t('Opening Hour')}</TableHead>
-                                <TableHead>{t('Devices')}</TableHead>
-                                <TableHead>{t('Gateways')}</TableHead>
-                                <TableHead />
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {sites.length === 0 ? (
+                {/* ── Table Section ────────────────────────── */}
+                <FadeIn delay={75} duration={400}>
+                    <SectionDivider label={t('All Sites')} />
+                </FadeIn>
+
+                <FadeIn delay={150} duration={400}>
+                    <Card className="shadow-elevation-1">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={7} className="py-12 text-center">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <MapPin className="h-8 w-8 text-muted-foreground/50" />
-                                            <p className="text-sm text-muted-foreground">{t('No sites configured')}</p>
-                                        </div>
-                                    </TableCell>
+                                    <TableHead>{t('Name')}</TableHead>
+                                    <TableHead>{t('Status')}</TableHead>
+                                    <TableHead>{t('Timezone')}</TableHead>
+                                    <TableHead>{t('Opening Hour')}</TableHead>
+                                    <TableHead>{t('Devices')}</TableHead>
+                                    <TableHead>{t('Gateways')}</TableHead>
+                                    <TableHead>{t('Created')}</TableHead>
+                                    <TableHead />
                                 </TableRow>
-                            ) : (
-                                sites.map((site) => (
-                                    <TableRow key={site.id}>
-                                        <TableCell className="font-medium">{site.name}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={statusBadgeVariant[site.status] ?? 'outline'}>
-                                                {site.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">{site.timezone ?? '-'}</TableCell>
-                                        <TableCell className="text-muted-foreground">{site.opening_hour ?? '-'}</TableCell>
-                                        <TableCell className="text-muted-foreground">{site.device_count}</TableCell>
-                                        <TableCell className="text-muted-foreground">{site.gateway_count}</TableCell>
-                                        <TableCell>
-                                            <Can permission="manage sites">
-                                                <div className="flex gap-1">
-                                                    {site.status === 'onboarding' && (
-                                                        <Button variant="outline" size="sm" onClick={() => router.get(`/sites/${site.id}/onboard`)}>
-                                                            {t('Onboard')}
-                                                        </Button>
-                                                    )}
-                                                    <Dialog open={editSite?.id === site.id} onOpenChange={(open) => !open && setEditSite(null)}>
-                                                        <DialogTrigger asChild>
-                                                            <Button variant="ghost" size="icon-sm" onClick={() => setEditSite(site)}>
-                                                                <Pencil className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                        </DialogTrigger>
-                                                        <DialogContent className="max-w-lg">
-                                                            <DialogHeader>
-                                                                <DialogTitle>{t('Edit Site')}</DialogTitle>
-                                                            </DialogHeader>
-                                                            <SiteForm
-                                                                site={site}
-                                                                timezones={timezones}
-                                                                onSuccess={() => setEditSite(null)}
-                                                            />
-                                                        </DialogContent>
-                                                    </Dialog>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        className="text-destructive"
-                                                        onClick={() => setDeleteSite(site)}
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </Can>
+                            </TableHeader>
+                            <TableBody>
+                                {sites.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="py-12 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <MapPin className="h-8 w-8 text-muted-foreground/50" />
+                                                <p className="text-sm text-muted-foreground">{t('No sites configured')}</p>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </Card>
+                                ) : (
+                                    sites.map((site) => (
+                                        <TableRow key={site.id}>
+                                            <TableCell className="font-medium">{site.name}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={statusBadgeVariant[site.status] ?? 'outline'}>
+                                                    {site.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">{site.timezone ?? '-'}</TableCell>
+                                            <TableCell className="font-mono tabular-nums text-muted-foreground">{site.opening_hour ?? '-'}</TableCell>
+                                            <TableCell className="font-mono tabular-nums text-muted-foreground">{site.device_count}</TableCell>
+                                            <TableCell className="font-mono tabular-nums text-muted-foreground">{site.gateway_count}</TableCell>
+                                            <TableCell className="font-mono tabular-nums text-muted-foreground">
+                                                {formatTimeAgo(site.created_at)}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Can permission="manage sites">
+                                                    <div className="flex gap-1">
+                                                        {site.status === 'onboarding' && (
+                                                            <Button variant="outline" size="sm" onClick={() => router.get(`/sites/${site.id}/onboard`)}>
+                                                                {t('Onboard')}
+                                                            </Button>
+                                                        )}
+                                                        <Dialog open={editSite?.id === site.id} onOpenChange={(open) => !open && setEditSite(null)}>
+                                                            <DialogTrigger asChild>
+                                                                <Button variant="ghost" size="icon-sm" onClick={() => setEditSite(site)}>
+                                                                    <Pencil className="h-3.5 w-3.5" />
+                                                                </Button>
+                                                            </DialogTrigger>
+                                                            <DialogContent className="max-w-lg">
+                                                                <DialogHeader>
+                                                                    <DialogTitle>{t('Edit Site')}</DialogTitle>
+                                                                </DialogHeader>
+                                                                <SiteForm
+                                                                    site={site}
+                                                                    timezones={timezones}
+                                                                    onSuccess={() => setEditSite(null)}
+                                                                />
+                                                            </DialogContent>
+                                                        </Dialog>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon-sm"
+                                                            className="text-destructive"
+                                                            onClick={() => setDeleteSite(site)}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </Can>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </Card>
+                </FadeIn>
             </div>
 
             <ConfirmationDialog
@@ -248,6 +288,7 @@ function SiteForm({
                         value={form.data.latitude}
                         onChange={(e) => form.setData('latitude', e.target.value)}
                         placeholder="-90 to 90"
+                        className="font-mono tabular-nums"
                     />
                     <InputError message={form.errors.latitude} />
                 </div>
@@ -261,6 +302,7 @@ function SiteForm({
                         value={form.data.longitude}
                         onChange={(e) => form.setData('longitude', e.target.value)}
                         placeholder="-180 to 180"
+                        className="font-mono tabular-nums"
                     />
                     <InputError message={form.errors.longitude} />
                 </div>
@@ -289,6 +331,7 @@ function SiteForm({
                         type="time"
                         value={form.data.opening_hour}
                         onChange={(e) => form.setData('opening_hour', e.target.value)}
+                        className="font-mono tabular-nums"
                     />
                     <InputError message={form.errors.opening_hour} />
                 </div>

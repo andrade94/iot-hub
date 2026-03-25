@@ -47,4 +47,26 @@ class PartnerController extends Controller
 
         return back()->with('success', "Organization '{$org->name}' created.");
     }
+
+    public function suspend(Organization $organization)
+    {
+        if (! $organization->canTransitionTo('suspended')) {
+            return back()->with('error', "Cannot suspend organization in '{$organization->status}' status.");
+        }
+
+        $organization->suspend();
+
+        return back()->with('success', "Organization '{$organization->name}' suspended.");
+    }
+
+    public function archive(Organization $organization)
+    {
+        if (! $organization->canTransitionTo('archived')) {
+            return back()->with('error', "Cannot archive organization in '{$organization->status}' status.");
+        }
+
+        $organization->archive();
+
+        return back()->with('success', "Organization '{$organization->name}' archived.");
+    }
 }

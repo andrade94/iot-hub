@@ -102,6 +102,11 @@ class Site extends Model
         return $this->hasMany(WorkOrder::class);
     }
 
+    public function temperatureVerifications(): HasMany
+    {
+        return $this->hasMany(TemperatureVerification::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');

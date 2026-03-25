@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
+import { FadeIn } from '@/components/ui/fade-in';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -39,46 +41,70 @@ export default function AlertRuleIndex({ site, rules }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${t('Alert Rules')} — ${site.name}`} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-                {/* Header */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('Alert Rules')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {site.name} — {rules.length} {t('rule(s)')}, {activeCount} {t('active')}
-                        </p>
-                    </div>
-                    <Can permission="manage alert rules">
-                        <Button asChild>
-                            <Link href={`/sites/${site.id}/rules/create`}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                {t('New Rule')}
-                            </Link>
-                        </Button>
-                    </Can>
-                </div>
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ── Header card with bg-dots ── */}
+                <FadeIn>
+                    <Card className="shadow-elevation-1 overflow-hidden">
+                        <div className="bg-dots relative border-b px-6 py-5">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                                        {t('Alert Rules')}
+                                    </p>
+                                    <h1 className="font-display mt-1 text-2xl font-bold tracking-tight">
+                                        {site.name}
+                                    </h1>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        <span className="font-mono tabular-nums">{rules.length}</span>{' '}
+                                        {t('rule(s)')},{' '}
+                                        <span className="font-mono tabular-nums">{activeCount}</span>{' '}
+                                        {t('active')}
+                                    </p>
+                                </div>
+                                <Can permission="manage alert rules">
+                                    <Button asChild>
+                                        <Link href={`/sites/${site.id}/rules/create`}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            {t('New Rule')}
+                                        </Link>
+                                    </Button>
+                                </Can>
+                            </div>
+                        </div>
+                    </Card>
+                </FadeIn>
 
-                {/* Rules list */}
+                {/* ── Rules list ── */}
                 {rules.length === 0 ? (
-                    <EmptyState
-                        icon={<Settings2 className="h-6 w-6 text-muted-foreground" />}
-                        title={t('No alert rules configured')}
-                        description={t('Create rules to automatically detect and alert on sensor anomalies')}
-                        action={
-                            <Can permission="manage alert rules">
-                                <Button asChild>
-                                    <Link href={`/sites/${site.id}/rules/create`}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        {t('Create First Rule')}
-                                    </Link>
-                                </Button>
-                            </Can>
-                        }
-                    />
+                    <FadeIn delay={100}>
+                        <EmptyState
+                            icon={<Settings2 className="h-6 w-6 text-muted-foreground" />}
+                            title={t('No alert rules configured')}
+                            description={t(
+                                'Create rules to automatically detect and alert on sensor anomalies',
+                            )}
+                            action={
+                                <Can permission="manage alert rules">
+                                    <Button asChild>
+                                        <Link href={`/sites/${site.id}/rules/create`}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            {t('Create First Rule')}
+                                        </Link>
+                                    </Button>
+                                </Can>
+                            }
+                        />
+                    </FadeIn>
                 ) : (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {rules.map((rule) => (
-                            <RuleCard key={rule.id} rule={rule} siteId={site.id} onDelete={setDeleteRule} />
+                        {rules.map((rule, idx) => (
+                            <FadeIn key={rule.id} delay={80 + idx * 60}>
+                                <RuleCard
+                                    rule={rule}
+                                    siteId={site.id}
+                                    onDelete={setDeleteRule}
+                                />
+                            </FadeIn>
                         ))}
                     </div>
                 )}
@@ -88,10 +114,15 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                     onOpenChange={(open) => !open && setDeleteRule(null)}
                     title={t('Delete Alert Rule')}
                     description={`Delete "${deleteRule?.name}"? This cannot be undone.`}
-                    warningMessage={t('Active alerts using this rule will not be affected, but no new alerts will be created.')}
+                    warningMessage={t(
+                        'Active alerts using this rule will not be affected, but no new alerts will be created.',
+                    )}
                     onConfirm={() => {
                         if (deleteRule) {
-                            router.delete(`/sites/${site.id}/rules/${deleteRule.id}`, { preserveScroll: true, onSuccess: () => setDeleteRule(null) });
+                            router.delete(`/sites/${site.id}/rules/${deleteRule.id}`, {
+                                preserveScroll: true,
+                                onSuccess: () => setDeleteRule(null),
+                            });
                         }
                     }}
                     actionLabel={t('Delete')}
@@ -101,7 +132,17 @@ export default function AlertRuleIndex({ site, rules }: Props) {
     );
 }
 
-function RuleCard({ rule, siteId, onDelete }: { rule: AlertRule; siteId: number; onDelete: (rule: AlertRule) => void }) {
+/* ── Rule Card ───────────────────────────────────── */
+
+function RuleCard({
+    rule,
+    siteId,
+    onDelete,
+}: {
+    rule: AlertRule;
+    siteId: number;
+    onDelete: (rule: AlertRule) => void;
+}) {
     const { t } = useLang();
 
     function toggleActive() {
@@ -121,7 +162,9 @@ function RuleCard({ rule, siteId, onDelete }: { rule: AlertRule; siteId: number;
     const Icon = severityIcons[rule.severity] ?? Bell;
 
     return (
-        <Card className={!rule.active ? 'opacity-60' : ''}>
+        <Card
+            className={`shadow-elevation-1 transition-opacity ${!rule.active ? 'opacity-60' : ''}`}
+        >
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -149,9 +192,11 @@ function RuleCard({ rule, siteId, onDelete }: { rule: AlertRule; siteId: number;
                         >
                             <span className="font-mono font-medium">{cond.metric}</span>
                             <span className="text-muted-foreground">{cond.condition}</span>
-                            <span className="font-medium">{cond.threshold}</span>
+                            <span className="font-mono font-medium tabular-nums">
+                                {cond.threshold}
+                            </span>
                             {cond.duration_minutes > 0 && (
-                                <span className="text-muted-foreground">
+                                <span className="font-mono tabular-nums text-muted-foreground">
                                     for {cond.duration_minutes}m
                                 </span>
                             )}
@@ -159,7 +204,8 @@ function RuleCard({ rule, siteId, onDelete }: { rule: AlertRule; siteId: number;
                     ))}
                     {rule.conditions.length > 3 && (
                         <p className="text-xs text-muted-foreground">
-                            +{rule.conditions.length - 3} {t('more')}
+                            +<span className="font-mono tabular-nums">{rule.conditions.length - 3}</span>{' '}
+                            {t('more')}
                         </p>
                     )}
                 </div>
@@ -171,7 +217,8 @@ function RuleCard({ rule, siteId, onDelete }: { rule: AlertRule; siteId: number;
                 )}
 
                 <p className="mt-2 text-xs text-muted-foreground">
-                    {t('Cooldown')}: {rule.cooldown_minutes}m
+                    {t('Cooldown')}:{' '}
+                    <span className="font-mono tabular-nums">{rule.cooldown_minutes}</span>m
                 </p>
 
                 {/* Actions */}
@@ -196,6 +243,51 @@ function RuleCard({ rule, siteId, onDelete }: { rule: AlertRule; siteId: number;
                 </Can>
             </CardContent>
         </Card>
+    );
+}
+
+/* ── Sub-components ──────────────────────────────── */
+
+export function AlertRulesIndexSkeleton() {
+    return (
+        <div className="flex flex-col gap-6 p-4 md:p-6">
+            {/* Header */}
+            <div className="rounded-xl border overflow-hidden">
+                <div className="border-b px-6 py-5">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <Skeleton className="h-3 w-20" />
+                            <Skeleton className="mt-2 h-7 w-36" />
+                            <Skeleton className="mt-2 h-4 w-28" />
+                        </div>
+                        <Skeleton className="h-9 w-28" />
+                    </div>
+                </div>
+            </div>
+            {/* Rules Grid */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="rounded-xl border p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-2">
+                                <Skeleton className="h-4 w-4" />
+                                <Skeleton className="h-4 w-28" />
+                            </div>
+                            <Skeleton className="h-5 w-9 rounded-full" />
+                        </div>
+                        <div className="flex gap-2">
+                            <Skeleton className="h-5 w-16 rounded-full" />
+                            <Skeleton className="h-5 w-14 rounded-full" />
+                        </div>
+                        <div className="space-y-1.5">
+                            {Array.from({ length: 2 }).map((_, j) => (
+                                <Skeleton key={j} className="h-6 w-full rounded" />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 }
 

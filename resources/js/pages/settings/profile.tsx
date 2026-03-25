@@ -5,6 +5,7 @@ import { Transition } from '@headlessui/react';
 import { Form, Head, Link, router, usePage } from '@inertiajs/react';
 
 import DeleteUser from '@/components/delete-user';
+import { FadeIn } from '@/components/ui/fade-in';
 import HeadingSmall from '@/components/ui/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+/* ── Section Divider ──────────────────────────────── */
+
+function SectionDivider({ label }: { label: string }) {
+    return (
+        <div className="flex items-center gap-3 pt-2">
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                {label}
+            </span>
+            <div className="h-px flex-1 bg-border" />
+        </div>
+    );
+}
+
 export default function Profile({
     mustVerifyEmail,
     status,
@@ -38,117 +52,131 @@ export default function Profile({
             <Head title="Profile settings" />
 
             <SettingsLayout>
-                <div className="space-y-6">
-                    <HeadingSmall
-                        title="Profile information"
-                        description="Update your name and email address"
-                    />
+                {/* ── Profile Information ──────────────────── */}
+                <FadeIn duration={400}>
+                    <div className="space-y-6">
+                        <HeadingSmall
+                            title="Profile information"
+                            description="Update your name and email address"
+                        />
 
-                    <Form
-                        {...ProfileController.update.form()}
-                        options={{
-                            preserveScroll: true,
-                        }}
-                        className="space-y-6"
-                    >
-                        {({ processing, recentlySuccessful, errors }) => (
-                            <>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Name</Label>
+                        <div className="rounded-lg border bg-card p-6 shadow-elevation-1">
+                            <Form
+                                {...ProfileController.update.form()}
+                                options={{
+                                    preserveScroll: true,
+                                }}
+                                className="space-y-6"
+                            >
+                                {({ processing, recentlySuccessful, errors }) => (
+                                    <>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="name">Name</Label>
 
-                                    <Input
-                                        id="name"
-                                        className="mt-1 block w-full"
-                                        defaultValue={auth.user.name}
-                                        name="name"
-                                        required
-                                        autoComplete="name"
-                                        placeholder="Full name"
-                                    />
+                                            <Input
+                                                id="name"
+                                                className="mt-1 block w-full"
+                                                defaultValue={auth.user.name}
+                                                name="name"
+                                                required
+                                                autoComplete="name"
+                                                placeholder="Full name"
+                                            />
 
-                                    <InputError
-                                        className="mt-2"
-                                        message={errors.name}
-                                    />
-                                </div>
+                                            <InputError
+                                                className="mt-2"
+                                                message={errors.name}
+                                            />
+                                        </div>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="email">Email address</Label>
 
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        className="mt-1 block w-full"
-                                        defaultValue={auth.user.email}
-                                        name="email"
-                                        required
-                                        autoComplete="username"
-                                        placeholder="Email address"
-                                    />
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                className="mt-1 block w-full"
+                                                defaultValue={auth.user.email}
+                                                name="email"
+                                                required
+                                                autoComplete="username"
+                                                placeholder="Email address"
+                                            />
 
-                                    <InputError
-                                        className="mt-2"
-                                        message={errors.email}
-                                    />
-                                </div>
+                                            <InputError
+                                                className="mt-2"
+                                                message={errors.email}
+                                            />
+                                        </div>
 
-                                {mustVerifyEmail &&
-                                    auth.user.email_verified_at === null && (
-                                        <div>
-                                            <p className="-mt-4 text-sm text-muted-foreground">
-                                                Your email address is
-                                                unverified.{' '}
-                                                <Link
-                                                    href={send()}
-                                                    as="button"
-                                                    className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                                                >
-                                                    Click here to resend the
-                                                    verification email.
-                                                </Link>
-                                            </p>
+                                        {mustVerifyEmail &&
+                                            auth.user.email_verified_at === null && (
+                                                <div>
+                                                    <p className="-mt-4 text-sm text-muted-foreground">
+                                                        Your email address is
+                                                        unverified.{' '}
+                                                        <Link
+                                                            href={send()}
+                                                            as="button"
+                                                            className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                                                        >
+                                                            Click here to resend the
+                                                            verification email.
+                                                        </Link>
+                                                    </p>
 
-                                            {status ===
-                                                'verification-link-sent' && (
-                                                <div className="mt-2 text-sm font-medium text-green-600">
-                                                    A new verification link has
-                                                    been sent to your email
-                                                    address.
+                                                    {status ===
+                                                        'verification-link-sent' && (
+                                                        <div className="mt-2 text-sm font-medium text-green-600">
+                                                            A new verification link has
+                                                            been sent to your email
+                                                            address.
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
+
+                                        <div className="flex items-center gap-4">
+                                            <Button
+                                                disabled={processing}
+                                                data-test="update-profile-button"
+                                            >
+                                                Save
+                                            </Button>
+
+                                            <Transition
+                                                show={recentlySuccessful}
+                                                enter="transition ease-in-out"
+                                                enterFrom="opacity-0"
+                                                leave="transition ease-in-out"
+                                                leaveTo="opacity-0"
+                                            >
+                                                <p className="text-sm text-neutral-600">
+                                                    Saved
+                                                </p>
+                                            </Transition>
                                         </div>
-                                    )}
+                                    </>
+                                )}
+                            </Form>
+                        </div>
+                    </div>
+                </FadeIn>
 
-                                <div className="flex items-center gap-4">
-                                    <Button
-                                        disabled={processing}
-                                        data-test="update-profile-button"
-                                    >
-                                        Save
-                                    </Button>
+                {/* ── Quiet Hours ──────────────────────────── */}
+                <FadeIn delay={75} duration={400}>
+                    <QuietHoursSection />
+                </FadeIn>
 
-                                    <Transition
-                                        show={recentlySuccessful}
-                                        enter="transition ease-in-out"
-                                        enterFrom="opacity-0"
-                                        leave="transition ease-in-out"
-                                        leaveTo="opacity-0"
-                                    >
-                                        <p className="text-sm text-neutral-600">
-                                            Saved
-                                        </p>
-                                    </Transition>
-                                </div>
-                            </>
-                        )}
-                    </Form>
-                </div>
+                {/* ── Notification Preferences ────────────── */}
+                <FadeIn delay={150} duration={400}>
+                    <NotificationPrefsSection />
+                </FadeIn>
 
-                <QuietHoursSection />
-
-                <NotificationPrefsSection />
-
-                <DeleteUser />
+                {/* ── Danger Zone ─────────────────────────── */}
+                <FadeIn delay={225} duration={400}>
+                    <DeleteUser />
+                </FadeIn>
             </SettingsLayout>
         </AppLayout>
     );
@@ -198,60 +226,66 @@ function QuietHoursSection() {
                 description="Suppress non-critical alert notifications during off-hours. Critical and high-severity alerts are always delivered."
             />
 
-            <div className="flex items-center gap-3">
-                <Switch
-                    id="quiet-hours-enabled"
-                    checked={enabled}
-                    onCheckedChange={setEnabled}
-                />
-                <Label htmlFor="quiet-hours-enabled">Enable quiet hours</Label>
-            </div>
+            <div className="rounded-lg border bg-card p-6 shadow-elevation-1">
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                        <Switch
+                            id="quiet-hours-enabled"
+                            checked={enabled}
+                            onCheckedChange={setEnabled}
+                        />
+                        <Label htmlFor="quiet-hours-enabled">Enable quiet hours</Label>
+                    </div>
 
-            {enabled && (
-                <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="grid gap-2">
-                        <Label htmlFor="quiet-start">Start time</Label>
-                        <Input
-                            id="quiet-start"
-                            type="time"
-                            value={start}
-                            onChange={(e) => setStart(e.target.value)}
-                        />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="quiet-end">End time</Label>
-                        <Input
-                            id="quiet-end"
-                            type="time"
-                            value={end}
-                            onChange={(e) => setEnd(e.target.value)}
-                        />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="quiet-tz">Timezone</Label>
-                        <Select value={tz} onValueChange={setTz}>
-                            <SelectTrigger id="quiet-tz">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {['America/Mexico_City', 'America/Monterrey', 'America/Cancun', 'America/Tijuana', 'America/Hermosillo', 'UTC'].map(
-                                    (zone) => (
-                                        <SelectItem key={zone} value={zone}>
-                                            {zone.replace('America/', '').replace('_', ' ')}
-                                        </SelectItem>
-                                    ),
-                                )}
-                            </SelectContent>
-                        </Select>
+                    {enabled && (
+                        <div className="grid gap-4 sm:grid-cols-3">
+                            <div className="grid gap-2">
+                                <Label htmlFor="quiet-start">Start time</Label>
+                                <Input
+                                    id="quiet-start"
+                                    type="time"
+                                    value={start}
+                                    onChange={(e) => setStart(e.target.value)}
+                                    className="font-mono tabular-nums"
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="quiet-end">End time</Label>
+                                <Input
+                                    id="quiet-end"
+                                    type="time"
+                                    value={end}
+                                    onChange={(e) => setEnd(e.target.value)}
+                                    className="font-mono tabular-nums"
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="quiet-tz">Timezone</Label>
+                                <Select value={tz} onValueChange={setTz}>
+                                    <SelectTrigger id="quiet-tz">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {['America/Mexico_City', 'America/Monterrey', 'America/Cancun', 'America/Tijuana', 'America/Hermosillo', 'UTC'].map(
+                                            (zone) => (
+                                                <SelectItem key={zone} value={zone}>
+                                                    {zone.replace('America/', '').replace('_', ' ')}
+                                                </SelectItem>
+                                            ),
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex items-center gap-4">
+                        <Button onClick={save} disabled={saving}>
+                            {saving ? 'Saving...' : 'Save quiet hours'}
+                        </Button>
+                        {saved && <p className="text-sm text-neutral-600">Saved</p>}
                     </div>
                 </div>
-            )}
-
-            <div className="flex items-center gap-4">
-                <Button onClick={save} disabled={saving}>
-                    {saving ? 'Saving...' : 'Save quiet hours'}
-                </Button>
-                {saved && <p className="text-sm text-neutral-600">Saved</p>}
             </div>
         </div>
     );
@@ -303,41 +337,45 @@ function NotificationPrefsSection() {
                 description="Choose how and when you receive alert notifications. Escalation chain notifications override these preferences."
             />
 
-            <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                    <Switch id="notify-whatsapp" checked={whatsapp} onCheckedChange={setWhatsapp} />
-                    <Label htmlFor="notify-whatsapp">WhatsApp alerts</Label>
-                </div>
-                <div className="flex items-center gap-3">
-                    <Switch id="notify-push" checked={push} onCheckedChange={setPush} />
-                    <Label htmlFor="notify-push">Push notifications</Label>
-                </div>
-                <div className="flex items-center gap-3">
-                    <Switch id="notify-email" checked={email} onCheckedChange={setEmail} />
-                    <Label htmlFor="notify-email">Email notifications</Label>
-                </div>
-            </div>
+            <div className="rounded-lg border bg-card p-6 shadow-elevation-1">
+                <div className="space-y-6">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <Switch id="notify-whatsapp" checked={whatsapp} onCheckedChange={setWhatsapp} />
+                            <Label htmlFor="notify-whatsapp">WhatsApp alerts</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Switch id="notify-push" checked={push} onCheckedChange={setPush} />
+                            <Label htmlFor="notify-push">Push notifications</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Switch id="notify-email" checked={email} onCheckedChange={setEmail} />
+                            <Label htmlFor="notify-email">Email notifications</Label>
+                        </div>
+                    </div>
 
-            <div className="grid gap-2 sm:max-w-[250px]">
-                <Label htmlFor="min-severity">Minimum severity</Label>
-                <Select value={minSeverity} onValueChange={setMinSeverity}>
-                    <SelectTrigger id="min-severity">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="low">All alerts</SelectItem>
-                        <SelectItem value="medium">Medium and above</SelectItem>
-                        <SelectItem value="high">High and above</SelectItem>
-                        <SelectItem value="critical">Critical only</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
+                    <div className="grid gap-2 sm:max-w-[250px]">
+                        <Label htmlFor="min-severity">Minimum severity</Label>
+                        <Select value={minSeverity} onValueChange={setMinSeverity}>
+                            <SelectTrigger id="min-severity">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="low">All alerts</SelectItem>
+                                <SelectItem value="medium">Medium and above</SelectItem>
+                                <SelectItem value="high">High and above</SelectItem>
+                                <SelectItem value="critical">Critical only</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
 
-            <div className="flex items-center gap-4">
-                <Button onClick={save} disabled={saving}>
-                    {saving ? 'Saving...' : 'Save preferences'}
-                </Button>
-                {saved && <p className="text-sm text-neutral-600">Saved</p>}
+                    <div className="flex items-center gap-4">
+                        <Button onClick={save} disabled={saving}>
+                            {saving ? 'Saving...' : 'Save preferences'}
+                        </Button>
+                        {saved && <p className="text-sm text-neutral-600">Saved</p>}
+                    </div>
+                </div>
             </div>
         </div>
     );

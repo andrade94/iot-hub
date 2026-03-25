@@ -104,4 +104,31 @@ class ReportController extends Controller
             'summary' => $summary,
         ]);
     }
+
+    public function inventory(Request $request, Site $site)
+    {
+        $devices = $site->devices()
+            ->with(['gateway', 'recipe', 'latestCalibration'])
+            ->get()
+            ->map(fn ($device) => [
+                'id' => $device->id,
+                'name' => $device->name,
+                'model' => $device->model,
+                'dev_eui' => $device->dev_eui,
+                'zone' => $device->zone,
+                'status' => $device->status,
+                'battery_pct' => $device->battery_pct,
+                'rssi' => $device->rssi,
+                'last_reading_at' => $device->last_reading_at,
+                'installed_at' => $device->installed_at,
+                'gateway_name' => $device->gateway?->serial,
+                'recipe_name' => $device->recipe?->name,
+                'calibration_status' => $device->calibrationStatus(),
+            ]);
+
+        return Inertia::render('reports/inventory', [
+            'site' => $site,
+            'devices' => $devices,
+        ]);
+    }
 }

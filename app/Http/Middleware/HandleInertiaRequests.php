@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Organization;
 use App\Models\OutageDeclaration;
 use App\Models\Site;
 use Illuminate\Http\Request;
@@ -104,6 +105,12 @@ class HandleInertiaRequests extends Middleware
             'unreadNotificationsCount' => $user ? $user->unreadNotifications()->count() : 0,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'locale' => app()->getLocale(),
+            'all_organizations' => $user && $user->hasRole('super_admin')
+                ? Organization::select('id', 'name', 'slug')
+                    ->orderBy('name')
+                    ->get()
+                    ->toArray()
+                : [],
             'active_outage' => OutageDeclaration::isActive()
                 ? OutageDeclaration::current()?->only(['id', 'reason', 'affected_services', 'declared_at'])
                 : null,

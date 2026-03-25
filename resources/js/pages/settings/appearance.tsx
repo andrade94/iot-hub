@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 
 import AppearanceTabs from '@/components/appearance-tabs';
+import { FadeIn } from '@/components/ui/fade-in';
 import HeadingSmall from '@/components/ui/heading-small';
 import { type BreadcrumbItem } from '@/types';
 
@@ -21,13 +22,15 @@ export default function Appearance() {
             <Head title="Appearance settings" />
 
             <SettingsLayout>
-                <div className="space-y-6">
-                    <HeadingSmall
-                        title="Appearance settings"
-                        description="Update your account's appearance settings"
-                    />
-                    <AppearanceTabs />
-                </div>
+                <FadeIn duration={400}>
+                    <div className="space-y-6">
+                        <HeadingSmall
+                            title="Appearance settings"
+                            description="Update your account's appearance settings"
+                        />
+                        <AppearanceTabs />
+                    </div>
+                </FadeIn>
             </SettingsLayout>
         </AppLayout>
     );

@@ -1,13 +1,16 @@
 /**
  * Activity Log Page
  *
- * A premium chronicle-style activity log with refined typography,
- * elegant timeline layout, and sophisticated visual hierarchy.
+ * Industrial Precision design treatment — chronicle-style activity log
+ * with bg-dots header, section dividers, shadow-elevation-1, and FadeIn.
  */
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { FadeIn } from '@/components/ui/fade-in';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Select,
     SelectContent,
@@ -15,7 +18,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useLang } from '@/hooks/use-lang';
 import { useInitials } from '@/hooks/use-initials';
@@ -27,7 +29,6 @@ import {
     formatRelativeTime,
     getCauserName,
     getChangedProperties,
-    getEventColor,
     getEventIcon,
     getEventName,
     getModelName,
@@ -198,7 +199,7 @@ function ActivityItem({
                 <div className="flex-1 pb-8">
                     <div
                         className={cn(
-                            'rounded-xl border bg-card/50 backdrop-blur-sm p-4 transition-all duration-300',
+                            'rounded-xl border bg-card/50 backdrop-blur-sm p-4 shadow-elevation-1 transition-all duration-300',
                             'hover:bg-card hover:shadow-elevation-2 hover:border-border/80',
                             'dark:bg-card/30 dark:hover:bg-card/50'
                         )}
@@ -236,7 +237,7 @@ function ActivityItem({
                             {/* Timestamp */}
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
                                 <Clock className="h-3 w-3" />
-                                <span title={formatDateTime(activity.created_at)}>
+                                <span className="font-mono tabular-nums" title={formatDateTime(activity.created_at)}>
                                     {formatRelativeTime(activity.created_at)}
                                 </span>
                             </div>
@@ -249,7 +250,7 @@ function ActivityItem({
                                 <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
                                     {modelName}
                                     {activity.subject_id && (
-                                        <span className="ml-1 font-mono">#{activity.subject_id}</span>
+                                        <span className="ml-1 font-mono tabular-nums">#{activity.subject_id}</span>
                                     )}
                                 </span>
                                 <div className="h-px flex-1 bg-border/50" />
@@ -273,7 +274,7 @@ function ActivityItem({
                                         )}
                                     />
                                     <span>
-                                        {changes.length} field{changes.length !== 1 ? 's' : ''} changed
+                                        <span className="font-mono tabular-nums">{changes.length}</span> field{changes.length !== 1 ? 's' : ''} changed
                                     </span>
                                 </button>
 
@@ -349,7 +350,7 @@ function DateGroupHeader({ date, count }: { date: string; count: number }) {
                 >
                     {date}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="font-mono text-xs tabular-nums text-muted-foreground">
                     ({count} {count === 1 ? 'event' : 'events'})
                 </span>
             </div>
@@ -374,6 +375,54 @@ function EmptyState({ message }: { message: string }) {
                 No Activity Yet
             </h3>
             <p className="text-muted-foreground max-w-sm">{message}</p>
+        </div>
+    );
+}
+
+export function ActivityLogSkeleton() {
+    return (
+        <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
+            {/* Header */}
+            <div className="rounded-xl border p-6 md:p-8">
+                <div className="flex items-start justify-between">
+                    <div>
+                        <Skeleton className="h-3 w-28" />
+                        <Skeleton className="mt-3 h-8 w-36" />
+                        <Skeleton className="mt-2 h-4 w-64" />
+                    </div>
+                    <Skeleton className="h-9 w-36 rounded-lg" />
+                </div>
+            </div>
+            {/* Filters */}
+            <div className="flex items-center gap-3">
+                <Skeleton className="h-3 w-14" />
+                <div className="h-px flex-1 bg-border" />
+            </div>
+            <div className="rounded-xl border p-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-4 w-4" />
+                        <Skeleton className="h-9 w-[180px]" />
+                    </div>
+                    <Skeleton className="h-9 w-24" />
+                </div>
+            </div>
+            {/* Timeline items */}
+            <div className="space-y-6">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex gap-4">
+                        <Skeleton className="h-11 w-11 shrink-0 rounded-xl" />
+                        <div className="flex-1 rounded-xl border p-4 space-y-2">
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-5 w-16 rounded-full" />
+                            </div>
+                            <Skeleton className="h-4 w-3/4" />
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
@@ -420,131 +469,150 @@ export default function ActivityLogPage({ activities, filters }: ActivityLogPage
         }
     };
 
-    const selectedEventType = eventTypes.find((t) => t.value === (filters.event || 'all'));
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Activity Log')} />
 
-            <div className="flex h-full flex-1 flex-col p-4 md:p-6 lg:p-8">
-                {/* Header Section */}
-                <div className="mb-8">
-                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                        <div>
-                            <h1 className="font-display text-3xl font-bold tracking-tight mb-1">
-                                Activity Chronicle
-                            </h1>
-                            <p className="text-muted-foreground">
-                                A complete record of all system events and changes
-                            </p>
-                        </div>
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8">
+                {/* ── Header ──────────────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative flex items-start justify-between p-6 md:p-8">
+                            <div>
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('Activity Chronicle')}
+                                </p>
+                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                    {t('Activity Log')}
+                                </h1>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {t('A complete record of all system events and changes')}
+                                </p>
+                            </div>
 
-                        {/* Stats badge */}
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 border">
-                            <Sparkles className="h-4 w-4 text-amber-500" />
-                            <span className="text-sm font-medium">
-                                {activities.total.toLocaleString()}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                                total events
-                            </span>
+                            {/* Stats badge */}
+                            <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-4 py-2">
+                                <Sparkles className="h-4 w-4 text-amber-500" />
+                                <span className="font-mono text-sm font-medium tabular-nums">
+                                    {activities.total.toLocaleString()}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                    {t('total events')}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </FadeIn>
 
-                {/* Filter Bar */}
-                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl border bg-card/50 backdrop-blur-sm">
+                {/* ── FILTERS ─────────────────────────────────────── */}
+                <FadeIn delay={75} duration={400}>
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Filter className="h-4 w-4" />
-                            <span>Filter by:</span>
-                        </div>
-
-                        <Select value={filters.event || 'all'} onValueChange={handleEventFilter}>
-                            <SelectTrigger className="w-[180px] bg-background">
-                                <SelectValue placeholder={t('Filter by event')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {eventTypes.map((type) => (
-                                    <SelectItem key={type.value} value={type.value}>
-                                        <div className="flex items-center gap-2">
-                                            <type.icon className="h-4 w-4 text-muted-foreground" />
-                                            <span>{type.label}</span>
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                            {t('Filters')}
+                        </h2>
+                        <div className="h-px flex-1 bg-border" />
                     </div>
+                </FadeIn>
 
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRefresh}
-                        disabled={isRefreshing}
-                        className="gap-2"
-                    >
-                        <RefreshCw
-                            className={cn('h-4 w-4', isRefreshing && 'animate-spin')}
-                        />
-                        Refresh
-                    </Button>
-                </div>
-
-                {/* Timeline */}
-                <div className="flex-1">
-                    {activities.data.length === 0 ? (
-                        <EmptyState message={t('No activities found matching your filters')} />
-                    ) : (
-                        <div className="space-y-0">
-                            {Object.entries(groupedActivities).map(([date, items]) => (
-                                <div key={date}>
-                                    <DateGroupHeader date={date} count={items.length} />
-                                    <div className="pl-0 md:pl-4">
-                                        {items.map((activity, index) => (
-                                            <ActivityItem
-                                                key={activity.id}
-                                                activity={activity}
-                                                index={index}
-                                                isLast={index === items.length - 1}
-                                            />
-                                        ))}
-                                    </div>
+                <FadeIn delay={100} duration={400}>
+                    <Card className="shadow-elevation-1">
+                        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Filter className="h-4 w-4" />
+                                    <span>{t('Filter by:')}</span>
                                 </div>
-                            ))}
-                        </div>
-                    )}
 
-                    {/* Load More */}
-                    {activities.current_page < activities.last_page && (
-                        <div className="flex justify-center pt-8">
+                                <Select value={filters.event || 'all'} onValueChange={handleEventFilter}>
+                                    <SelectTrigger className="w-[180px] bg-background">
+                                        <SelectValue placeholder={t('Filter by event')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {eventTypes.map((type) => (
+                                            <SelectItem key={type.value} value={type.value}>
+                                                <div className="flex items-center gap-2">
+                                                    <type.icon className="h-4 w-4 text-muted-foreground" />
+                                                    <span>{type.label}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
                             <Button
-                                onClick={handleLoadMore}
                                 variant="outline"
-                                size="lg"
-                                className="gap-2 px-8"
+                                size="sm"
+                                onClick={handleRefresh}
+                                disabled={isRefreshing}
+                                className="gap-2"
                             >
-                                <ChevronDown className="h-4 w-4" />
-                                Load More Events
+                                <RefreshCw
+                                    className={cn('h-4 w-4', isRefreshing && 'animate-spin')}
+                                />
+                                {t('Refresh')}
                             </Button>
                         </div>
-                    )}
+                    </Card>
+                </FadeIn>
 
-                    {/* Footer stats */}
-                    <div className="flex justify-center pt-6 pb-4">
-                        <div className="text-sm text-muted-foreground">
-                            Showing{' '}
-                            <span className="font-semibold text-foreground">
-                                {activities.data.length}
-                            </span>{' '}
-                            of{' '}
-                            <span className="font-semibold text-foreground">
-                                {activities.total}
-                            </span>{' '}
-                            activities
+                {/* ── Timeline ─────────────────────────────────────── */}
+                <FadeIn delay={150} duration={400}>
+                    <div className="flex-1">
+                        {activities.data.length === 0 ? (
+                            <EmptyState message={t('No activities found matching your filters')} />
+                        ) : (
+                            <div className="space-y-0">
+                                {Object.entries(groupedActivities).map(([date, items]) => (
+                                    <div key={date}>
+                                        <DateGroupHeader date={date} count={items.length} />
+                                        <div className="pl-0 md:pl-4">
+                                            {items.map((activity, index) => (
+                                                <ActivityItem
+                                                    key={activity.id}
+                                                    activity={activity}
+                                                    index={index}
+                                                    isLast={index === items.length - 1}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Load More */}
+                        {activities.current_page < activities.last_page && (
+                            <div className="flex justify-center pt-8">
+                                <Button
+                                    onClick={handleLoadMore}
+                                    variant="outline"
+                                    size="lg"
+                                    className="gap-2 px-8"
+                                >
+                                    <ChevronDown className="h-4 w-4" />
+                                    {t('Load More Events')}
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Footer stats */}
+                        <div className="flex justify-center pt-6 pb-4">
+                            <div className="text-sm text-muted-foreground">
+                                {t('Showing')}{' '}
+                                <span className="font-mono font-semibold tabular-nums text-foreground">
+                                    {activities.data.length}
+                                </span>{' '}
+                                {t('of')}{' '}
+                                <span className="font-mono font-semibold tabular-nums text-foreground">
+                                    {activities.total}
+                                </span>{' '}
+                                {t('activities')}
+                            </div>
                         </div>
                     </div>
-                </div>
+                </FadeIn>
             </div>
         </AppLayout>
     );

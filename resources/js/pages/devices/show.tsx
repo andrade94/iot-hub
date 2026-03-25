@@ -1,30 +1,24 @@
 import { Can } from '@/components/Can';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
+import { formatTimeAgo } from '@/utils/date';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DetailCard, MetricCard } from '@/components/ui/detail-card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { Alert, BreadcrumbItem, ChartDataPoint, Device } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import {
     Activity,
-    AlertTriangle,
     ArrowLeft,
-    BatteryFull,
-    BatteryLow,
-    BatteryMedium,
-    Clock,
-    Cpu,
-    MapPin,
-    Radio,
-    Signal,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import {
@@ -82,172 +76,245 @@ export default function DeviceShow({
         router.get(`/devices/${device.id}`, { period, metric: newMetric }, { preserveState: true, replace: true });
     }
 
-    const BatteryIcon = (device.battery_pct ?? 100) < 20 ? BatteryLow : (device.battery_pct ?? 100) < 60 ? BatteryMedium : BatteryFull;
     const batteryColor = (device.battery_pct ?? 100) < 20 ? 'text-red-500' : (device.battery_pct ?? 100) < 40 ? 'text-amber-500' : 'text-emerald-500';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={device.name} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-                {/* Header */}
-                <div className="flex items-start gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => router.get(`/sites/${device.site_id}`)}>
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <h1 className="text-2xl font-bold tracking-tight">{device.name}</h1>
-                            <Badge variant="outline" className="font-mono">{device.model}</Badge>
-                            <StatusBadge status={device.status} />
-                        </div>
-                        <p className="mt-0.5 font-mono text-xs text-muted-foreground">{device.dev_eui}</p>
-                    </div>
-                    {/* Replace button (Phase 10) */}
-                    {['active', 'offline'].includes(device.status) && (
-                        <Can permission="manage devices">
-                            <Button variant="outline" size="sm" onClick={() => setShowReplace(true)}>
-                                {t('Replace')}
-                            </Button>
-                        </Can>
-                    )}
-                </div>
-
-                {/* Quick stats */}
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <StatCard
-                        icon={<BatteryIcon className={`h-4 w-4 ${batteryColor}`} />}
-                        label={t('Battery')}
-                        value={device.battery_pct !== null ? `${device.battery_pct}%` : '—'}
-                    />
-                    <StatCard
-                        icon={<Signal className="h-4 w-4" />}
-                        label={t('Signal')}
-                        value={device.rssi !== null ? `${device.rssi} dBm` : '—'}
-                    />
-                    <StatCard
-                        icon={<Clock className="h-4 w-4" />}
-                        label={t('Last Seen')}
-                        value={device.last_reading_at ? formatTimeAgo(device.last_reading_at) : '—'}
-                    />
-                    <StatCard
-                        icon={<AlertTriangle className="h-4 w-4" />}
-                        label={t('Alerts')}
-                        value={String(alerts.length)}
-                    />
-                </div>
-
-                <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_300px]">
-                    {/* Chart area */}
-                    <div className="space-y-4">
-                        {/* Controls */}
-                        <Card>
-                            <CardContent className="flex items-center justify-between p-3">
-                                <div className="flex gap-1">
-                                    {['24h', '7d', '30d'].map((p) => (
-                                        <Button
-                                            key={p}
-                                            variant={period === p ? 'default' : 'ghost'}
-                                            size="sm"
-                                            onClick={() => changePeriod(p)}
-                                        >
-                                            {p}
-                                        </Button>
-                                    ))}
-                                </div>
-                                <Select value={metric} onValueChange={changeMetric}>
-                                    <SelectTrigger className="w-[160px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {availableMetrics.map((m) => (
-                                            <SelectItem key={m} value={m}>{m}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </CardContent>
-                        </Card>
-
-                        {/* Device metric chart */}
-                        <DeviceChart chartData={chartData} metric={metric} period={period} t={t} />
-
-                        {/* Latest readings */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">{t('Latest Readings')}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                    {latestReadings.map((reading) => (
-                                        <div key={reading.metric} className="rounded-lg border p-3">
-                                            <p className="text-xs font-medium uppercase text-muted-foreground">
-                                                {reading.metric}
-                                            </p>
-                                            <p className="mt-1 text-xl font-bold tabular-nums">
-                                                {typeof reading.value === 'number' ? reading.value.toFixed(1) : reading.value}
-                                                <span className="ml-1 text-xs font-normal text-muted-foreground">
-                                                    {reading.unit}
-                                                </span>
-                                            </p>
-                                            <p className="text-[10px] text-muted-foreground">
-                                                {formatTimeAgo(reading.time)}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-4">
-                        {/* Device info */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">{t('Device Info')}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2">
-                                <InfoRow icon={<Cpu className="h-3.5 w-3.5" />} label={t('Model')} value={device.model} />
-                                <InfoRow icon={<MapPin className="h-3.5 w-3.5" />} label={t('Zone')} value={device.zone ?? '—'} />
-                                <InfoRow icon={<Radio className="h-3.5 w-3.5" />} label={t('Gateway')} value={device.gateway?.serial ?? '—'} />
-                                {device.recipe && (
-                                    <InfoRow label={t('Recipe')} value={device.recipe.name} />
-                                )}
-                                {device.installed_at && (
-                                    <InfoRow label={t('Installed')} value={new Date(device.installed_at).toLocaleDateString()} />
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Alert history */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">{t('Alert History')}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {alerts.length === 0 ? (
-                                    <p className="text-center text-xs text-muted-foreground py-4">{t('No alerts')}</p>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {alerts.map((alert) => (
-                                            <div
-                                                key={alert.id}
-                                                className="flex items-center gap-2 rounded border p-2 text-xs cursor-pointer hover:bg-muted/50"
-                                                onClick={() => router.get(`/alerts/${alert.id}`)}
-                                            >
-                                                <SeverityDot severity={alert.severity} />
-                                                <div className="flex-1 truncate">
-                                                    <p className="font-medium truncate">{alert.data?.rule_name}</p>
-                                                    <p className="text-muted-foreground">{formatTimeAgo(alert.triggered_at)}</p>
-                                                </div>
-                                                <Badge variant={alert.status === 'active' ? 'destructive' : 'outline'} className="text-[10px]">
-                                                    {alert.status}
-                                                </Badge>
-                                            </div>
-                                        ))}
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ── Header ──────────────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative flex items-start justify-between p-6 md:p-8">
+                            <div className="flex items-start gap-4">
+                                <Button variant="ghost" size="icon" onClick={() => router.get(`/sites/${device.site_id}`)}>
+                                    <ArrowLeft className="h-4 w-4" />
+                                </Button>
+                                <div>
+                                    <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Device Detail')}
+                                    </p>
+                                    <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                                        <h1 className="font-display text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                            {device.name}
+                                        </h1>
+                                        <StatusBadge status={device.status} />
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                    <p className="mt-1 font-mono text-xs text-muted-foreground">
+                                        {device.model} · {device.dev_eui}
+                                    </p>
+                                </div>
+                            </div>
+                            {/* Replace button (Phase 10) */}
+                            {['active', 'offline'].includes(device.status) && (
+                                <Can permission="manage devices">
+                                    <Button variant="outline" size="sm" onClick={() => setShowReplace(true)}>
+                                        {t('Replace')}
+                                    </Button>
+                                </Can>
+                            )}
+                        </div>
+                    </div>
+                </FadeIn>
+
+                {/* ── Quick Stats ──────────────────────────────────── */}
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    <FadeIn delay={0} duration={400}>
+                        <MetricCard
+                            label={t('Battery')}
+                            value={device.battery_pct !== null ? `${device.battery_pct}%` : '—'}
+                            badge={
+                                device.battery_pct !== null
+                                    ? (device.battery_pct ?? 100) < 20
+                                        ? t('Low')
+                                        : (device.battery_pct ?? 100) < 40
+                                          ? t('Fair')
+                                          : t('Good')
+                                    : undefined
+                            }
+                            badgeColor={batteryColor}
+                            className="shadow-elevation-1"
+                        />
+                    </FadeIn>
+                    <FadeIn delay={60} duration={400}>
+                        <MetricCard
+                            label={t('Signal')}
+                            value={device.rssi !== null ? `${device.rssi} dBm` : '—'}
+                            className="shadow-elevation-1"
+                        />
+                    </FadeIn>
+                    <FadeIn delay={120} duration={400}>
+                        <MetricCard
+                            label={t('Last Seen')}
+                            value={device.last_reading_at ? formatTimeAgo(device.last_reading_at) : '—'}
+                            className="shadow-elevation-1"
+                        />
+                    </FadeIn>
+                    <FadeIn delay={180} duration={400}>
+                        <MetricCard
+                            label={t('Alerts')}
+                            value={alerts.length}
+                            className="shadow-elevation-1"
+                        />
+                    </FadeIn>
+                </div>
+
+                <div className="grid flex-1 gap-6 lg:grid-cols-[1fr_300px]">
+                    {/* ── Chart Area ──────────────────────────────── */}
+                    <div className="space-y-6">
+                        {/* Readings section divider + controls */}
+                        <FadeIn delay={100} duration={500}>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Readings')}
+                                    </h2>
+                                    <div className="h-px flex-1 bg-border" />
+                                </div>
+
+                                {/* Controls */}
+                                <Card className="shadow-elevation-1">
+                                    <CardContent className="flex items-center justify-between p-3">
+                                        <ButtonGroup>
+                                            {['24h', '7d', '30d'].map((p) => (
+                                                <Button
+                                                    key={p}
+                                                    variant={period === p ? 'default' : 'outline'}
+                                                    size="sm"
+                                                    onClick={() => changePeriod(p)}
+                                                >
+                                                    {p}
+                                                </Button>
+                                            ))}
+                                        </ButtonGroup>
+                                        <Select value={metric} onValueChange={changeMetric}>
+                                            <SelectTrigger className="w-[160px]">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableMetrics.map((m) => (
+                                                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Device metric chart */}
+                                <DeviceChart chartData={chartData} metric={metric} period={period} t={t} />
+                            </div>
+                        </FadeIn>
+
+                        {/* ── Latest Readings ─────────────────────── */}
+                        <FadeIn delay={200} duration={500}>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Latest Readings')}
+                                    </h2>
+                                    <div className="h-px flex-1 bg-border" />
+                                    <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                                        {latestReadings.length}
+                                    </span>
+                                </div>
+
+                                <Card className="shadow-elevation-1">
+                                    <CardContent className="p-4">
+                                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                                            {latestReadings.map((reading) => (
+                                                <div key={reading.metric} className="rounded-lg border p-3">
+                                                    <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                        {reading.metric}
+                                                    </p>
+                                                    <p className="mt-1 font-mono text-xl font-bold tabular-nums">
+                                                        {typeof reading.value === 'number' ? reading.value.toFixed(1) : reading.value}
+                                                        <span className="ml-1 text-xs font-normal text-muted-foreground">
+                                                            {reading.unit}
+                                                        </span>
+                                                    </p>
+                                                    <p className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                                                        {formatTimeAgo(reading.time)}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </FadeIn>
+                    </div>
+
+                    {/* ── Sidebar ─────────────────────────────────── */}
+                    <div className="space-y-6">
+                        {/* Device Info */}
+                        <FadeIn delay={150} duration={500}>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Device Info')}
+                                    </h2>
+                                    <div className="h-px flex-1 bg-border" />
+                                </div>
+
+                                <DetailCard
+                                    className="shadow-elevation-1"
+                                    items={[
+                                        { label: t('Model'), value: <span className="font-mono tabular-nums">{device.model}</span> },
+                                        { label: t('Zone'), value: device.zone ?? '—' },
+                                        { label: t('Gateway'), value: <span className="font-mono tabular-nums">{device.gateway?.serial ?? '—'}</span> },
+                                        ...(device.recipe ? [{ label: t('Recipe'), value: device.recipe.name }] : []),
+                                        ...(device.installed_at ? [{ label: t('Installed'), value: <span className="font-mono tabular-nums">{new Date(device.installed_at).toLocaleDateString()}</span> }] : []),
+                                    ]}
+                                />
+                            </div>
+                        </FadeIn>
+
+                        {/* Alert History */}
+                        <FadeIn delay={250} duration={500}>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Alert History')}
+                                    </h2>
+                                    <div className="h-px flex-1 bg-border" />
+                                    {alerts.length > 0 && (
+                                        <Badge variant="destructive" className="font-mono tabular-nums">
+                                            {alerts.length}
+                                        </Badge>
+                                    )}
+                                </div>
+
+                                <Card className="shadow-elevation-1">
+                                    <CardContent className="p-4">
+                                        {alerts.length === 0 ? (
+                                            <p className="py-4 text-center text-xs text-muted-foreground">{t('No alerts')}</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {alerts.map((alert) => (
+                                                    <div
+                                                        key={alert.id}
+                                                        className="flex cursor-pointer items-center gap-2 rounded border p-2 text-xs transition-colors hover:bg-muted/50"
+                                                        onClick={() => router.get(`/alerts/${alert.id}`)}
+                                                    >
+                                                        <SeverityDot severity={alert.severity} />
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="truncate font-medium">{alert.data?.rule_name}</p>
+                                                            <p className="font-mono tabular-nums text-muted-foreground">
+                                                                {formatTimeAgo(alert.triggered_at)}
+                                                            </p>
+                                                        </div>
+                                                        <Badge variant={alert.status === 'active' ? 'destructive' : 'outline'} className="text-[10px]">
+                                                            {alert.status}
+                                                        </Badge>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </FadeIn>
                     </div>
                 </div>
 
@@ -305,16 +372,16 @@ function DeviceChart({ chartData, metric, period, t }: DeviceChartProps) {
     }, [chartData]);
 
     return (
-        <Card>
+        <Card className="shadow-elevation-1">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                     <Activity className="h-4 w-4" />
                     {metric} — {period}
                 </CardTitle>
                 <CardDescription>
-                    {chartData.length} {t('data points')}
+                    <span className="font-mono tabular-nums">{chartData.length}</span> {t('data points')}
                     {stats && (
-                        <span className="ml-3 tabular-nums">
+                        <span className="ml-3 font-mono tabular-nums">
                             {t('Min')} {stats.min.toFixed(1)} · {t('Avg')} {stats.avg.toFixed(1)} · {t('Max')} {stats.max.toFixed(1)}
                         </span>
                     )}
@@ -402,28 +469,6 @@ function DeviceChart({ chartData, metric, period, t }: DeviceChartProps) {
     );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-    return (
-        <Card>
-            <CardContent className="flex items-center gap-3 p-3">
-                {icon}
-                <div>
-                    <p className="text-sm font-bold tabular-nums">{value}</p>
-                    <p className="text-xs text-muted-foreground">{label}</p>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
-
-function InfoRow({ icon, label, value }: { icon?: React.ReactNode; label: string; value: string }) {
-    return (
-        <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-1.5 text-muted-foreground">{icon}{label}</span>
-            <span className="font-medium">{value}</span>
-        </div>
-    );
-}
 
 function StatusBadge({ status }: { status: string }) {
     const v: Record<string, 'success' | 'warning' | 'destructive' | 'outline' | 'info'> = {
@@ -437,31 +482,20 @@ function SeverityDot({ severity }: { severity: string }) {
     return <span className={`h-2 w-2 shrink-0 rounded-full ${c[severity] ?? 'bg-zinc-400'}`} />;
 }
 
-function formatTimeAgo(s: string) {
-    const m = Math.floor((Date.now() - new Date(s).getTime()) / 60000);
-    if (m < 1) return 'now'; if (m < 60) return `${m}m ago`; const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`; return `${Math.floor(h / 24)}d ago`;
-}
-
 export function DeviceShowSkeleton() {
     return (
-        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+        <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
             {/* Header */}
-            <div className="flex items-start gap-4">
-                <Skeleton className="h-9 w-9 rounded-md" />
-                <div className="flex-1 space-y-2">
-                    <div className="flex flex-wrap items-center gap-3">
-                        <Skeleton className="h-8 w-48" />
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-5 w-16" />
-                    </div>
-                    <Skeleton className="h-3 w-40" />
-                </div>
+            <div className="rounded-xl border p-6 md:p-8">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="mt-3 h-8 w-48" />
+                <Skeleton className="mt-2 h-3 w-40" />
             </div>
 
             {/* Quick stats */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, i) => (
-                    <Card key={i}>
+                    <Card key={i} className="shadow-elevation-1">
                         <CardContent className="flex items-center gap-3 p-3">
                             <Skeleton className="h-4 w-4 rounded" />
                             <div className="space-y-1">
@@ -473,11 +507,17 @@ export function DeviceShowSkeleton() {
                 ))}
             </div>
 
-            <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_300px]">
+            <div className="grid flex-1 gap-6 lg:grid-cols-[1fr_300px]">
                 {/* Chart area */}
-                <div className="space-y-4">
+                <div className="space-y-6">
+                    {/* Section divider */}
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-3 w-16" />
+                        <div className="h-px flex-1 bg-border" />
+                    </div>
+
                     {/* Controls */}
-                    <Card>
+                    <Card className="shadow-elevation-1">
                         <CardContent className="flex items-center justify-between p-3">
                             <div className="flex gap-1">
                                 {Array.from({ length: 3 }).map((_, i) => (
@@ -489,7 +529,7 @@ export function DeviceShowSkeleton() {
                     </Card>
 
                     {/* Chart placeholder */}
-                    <Card>
+                    <Card className="shadow-elevation-1">
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <Skeleton className="h-4 w-4" />
@@ -502,15 +542,19 @@ export function DeviceShowSkeleton() {
                         </CardContent>
                     </Card>
 
+                    {/* Latest readings section divider */}
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-3 w-28" />
+                        <div className="h-px flex-1 bg-border" />
+                        <Skeleton className="h-3 w-4" />
+                    </div>
+
                     {/* Latest readings */}
-                    <Card>
-                        <CardHeader>
-                            <Skeleton className="h-5 w-32" />
-                        </CardHeader>
-                        <CardContent>
+                    <Card className="shadow-elevation-1">
+                        <CardContent className="p-4">
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                                 {Array.from({ length: 6 }).map((_, i) => (
-                                    <div key={i} className="rounded-lg border p-3 space-y-2">
+                                    <div key={i} className="space-y-2 rounded-lg border p-3">
                                         <Skeleton className="h-3 w-20" />
                                         <Skeleton className="h-6 w-16" />
                                         <Skeleton className="h-2 w-12" />
@@ -522,12 +566,14 @@ export function DeviceShowSkeleton() {
                 </div>
 
                 {/* Sidebar */}
-                <div className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <Skeleton className="h-5 w-24" />
-                        </CardHeader>
-                        <CardContent className="space-y-3">
+                <div className="space-y-6">
+                    {/* Device Info section divider */}
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-3 w-20" />
+                        <div className="h-px flex-1 bg-border" />
+                    </div>
+                    <Card className="shadow-elevation-1">
+                        <CardContent className="space-y-3 p-4">
                             {Array.from({ length: 5 }).map((_, i) => (
                                 <div key={i} className="flex items-center justify-between">
                                     <Skeleton className="h-3 w-16" />
@@ -537,11 +583,13 @@ export function DeviceShowSkeleton() {
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <Skeleton className="h-5 w-28" />
-                        </CardHeader>
-                        <CardContent className="space-y-2">
+                    {/* Alert History section divider */}
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-3 w-24" />
+                        <div className="h-px flex-1 bg-border" />
+                    </div>
+                    <Card className="shadow-elevation-1">
+                        <CardContent className="space-y-2 p-4">
                             {Array.from({ length: 3 }).map((_, i) => (
                                 <div key={i} className="flex items-center gap-2 rounded border p-2">
                                     <Skeleton className="h-2 w-2 rounded-full" />

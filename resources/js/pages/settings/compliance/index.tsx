@@ -6,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
+import { FadeIn } from '@/components/ui/fade-in';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,7 +19,8 @@ import type { BreadcrumbItem } from '@/types';
 import { useValidatedForm } from '@/hooks/use-validated-form';
 import { complianceEventSchema } from '@/utils/schemas';
 import { Head, router } from '@inertiajs/react';
-import { CalendarCheck, CheckCircle2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { CalendarCheck, CheckCircle2, Filter, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface ComplianceEvent {
@@ -108,107 +111,142 @@ export default function ComplianceIndex({ events, sites, types }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Compliance Calendar')} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('Compliance Calendar')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {totalCount} {t('event(s)')}
-                        </p>
-                    </div>
-                    <Can permission="manage org settings">
-                        <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                            <DialogTrigger asChild>
-                                <Button>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    {t('Add Event')}
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle>{t('Create Compliance Event')}</DialogTitle>
-                                </DialogHeader>
-                                <EventForm
-                                    sites={sites}
-                                    types={types}
-                                    onSuccess={() => setShowCreate(false)}
-                                />
-                            </DialogContent>
-                        </Dialog>
-                    </Can>
-                </div>
-
-                {/* Filters */}
-                <Card>
-                    <CardContent className="flex flex-wrap items-center gap-3 p-4">
-                        <Select value={filterSite} onValueChange={setFilterSite}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder={t('All Sites')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('All Sites')}</SelectItem>
-                                {sites.map((site) => (
-                                    <SelectItem key={site.id} value={site.id.toString()}>
-                                        {site.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={filterType} onValueChange={setFilterType}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder={t('All Types')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('All Types')}</SelectItem>
-                                {types.map((type) => (
-                                    <SelectItem key={type} value={type}>
-                                        {type.replace(/_/g, ' ')}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={filterStatus} onValueChange={setFilterStatus}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder={t('All Statuses')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('All Statuses')}</SelectItem>
-                                <SelectItem value="upcoming">{t('Upcoming')}</SelectItem>
-                                <SelectItem value="overdue">{t('Overdue')}</SelectItem>
-                                <SelectItem value="completed">{t('Completed')}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </CardContent>
-                </Card>
-
-                {/* Events grouped by month */}
-                {Object.keys(filteredEvents).length === 0 ? (
-                    <EmptyState
-                        icon={<CalendarCheck className="h-5 w-5 text-muted-foreground" />}
-                        title={t('No compliance events scheduled')}
-                        description={t('Create a compliance event to track audits, certifications, and inspections')}
-                    />
-                ) : (
-                    <div className="space-y-6">
-                        {Object.entries(filteredEvents).map(([month, monthEvents]) => (
-                            <div key={month} className="space-y-3">
-                                <h2 className="text-lg font-semibold">{formatMonth(month)}</h2>
-                                <div className="space-y-2">
-                                    {monthEvents.map((event) => (
-                                        <EventCard
-                                            key={event.id}
-                                            event={event}
-                                            onComplete={() => handleComplete(event)}
-                                            onEdit={() => setEditEvent(event)}
-                                            onDelete={() => setDeleteEvent(event)}
-                                        />
-                                    ))}
-                                </div>
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ── Header ──────────────────────────────────────── */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative flex items-center justify-between p-6 md:p-8">
+                            <div>
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('Compliance Calendar')}
+                                </p>
+                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                    {t('Regulatory Events')}
+                                </h1>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    <span className="font-mono font-medium tabular-nums text-foreground">{totalCount}</span>{' '}
+                                    {t('event(s) scheduled')}
+                                </p>
                             </div>
-                        ))}
+                            <Can permission="manage org settings">
+                                <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                                    <DialogTrigger asChild>
+                                        <Button>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            {t('Add Event')}
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+                                        <DialogHeader>
+                                            <DialogTitle>{t('Create Compliance Event')}</DialogTitle>
+                                        </DialogHeader>
+                                        <EventForm
+                                            sites={sites}
+                                            types={types}
+                                            onSuccess={() => setShowCreate(false)}
+                                        />
+                                    </DialogContent>
+                                </Dialog>
+                            </Can>
+                        </div>
                     </div>
-                )}
+                </FadeIn>
+
+                {/* ── Filters ─────────────────────────────────────── */}
+                <FadeIn delay={75} duration={400}>
+                    <div>
+                        <div className="mb-2 flex items-center gap-3">
+                            <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                {t('Filters')}
+                            </p>
+                            <div className="h-px flex-1 bg-border" />
+                        </div>
+                        <Card className="shadow-elevation-1">
+                            <CardContent className="flex flex-wrap items-center gap-3 p-3">
+                                <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                                <Select value={filterSite} onValueChange={setFilterSite}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder={t('All Sites')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('All Sites')}</SelectItem>
+                                        {sites.map((site) => (
+                                            <SelectItem key={site.id} value={site.id.toString()}>
+                                                {site.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Select value={filterType} onValueChange={setFilterType}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder={t('All Types')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('All Types')}</SelectItem>
+                                        {types.map((type) => (
+                                            <SelectItem key={type} value={type}>
+                                                {type.replace(/_/g, ' ')}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder={t('All Statuses')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('All Statuses')}</SelectItem>
+                                        <SelectItem value="upcoming">{t('Upcoming')}</SelectItem>
+                                        <SelectItem value="overdue">{t('Overdue')}</SelectItem>
+                                        <SelectItem value="completed">{t('Completed')}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </FadeIn>
+
+                {/* ── Events grouped by month ─────────────────────── */}
+                <FadeIn delay={150} duration={500}>
+                    {Object.keys(filteredEvents).length === 0 ? (
+                        <EmptyState
+                            icon={<CalendarCheck className="h-5 w-5 text-muted-foreground" />}
+                            title={t('No compliance events scheduled')}
+                            description={t('Create a compliance event to track audits, certifications, and inspections')}
+                        />
+                    ) : (
+                        <div className="space-y-6">
+                            {Object.entries(filteredEvents).map(([month, monthEvents], monthIndex) => (
+                                <FadeIn key={month} delay={200 + monthIndex * 75} duration={400}>
+                                    <div className="space-y-3">
+                                        {/* ── Month Divider ───────────────── */}
+                                        <div className="flex items-center gap-3">
+                                            <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                                {formatMonth(month)}
+                                            </p>
+                                            <div className="h-px flex-1 bg-border" />
+                                            <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                                                {monthEvents.length}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {monthEvents.map((event) => (
+                                                <EventCard
+                                                    key={event.id}
+                                                    event={event}
+                                                    onComplete={() => handleComplete(event)}
+                                                    onEdit={() => setEditEvent(event)}
+                                                    onDelete={() => setDeleteEvent(event)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </FadeIn>
+                            ))}
+                        </div>
+                    )}
+                </FadeIn>
             </div>
 
             {/* Edit Dialog */}
@@ -257,7 +295,7 @@ function EventCard({
     const daysUntilDue = Math.ceil((new Date(event.due_date).getTime() - Date.now()) / 86400000);
 
     return (
-        <Card>
+        <Card className="shadow-elevation-1">
             <CardContent className="flex items-center gap-4 p-4">
                 <Badge variant={TYPE_BADGE_VARIANTS[event.type] ?? 'outline'} className="text-xs">
                     {event.type.replace(/_/g, ' ')}
@@ -269,8 +307,8 @@ function EventCard({
                     )}
                 </div>
                 <div className="text-right">
-                    <p className="text-sm">{new Date(event.due_date).toLocaleDateString()}</p>
-                    <p className={`text-xs font-medium ${getDaysColor(daysUntilDue)}`}>
+                    <p className="font-mono text-sm tabular-nums">{new Date(event.due_date).toLocaleDateString()}</p>
+                    <p className={`font-mono text-xs font-medium tabular-nums ${getDaysColor(daysUntilDue)}`}>
                         {formatDaysUntilDue(daysUntilDue)}
                     </p>
                 </div>
@@ -406,11 +444,10 @@ function EventForm({
 
             <div className="grid gap-2">
                 <Label>{t('Due Date')}</Label>
-                <Input
-                    type="date"
-                    value={form.data.due_date}
-                    onChange={(e) => form.setData('due_date', e.target.value)}
-                    required
+                <DatePicker
+                    date={form.data.due_date ? new Date(form.data.due_date + 'T00:00:00') : undefined}
+                    onDateChange={(d) => form.setData('due_date', d ? format(d, 'yyyy-MM-dd') : '')}
+                    placeholder={t('Select date')}
                 />
                 <InputError message={form.errors.due_date} />
             </div>
@@ -435,32 +472,36 @@ function EventForm({
 
 export function ComplianceSkeleton() {
     return (
-        <div className="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
+        <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                    <Skeleton className="h-8 w-48" />
-                    <Skeleton className="h-4 w-24" />
-                </div>
-                <Skeleton className="h-9 w-28" />
-            </div>
+            <Skeleton className="h-36 w-full rounded-xl" />
 
             {/* Filters */}
-            <Card>
-                <CardContent className="flex flex-wrap items-center gap-3 p-4">
-                    <Skeleton className="h-9 w-[180px]" />
-                    <Skeleton className="h-9 w-[180px]" />
-                    <Skeleton className="h-9 w-[180px]" />
-                </CardContent>
-            </Card>
+            <div>
+                <div className="mb-2 flex items-center gap-3">
+                    <Skeleton className="h-3 w-16" />
+                    <div className="h-px flex-1 bg-border" />
+                </div>
+                <Card className="shadow-elevation-1">
+                    <CardContent className="flex flex-wrap items-center gap-3 p-3">
+                        <Skeleton className="h-9 w-[180px]" />
+                        <Skeleton className="h-9 w-[180px]" />
+                        <Skeleton className="h-9 w-[180px]" />
+                    </CardContent>
+                </Card>
+            </div>
 
             {/* Month groups */}
             {Array.from({ length: 2 }).map((_, monthIdx) => (
                 <div key={monthIdx} className="space-y-3">
-                    <Skeleton className="h-6 w-36" />
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-3 w-32" />
+                        <div className="h-px flex-1 bg-border" />
+                        <Skeleton className="h-3 w-6" />
+                    </div>
                     <div className="space-y-2">
                         {Array.from({ length: 3 }).map((_, i) => (
-                            <Card key={i}>
+                            <Card key={i} className="shadow-elevation-1">
                                 <CardContent className="flex items-center gap-4 p-4">
                                     <Skeleton className="h-5 w-24" />
                                     <div className="min-w-0 flex-1 space-y-1">
