@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding Checklist — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
+  --green: #10b981; --blue: #3b82f6; --purple: #8b5cf6; --orange: #f59e0b;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348; --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+code { background: var(--code-bg); padding: 2px 7px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; }
+.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
+.nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+.nav-links { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.nav-links a { padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+.nav-links a:hover { color:var(--text); background:var(--accent-glow); }
+.nav-links a.active { color:var(--accent); background:var(--accent-light); }
+.nav-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+.theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.container { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+.page-header { margin-bottom: 48px; }
+.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.page-header p { font-size: 16px; color: var(--text-muted); }
+
+/* Phase */
+.phase-section { margin-bottom: 56px; }
+.phase-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+}
+.phase-badge {
+  width: 48px; height: 48px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.phase-header h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.phase-header .phase-meta {
+  font-size: 13px; color: var(--text-muted); margin-top: 2px;
+}
+
+/* Checklist */
+.checklist { display: flex; flex-direction: column; gap: 10px; }
+.check-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  box-shadow: var(--shadow); display: flex; gap: 14px;
+  transition: all 0.2s; cursor: pointer;
+}
+.check-item:hover { border-color: var(--accent); }
+.check-item.done { opacity: 0.6; }
+.check-item.done .check-box { background: var(--accent); border-color: var(--accent); }
+.check-item.done .check-box::after { content: '\2713'; color: #fff; font-size: 14px; font-weight: 700; }
+.check-box {
+  width: 24px; height: 24px; border: 2px solid var(--border);
+  border-radius: 6px; flex-shrink: 0; display: flex;
+  align-items: center; justify-content: center;
+  transition: all 0.15s; margin-top: 1px;
+}
+.check-content { flex: 1; }
+.check-content h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.check-content p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: 6px; }
+.check-meta {
+  display: flex; gap: 16px; flex-wrap: wrap;
+}
+.check-meta span {
+  font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px;
+}
+.check-meta .who { color: var(--accent); font-weight: 600; }
+.check-meta .time { color: var(--orange); font-weight: 600; }
+
+/* Progress bar */
+.progress-bar {
+  background: var(--bg-alt); border-radius: 8px; height: 8px;
+  margin-bottom: 32px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--accent); border-radius: 8px;
+  transition: width 0.3s;
+}
+.progress-label {
+  font-size: 13px; color: var(--text-muted); margin-bottom: 8px;
+  font-weight: 600;
+}
+
+/* Summary */
+.summary-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px; margin-bottom: 48px;
+}
+.summary-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.summary-card .sc-num { font-size: 28px; font-weight: 800; color: var(--accent); }
+.summary-card .sc-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-top: 4px; }
+
+.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-scenarios.html">Scenarios</a>
+      <a href="astrea-roles.html">Roles</a>
+      <a href="astrea-faq.html">FAQ</a>
+      <a href="astrea-glossary.html">Glossary</a>
+      <a href="astrea-onboarding.html" class="active">Onboarding</a>
+      <a href="astrea-qa.html">QA Guide</a>
+      <span class="nav-sep"></span>
+      <a href="astrea-screens.html">Screens</a>
+      <a href="astrea-progress.html">Progress</a>
+      <a href="astrea-presentation.html">Presentation</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span id="theme-icon"></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Implementation Checklist</h1>
+    <p>Step-by-step guide for deploying the Astrea IoT Platform for a new client. Click items to mark them complete.</p>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="sc-num">4</div>
+      <div class="sc-label">Phases</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num">20</div>
+      <div class="sc-label">Steps</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num" id="completedCount">0</div>
+      <div class="sc-label">Completed</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num" id="totalTime">~8h</div>
+      <div class="sc-label">Est. Total Time</div>
+    </div>
+  </div>
+
+  <div class="progress-label">Overall Progress: <span id="progressPct">0%</span></div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+
+  <!-- Phase 1: Organization Setup -->
+  <div class="phase-section">
+    <div class="phase-header">
+      <div class="phase-badge" style="background:var(--green);">1</div>
+      <div>
+        <h2>Organization Setup</h2>
+        <div class="phase-meta">Create the client organization, configure branding, and set up billing -- Est. 1.5 hours</div>
+      </div>
+    </div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Create organization in Partner Portal</h4>
+          <p>Navigate to Partner Portal as super_admin. Create new organization with name, slug, primary segment, default timezone, and default opening hour.</p>
+          <div class="check-meta">
+            <span class="who">super_admin</span>
+            <span class="time">10 min</span>
+            <span>Partner Portal > New Organization</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Configure organization branding</h4>
+          <p>Upload client logo, set primary and secondary brand colors, choose font. This branding applies to all PDF reports and the client's web interface.</p>
+          <div class="check-meta">
+            <span class="who">super_admin</span>
+            <span class="time">10 min</span>
+            <span>Settings > Organization</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Create billing profile</h4>
+          <p>Enter client's RFC, razon social, regimen fiscal, direccion fiscal, uso CFDI, and facturacion email. Multiple billing profiles supported if the client has multiple legal entities.</p>
+          <div class="check-meta">
+            <span class="who">super_admin</span>
+            <span class="time">15 min</span>
+            <span>Settings > Billing > Profiles</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Set up subscription</h4>
+          <p>Configure base fee (by segment), discount percentage, and contract type (monthly or annual). Subscription auto-generates when the organization is created, but verify pricing.</p>
+          <div class="check-meta">
+            <span class="who">super_admin</span>
+            <span class="time">10 min</span>
+            <span>Settings > Billing > Subscription</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Create org_admin user account</h4>
+          <p>Create the client's primary admin user (Director de Operaciones). Assign client_org_admin role. This user will manage their own sites, users, and configuration going forward.</p>
+          <div class="check-meta">
+            <span class="who">super_admin</span>
+            <span class="time">5 min</span>
+            <span>Settings > Users > Create</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2: Site Setup -->
+  <div class="phase-section">
+    <div class="phase-header">
+      <div class="phase-badge" style="background:var(--blue);">2</div>
+      <div>
+        <h2>Site Setup</h2>
+        <div class="phase-meta">Create sites, register gateways and devices, configure modules -- Est. 3 hours (varies by site count)</div>
+      </div>
+    </div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Create sites via onboarding wizard</h4>
+          <p>For each physical location: enter site name, address, coordinates (lat/lng), timezone, opening hour, and optional segment override. The wizard guides through a 5-step process.</p>
+          <div class="check-meta">
+            <span class="who">org_admin or super_admin</span>
+            <span class="time">10 min/site</span>
+            <span>Sites > New Site (Wizard Step 1)</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Register gateways</h4>
+          <p>For each site, register the LoRaWAN gateway: model (UG65/SG50), serial number, ChirpStack gateway ID. Mark as base (included) or add-on (billed at $2,500/mo). Verify the gateway appears as "online" in ChirpStack.</p>
+          <div class="check-meta">
+            <span class="who">super_admin or technician</span>
+            <span class="time">5 min/gateway</span>
+            <span>Wizard Step 2 — Gateways</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Register and provision devices</h4>
+          <p>For each sensor: enter dev_eui, app_key (from sensor label), model, name, and zone. The system sends the app_key to ChirpStack for OTAA join. Wait for the first uplink to confirm connectivity.</p>
+          <div class="check-meta">
+            <span class="who">super_admin or technician</span>
+            <span class="time">3 min/device</span>
+            <span>Wizard Step 3 — Devices</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Upload floor plans (optional)</h4>
+          <p>Upload site layout images per floor. Drag and drop sensors onto the floor plan to set their physical positions. Enables the temperature heatmap view.</p>
+          <div class="check-meta">
+            <span class="who">org_admin or technician</span>
+            <span class="time">10 min/site</span>
+            <span>Wizard Step 3b — Floor Plans</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Activate modules and apply recipes</h4>
+          <p>Select which modules to activate for the site (Cold Chain, Energy, Compliance, etc.). Module activation auto-applies matching alert recipes to site devices based on sensor model.</p>
+          <div class="check-meta">
+            <span class="who">org_admin</span>
+            <span class="time">5 min/site</span>
+            <span>Wizard Step 4 — Modules</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Configure escalation chains</h4>
+          <p>For each site, define the escalation chain: Level 1 contacts (immediate), Level 2 (after delay), Level 3 (final escalation). Set channels per level (WhatsApp, push, email).</p>
+          <div class="check-meta">
+            <span class="who">org_admin</span>
+            <span class="time">10 min/site</span>
+            <span>Wizard Step 5 — Escalation</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Use site templates for bulk setup</h4>
+          <p>After setting up the first site, capture it as a template. Clone the template for remaining sites with similar configurations, then adjust individual settings as needed.</p>
+          <div class="check-meta">
+            <span class="who">org_admin</span>
+            <span class="time">2 min/site</span>
+            <span>Settings > Site Templates</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3: User Setup -->
+  <div class="phase-section">
+    <div class="phase-header">
+      <div class="phase-badge" style="background:var(--purple);">3</div>
+      <div>
+        <h2>User Setup</h2>
+        <div class="phase-meta">Create user accounts, assign roles and sites, configure notification preferences -- Est. 2 hours</div>
+      </div>
+    </div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Create site manager accounts</h4>
+          <p>Create regional manager users (client_site_manager). Each manages multiple assigned sites. Enter name, email, phone, and optional WhatsApp number.</p>
+          <div class="check-meta">
+            <span class="who">org_admin</span>
+            <span class="time">5 min/user</span>
+            <span>Settings > Users > Create</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Create site viewer accounts</h4>
+          <p>Create store manager users (client_site_viewer). Each is assigned to exactly one site. These users do daily monitoring, alert acknowledgment, and maintenance requests.</p>
+          <div class="check-meta">
+            <span class="who">org_admin</span>
+            <span class="time">3 min/user</span>
+            <span>Settings > Users > Create</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Assign users to sites</h4>
+          <p>Map each user to their sites via the user management page. Site managers get multiple sites, site viewers get one. Technicians get their service area sites.</p>
+          <div class="check-meta">
+            <span class="who">org_admin</span>
+            <span class="time">2 min/user</span>
+            <span>Settings > Users > Edit > Sites</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Add WhatsApp-only contacts</h4>
+          <p>Create users with has_app_access=false for night guards, external repair technicians, or other contacts who only receive WhatsApp alerts. No password or app login needed.</p>
+          <div class="check-meta">
+            <span class="who">org_admin</span>
+            <span class="time">2 min/contact</span>
+            <span>Settings > Users > Create (WhatsApp only)</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Verify escalation chains reference correct users</h4>
+          <p>Review each site's escalation chain to ensure the right users are at each level. Test by triggering a manual test alert and verifying delivery across all channels.</p>
+          <div class="check-meta">
+            <span class="who">org_admin</span>
+            <span class="time">5 min/site</span>
+            <span>Settings > Escalation Chains</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 4: Go Live -->
+  <div class="phase-section">
+    <div class="phase-header">
+      <div class="phase-badge" style="background:var(--orange);">4</div>
+      <div>
+        <h2>Go Live</h2>
+        <div class="phase-meta">Activate sites, verify monitoring, and confirm morning summaries are working -- Est. 1.5 hours</div>
+      </div>
+    </div>
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Verify all devices are reporting</h4>
+          <p>Check the device list for each site. All devices should show "active" status with recent readings (within last 15 minutes). Investigate any "offline" or "pending" devices.</p>
+          <div class="check-meta">
+            <span class="who">technician</span>
+            <span class="time">10 min/site</span>
+            <span>Devices page — filter by status</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Wait for defrost pattern learning (48 hours)</h4>
+          <p>Cold chain sites need 48 hours of data before defrost patterns are detected. After hour 49, the system auto-generates defrost schedules. Confirm with site viewers that detected patterns match reality.</p>
+          <div class="check-meta">
+            <span class="who">system (automatic)</span>
+            <span class="time">48 hours wait</span>
+            <span>Settings > Defrost Schedules</span>
+          </div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-content">
+          <h4>Verify morning summaries are delivered</h4>
+          <p>On the first full day after activation, confirm that morning summaries arrive at each site's opening hour. Check WhatsApp, push, and email delivery. Verify regional and corporate summaries also arrive.</p>
+          <div class="check-meta">
+            <span class="who">org_admin + site_viewer</span>
+            <span class="time">15 min</span>
+            <span>Check WhatsApp + email + push</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- Onboarding Checklist -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+function toggleCheck(el) {
+  el.classList.toggle('done');
+  updateProgress();
+}
+function updateProgress() {
+  var total = document.querySelectorAll('.check-item').length;
+  var done = document.querySelectorAll('.check-item.done').length;
+  var pct = Math.round((done / total) * 100);
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('completedCount').textContent = done;
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>

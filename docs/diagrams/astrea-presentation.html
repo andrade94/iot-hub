@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presentation — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348; --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+code { background: var(--code-bg); padding: 2px 7px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; }
+.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
+.nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+.nav-links { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.nav-links a { padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+.nav-links a:hover { color:var(--text); background:var(--accent-glow); }
+.nav-links a.active { color:var(--accent); background:var(--accent-light); }
+.nav-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+.theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* Slides */
+.slide {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 80px 24px; position: relative;
+  border-bottom: 1px solid var(--border);
+}
+.slide:last-of-type { border-bottom: none; }
+.slide-content { max-width: 900px; width: 100%; }
+.slide-number {
+  position: absolute; top: 80px; right: 40px;
+  font-size: 12px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.slide h1 {
+  font-size: clamp(36px, 5vw, 56px); font-weight: 800;
+  letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px;
+}
+.slide h1 .accent { color: var(--accent); }
+.slide h2 {
+  font-size: clamp(28px, 4vw, 42px); font-weight: 800;
+  letter-spacing: -1.5px; line-height: 1.15; margin-bottom: 20px;
+}
+.slide p { font-size: 18px; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px; max-width: 700px; }
+.slide .subtitle { font-size: 14px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+
+/* Problem cards */
+.problem-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px; margin-top: 32px;
+}
+.problem-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  box-shadow: var(--shadow);
+}
+.problem-card .pc-icon { font-size: 28px; margin-bottom: 12px; }
+.problem-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.problem-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 0; }
+
+/* Feature grid */
+.feature-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px; margin-top: 32px;
+}
+.feature-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  box-shadow: var(--shadow); transition: all 0.2s;
+}
+.feature-card:hover { border-color: var(--accent); }
+.feature-card .fc-icon { font-size: 24px; margin-bottom: 10px; }
+.feature-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.feature-card p { font-size: 13.5px; color: var(--text-muted); margin-bottom: 0; }
+
+/* Pipeline */
+.pipeline-flow {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; margin-top: 40px; flex-wrap: wrap;
+}
+.pf-step {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 16px; text-align: center;
+  min-width: 140px; box-shadow: var(--shadow);
+}
+.pf-step .pf-icon { font-size: 24px; margin-bottom: 8px; }
+.pf-step h4 { font-size: 14px; font-weight: 700; }
+.pf-step p { font-size: 12px; color: var(--text-muted); margin-bottom: 0; }
+.pf-arrow { font-size: 24px; color: var(--accent); padding: 0 10px; font-weight: 700; }
+
+/* Roles */
+.role-list { display: flex; flex-direction: column; gap: 10px; margin-top: 28px; }
+.role-row {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 20px;
+  display: flex; align-items: center; gap: 16px;
+}
+.role-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.role-info { flex: 1; }
+.role-info .rn { font-size: 14px; font-weight: 700; font-family: 'SF Mono', 'Fira Code', monospace; }
+.role-info .rd { font-size: 13px; color: var(--text-muted); }
+.role-badge {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 3px 10px; border-radius: 4px;
+}
+.role-badge.astrea { background: rgba(16,185,129,0.12); color: var(--accent); }
+.role-badge.client { background: rgba(59,130,246,0.12); color: #3b82f6; }
+
+/* Stats grid in slide */
+.slide-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 14px; margin-top: 40px;
+}
+.slide-stat {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px 16px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.slide-stat .ss-num { font-size: 36px; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+.slide-stat .ss-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+/* Scroll indicator */
+.scroll-hint {
+  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+  font-size: 12px; color: var(--text-muted); text-align: center;
+  animation: bounce 2s infinite;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+  .slide { min-height: auto; padding: 60px 20px; }
+  .pipeline-flow { flex-direction: column; }
+  .pf-arrow { transform: rotate(90deg); }
+  .slide-number { display: none; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-scenarios.html">Scenarios</a>
+      <a href="astrea-roles.html">Roles</a>
+      <a href="astrea-faq.html">FAQ</a>
+      <a href="astrea-glossary.html">Glossary</a>
+      <a href="astrea-onboarding.html">Onboarding</a>
+      <a href="astrea-qa.html">QA Guide</a>
+      <span class="nav-sep"></span>
+      <a href="astrea-screens.html">Screens</a>
+      <a href="astrea-progress.html">Progress</a>
+      <a href="astrea-presentation.html" class="active">Presentation</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span id="theme-icon"></span></button>
+    </div>
+  </div>
+</nav>
+
+<!-- Slide 1: Title -->
+<div class="slide" id="slide-1">
+  <div class="slide-number">01 / 08</div>
+  <div class="slide-content" style="text-align:center;">
+    <div class="subtitle">Multi-Tenant LoRaWAN Operations Platform</div>
+    <h1>Astrea <span class="accent">IoT Hub</span></h1>
+    <p style="margin:0 auto 8px;">The bridge between physical sensors and the people who make operational decisions.</p>
+    <p style="margin:0 auto; font-size:15px; color:var(--accent); font-weight:600;">Sensor to Decision in 60 Seconds</p>
+  </div>
+  <div class="scroll-hint">Scroll to continue &#8595;</div>
+</div>
+
+<!-- Slide 2: The Problem -->
+<div class="slide" id="slide-2">
+  <div class="slide-number">02 / 08</div>
+  <div class="slide-content">
+    <div class="subtitle">The Problem</div>
+    <h2>Manual Monitoring is Broken</h2>
+    <p>Businesses with temperature-sensitive assets, energy infrastructure, and compliance obligations rely on manual checks, paper logs, and reactive responses. The result: product loss, regulatory fines, and operational blind spots.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="pc-icon">&#128290;</div>
+        <h3>Manual Temperature Logs</h3>
+        <p>Staff record temperatures 2-3x daily on paper. Gaps go unnoticed. Overnight excursions destroy inventory.</p>
+      </div>
+      <div class="problem-card">
+        <div class="pc-icon">&#128275;</div>
+        <h3>Compliance Blind Spots</h3>
+        <p>NOM-251, COFEPRIS, and HACCP audits require continuous records. Paper logs have gaps, errors, and no timestamps.</p>
+      </div>
+      <div class="problem-card">
+        <div class="pc-icon">&#9201;</div>
+        <h3>Slow Response Times</h3>
+        <p>Equipment failures at night go undetected until morning. Hours of exposure to unsafe temperatures. Costly waste.</p>
+      </div>
+      <div class="problem-card">
+        <div class="pc-icon">&#128200;</div>
+        <h3>No Operational Visibility</h3>
+        <p>Regional managers have no real-time view across sites. Performance data is siloed in spreadsheets.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 3: The Solution -->
+<div class="slide" id="slide-3">
+  <div class="slide-number">03 / 08</div>
+  <div class="slide-content">
+    <div class="subtitle">The Solution</div>
+    <h2>Astrea <span class="accent">IoT Platform</span></h2>
+    <p>A unified operations platform that connects LoRaWAN sensors to real-time dashboards, automated alerts, and compliance-ready reports. Three interfaces serve every level of the organization:</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="pc-icon">&#128241;</div>
+        <h3>WhatsApp</h3>
+        <p>Critical alerts delivered instantly. One-tap acknowledgment. Escalation chains ensure no alert is ignored.</p>
+      </div>
+      <div class="problem-card">
+        <div class="pc-icon">&#128247;</div>
+        <h3>Mobile App</h3>
+        <p>Daily monitoring on the go. Push notifications, device status, work orders, and field documentation.</p>
+      </div>
+      <div class="problem-card">
+        <div class="pc-icon">&#128187;</div>
+        <h3>Web Platform</h3>
+        <p>Full configuration, deep analytics, compliance reports, user management, and multi-site command center.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 4: Key Features -->
+<div class="slide" id="slide-4">
+  <div class="slide-number">04 / 08</div>
+  <div class="slide-content">
+    <div class="subtitle">Key Features</div>
+    <h2>Six Segment Modules</h2>
+    <p>Activate modules per client based on their industry. Each module includes dashboards, alert recipes, and compliance tools tailored to the vertical.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="fc-icon">&#10052;</div>
+        <h3>Cold Chain</h3>
+        <p>Temperature zones, defrost detection, HACCP reports, NOM-251 compliance.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">&#9889;</div>
+        <h3>Energy</h3>
+        <p>Compressor duty cycles, night waste detection, energy cost optimization.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">&#128203;</div>
+        <h3>Compliance</h3>
+        <p>Calendar, reminders, corrective actions, LFPDPPP consent, audit exports.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">&#9881;</div>
+        <h3>Industrial</h3>
+        <p>Vibration, compressed air, equipment utilization, predictive maintenance.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">&#127811;</div>
+        <h3>IAQ</h3>
+        <p>CO2, PM2.5, humidity monitoring, zone scoring, HVAC correlation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">&#128682;</div>
+        <h3>Safety &amp; People</h3>
+        <p>Door monitoring, traffic counting, occupancy heatmaps, access events.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 5: How It Works -->
+<div class="slide" id="slide-5">
+  <div class="slide-number">05 / 08</div>
+  <div class="slide-content" style="text-align:center;">
+    <div class="subtitle">Data Pipeline</div>
+    <h2>Sensor &#8594; Alert &#8594; Action</h2>
+    <p style="margin:0 auto 8px;">Every reading flows through a real-time pipeline. From LoRaWAN uplink to operational response in under 60 seconds.</p>
+    <div class="pipeline-flow">
+      <div class="pf-step">
+        <div class="pf-icon">&#128225;</div>
+        <h4>Sensor</h4>
+        <p>LoRaWAN devices</p>
+      </div>
+      <span class="pf-arrow">&#8594;</span>
+      <div class="pf-step">
+        <div class="pf-icon">&#128752;</div>
+        <h4>Gateway</h4>
+        <p>UG65 / SG50</p>
+      </div>
+      <span class="pf-arrow">&#8594;</span>
+      <div class="pf-step">
+        <div class="pf-icon">&#9729;</div>
+        <h4>ChirpStack</h4>
+        <p>MQTT uplink</p>
+      </div>
+      <span class="pf-arrow">&#8594;</span>
+      <div class="pf-step">
+        <div class="pf-icon">&#9881;</div>
+        <h4>Rules Engine</h4>
+        <p>Evaluate thresholds</p>
+      </div>
+      <span class="pf-arrow">&#8594;</span>
+      <div class="pf-step">
+        <div class="pf-icon">&#128276;</div>
+        <h4>Alert Router</h4>
+        <p>WhatsApp / Push / Web</p>
+      </div>
+      <span class="pf-arrow">&#8594;</span>
+      <div class="pf-step">
+        <div class="pf-icon">&#9989;</div>
+        <h4>Resolution</h4>
+        <p>Ack / Work Order</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 6: Role-Based Access -->
+<div class="slide" id="slide-6">
+  <div class="slide-number">06 / 08</div>
+  <div class="slide-content">
+    <div class="subtitle">Access Control</div>
+    <h2>7 Roles, 29 Permissions</h2>
+    <p>Multi-tenant isolation with organization and site-level scoping. Each role sees exactly what they need -- nothing more.</p>
+    <div class="role-list">
+      <div class="role-row">
+        <span class="role-dot" style="background:#10b981;"></span>
+        <div class="role-info"><div class="rn">super_admin</div><div class="rd">Full access to all organizations, Command Center, Partner Portal</div></div>
+        <span class="role-badge astrea">Astrea</span>
+      </div>
+      <div class="role-row">
+        <span class="role-dot" style="background:#10b981;"></span>
+        <div class="role-info"><div class="rn">support</div><div class="rd">View all orgs, assist clients, manage tickets</div></div>
+        <span class="role-badge astrea">Astrea</span>
+      </div>
+      <div class="role-row">
+        <span class="role-dot" style="background:#10b981;"></span>
+        <div class="role-info"><div class="rn">account_manager</div><div class="rd">Manage assigned client accounts, billing, onboarding</div></div>
+        <span class="role-badge astrea">Astrea</span>
+      </div>
+      <div class="role-row">
+        <span class="role-dot" style="background:#10b981;"></span>
+        <div class="role-info"><div class="rn">technician</div><div class="rd">Device diagnostics, work orders, field operations</div></div>
+        <span class="role-badge astrea">Astrea</span>
+      </div>
+      <div class="role-row">
+        <span class="role-dot" style="background:#3b82f6;"></span>
+        <div class="role-info"><div class="rn">client_org_admin</div><div class="rd">All sites in their org, user management, billing, configuration</div></div>
+        <span class="role-badge client">Client</span>
+      </div>
+      <div class="role-row">
+        <span class="role-dot" style="background:#3b82f6;"></span>
+        <div class="role-info"><div class="rn">client_site_manager</div><div class="rd">Multiple assigned sites, dashboards, alerts, reports, comparisons</div></div>
+        <span class="role-badge client">Client</span>
+      </div>
+      <div class="role-row">
+        <span class="role-dot" style="background:#3b82f6;"></span>
+        <div class="role-info"><div class="rn">client_site_viewer</div><div class="rd">Single site read-only, acknowledge alerts, request maintenance</div></div>
+        <span class="role-badge client">Client</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 7: Platform Stats -->
+<div class="slide" id="slide-7">
+  <div class="slide-number">07 / 08</div>
+  <div class="slide-content" style="text-align:center;">
+    <div class="subtitle">By the Numbers</div>
+    <h2>Platform at a Glance</h2>
+    <p style="margin:0 auto;">Built with Laravel 12, React 19, Inertia.js 2, PostgreSQL + TimescaleDB, and Laravel Reverb WebSockets.</p>
+    <div class="slide-stats">
+      <div class="slide-stat"><div class="ss-num">43</div><div class="ss-label">Models</div></div>
+      <div class="slide-stat"><div class="ss-num">72</div><div class="ss-label">Pages</div></div>
+      <div class="slide-stat"><div class="ss-num">226</div><div class="ss-label">Routes</div></div>
+      <div class="slide-stat"><div class="ss-num">133</div><div class="ss-label">Tests</div></div>
+      <div class="slide-stat"><div class="ss-num">30</div><div class="ss-label">Workflows</div></div>
+      <div class="slide-stat"><div class="ss-num">98</div><div class="ss-label">Business Rules</div></div>
+      <div class="slide-stat"><div class="ss-num">120+</div><div class="ss-label">UI Components</div></div>
+      <div class="slide-stat"><div class="ss-num">14</div><div class="ss-label">Policies</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 8: Next Steps -->
+<div class="slide" id="slide-8">
+  <div class="slide-number">08 / 08</div>
+  <div class="slide-content" style="text-align:center;">
+    <div class="subtitle">Next Steps</div>
+    <h2>Ready to <span class="accent">Explore</span>?</h2>
+    <p style="margin:0 auto 32px;">Dive into the full documentation, browse the screen inventory, or review implementation progress.</p>
+    <div class="feature-grid" style="max-width:800px;margin:0 auto;">
+      <a href="astrea-portal.html" class="feature-card" style="text-decoration:none;color:inherit;text-align:center;">
+        <div class="fc-icon">&#9776;</div>
+        <h3>Documentation Portal</h3>
+        <p>All docs in one place</p>
+      </a>
+      <a href="astrea-guide.html" class="feature-card" style="text-decoration:none;color:inherit;text-align:center;">
+        <div class="fc-icon">&#128214;</div>
+        <h3>System Guide</h3>
+        <p>Architecture and modules</p>
+      </a>
+      <a href="astrea-scenarios.html" class="feature-card" style="text-decoration:none;color:inherit;text-align:center;">
+        <div class="fc-icon">&#128100;</div>
+        <h3>Use Case Scenarios</h3>
+        <p>A day in the life per role</p>
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- Executive Presentation -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>

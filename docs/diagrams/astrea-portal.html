@@ -120,11 +120,17 @@ code { background: var(--bg-alt); padding: 2px 7px; border-radius: 4px; font-siz
     <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
     <div class="nav-links">
       <a href="../index.html">Home</a>
-      <a href="astrea-portal.html" class="active">Portal</a>
       <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-scenarios.html">Scenarios</a>
+      <a href="astrea-roles.html">Roles</a>
+      <a href="astrea-faq.html">FAQ</a>
+      <a href="astrea-glossary.html">Glossary</a>
+      <a href="astrea-onboarding.html">Onboarding</a>
+      <a href="astrea-qa.html">QA Guide</a>
+      <span style="width:1px;height:20px;background:var(--border);margin:0 4px;"></span>
       <a href="astrea-screens.html">Screens</a>
       <a href="astrea-progress.html">Progress</a>
-      <a href="astrea-roles.html">Roles</a>
+      <a href="astrea-presentation.html">Presentation</a>
       <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
         <span id="theme-icon"></span>
       </button>
@@ -147,23 +153,41 @@ code { background: var(--bg-alt); padding: 2px 7px; border-radius: 4px; font-siz
         <p>Architecture overview, segment modules (Cold Chain, Energy, Compliance, Industrial, IAQ), data pipeline, tech stack, and multi-tenancy model.</p>
         <span class="card-link">Read Guide -></span>
       </a>
+      <a href="astrea-scenarios.html" class="portal-card">
+        <div class="card-icon">&#128100;</div>
+        <h3>Use Case Scenarios</h3>
+        <p>"A Day in the Life" for 4 roles: org admin, site manager, site viewer, and technician. Workflows, pages, and alerts per persona.</p>
+        <span class="card-link">View Scenarios -></span>
+      </a>
       <a href="astrea-roles.html" class="portal-card">
         <div class="card-icon">&#128101;</div>
         <h3>Roles &amp; Permissions</h3>
         <p>7 roles across Astrea and client organizations. Permission matrix showing who can manage devices, alerts, users, billing, and more.</p>
         <span class="card-link">View Roles -></span>
       </a>
-      <a href="astrea-screens.html" class="portal-card">
-        <div class="card-icon">&#128187;</div>
-        <h3>Screen Inventory</h3>
-        <p>Complete inventory of 72 pages grouped by area: Core, Settings, Auth, Command Center, and Modules. URL patterns and role access.</p>
-        <span class="card-link">Browse Screens -></span>
-      </a>
-      <a href="#faq" class="portal-card">
+      <a href="astrea-faq.html" class="portal-card">
         <div class="card-icon">&#10067;</div>
         <h3>FAQ</h3>
-        <p>Common questions about the platform: authentication, multi-tenancy, real-time updates, mobile app, compliance, and deployment.</p>
-        <span class="card-link">See FAQ below</span>
+        <p>18 frequently asked questions covering sensors, alerts, security, compliance, mobile app, integrations, pricing, and deployment.</p>
+        <span class="card-link">Read FAQ -></span>
+      </a>
+      <a href="astrea-glossary.html" class="portal-card">
+        <div class="card-icon">&#128218;</div>
+        <h3>Glossary</h3>
+        <p>40 domain terms from Alert to Zone. Searchable alphabetical reference with definitions, related features, and cross-references.</p>
+        <span class="card-link">Browse Glossary -></span>
+      </a>
+      <a href="astrea-onboarding.html" class="portal-card">
+        <div class="card-icon">&#9989;</div>
+        <h3>Onboarding Checklist</h3>
+        <p>4-phase implementation guide for deploying Astrea for a new client. Interactive checkboxes, estimated times, and responsible roles.</p>
+        <span class="card-link">View Checklist -></span>
+      </a>
+      <a href="astrea-qa.html" class="portal-card">
+        <div class="card-icon">&#128270;</div>
+        <h3>QA Testing Guide</h3>
+        <p>Manual QA guide: 8 test phases, 72 pages, 200+ checks, 7 roles. Setup instructions, credentials, and business rule verification.</p>
+        <span class="card-link">Open QA Guide -></span>
       </a>
     </div>
   </div>
@@ -171,11 +195,23 @@ code { background: var(--bg-alt); padding: 2px 7px; border-radius: 4px; font-siz
   <div class="tier-section">
     <div class="tier-label">Tier 2 -- Deep Dives</div>
     <div class="card-grid">
+      <a href="astrea-screens.html" class="portal-card">
+        <div class="card-icon">&#128187;</div>
+        <h3>Screen Inventory</h3>
+        <p>Complete inventory of 72 pages grouped by area: Core, Settings, Auth, Command Center, and Modules. URL patterns and role access.</p>
+        <span class="card-link">Browse Screens -></span>
+      </a>
       <a href="astrea-progress.html" class="portal-card">
         <div class="card-icon">&#128200;</div>
         <h3>Implementation Progress</h3>
         <p>Phase-by-phase completion status. Phases 0-12 complete, Phase 13 partial. Gap report: 51 resolved, 11 deferred, 0 remaining.</p>
         <span class="card-link">View Progress -></span>
+      </a>
+      <a href="astrea-presentation.html" class="portal-card">
+        <div class="card-icon">&#127916;</div>
+        <h3>Executive Presentation</h3>
+        <p>8-slide scroll-through presentation: problem, solution, features, data pipeline, roles, stats, and next steps.</p>
+        <span class="card-link">View Presentation -></span>
       </a>
       <a href="astrea-guide.html#architecture" class="portal-card">
         <div class="card-icon">&#9881;</div>
@@ -188,6 +224,12 @@ code { background: var(--bg-alt); padding: 2px 7px; border-radius: 4px; font-siz
         <h3>Segment Modules</h3>
         <p>Cold Chain, Energy, Compliance, Industrial, IAQ, Safety, People -- activated per client. Recipes and alert templates per vertical.</p>
         <span class="card-link">View Modules -></span>
+      </a>
+      <a href="../ASTREA_SHOWCASE.html" class="portal-card">
+        <div class="card-icon">&#127775;</div>
+        <h3>Showcase Landing</h3>
+        <p>Visual showcase with platform highlights, module cards, screenshot placeholders, pipeline visualization, and key statistics.</p>
+        <span class="card-link">View Showcase -></span>
       </a>
     </div>
   </div>

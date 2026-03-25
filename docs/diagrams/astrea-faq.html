@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348; --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+code { background: var(--code-bg); padding: 2px 7px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; }
+.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
+.nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+.nav-links { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.nav-links a { padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+.nav-links a:hover { color:var(--text); background:var(--accent-glow); }
+.nav-links a.active { color:var(--accent); background:var(--accent-light); }
+.nav-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+.theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.container { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+.page-header { margin-bottom: 48px; }
+.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.page-header p { font-size: 16px; color: var(--text-muted); }
+
+/* Category */
+.faq-category { margin-bottom: 40px; }
+.faq-category h2 {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.3px;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent-light);
+  color: var(--accent-dark);
+}
+
+/* Accordion */
+.faq-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 8px;
+  box-shadow: var(--shadow); overflow: hidden;
+}
+.faq-question {
+  padding: 18px 20px; cursor: pointer; display: flex;
+  align-items: center; justify-content: space-between;
+  font-size: 15px; font-weight: 600; user-select: none;
+  transition: color 0.15s;
+}
+.faq-question:hover { color: var(--accent); }
+.faq-question .faq-toggle {
+  font-size: 18px; color: var(--text-muted); transition: transform 0.2s;
+  flex-shrink: 0; margin-left: 12px;
+}
+.faq-item.open .faq-toggle { transform: rotate(45deg); color: var(--accent); }
+.faq-answer {
+  max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+}
+.faq-item.open .faq-answer { max-height: 600px; }
+.faq-answer-inner {
+  padding: 0 20px 18px; font-size: 14.5px; color: var(--text-muted); line-height: 1.8;
+}
+.faq-answer-inner p { margin-bottom: 8px; }
+.faq-answer-inner p:last-child { margin-bottom: 0; }
+
+.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-scenarios.html">Scenarios</a>
+      <a href="astrea-roles.html">Roles</a>
+      <a href="astrea-faq.html" class="active">FAQ</a>
+      <a href="astrea-glossary.html">Glossary</a>
+      <a href="astrea-onboarding.html">Onboarding</a>
+      <a href="astrea-qa.html">QA Guide</a>
+      <span class="nav-sep"></span>
+      <a href="astrea-screens.html">Screens</a>
+      <a href="astrea-progress.html">Progress</a>
+      <a href="astrea-presentation.html">Presentation</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span id="theme-icon"></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Frequently Asked Questions</h1>
+    <p>Common questions about the Astrea IoT Platform -- from architecture to deployment to compliance.</p>
+  </div>
+
+  <!-- General -->
+  <div class="faq-category">
+    <h2>General</h2>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>What is Astrea IoT Hub?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Astrea is a multi-tenant LoRaWAN operations platform that bridges physical sensors and the people who make operational decisions. It serves retail chains, convenience stores, foodservice operations, industrial plants, commercial real estate, and pharmacies.</p>
+        <p>The platform provides real-time monitoring, automated alerts, compliance reporting, and operational analytics through three interfaces: web application, mobile app, and WhatsApp.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>How does Astrea work?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>LoRaWAN sensors (temperature, humidity, current, door contact, CO2, etc.) transmit readings to gateways every 5-15 minutes. Gateways relay data via 4G/Ethernet to ChirpStack Cloud, which forwards MQTT messages to the Laravel application.</p>
+        <p>The application decodes sensor data, stores it in PostgreSQL + TimescaleDB, caches the latest reading in Redis, and evaluates alert rules in real-time. When a threshold is breached, the alert router sends notifications via WhatsApp, push, email, and WebSocket.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>What industries does Astrea support?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Astrea supports any industry that needs environmental monitoring. Current segment modules include:</p>
+        <p><strong>Cold Chain</strong> -- Retail, convenience stores, pharmacies, foodservice, cold storage warehouses.</p>
+        <p><strong>Energy</strong> -- Equipment monitoring, compressor duty cycles, energy cost optimization.</p>
+        <p><strong>Compliance</strong> -- COFEPRIS, NOM-251, HACCP, LFPDPPP regulatory compliance.</p>
+        <p><strong>Industrial</strong> -- Manufacturing, vibration, compressed air, environmental monitoring.</p>
+        <p><strong>IAQ</strong> -- Offices, schools, commercial real estate (CO2, PM2.5, humidity).</p>
+        <p><strong>Safety &amp; People</strong> -- Door monitoring, occupancy counting, traffic flow.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- Sensors & Hardware -->
+  <div class="faq-category">
+    <h2>Sensors &amp; Hardware</h2>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>What sensors are supported?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Astrea supports Milesight LoRaWAN sensors out of the box, decoded via the DecoderFactory pattern:</p>
+        <p><strong>EM300-TH</strong> -- Temperature and humidity (cold chain, IAQ)</p>
+        <p><strong>CT101</strong> -- Current transformer for energy/compressor monitoring</p>
+        <p><strong>WS301</strong> -- Door/window contact sensor</p>
+        <p><strong>AM307</strong> -- Indoor air quality (CO2, PM2.5, TVOC, humidity, temperature)</p>
+        <p><strong>VS121</strong> -- People counting / traffic sensor</p>
+        <p>Additional sensor models can be added by implementing a new decoder class.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>What gateways are used?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Milesight UG65 (indoor, 4G/Ethernet backhaul) and SG50 (outdoor, solar-powered) gateways. Each site typically has one gateway included in the base fee, with additional gateways available at $2,500 MXN/month as add-ons.</p>
+        <p>Gateways connect to ChirpStack Cloud -- no self-hosted network server required.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- Alerts & Monitoring -->
+  <div class="faq-category">
+    <h2>Alerts &amp; Monitoring</h2>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>How fast are alerts delivered?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Alerts are evaluated in real-time as each sensor reading arrives. From the moment a threshold breach is detected, WhatsApp and push notifications are typically delivered within 10-30 seconds. Web dashboard updates are instant via WebSocket (Laravel Reverb).</p>
+        <p>Duration-based thresholds require sustained breaches (e.g., temperature above -8C for 10 minutes) to avoid false alarms from momentary spikes.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Can I customize alert rules?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Yes. Alert rules support three types: <strong>simple</strong> (threshold + duration), <strong>correlation</strong> (multi-sensor conditions), and <strong>baseline</strong> (learned patterns with anomaly detection at 2+ standard deviations).</p>
+        <p>Astrea provides pre-built alert recipes per sensor model and vertical. Organization admins can adjust thresholds, durations, and severity levels. They can also enable/disable individual rules per site via recipe overrides. Only super_admins can create entirely new recipes.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>How does escalation work?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Each site has an escalation chain with multiple levels. When an alert fires, Level 1 contacts are notified immediately. If the alert is not acknowledged within the configured delay (e.g., 15 minutes), it escalates to Level 2, and so on.</p>
+        <p>Each level can use different channels: WhatsApp, push notification, email, or SMS. WhatsApp messages include inline ACK/ESC keywords for one-tap response.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>What about false alarms from defrost cycles?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Commercial refrigerators defrost 2-4 times daily on fixed schedules, causing temperature spikes that look like failures. Without detection, each installation would generate 8-16 false alarms per day.</p>
+        <p>Astrea automatically learns defrost patterns within 48 hours of sensor installation. The system collects temperature spikes, compares Day 1 vs Day 2 patterns, and auto-generates defrost schedules when it detects consistent cycles. During confirmed defrost windows, cold-chain alerts are suppressed.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- Security & Data -->
+  <div class="faq-category">
+    <h2>Security &amp; Data</h2>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>How is data secured? What about multi-tenancy?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Astrea uses manual multi-tenancy scoping with <code>org_id</code> and <code>site_id</code> columns on all data tables. Two middleware enforce isolation:</p>
+        <p><strong>EnsureOrganizationScope</strong> binds the current organization to every authenticated request.</p>
+        <p><strong>EnsureSiteAccess</strong> verifies site-level permissions via the <code>user_sites</code> pivot table.</p>
+        <p>Session-based authentication (Laravel Fortify) for web, token-based (Laravel Sanctum) for mobile API. Two-factor authentication (TOTP) is supported. All passwords are hashed with bcrypt. Device app_keys are stored encrypted.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Is Astrea LFPDPPP compliant?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Yes. The platform includes LFPDPPP (Mexican Federal Law for Protection of Personal Data) consent management. New users must accept the privacy policy before accessing the platform. Consent is timestamped and recorded. The privacy acceptance page (<code>/privacy/accept</code>) is enforced via middleware.</p>
+        <p>Activity logs track all data access and modifications with user, timestamp, IP address, and change details for audit purposes.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>How long is sensor data retained?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Raw sensor readings are retained for 12 months. After 7 days, data is compressed (90%+ reduction in storage). Continuous aggregates provide pre-computed rollups:</p>
+        <p><strong>15-minute aggregates</strong> -- retained 3 months (for detailed 24h charts)</p>
+        <p><strong>1-hour aggregates</strong> -- retained 5 years (for weekly/monthly charts)</p>
+        <p><strong>1-day aggregates</strong> -- retained 10 years (for yearly KPI dashboards)</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- Reports & Compliance -->
+  <div class="faq-category">
+    <h2>Reports &amp; Compliance</h2>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>What reports are available?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Astrea generates branded PDF reports via Browsershot (Puppeteer), including:</p>
+        <p><strong>HACCP temperature log</strong> -- Continuous temperature records with excursion flagging for NOM-251/COFEPRIS audits.</p>
+        <p><strong>Energy reports</strong> -- Consumption analysis with peak/off-peak breakdown and night waste detection.</p>
+        <p><strong>Alert analytics</strong> -- Trends, MTTR (mean time to resolve), top offending devices, and severity distribution.</p>
+        <p><strong>Morning/regional/corporate summaries</strong> -- Automated daily digests delivered by email and push notification.</p>
+        <p>Reports can be generated on-demand or scheduled for automatic delivery (daily, weekly, monthly) via the Report Schedules settings page.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- Mobile & Integration -->
+  <div class="faq-category">
+    <h2>Mobile &amp; Integration</h2>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Is there a mobile app?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Yes. The Astrea companion app is built with Expo SDK 54 (React Native) and runs on iOS and Android. It connects to the platform via Sanctum API tokens with 26 endpoints.</p>
+        <p>Key features: real-time sensor readings, push notifications for alerts, work order management with photo capture, device status monitoring, and alert acknowledgment.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>What integration options are available?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Astrea supports several integration paths:</p>
+        <p><strong>SAP export</strong> -- JSON export format compatible with SAP Business One for invoice synchronization.</p>
+        <p><strong>CONTPAQi export</strong> -- Export format for CONTPAQi accounting software.</p>
+        <p><strong>Data export</strong> -- CSV/JSON bulk export of sensor readings, alerts, and operational data.</p>
+        <p><strong>Webhook subscriptions</strong> -- Event-type filtering for real-time integration (planned Phase 13).</p>
+        <p><strong>Public REST API</strong> -- Versioned API with OpenAPI documentation (planned Phase 13).</p>
+        <p>All exports are non-blocking -- if an external system is unavailable, a local JSON copy is stored for retry.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Does Astrea support WhatsApp notifications?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Yes. Critical and high-severity alerts are delivered via WhatsApp using the Twilio API (MVP) with migration to Meta Cloud API planned for scale. WhatsApp messages include alert details and inline ACK/ESC action keywords.</p>
+        <p>WhatsApp is also used for morning summaries and escalation notifications. Users can be set up as WhatsApp-only contacts (no app login required) for roles like night guards or external repair technicians.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- Pricing & Deployment -->
+  <div class="faq-category">
+    <h2>Pricing &amp; Deployment</h2>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>What is the pricing model?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Astrea uses a B2B subscription model with per-sensor pricing:</p>
+        <p><strong>Base fee</strong> -- Per organization, varies by segment and contract type (monthly or annual).</p>
+        <p><strong>Per-sensor fees</strong> -- EM300-TH: $150/mo, CT101: $200/mo, WS301: $100/mo, AM307: $175/mo, VS121: $125/mo (MXN).</p>
+        <p><strong>Gateway add-ons</strong> -- $2,500/mo per additional gateway beyond the included one.</p>
+        <p>Invoicing is via CFDI (Mexican electronic invoice) with timbrado through Facturapi. Payment is via SPEI bank transfer -- no online payment processor.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>How is the platform deployed?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>Production: Laravel Forge on DigitalOcean droplets with automated provisioning, SSL, deploys, and cron jobs. PostgreSQL 16 + TimescaleDB, Redis, and Laravel Reverb (WebSocket server).</p>
+        <p>Development: Laravel Herd provides local PHP 8.4, PostgreSQL, and Redis. Sites are served at <code>http://[directory-name].test</code>.</p>
+        <p>Monitoring: Laravel Telescope for debugging, Sentry for error tracking. File storage on S3-compatible DigitalOcean Spaces.</p>
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>How does the platform scale?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>TimescaleDB compression (90%+ storage reduction), continuous aggregates (pre-computed rollups), and Redis hot caching keep database load manageable. The platform supports:</p>
+        <p><strong>MVP (0-50 sites)</strong> -- Up to 750 sensors, 4 vCPU, 8GB RAM</p>
+        <p><strong>Growth (50-200)</strong> -- Up to 3,000 sensors, 16GB RAM</p>
+        <p><strong>Scale (200-500)</strong> -- Up to 7,500 sensors, 32GB RAM, daily chunks</p>
+        <p><strong>Enterprise (500-1000)</strong> -- Up to 15,000 sensors, 64GB RAM, read replica</p>
+        <p>The bottleneck is server cost, not technology -- TimescaleDB handles billions of rows.</p>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- FAQ -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+function toggleFaq(el) {
+  var item = el.parentElement;
+  item.classList.toggle('open');
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>

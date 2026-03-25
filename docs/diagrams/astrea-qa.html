@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA Testing Guide — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
+  --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6; --red: #ef4444; --purple: #8b5cf6;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348; --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+code { background: var(--code-bg); padding: 2px 7px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; }
+pre {
+  background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px 20px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace;
+  overflow-x: auto; line-height: 1.6; margin-bottom: 20px;
+}
+.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
+.nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+.nav-links { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.nav-links a { padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+.nav-links a:hover { color:var(--text); background:var(--accent-glow); }
+.nav-links a.active { color:var(--accent); background:var(--accent-light); }
+.nav-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+.theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+.page-header { margin-bottom: 32px; }
+.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.page-header p { font-size: 16px; color: var(--text-muted); }
+.page-header .print-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px; padding: 8px 16px; border: 1px solid var(--border);
+  border-radius: 6px; font-size: 13px; font-weight: 600;
+  color: var(--text-muted); background: var(--bg-card); cursor: pointer;
+  transition: all 0.15s;
+}
+.page-header .print-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Summary cards */
+.summary-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px; margin-bottom: 40px;
+}
+.summary-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 14px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.summary-card .sc-num { font-size: 28px; font-weight: 800; line-height: 1; }
+.summary-card .sc-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-top: 6px; }
+
+/* Section */
+.section { margin-bottom: 48px; }
+.section h2 {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent-light);
+}
+.section h3 { font-size: 17px; font-weight: 700; margin: 20px 0 12px; color: var(--accent-dark); }
+.section p { font-size: 15px; margin-bottom: 12px; }
+
+/* Credentials table */
+.cred-table {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  overflow-x: auto; margin-bottom: 24px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead { background: var(--bg-alt); }
+th {
+  padding: 10px 14px; text-align: left; font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover { background: var(--accent-glow); }
+td code { font-size: 12.5px; }
+
+/* Phase cards */
+.phase-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px; margin-bottom: 24px;
+}
+.phase-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  box-shadow: var(--shadow); transition: all 0.2s;
+  text-decoration: none; color: inherit; display: block;
+}
+.phase-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
+.phase-card .pc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.phase-card .pc-name { font-size: 15px; font-weight: 700; }
+.phase-card .pc-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 12px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.phase-card .pc-desc { font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px; }
+.phase-card .pc-stats {
+  display: flex; gap: 16px; font-size: 12px; color: var(--text-muted);
+}
+.phase-card .pc-stats strong { color: var(--text); font-weight: 700; }
+
+/* Legend */
+.legend-grid {
+  display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+  padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.legend-item {
+  display: flex; align-items: center; gap: 8px; font-size: 13px;
+}
+.legend-item code { font-size: 12px; }
+
+/* Print styles */
+@media print {
+  .nav, .theme-btn, .print-btn { display: none !important; }
+  body { background: #fff; color: #000; font-size: 11px; }
+  .container { max-width: 100%; padding: 12px; }
+  .phase-card { break-inside: avoid; }
+  .summary-grid { grid-template-columns: repeat(6, 1fr); }
+  [data-theme="dark"] { --bg:#fff; --text:#000; --bg-card:#fff; --border:#ccc; --text-muted:#555; --code-bg:#f5f5f5; --bg-alt:#f9f9f9; }
+}
+
+.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+  .phase-grid { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-scenarios.html">Scenarios</a>
+      <a href="astrea-roles.html">Roles</a>
+      <a href="astrea-faq.html">FAQ</a>
+      <a href="astrea-glossary.html">Glossary</a>
+      <a href="astrea-onboarding.html">Onboarding</a>
+      <a href="astrea-qa.html" class="active">QA Guide</a>
+      <span class="nav-sep"></span>
+      <a href="astrea-screens.html">Screens</a>
+      <a href="astrea-progress.html">Progress</a>
+      <a href="astrea-presentation.html">Presentation</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span id="theme-icon"></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>QA Testing Guide</h1>
+    <p>Manual QA testing guide for the Astrea IoT Hub. Walk through every page and feature, testing functionality and evaluating UX/UI across all 7 roles.</p>
+    <button class="print-btn" onclick="window.print()">Print for offline use</button>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="sc-num" style="color:var(--green);">8</div>
+      <div class="sc-label">Test Phases</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num" style="color:var(--blue);">72</div>
+      <div class="sc-label">Pages Tested</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num" style="color:var(--purple);">7</div>
+      <div class="sc-label">Roles Tested</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num" style="color:var(--yellow);">200+</div>
+      <div class="sc-label">Test Checks</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num" style="color:var(--red);">98</div>
+      <div class="sc-label">Business Rules</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num" style="color:var(--accent);">30</div>
+      <div class="sc-label">Workflows</div>
+    </div>
+  </div>
+
+  <!-- Setup -->
+  <div class="section">
+    <h2>Setup Instructions</h2>
+    <h3>Environment Preparation</h3>
+    <pre># 1. Reset database with fresh seed data
+php artisan migrate:fresh --seed
+
+# 2. Start development services (Vite, queue, Reverb WebSocket, logs)
+composer dev
+
+# 3. Verify the app loads
+open http://iot-hub.test</pre>
+
+    <h3>Test Credentials</h3>
+    <div class="cred-table">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Email</th><th>Password</th><th>Role</th><th>Owner</th><th>Sidebar Scope</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><code>super@example.com</code></td><td><code>password</code></td><td>super_admin</td><td>Astrea</td><td>Full (all nav + CC + Partner)</td></tr>
+          <tr><td>2</td><td><code>support@example.com</code></td><td><code>password</code></td><td>support</td><td>Astrea</td><td>Full minus some admin actions</td></tr>
+          <tr><td>3</td><td><code>account@example.com</code></td><td><code>password</code></td><td>account_manager</td><td>Astrea</td><td>Full minus some admin actions</td></tr>
+          <tr><td>4</td><td><code>tech@example.com</code></td><td><code>password</code></td><td>technician</td><td>Astrea</td><td>Reduced (no admin, no analytics)</td></tr>
+          <tr><td>5</td><td><code>admin@example.com</code></td><td><code>password</code></td><td>client_org_admin</td><td>Client</td><td>Full client (no CC, no Partner)</td></tr>
+          <tr><td>6</td><td><code>manager@example.com</code></td><td><code>password</code></td><td>client_site_manager</td><td>Client</td><td>Moderate client</td></tr>
+          <tr><td>7</td><td><code>viewer@example.com</code></td><td><code>password</code></td><td>client_site_viewer</td><td>Client</td><td>Minimal (overview + alerts)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="section">
+    <h2>Legend</h2>
+    <div class="legend-grid">
+      <div class="legend-item"><code>[ ]</code> Checkbox -- mark [x] when passed</div>
+      <div class="legend-item"><strong>SA</strong> = super_admin</div>
+      <div class="legend-item"><strong>SUP</strong> = support</div>
+      <div class="legend-item"><strong>AM</strong> = account_manager</div>
+      <div class="legend-item"><strong>TECH</strong> = technician</div>
+      <div class="legend-item"><strong>OA</strong> = client_org_admin</div>
+      <div class="legend-item"><strong>SM</strong> = client_site_manager</div>
+      <div class="legend-item"><strong>SV</strong> = client_site_viewer</div>
+      <div class="legend-item"><strong>(gap)</strong> = known missing feature</div>
+      <div class="legend-item"><strong>BUG</strong> = confirmed bug</div>
+    </div>
+  </div>
+
+  <!-- Phase Overview -->
+  <div class="section">
+    <h2>Phase Overview</h2>
+    <p>Testing is organized into 8 phases, progressing from setup through authentication, configuration, monitoring, operations, and advanced features.</p>
+
+    <div class="phase-grid">
+      <div class="phase-card">
+        <div class="pc-header">
+          <span class="pc-name">Phase 0: Setup</span>
+          <span class="pc-badge" style="background:var(--accent-light);color:var(--accent-dark);">Foundation</span>
+        </div>
+        <div class="pc-desc">Environment preparation, database seeding, service startup, and credential verification.</div>
+        <div class="pc-stats">
+          <span>Pages: <strong>0</strong></span>
+          <span>Checks: <strong>6</strong></span>
+          <span>Roles: <strong>All 7</strong></span>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="pc-header">
+          <span class="pc-name">Phase 1: Authentication</span>
+          <span class="pc-badge" style="background:rgba(59,130,246,0.12);color:var(--blue);">Auth</span>
+        </div>
+        <div class="pc-desc">Login, register, forgot/reset password, email verification, 2FA challenge, privacy accept.</div>
+        <div class="pc-stats">
+          <span>Pages: <strong>8</strong></span>
+          <span>Checks: <strong>28</strong></span>
+          <span>Roles: <strong>Unauthenticated</strong></span>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="pc-header">
+          <span class="pc-name">Phase 2: Catalogs &amp; Config</span>
+          <span class="pc-badge" style="background:rgba(139,92,246,0.12);color:var(--purple);">Settings</span>
+        </div>
+        <div class="pc-desc">Organization settings, sites, users, alert rules, escalation chains, recipes, modules, billing, compliance, integrations.</div>
+        <div class="pc-stats">
+          <span>Pages: <strong>27</strong></span>
+          <span>Checks: <strong>60+</strong></span>
+          <span>Roles: <strong>SA, OA</strong></span>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="pc-header">
+          <span class="pc-name">Phase 3: Monitoring</span>
+          <span class="pc-badge" style="background:rgba(16,185,129,0.12);color:var(--green);">Core</span>
+        </div>
+        <div class="pc-desc">Dashboard, device list, device detail, gateway status, real-time readings, WebSocket updates.</div>
+        <div class="pc-stats">
+          <span>Pages: <strong>8</strong></span>
+          <span>Checks: <strong>30+</strong></span>
+          <span>Roles: <strong>All client roles</strong></span>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="pc-header">
+          <span class="pc-name">Phase 4: Alerts &amp; Actions</span>
+          <span class="pc-badge" style="background:rgba(239,68,68,0.12);color:var(--red);">Alerts</span>
+        </div>
+        <div class="pc-desc">Alert list, alert detail, acknowledgment, resolution, corrective actions, escalation flow, work orders.</div>
+        <div class="pc-stats">
+          <span>Pages: <strong>10</strong></span>
+          <span>Checks: <strong>35+</strong></span>
+          <span>Roles: <strong>SM, SV, TECH</strong></span>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="pc-header">
+          <span class="pc-name">Phase 5: Reports &amp; Analytics</span>
+          <span class="pc-badge" style="background:rgba(249,115,22,0.12);color:#f97316;">Reports</span>
+        </div>
+        <div class="pc-desc">Report generation, HACCP reports, energy reports, alert analytics, scheduled reports, data export.</div>
+        <div class="pc-stats">
+          <span>Pages: <strong>8</strong></span>
+          <span>Checks: <strong>25+</strong></span>
+          <span>Roles: <strong>OA, SM, SV</strong></span>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="pc-header">
+          <span class="pc-name">Phase 6: Command Center</span>
+          <span class="pc-badge" style="background:rgba(16,185,129,0.12);color:var(--green);">Astrea</span>
+        </div>
+        <div class="pc-desc">Multi-org map view, fleet statistics, outage declarations, partner portal, organization management.</div>
+        <div class="pc-stats">
+          <span>Pages: <strong>6</strong></span>
+          <span>Checks: <strong>20+</strong></span>
+          <span>Roles: <strong>SA only</strong></span>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="pc-header">
+          <span class="pc-name">Phase 7: Cross-Cutting</span>
+          <span class="pc-badge" style="background:rgba(107,114,128,0.12);color:var(--text-muted);">Quality</span>
+        </div>
+        <div class="pc-desc">Responsive design, dark/light theme, i18n, flash messages, error pages, accessibility, performance.</div>
+        <div class="pc-stats">
+          <span>Pages: <strong>5</strong></span>
+          <span>Checks: <strong>20+</strong></span>
+          <span>Roles: <strong>All</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Testing Approach -->
+  <div class="section">
+    <h2>Testing Approach</h2>
+
+    <h3>Per-Page Testing Template</h3>
+    <p>For each page in the inventory, follow this structure:</p>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px;">
+      <p style="margin-bottom:8px;"><strong>1. How to get here:</strong> Direct URL + navigation path</p>
+      <p style="margin-bottom:8px;"><strong>2. Content (verify these exist):</strong> Checkbox list of expected UI elements</p>
+      <p style="margin-bottom:8px;"><strong>3. Actions and Destinations:</strong> Table of user actions, expected results, and navigation targets</p>
+      <p style="margin-bottom:8px;"><strong>4. Role differences:</strong> What each role sees (visibility matrix)</p>
+      <p style="margin-bottom:8px;"><strong>5. Business rules to verify:</strong> BR-xxx references with expected behavior</p>
+      <p style="margin-bottom:8px;"><strong>6. Screen states to test:</strong> Default, loading, empty, error, success, validation</p>
+      <p style="margin-bottom:0;"><strong>7. Issues found:</strong> Space for documenting bugs and UX issues</p>
+    </div>
+
+    <h3>Role-Based Testing Order</h3>
+    <p>Test each phase with the recommended roles in this order:</p>
+    <div class="cred-table">
+      <table>
+        <thead>
+          <tr><th>Phase</th><th>Primary Role</th><th>Secondary Roles</th><th>Focus</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Phase 0-1</td><td>All (sequential login)</td><td>--</td><td>Each role logs in, verify sidebar</td></tr>
+          <tr><td>Phase 2</td><td>super_admin</td><td>org_admin</td><td>Full config, then client perspective</td></tr>
+          <tr><td>Phase 3</td><td>site_viewer</td><td>site_manager, technician</td><td>Single-site, then multi-site</td></tr>
+          <tr><td>Phase 4</td><td>site_manager</td><td>site_viewer, technician</td><td>Alert flow, work order flow</td></tr>
+          <tr><td>Phase 5</td><td>org_admin</td><td>site_manager</td><td>Report access and generation</td></tr>
+          <tr><td>Phase 6</td><td>super_admin</td><td>--</td><td>Astrea-only features</td></tr>
+          <tr><td>Phase 7</td><td>All</td><td>--</td><td>Cross-cutting quality checks</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Key Business Rules to Verify</h3>
+    <p>The most critical rules that must be verified during QA:</p>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);">
+      <p style="margin-bottom:6px;"><strong>BR-029:</strong> All routes scoped to user's organization (EnsureOrganizationScope)</p>
+      <p style="margin-bottom:6px;"><strong>BR-030:</strong> Site access validated via canAccessSite() -- super_admin=all, org_admin=org, others=pivot</p>
+      <p style="margin-bottom:6px;"><strong>BR-010:</strong> Alert rules evaluated per-reading, scoped to site + device</p>
+      <p style="margin-bottom:6px;"><strong>BR-011:</strong> Duration-based thresholds -- only sustained breaches trigger alerts</p>
+      <p style="margin-bottom:6px;"><strong>BR-013:</strong> Auto-resolution -- 2 consecutive normal readings resolve active alert</p>
+      <p style="margin-bottom:6px;"><strong>BR-017:</strong> Escalation chain levels with delay, users, and channels</p>
+      <p style="margin-bottom:6px;"><strong>BR-025:</strong> CFDI timbrado via Facturapi using billing profile</p>
+      <p style="margin-bottom:6px;"><strong>BR-047:</strong> Site onboarding is 5-step wizard (gateway, devices, floor plans, modules, escalation)</p>
+      <p style="margin-bottom:0;"><strong>BR-048:</strong> Onboarding completion requires 1+ gateway, 1+ device, 1+ module</p>
+    </div>
+  </div>
+
+  <!-- Full Guide Reference -->
+  <div class="section">
+    <h2>Full Guide Reference</h2>
+    <p>This HTML page provides an overview of the QA testing structure. The complete testing guide with all per-page checklists is available in the Markdown source file:</p>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);">
+      <p><strong>Source file:</strong> <code>docs/project/MANUAL_QA_GUIDE.md</code></p>
+      <p style="margin-top:8px;">The Markdown guide contains the full per-page testing template for all 72 pages, including:</p>
+      <ul style="margin-top:8px;padding-left:20px;font-size:14px;color:var(--text-muted);">
+        <li>Detailed content checklists for each page</li>
+        <li>Action-to-destination tables</li>
+        <li>Role visibility matrices</li>
+        <li>Business rule references per page</li>
+        <li>Screen state test cases</li>
+        <li>Space for issue documentation</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- QA Testing Guide -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>

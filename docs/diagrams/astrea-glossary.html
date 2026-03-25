@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glossary — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348; --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+code { background: var(--code-bg); padding: 2px 7px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; }
+.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
+.nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+.nav-links { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.nav-links a { padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+.nav-links a:hover { color:var(--text); background:var(--accent-glow); }
+.nav-links a.active { color:var(--accent); background:var(--accent-light); }
+.nav-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+.theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.container { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+.page-header { margin-bottom: 32px; }
+.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.page-header p { font-size: 16px; color: var(--text-muted); }
+
+/* Search */
+.search-box {
+  margin-bottom: 32px;
+}
+.search-input {
+  width: 100%; padding: 12px 16px; border: 1px solid var(--border);
+  border-radius: 8px; font-size: 15px; background: var(--bg-card);
+  color: var(--text); outline: none; transition: border-color 0.15s;
+  font-family: inherit;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-muted); }
+
+/* Letter nav */
+.letter-nav {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 32px;
+}
+.letter-nav a {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--text-muted);
+  border: 1px solid var(--border); transition: all 0.15s;
+}
+.letter-nav a:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* Term */
+.letter-section { margin-bottom: 40px; }
+.letter-heading {
+  font-size: 20px; font-weight: 800; color: var(--accent);
+  margin-bottom: 16px; padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent-light);
+}
+.term-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 24px; margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.term-card .term-name {
+  font-size: 15px; font-weight: 700; margin-bottom: 6px;
+}
+.term-card .term-def {
+  font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 8px;
+}
+.term-card .term-related {
+  font-size: 12px; color: var(--text-muted);
+}
+.term-card .term-related span {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  background: var(--accent-light); color: var(--accent-dark);
+  font-size: 11px; font-weight: 600; margin-right: 4px; margin-bottom: 4px;
+}
+
+.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-scenarios.html">Scenarios</a>
+      <a href="astrea-roles.html">Roles</a>
+      <a href="astrea-faq.html">FAQ</a>
+      <a href="astrea-glossary.html" class="active">Glossary</a>
+      <a href="astrea-onboarding.html">Onboarding</a>
+      <a href="astrea-qa.html">QA Guide</a>
+      <span class="nav-sep"></span>
+      <a href="astrea-screens.html">Screens</a>
+      <a href="astrea-progress.html">Progress</a>
+      <a href="astrea-presentation.html">Presentation</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span id="theme-icon"></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Glossary</h1>
+    <p>Domain terminology used throughout the Astrea IoT Platform. 40 terms covering sensors, data pipeline, alerts, compliance, and operations.</p>
+  </div>
+
+  <div class="search-box">
+    <input type="text" class="search-input" id="glossarySearch" placeholder="Search terms..." oninput="filterTerms()">
+  </div>
+
+  <div class="letter-nav" id="letterNav">
+    <a href="#letter-A">A</a><a href="#letter-B">B</a><a href="#letter-C">C</a><a href="#letter-D">D</a><a href="#letter-E">E</a><a href="#letter-F">F</a><a href="#letter-G">G</a><a href="#letter-H">H</a><a href="#letter-I">I</a><a href="#letter-K">K</a><a href="#letter-L">L</a><a href="#letter-M">M</a><a href="#letter-N">N</a><a href="#letter-O">O</a><a href="#letter-P">P</a><a href="#letter-R">R</a><a href="#letter-S">S</a><a href="#letter-T">T</a><a href="#letter-U">U</a><a href="#letter-W">W</a><a href="#letter-Z">Z</a>
+  </div>
+
+  <div id="glossaryContent">
+
+  <!-- A -->
+  <div class="letter-section" id="letter-A">
+    <div class="letter-heading">A</div>
+    <div class="term-card" data-term="alert">
+      <div class="term-name">Alert</div>
+      <div class="term-def">A notification generated when a sensor reading breaches a configured threshold for a sustained duration. Alerts have severity levels (critical, high, medium, low) and follow a lifecycle: active, acknowledged, resolved, or dismissed.</div>
+      <div class="term-related"><span>Alert Rules</span><span>Escalation Chain</span><span>WF-003</span></div>
+    </div>
+    <div class="term-card" data-term="alert rule">
+      <div class="term-name">Alert Rule</div>
+      <div class="term-def">A configuration that defines when an alert should fire. Includes threshold value, condition (above/below), duration (how long the breach must persist), severity, and cooldown period. Three types: simple, correlation, and baseline.</div>
+      <div class="term-related"><span>Recipe</span><span>Rule Evaluator</span><span>BR-010</span></div>
+    </div>
+    <div class="term-card" data-term="alert router">
+      <div class="term-name">Alert Router</div>
+      <div class="term-def">The service that determines how to deliver alert notifications. Routes by severity: critical/high get immediate escalation, medium/low follow normal queue. Implements batch mode when more than 5 alerts fire in 10 minutes.</div>
+      <div class="term-related"><span>Escalation Chain</span><span>BR-015</span><span>BR-016</span></div>
+    </div>
+    <div class="term-card" data-term="activity log">
+      <div class="term-name">Activity Log</div>
+      <div class="term-def">An audit trail recording every significant action in the system: alert rule changes, escalation chain edits, alert acknowledgments, device configuration changes, user role changes, and work order updates. Powered by Spatie Activity Log.</div>
+      <div class="term-related"><span>Compliance</span><span>LFPDPPP</span></div>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="letter-section" id="letter-B">
+    <div class="letter-heading">B</div>
+    <div class="term-card" data-term="baseline">
+      <div class="term-name">Baseline</div>
+      <div class="term-def">A learned pattern of normal sensor behavior, computed from hourly averages grouped by weekday/weekend. Anomalies are detected when readings deviate more than 2 standard deviations from the baseline.</div>
+      <div class="term-related"><span>Alert Rule</span><span>BR-042</span></div>
+    </div>
+    <div class="term-card" data-term="billing profile">
+      <div class="term-name">Billing Profile</div>
+      <div class="term-def">The fiscal identity used for invoicing a client organization. Contains RFC, razon social, regimen fiscal, direccion fiscal, and uso CFDI. An organization can have multiple billing profiles (one per legal entity).</div>
+      <div class="term-related"><span>Subscription</span><span>Invoice</span><span>CFDI</span></div>
+    </div>
+    <div class="term-card" data-term="broadcast">
+      <div class="term-name">Broadcast</div>
+      <div class="term-def">Real-time event delivery via Laravel Reverb WebSockets. Three broadcast events push live data: SensorReadingReceived, AlertTriggered, and NotificationCreated. Frontend consumes these via Laravel Echo.</div>
+      <div class="term-related"><span>Reverb</span><span>BR-007</span></div>
+    </div>
+  </div>
+
+  <!-- C -->
+  <div class="letter-section" id="letter-C">
+    <div class="letter-heading">C</div>
+    <div class="term-card" data-term="cfdi">
+      <div class="term-name">CFDI</div>
+      <div class="term-def">Comprobante Fiscal Digital por Internet -- the official Mexican electronic invoice format. Astrea generates CFDIs via Facturapi using the organization's billing profile. Each invoice gets a UUID (folio fiscal) and XML/PDF output.</div>
+      <div class="term-related"><span>Billing Profile</span><span>Invoice</span><span>BR-025</span></div>
+    </div>
+    <div class="term-card" data-term="chirpstack">
+      <div class="term-name">ChirpStack</div>
+      <div class="term-def">The managed LoRaWAN network server (ChirpStack Cloud) that receives sensor data from gateways and forwards it via MQTT to the Astrea application. No self-hosting required.</div>
+      <div class="term-related"><span>Gateway</span><span>MQTT</span><span>Data Pipeline</span></div>
+    </div>
+    <div class="term-card" data-term="command center">
+      <div class="term-name">Command Center</div>
+      <div class="term-def">The super_admin-only dashboard that provides a fleet-wide view across all client organizations. Includes multi-org map, site health indicators, fleet statistics, and outage declaration controls.</div>
+      <div class="term-related"><span>super_admin</span><span>Outage Declaration</span></div>
+    </div>
+    <div class="term-card" data-term="compliance event">
+      <div class="term-name">Compliance Event</div>
+      <div class="term-def">A scheduled compliance obligation (e.g., COFEPRIS inspection, NOM-251 audit, equipment calibration). Tracked in the compliance calendar with automated reminders at 30, 7, and 1 day before due date.</div>
+      <div class="term-related"><span>Corrective Action</span><span>WF-008</span><span>BR-038</span></div>
+    </div>
+    <div class="term-card" data-term="continuous aggregate">
+      <div class="term-name">Continuous Aggregate</div>
+      <div class="term-def">A TimescaleDB materialized view that pre-computes rollups of sensor readings at 15-minute, 1-hour, and 1-day intervals. Keeps chart queries fast regardless of data volume.</div>
+      <div class="term-related"><span>TimescaleDB</span><span>Sensor Reading</span></div>
+    </div>
+    <div class="term-card" data-term="cooldown">
+      <div class="term-name">Cooldown</div>
+      <div class="term-def">The minimum time between duplicate alerts for the same rule. Prevents alert fatigue by ensuring a rule does not fire repeatedly during an ongoing excursion. Configured in minutes per alert rule.</div>
+      <div class="term-related"><span>Alert Rule</span><span>BR-012</span></div>
+    </div>
+    <div class="term-card" data-term="corrective action">
+      <div class="term-name">Corrective Action</div>
+      <div class="term-def">A documented response to an alert, logged by a site_manager or technician. Records what was done to address the issue (e.g., "closed freezer door", "replaced compressor fuse"). Required for compliance audit trails.</div>
+      <div class="term-related"><span>Alert</span><span>Compliance</span><span>WF-013</span></div>
+    </div>
+  </div>
+
+  <!-- D -->
+  <div class="letter-section" id="letter-D">
+    <div class="letter-heading">D</div>
+    <div class="term-card" data-term="dashboard">
+      <div class="term-name">Dashboard</div>
+      <div class="term-def">The primary landing page after login. Shows KPI cards (devices online, active alerts, readings today), device grid with current readings, alert feed, and action cards for quick navigation. Content varies by role and site scope.</div>
+      <div class="term-related"><span>Site</span><span>Device</span><span>Alert</span></div>
+    </div>
+    <div class="term-card" data-term="data export">
+      <div class="term-name">Data Export</div>
+      <div class="term-def">Bulk export of platform data (sensor readings, alerts, devices) in CSV or JSON format. Requested by org_admin, processed asynchronously, and delivered via download link with email notification when ready.</div>
+      <div class="term-related"><span>WF-015</span><span>BR-064</span></div>
+    </div>
+    <div class="term-card" data-term="decoder factory">
+      <div class="term-name">Decoder Factory</div>
+      <div class="term-def">A pattern that routes raw MQTT payloads to the correct decoder class based on device.model (EM300-TH, CT101, WS301, AM307, VS121). Each decoder extracts metric, value, and unit from the binary payload.</div>
+      <div class="term-related"><span>Data Pipeline</span><span>BR-001</span></div>
+    </div>
+    <div class="term-card" data-term="defrost schedule">
+      <div class="term-name">Defrost Schedule</div>
+      <div class="term-def">Auto-learned or manually configured time windows when a refrigeration unit runs its defrost cycle. Temperature spikes during these windows are suppressed from cold-chain alerts to avoid false alarms.</div>
+      <div class="term-related"><span>Cold Chain</span><span>BR-014</span><span>WF-027</span></div>
+    </div>
+    <div class="term-card" data-term="device">
+      <div class="term-name">Device</div>
+      <div class="term-def">A LoRaWAN sensor installed at a site. Identified by dev_eui (unique hardware ID). Has attributes: name, zone, model, recipe, battery percentage, RSSI, last reading timestamp, and status (pending, active, offline).</div>
+      <div class="term-related"><span>Sensor Reading</span><span>Gateway</span><span>Recipe</span></div>
+    </div>
+    <div class="term-card" data-term="device anomaly">
+      <div class="term-name">Device Anomaly</div>
+      <div class="term-def">A sanity check flag raised when a sensor reports physically impossible or suspicious values (e.g., temperature of 200C, humidity of -5%). Detected by the SanityCheckService and logged as a DeviceAnomaly record.</div>
+      <div class="term-related"><span>Sanity Check</span><span>WF-020</span><span>BR-085</span></div>
+    </div>
+  </div>
+
+  <!-- E -->
+  <div class="letter-section" id="letter-E">
+    <div class="letter-heading">E</div>
+    <div class="term-card" data-term="escalation chain">
+      <div class="term-name">Escalation Chain</div>
+      <div class="term-def">A site-level configuration defining who gets notified when an alert fires, in what order, with what delay, and via which channel (WhatsApp, push, email, SMS). Supports multiple levels for progressive escalation.</div>
+      <div class="term-related"><span>Alert</span><span>WF-024</span><span>BR-017</span></div>
+    </div>
+  </div>
+
+  <!-- F -->
+  <div class="letter-section" id="letter-F">
+    <div class="letter-heading">F</div>
+    <div class="term-card" data-term="floor plan">
+      <div class="term-name">Floor Plan</div>
+      <div class="term-def">An uploaded image of a site's physical layout (per floor). Sensors are placed via drag-and-drop using floor_x and floor_y coordinates. Supports multi-floor sites with named floors (e.g., "Planta Baja", "Piso 1").</div>
+      <div class="term-related"><span>Site</span><span>Device</span><span>Onboarding Wizard</span></div>
+    </div>
+  </div>
+
+  <!-- G -->
+  <div class="letter-section" id="letter-G">
+    <div class="letter-heading">G</div>
+    <div class="term-card" data-term="gateway">
+      <div class="term-name">Gateway</div>
+      <div class="term-def">A LoRaWAN concentrator that receives radio transmissions from sensors and relays data to ChirpStack Cloud via 4G or Ethernet. Models: Milesight UG65 (indoor) and SG50 (outdoor, solar). Marked offline after 30 minutes without a heartbeat.</div>
+      <div class="term-related"><span>ChirpStack</span><span>Device</span><span>BR-004</span></div>
+    </div>
+  </div>
+
+  <!-- H -->
+  <div class="letter-section" id="letter-H">
+    <div class="letter-heading">H</div>
+    <div class="term-card" data-term="haccp">
+      <div class="term-name">HACCP Report</div>
+      <div class="term-def">Hazard Analysis and Critical Control Points -- an auto-generated temperature log with excursion flagging, exported as a branded PDF. Used for food safety compliance audits (NOM-251, COFEPRIS).</div>
+      <div class="term-related"><span>Cold Chain</span><span>Compliance</span><span>Reports</span></div>
+    </div>
+    <div class="term-card" data-term="hypertable">
+      <div class="term-name">Hypertable</div>
+      <div class="term-def">A TimescaleDB table type optimized for time-series data. The sensor_readings table is a hypertable with weekly chunks, automatic time-based indexing, and compression after 7 days.</div>
+      <div class="term-related"><span>TimescaleDB</span><span>Sensor Reading</span></div>
+    </div>
+  </div>
+
+  <!-- I -->
+  <div class="letter-section" id="letter-I">
+    <div class="letter-heading">I</div>
+    <div class="term-card" data-term="invoice">
+      <div class="term-name">Invoice</div>
+      <div class="term-def">A monthly billing document generated per organization. Follows lifecycle: draft, sent, paid (or overdue). Includes CFDI timbrado via Facturapi with PDF and XML output. Payment via SPEI bank transfer.</div>
+      <div class="term-related"><span>Billing Profile</span><span>Subscription</span><span>SM-003</span></div>
+    </div>
+  </div>
+
+  <!-- K -->
+  <div class="letter-section" id="letter-K">
+    <div class="letter-heading">K</div>
+    <div class="term-card" data-term="kpi">
+      <div class="term-name">KPI (Key Performance Indicator)</div>
+      <div class="term-def">Operational metrics displayed on dashboards: devices online percentage, active alert count, mean time to resolve (MTTR), readings received today, temperature compliance rate, energy waste percentage.</div>
+      <div class="term-related"><span>Dashboard</span><span>Analytics</span></div>
+    </div>
+  </div>
+
+  <!-- L -->
+  <div class="letter-section" id="letter-L">
+    <div class="letter-heading">L</div>
+    <div class="term-card" data-term="lfpdppp">
+      <div class="term-name">LFPDPPP</div>
+      <div class="term-def">Ley Federal de Proteccion de Datos Personales en Posesion de los Particulares -- Mexico's federal data privacy law. Astrea enforces consent via the /privacy/accept page before users can access the platform.</div>
+      <div class="term-related"><span>Compliance</span><span>BR-082</span></div>
+    </div>
+    <div class="term-card" data-term="lorawan">
+      <div class="term-name">LoRaWAN</div>
+      <div class="term-def">Long Range Wide Area Network -- a low-power wireless protocol used by all Astrea sensors. Provides kilometer-range connectivity with multi-year battery life. Sensors transmit to gateways, which relay to ChirpStack Cloud.</div>
+      <div class="term-related"><span>Device</span><span>Gateway</span><span>ChirpStack</span></div>
+    </div>
+  </div>
+
+  <!-- M -->
+  <div class="letter-section" id="letter-M">
+    <div class="letter-heading">M</div>
+    <div class="term-card" data-term="maintenance window">
+      <div class="term-name">Maintenance Window</div>
+      <div class="term-def">A scheduled time period during which alerts are suppressed for specific devices or an entire site. Used for planned maintenance, equipment testing, or site renovations.</div>
+      <div class="term-related"><span>Alert</span><span>WF-016</span><span>BR-073</span></div>
+    </div>
+    <div class="term-card" data-term="module">
+      <div class="term-name">Module</div>
+      <div class="term-def">A segment-specific feature pack activated per site: Cold Chain, Energy, Compliance, Industrial, IAQ, Safety, People. Each module brings dashboards, alert recipes, and compliance tools tailored to the vertical.</div>
+      <div class="term-related"><span>Recipe</span><span>Site Module</span><span>WF-011</span></div>
+    </div>
+    <div class="term-card" data-term="morning summary">
+      <div class="term-name">Morning Summary</div>
+      <div class="term-def">An automated daily digest sent at each site's opening hour (timezone-aware). Contains overnight alert count, device status, and key metrics. Delivered via push notification and email. Regional and corporate variants aggregate across sites.</div>
+      <div class="term-related"><span>WF-005</span><span>BR-034</span></div>
+    </div>
+    <div class="term-card" data-term="mqtt">
+      <div class="term-name">MQTT</div>
+      <div class="term-def">Message Queuing Telemetry Transport -- the protocol used by ChirpStack to deliver sensor uplinks to the Astrea application. The Laravel MQTT listener runs as a queued job and feeds data into the processing pipeline.</div>
+      <div class="term-related"><span>ChirpStack</span><span>Data Pipeline</span><span>BR-001</span></div>
+    </div>
+  </div>
+
+  <!-- N -->
+  <div class="letter-section" id="letter-N">
+    <div class="letter-heading">N</div>
+    <div class="term-card" data-term="nom-251">
+      <div class="term-name">NOM-251</div>
+      <div class="term-def">Mexican Official Standard for food hygiene practices, requiring continuous temperature monitoring and logging for food storage. Astrea's HACCP reports and cold chain module directly support NOM-251 compliance.</div>
+      <div class="term-related"><span>Cold Chain</span><span>HACCP</span><span>Compliance</span></div>
+    </div>
+  </div>
+
+  <!-- O -->
+  <div class="letter-section" id="letter-O">
+    <div class="letter-heading">O</div>
+    <div class="term-card" data-term="organization">
+      <div class="term-name">Organization</div>
+      <div class="term-def">The top-level tenant in the multi-tenancy model. Represents a client company. Has attributes: name, slug, segment (primary industry), plan, settings, logo, default timezone, and default opening hour. Contains sites, users, and billing profiles.</div>
+      <div class="term-related"><span>Site</span><span>Multi-tenancy</span><span>Billing Profile</span></div>
+    </div>
+    <div class="term-card" data-term="outage declaration">
+      <div class="term-name">Outage Declaration</div>
+      <div class="term-def">A super_admin action declaring a platform-wide or regional outage. Displays a banner on all affected dashboards, suppresses alerts during the outage period, and auto-notifies all affected organizations.</div>
+      <div class="term-related"><span>Command Center</span><span>WF-017</span><span>BR-079</span></div>
+    </div>
+  </div>
+
+  <!-- P -->
+  <div class="letter-section" id="letter-P">
+    <div class="letter-heading">P</div>
+    <div class="term-card" data-term="policy">
+      <div class="term-name">Policy</div>
+      <div class="term-def">A Laravel authorization class that defines which users can perform which actions on a model. Astrea has 14 policies (Device, Alert, AlertRule, WorkOrder, Site, Recipe, EscalationChain, Billing, Report, User, File, Gateway, Notification, CorrectiveAction).</div>
+      <div class="term-related"><span>Permission</span><span>Role</span></div>
+    </div>
+    <div class="term-card" data-term="push token">
+      <div class="term-name">Push Token</div>
+      <div class="term-def">An Expo push notification token registered by the mobile app. Stored per user with device type (iOS/Android). Invalid tokens are auto-cleaned on delivery failure.</div>
+      <div class="term-related"><span>Mobile App</span><span>BR-046</span></div>
+    </div>
+  </div>
+
+  <!-- R -->
+  <div class="letter-section" id="letter-R">
+    <div class="letter-heading">R</div>
+    <div class="term-card" data-term="recipe">
+      <div class="term-name">Recipe</div>
+      <div class="term-def">An alert template per sensor model and vertical. Contains default alert rules with pre-configured thresholds, durations, and severities. Seeded by Astrea with sensible defaults. Org admins can override thresholds per site.</div>
+      <div class="term-related"><span>Alert Rule</span><span>Module</span><span>BR-043</span></div>
+    </div>
+    <div class="term-card" data-term="report schedule">
+      <div class="term-name">Report Schedule</div>
+      <div class="term-def">A configuration for automatic report delivery. Defines report type, frequency (daily, weekly, monthly), recipients, and delivery channel. Reports are generated by a cron job and delivered via email with PDF attachment.</div>
+      <div class="term-related"><span>WF-022</span><span>BR-069</span></div>
+    </div>
+    <div class="term-card" data-term="reverb">
+      <div class="term-name">Reverb</div>
+      <div class="term-def">Laravel Reverb -- the WebSocket server used for real-time updates. Broadcasts sensor readings, alert triggers, and notifications to connected web clients. Included in the <code>composer dev</code> command.</div>
+      <div class="term-related"><span>Broadcast</span><span>BR-007</span><span>BR-019</span></div>
+    </div>
+    <div class="term-card" data-term="rule evaluator">
+      <div class="term-name">Rule Evaluator</div>
+      <div class="term-def">The core service that processes each sensor reading against active alert rules. Manages duration-based tracking (via Redis state), cooldown enforcement, defrost suppression, and auto-resolution (2 consecutive normal readings).</div>
+      <div class="term-related"><span>Alert Rule</span><span>BR-010</span><span>BR-013</span></div>
+    </div>
+  </div>
+
+  <!-- S -->
+  <div class="letter-section" id="letter-S">
+    <div class="letter-heading">S</div>
+    <div class="term-card" data-term="sanity check">
+      <div class="term-name">Sanity Check</div>
+      <div class="term-def">A validation step in the data pipeline that flags physically impossible or suspicious sensor readings (e.g., temperature jumps of 50C between readings, humidity above 100%). Detected readings are logged as DeviceAnomaly records.</div>
+      <div class="term-related"><span>Device Anomaly</span><span>WF-020</span><span>BR-085</span></div>
+    </div>
+    <div class="term-card" data-term="sensor reading">
+      <div class="term-name">Sensor Reading</div>
+      <div class="term-def">A single data point from a sensor: time, device_id, metric (temperature, humidity, current, etc.), value, and unit. Stored in the TimescaleDB hypertable. Latest reading cached in Redis for sub-millisecond dashboard access.</div>
+      <div class="term-related"><span>Device</span><span>TimescaleDB</span><span>BR-002</span></div>
+    </div>
+    <div class="term-card" data-term="site">
+      <div class="term-name">Site</div>
+      <div class="term-def">A physical location within an organization (e.g., a store, warehouse, office). Contains gateways, devices, floor plans, and modules. Has its own timezone, opening hour, and optional segment override. Status: active, onboarding, inactive.</div>
+      <div class="term-related"><span>Organization</span><span>Device</span><span>Gateway</span></div>
+    </div>
+    <div class="term-card" data-term="site template">
+      <div class="term-name">Site Template</div>
+      <div class="term-def">A captured configuration snapshot of a site (modules, alert rules, escalation chains) that can be cloned to quickly set up new sites with the same configuration. Created by site managers.</div>
+      <div class="term-related"><span>WF-018</span><span>BR-089</span></div>
+    </div>
+    <div class="term-card" data-term="subscription">
+      <div class="term-name">Subscription</div>
+      <div class="term-def">The billing agreement for an organization. Defines base fee, discount percentage, contract type (monthly/annual), and status. Subscription items track per-sensor fees. Total = base_fee x (1 - discount) + sensor fees + gateway add-ons.</div>
+      <div class="term-related"><span>Billing Profile</span><span>Invoice</span><span>BR-023</span></div>
+    </div>
+  </div>
+
+  <!-- T -->
+  <div class="letter-section" id="letter-T">
+    <div class="letter-heading">T</div>
+    <div class="term-card" data-term="timescaledb">
+      <div class="term-name">TimescaleDB</div>
+      <div class="term-def">A PostgreSQL extension for time-series data. Powers the sensor_readings hypertable with automatic partitioning (weekly chunks), compression (90%+ reduction after 7 days), and continuous aggregates (pre-computed rollups).</div>
+      <div class="term-related"><span>Sensor Reading</span><span>Continuous Aggregate</span><span>Hypertable</span></div>
+    </div>
+  </div>
+
+  <!-- U -->
+  <div class="letter-section" id="letter-U">
+    <div class="letter-heading">U</div>
+    <div class="term-card" data-term="user_sites">
+      <div class="term-name">User-Site Assignment</div>
+      <div class="term-def">The pivot table (<code>user_sites</code>) that controls which sites a user can access. Org admins see all sites automatically. Site managers have multiple entries. Site viewers have exactly one. Technicians are assigned to their service sites.</div>
+      <div class="term-related"><span>Role</span><span>Site</span><span>BR-030</span></div>
+    </div>
+  </div>
+
+  <!-- W -->
+  <div class="letter-section" id="letter-W">
+    <div class="letter-heading">W</div>
+    <div class="term-card" data-term="work order">
+      <div class="term-name">Work Order</div>
+      <div class="term-def">A task assigned to a technician for device maintenance, replacement, inspection, or installation. Can be auto-generated (device offline &gt;2h, battery &lt;20%) or manually created. Lifecycle: open, assigned, in_progress, completed, cancelled.</div>
+      <div class="term-related"><span>WF-004</span><span>SM-002</span><span>BR-005</span></div>
+    </div>
+  </div>
+
+  <!-- Z -->
+  <div class="letter-section" id="letter-Z">
+    <div class="letter-heading">Z</div>
+    <div class="term-card" data-term="zone">
+      <div class="term-name">Zone</div>
+      <div class="term-def">A logical grouping of sensors within a site (e.g., "Walk-in Cooler", "Display Case", "Freezer Room"). Used in cold chain for temperature zone health status and in IAQ for composite zone scoring.</div>
+      <div class="term-related"><span>Device</span><span>Cold Chain</span><span>IAQ</span></div>
+    </div>
+  </div>
+
+  </div><!-- glossaryContent -->
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- Glossary -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+function filterTerms() {
+  var query = document.getElementById('glossarySearch').value.toLowerCase();
+  var cards = document.querySelectorAll('.term-card');
+  var sections = document.querySelectorAll('.letter-section');
+  cards.forEach(function(card) {
+    var text = card.textContent.toLowerCase();
+    card.style.display = text.indexOf(query) !== -1 ? '' : 'none';
+  });
+  sections.forEach(function(sec) {
+    var visible = sec.querySelectorAll('.term-card[style=""], .term-card:not([style])');
+    var hidden = sec.querySelectorAll('.term-card[style*="none"]');
+    sec.style.display = (visible.length === 0 && hidden.length > 0) ? 'none' : '';
+  });
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>

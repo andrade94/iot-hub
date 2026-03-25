@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Use Case Scenarios — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
+  --green: #10b981; --blue: #3b82f6; --purple: #8b5cf6; --orange: #f59e0b;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348; --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.7; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+code { background: var(--code-bg); padding: 2px 7px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; }
+.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
+.nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+.nav-links { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.nav-links a { padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+.nav-links a:hover { color:var(--text); background:var(--accent-glow); }
+.nav-links a.active { color:var(--accent); background:var(--accent-light); }
+.nav-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+.theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.container { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+.page-header { margin-bottom: 48px; }
+.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.page-header p { font-size: 16px; color: var(--text-muted); }
+
+/* Role Section */
+.role-section { margin-bottom: 64px; }
+.role-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+  padding-bottom: 16px; border-bottom: 2px solid var(--accent-light);
+}
+.role-icon {
+  width: 48px; height: 48px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;
+}
+.role-header h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.role-header .role-code {
+  font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--text-muted); margin-top: 2px;
+}
+
+/* Narrative */
+.narrative {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px; margin-bottom: 24px;
+  box-shadow: var(--shadow); position: relative;
+}
+.narrative::before {
+  content: '"'; position: absolute; top: 12px; left: 16px;
+  font-size: 48px; color: var(--accent-light); font-family: Georgia, serif; line-height: 1;
+}
+.narrative .n-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; padding-left: 28px; }
+.narrative p { font-size: 14.5px; color: var(--text-muted); line-height: 1.8; padding-left: 28px; }
+
+/* Timeline */
+.timeline { margin-bottom: 24px; }
+.timeline h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--accent-dark); }
+.tl-item {
+  display: flex; gap: 16px; margin-bottom: 12px; position: relative;
+  padding-left: 24px;
+}
+.tl-item::before {
+  content: ''; position: absolute; left: 6px; top: 8px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+.tl-item::after {
+  content: ''; position: absolute; left: 9px; top: 20px;
+  width: 2px; height: calc(100% + 4px); background: var(--border);
+}
+.tl-item:last-child::after { display: none; }
+.tl-time { font-size: 13px; font-weight: 600; color: var(--accent); min-width: 70px; flex-shrink: 0; }
+.tl-desc { font-size: 14px; color: var(--text-muted); }
+
+/* Workflows and Pages */
+.info-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
+}
+.info-box {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
+}
+.info-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+.info-box ul { list-style: none; padding: 0; }
+.info-box ul li {
+  font-size: 13.5px; color: var(--text-muted); padding: 4px 0;
+  padding-left: 16px; position: relative;
+}
+.info-box ul li::before {
+  content: ''; position: absolute; left: 0; top: 11px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+}
+
+/* Alerts box */
+.alerts-box {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
+}
+.alerts-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+.alert-item {
+  display: flex; align-items: center; gap: 10px; padding: 6px 0;
+  font-size: 13.5px; color: var(--text-muted);
+}
+.alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.alert-dot.critical { background: #ef4444; }
+.alert-dot.high { background: #f59e0b; }
+.alert-dot.medium { background: #3b82f6; }
+.alert-dot.low { background: #6b7280; }
+
+.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+  .info-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-scenarios.html" class="active">Scenarios</a>
+      <a href="astrea-roles.html">Roles</a>
+      <a href="astrea-faq.html">FAQ</a>
+      <a href="astrea-glossary.html">Glossary</a>
+      <a href="astrea-onboarding.html">Onboarding</a>
+      <a href="astrea-qa.html">QA Guide</a>
+      <span class="nav-sep"></span>
+      <a href="astrea-screens.html">Screens</a>
+      <a href="astrea-progress.html">Progress</a>
+      <a href="astrea-presentation.html">Presentation</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span id="theme-icon"></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Use Case Scenarios</h1>
+    <p>"A Day in the Life" for each role -- how different users interact with the Astrea platform daily.</p>
+  </div>
+
+  <!-- client_org_admin -->
+  <div class="role-section">
+    <div class="role-header">
+      <div class="role-icon" style="background:rgba(59,130,246,0.12);">&#128188;</div>
+      <div>
+        <h2>Organization Admin</h2>
+        <div class="role-code">client_org_admin -- Director de Operaciones</div>
+      </div>
+    </div>
+
+    <div class="narrative">
+      <div class="n-title">A Day in the Life</div>
+      <p>Maria is the Director of Operations for a convenience store chain with 45 locations. She starts her morning reviewing the corporate summary email that arrived at 8:00 AM. Three sites had temperature excursions overnight -- she drills into the dashboard to check if corrective actions were logged. She notices one site has had recurring compressor issues and creates a work order for the technician team. Before her 10 AM meeting, she pulls a weekly compliance report PDF to share with her board. In the afternoon, she onboards two new sites using the wizard, assigns regional managers, and adjusts alert thresholds for the pharmacy locations.</p>
+    </div>
+
+    <div class="timeline">
+      <h3>Typical Daily Timeline</h3>
+      <div class="tl-item">
+        <span class="tl-time">08:00</span>
+        <span class="tl-desc">Reviews corporate summary email with overnight alerts across all 45 sites</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">08:30</span>
+        <span class="tl-desc">Drills into dashboard for sites with temperature excursions, checks corrective actions</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">09:00</span>
+        <span class="tl-desc">Creates work orders for recurring equipment issues, assigns to technicians</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">09:45</span>
+        <span class="tl-desc">Generates weekly compliance PDF report for board meeting</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">14:00</span>
+        <span class="tl-desc">Onboards 2 new sites via the setup wizard (gateway, devices, modules, escalation)</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">15:00</span>
+        <span class="tl-desc">Manages users: assigns regional manager to new sites, adjusts alert rules for pharmacy</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">16:30</span>
+        <span class="tl-desc">Reviews billing invoices and subscription details for the month</span>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <h4>Key Workflows</h4>
+        <ul>
+          <li>Site onboarding wizard (WF-023)</li>
+          <li>User management and role assignment (WF-009)</li>
+          <li>Report generation and scheduling (WF-006, WF-022)</li>
+          <li>Alert rule configuration and recipes (WF-011)</li>
+          <li>Billing and invoicing review (WF-007)</li>
+          <li>Compliance calendar management (WF-008)</li>
+          <li>Data export for integration (WF-015)</li>
+        </ul>
+      </div>
+      <div class="info-box">
+        <h4>Most Used Pages</h4>
+        <ul>
+          <li><code>/dashboard</code> -- Site overview with KPI cards</li>
+          <li><code>/settings/users</code> -- User management</li>
+          <li><code>/settings/sites</code> -- Site configuration</li>
+          <li><code>/reports</code> -- Report generation</li>
+          <li><code>/settings/billing</code> -- Subscription and invoices</li>
+          <li><code>/settings/alert-rules</code> -- Alert rule management</li>
+          <li><code>/analytics/alerts</code> -- Alert trends and analytics</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alerts-box">
+      <h4>Alerts Received</h4>
+      <div class="alert-item"><span class="alert-dot critical"></span> Critical: Escalation only (when site_manager and site_viewer do not respond)</div>
+      <div class="alert-item"><span class="alert-dot medium"></span> Weekly corporate summary email digest</div>
+      <div class="alert-item"><span class="alert-dot low"></span> Compliance reminders at 30, 7, and 1 day before due dates</div>
+    </div>
+  </div>
+
+  <!-- client_site_manager -->
+  <div class="role-section">
+    <div class="role-header">
+      <div class="role-icon" style="background:rgba(139,92,246,0.12);">&#128202;</div>
+      <div>
+        <h2>Site Manager</h2>
+        <div class="role-code">client_site_manager -- Gerente Regional</div>
+      </div>
+    </div>
+
+    <div class="narrative">
+      <div class="n-title">A Day in the Life</div>
+      <p>Carlos manages 12 stores in the northern region. His morning starts with the regional summary push notification at 7:30 AM -- 30 minutes after the earliest site opens. He scans the mobile app while commuting: two sites have high-severity alerts from overnight. He acknowledges one (a brief temp spike during a known defrost cycle) and escalates the other to the on-site viewer for immediate inspection. At the office, he opens the web platform to compare performance across his 12 sites, identifying two consistently underperforming locations. He schedules a meeting with those site viewers and generates a comparison report. In the afternoon, he reviews work order completion rates and assigns a technician for a battery replacement at a remote site.</p>
+    </div>
+
+    <div class="timeline">
+      <h3>Typical Daily Timeline</h3>
+      <div class="tl-item">
+        <span class="tl-time">07:30</span>
+        <span class="tl-desc">Receives regional summary push notification on mobile app</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">08:00</span>
+        <span class="tl-desc">Reviews alerts on mobile during commute, acknowledges or escalates</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">09:00</span>
+        <span class="tl-desc">Opens web dashboard, compares performance across 12 sites</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">10:00</span>
+        <span class="tl-desc">Generates comparison report for underperforming sites</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">14:00</span>
+        <span class="tl-desc">Reviews work order completion rates and technician assignments</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">15:00</span>
+        <span class="tl-desc">Checks device health across sites, flags low-battery sensors</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">16:00</span>
+        <span class="tl-desc">Creates maintenance windows for scheduled equipment service</span>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <h4>Key Workflows</h4>
+        <ul>
+          <li>Alert acknowledgment and escalation (WF-003)</li>
+          <li>Work order creation and assignment (WF-004)</li>
+          <li>Report generation (WF-006)</li>
+          <li>Maintenance window management (WF-016)</li>
+          <li>Device replacement initiation (WF-014)</li>
+          <li>Corrective action logging (WF-013)</li>
+          <li>Site template capture for cloning (WF-018)</li>
+        </ul>
+      </div>
+      <div class="info-box">
+        <h4>Most Used Pages</h4>
+        <ul>
+          <li><code>/dashboard</code> -- Multi-site overview</li>
+          <li><code>/alerts</code> -- Alert list with filters</li>
+          <li><code>/work-orders</code> -- Work order management</li>
+          <li><code>/reports</code> -- Report generation</li>
+          <li><code>/devices</code> -- Device health and status</li>
+          <li><code>/analytics/alerts</code> -- Alert analytics</li>
+          <li><code>/settings/maintenance</code> -- Maintenance windows</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alerts-box">
+      <h4>Alerts Received</h4>
+      <div class="alert-item"><span class="alert-dot critical"></span> Critical alerts: immediate WhatsApp escalation</div>
+      <div class="alert-item"><span class="alert-dot high"></span> High alerts: push notification + email</div>
+      <div class="alert-item"><span class="alert-dot medium"></span> Regional morning summary (daily push + email)</div>
+      <div class="alert-item"><span class="alert-dot low"></span> Device offline and battery warnings via push</div>
+    </div>
+  </div>
+
+  <!-- client_site_viewer -->
+  <div class="role-section">
+    <div class="role-header">
+      <div class="role-icon" style="background:rgba(249,115,22,0.12);">&#127978;</div>
+      <div>
+        <h2>Site Viewer</h2>
+        <div class="role-code">client_site_viewer -- Gerente de Tienda</div>
+      </div>
+    </div>
+
+    <div class="narrative">
+      <div class="n-title">A Day in the Life</div>
+      <p>Ana manages a single convenience store. She arrives at 7:00 AM and checks the morning summary that arrived on WhatsApp -- overnight her walk-in cooler had a brief temperature excursion that auto-resolved. She opens the mobile app to verify current readings: all zones are green. Mid-morning, she receives a push notification that the front display case temperature is rising. She walks over, finds a customer left the door ajar, closes it, and acknowledges the alert on her phone. Before closing, she reviews the daily temperature log on the dashboard to ensure compliance for a COFEPRIS visit next week. She notices the freezer sensor battery is at 18% and taps "Request Maintenance" to notify the technician team.</p>
+    </div>
+
+    <div class="timeline">
+      <h3>Typical Daily Timeline</h3>
+      <div class="tl-item">
+        <span class="tl-time">07:00</span>
+        <span class="tl-desc">Checks WhatsApp morning summary -- reviews overnight activity at her store</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">07:15</span>
+        <span class="tl-desc">Opens mobile app to verify all temperature zones are in range</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">10:30</span>
+        <span class="tl-desc">Receives push alert about rising temperature in display case</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">10:35</span>
+        <span class="tl-desc">Investigates, finds root cause (door ajar), acknowledges alert</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">17:00</span>
+        <span class="tl-desc">Reviews daily temperature log on dashboard for compliance</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">17:15</span>
+        <span class="tl-desc">Notices low battery sensor, taps "Request Maintenance" to notify technician</span>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <h4>Key Workflows</h4>
+        <ul>
+          <li>Alert acknowledgment on mobile (WF-003)</li>
+          <li>Corrective action logging (WF-013)</li>
+          <li>Morning summary review (WF-005)</li>
+          <li>Report viewing (WF-006)</li>
+          <li>Maintenance request (WF-004)</li>
+        </ul>
+      </div>
+      <div class="info-box">
+        <h4>Most Used Pages</h4>
+        <ul>
+          <li><code>/dashboard</code> -- Single-site overview</li>
+          <li><code>/alerts</code> -- Alert list for their store</li>
+          <li><code>/devices</code> -- Device status (read-only)</li>
+          <li><code>/reports</code> -- View and download reports</li>
+          <li>Mobile app -- Primary daily interface</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alerts-box">
+      <h4>Alerts Received</h4>
+      <div class="alert-item"><span class="alert-dot critical"></span> Critical + high alerts: immediate WhatsApp + push</div>
+      <div class="alert-item"><span class="alert-dot high"></span> All alerts for their store: push notification</div>
+      <div class="alert-item"><span class="alert-dot medium"></span> Morning summary via WhatsApp (daily at store opening hour)</div>
+    </div>
+  </div>
+
+  <!-- technician -->
+  <div class="role-section">
+    <div class="role-header">
+      <div class="role-icon" style="background:rgba(16,185,129,0.12);">&#128295;</div>
+      <div>
+        <h2>Technician</h2>
+        <div class="role-code">technician -- Tecnico de Mantenimiento</div>
+      </div>
+    </div>
+
+    <div class="narrative">
+      <div class="n-title">A Day in the Life</div>
+      <p>Ricardo is a field technician responsible for 30 sites across the metro area. His day starts by checking the mobile app for new work orders -- there are three: a battery replacement at a pharmacy, a sensor replacement at a convenience store (the device was reporting erratic readings), and a gateway inspection at an industrial site. He drives to the first location, opens the work order detail, takes a photo of the old sensor, replaces the battery, uploads a completion photo, and marks the work order complete. At the second site, he uses the device replacement flow to swap the faulty sensor -- the system transfers alert rules to the new device automatically. Between visits, he checks the device health dashboard to proactively identify sensors that might need attention soon.</p>
+    </div>
+
+    <div class="timeline">
+      <h3>Typical Daily Timeline</h3>
+      <div class="tl-item">
+        <span class="tl-time">07:30</span>
+        <span class="tl-desc">Checks mobile app for new work order assignments (3 pending today)</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">08:30</span>
+        <span class="tl-desc">Arrives at pharmacy, opens work order, photographs old sensor</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">09:00</span>
+        <span class="tl-desc">Replaces battery, uploads completion photo, marks work order complete</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">10:30</span>
+        <span class="tl-desc">At convenience store, uses device replacement flow to swap faulty sensor</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">11:00</span>
+        <span class="tl-desc">Verifies new sensor is reporting correctly via real-time dashboard</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">13:00</span>
+        <span class="tl-desc">Checks device health dashboard for proactive maintenance needs</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">14:00</span>
+        <span class="tl-desc">Gateway inspection at industrial site, checks signal strength and connectivity</span>
+      </div>
+      <div class="tl-item">
+        <span class="tl-time">16:00</span>
+        <span class="tl-desc">Reviews completed work orders, adds notes for follow-up items</span>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <h4>Key Workflows</h4>
+        <ul>
+          <li>Work order execution and completion (WF-004)</li>
+          <li>Device replacement with rule transfer (WF-014)</li>
+          <li>Device health monitoring (WF-025)</li>
+          <li>Photo documentation for work orders</li>
+          <li>Gateway diagnostics and inspection</li>
+        </ul>
+      </div>
+      <div class="info-box">
+        <h4>Most Used Pages</h4>
+        <ul>
+          <li><code>/work-orders</code> -- Assignment list</li>
+          <li><code>/devices</code> -- Device status and diagnostics</li>
+          <li><code>/devices/{id}</code> -- Device detail (signal, battery, readings)</li>
+          <li><code>/gateways</code> -- Gateway health and connectivity</li>
+          <li>Mobile app -- Primary field interface</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alerts-box">
+      <h4>Alerts Received</h4>
+      <div class="alert-item"><span class="alert-dot high"></span> Device offline alerts: WhatsApp + push</div>
+      <div class="alert-item"><span class="alert-dot medium"></span> Low battery warnings: push notification</div>
+      <div class="alert-item"><span class="alert-dot medium"></span> New work order assignments: push notification</div>
+      <div class="alert-item"><span class="alert-dot low"></span> Device health anomalies: in-app notification</div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- Use Case Scenarios -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>
