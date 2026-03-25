@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screen Inventory — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348; --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+code {
+  background: var(--code-bg); padding: 2px 7px; border-radius: 4px;
+  font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
+.nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+.nav-links { display:flex; gap:4px; align-items:center; }
+.nav-links a { padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+.nav-links a:hover { color:var(--text); background:var(--accent-glow); }
+.nav-links a.active { color:var(--accent); background:var(--accent-light); }
+.theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 48px 24px 80px; }
+.page-header { margin-bottom: 32px; }
+.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.page-header p { font-size: 16px; color: var(--text-muted); }
+
+.filter-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted);
+  cursor: pointer; transition: all 0.15s;
+}
+.filter-btn:hover, .filter-btn.active {
+  border-color: var(--accent); color: var(--accent); background: var(--accent-light);
+}
+
+.table-wrap {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead { background: var(--bg-alt); }
+th {
+  padding: 12px 16px; text-align: left; font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-muted);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+td {
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover { background: var(--accent-glow); }
+.area-header td {
+  background: var(--bg-alt); font-weight: 700; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent);
+  padding: 10px 16px;
+}
+.url-cell { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--accent-dark); }
+.pattern-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  background: var(--accent-light); color: var(--accent-dark);
+  font-size: 11px; font-weight: 600;
+}
+.role-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  background: var(--code-bg); color: var(--text-muted);
+  font-size: 11px; font-weight: 500; margin: 1px 2px;
+}
+
+.summary-bar { display: flex; gap: 20px; margin-bottom: 32px; flex-wrap: wrap; }
+.summary-item { font-size: 14px; color: var(--text-muted); }
+.summary-item strong { color: var(--accent); font-size: 20px; font-weight: 800; }
+
+.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+  td, th { padding: 8px 10px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="astrea-portal.html">Portal</a>
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-screens.html" class="active">Screens</a>
+      <a href="astrea-progress.html">Progress</a>
+      <a href="astrea-roles.html">Roles</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span id="theme-icon"></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Screen Inventory</h1>
+    <p>All 72 Inertia page components with URL patterns, UI patterns, and role access.</p>
+  </div>
+
+  <div class="summary-bar">
+    <div class="summary-item"><strong>21</strong> Core</div>
+    <div class="summary-item"><strong>27</strong> Settings</div>
+    <div class="summary-item"><strong>8</strong> Auth</div>
+    <div class="summary-item"><strong>8</strong> Command Center</div>
+    <div class="summary-item"><strong>3</strong> Modules</div>
+    <div class="summary-item"><strong>5</strong> New Pages</div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterTable('all', this)">All (72)</button>
+    <button class="filter-btn" onclick="filterTable('core', this)">Core</button>
+    <button class="filter-btn" onclick="filterTable('settings', this)">Settings</button>
+    <button class="filter-btn" onclick="filterTable('auth', this)">Auth</button>
+    <button class="filter-btn" onclick="filterTable('cc', this)">Command Center</button>
+    <button class="filter-btn" onclick="filterTable('modules', this)">Modules</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="screen-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Page</th>
+          <th>URL</th>
+          <th>Pattern</th>
+          <th>Roles</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- CORE -->
+        <tr class="area-header" data-area="core"><td colspan="5">Core (21 pages)</td></tr>
+        <tr data-area="core"><td>1</td><td>Dashboard</td><td class="url-cell">/dashboard</td><td><span class="pattern-badge">Dashboard</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>2</td><td>Alerts Index</td><td class="url-cell">/alerts</td><td><span class="pattern-badge">Index table</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>3</td><td>Alert Show</td><td class="url-cell">/alerts/{alert}</td><td><span class="pattern-badge">Detail 2-col</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>4</td><td>Sites Index</td><td class="url-cell">/sites</td><td><span class="pattern-badge">Card grid</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>5</td><td>Site Show</td><td class="url-cell">/sites/{site}</td><td><span class="pattern-badge">Detail 2-col</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>6</td><td>Zone Detail</td><td class="url-cell">/sites/{site}/zones/{zone}</td><td><span class="pattern-badge">Detail + chart</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>7</td><td>Site Comparison</td><td class="url-cell">/sites/compare</td><td><span class="pattern-badge">Analytics</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>8</td><td>Site Timeline</td><td class="url-cell">/sites/{site}/timeline</td><td><span class="pattern-badge">Feed</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>9</td><td>Site Audit</td><td class="url-cell">/sites/{site}/audit</td><td><span class="pattern-badge">Compliance</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>9a</td><td>Temp Verification</td><td class="url-cell">/sites/{site}/verifications</td><td><span class="pattern-badge">Form + checklist</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>10</td><td>Devices Index</td><td class="url-cell">/devices</td><td><span class="pattern-badge">Index table</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>11</td><td>Device Show</td><td class="url-cell">/devices/{device}</td><td><span class="pattern-badge">Detail + chart</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>12</td><td>Work Orders Index</td><td class="url-cell">/work-orders</td><td><span class="pattern-badge">Index table</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>13</td><td>Work Order Show</td><td class="url-cell">/work-orders/{workOrder}</td><td><span class="pattern-badge">Detail + forms</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>14</td><td>Activity Log</td><td class="url-cell">/activity-log</td><td><span class="pattern-badge">Feed</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>15</td><td>Notifications</td><td class="url-cell">/notifications</td><td><span class="pattern-badge">Feed</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>16</td><td>Alert Tuning</td><td class="url-cell">/analytics/alerts</td><td><span class="pattern-badge">Analytics</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>17</td><td>Performance</td><td class="url-cell">/analytics/performance</td><td><span class="pattern-badge">Analytics</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>18</td><td>Reports Index</td><td class="url-cell">/reports</td><td><span class="pattern-badge">Launcher</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>19</td><td>Temperature Report</td><td class="url-cell">/sites/{site}/reports/temperature</td><td><span class="pattern-badge">Report</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>20</td><td>Energy Report</td><td class="url-cell">/sites/{site}/reports/energy</td><td><span class="pattern-badge">Report</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>21</td><td>Morning Summary</td><td class="url-cell">/sites/{site}/reports/summary</td><td><span class="pattern-badge">Report</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="core"><td>21a</td><td>Device Inventory</td><td class="url-cell">/sites/{site}/reports/inventory</td><td><span class="pattern-badge">Report</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+
+        <!-- SETTINGS -->
+        <tr class="area-header" data-area="settings"><td colspan="5">Settings (27 pages)</td></tr>
+        <tr data-area="settings"><td>22</td><td>Profile</td><td class="url-cell">/settings/profile</td><td><span class="pattern-badge">Form</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>23</td><td>Password</td><td class="url-cell">/settings/password</td><td><span class="pattern-badge">Form</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>24</td><td>Appearance</td><td class="url-cell">/settings/appearance</td><td><span class="pattern-badge">Tabs</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>25</td><td>Two-Factor</td><td class="url-cell">/settings/two-factor</td><td><span class="pattern-badge">Setup modal</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>26</td><td>Organization</td><td class="url-cell">/settings/organization</td><td><span class="pattern-badge">Form</span></td><td><span class="role-badge">manage org settings</span></td></tr>
+        <tr data-area="settings"><td>27</td><td>Sites Settings</td><td class="url-cell">/settings/sites</td><td><span class="pattern-badge">CRUD table</span></td><td><span class="role-badge">manage sites</span></td></tr>
+        <tr data-area="settings"><td>27a</td><td>Batch Site Import</td><td class="url-cell">/settings/sites/batch-import</td><td><span class="pattern-badge">Form + CSV</span></td><td><span class="role-badge">manage sites</span></td></tr>
+        <tr data-area="settings"><td>28</td><td>Onboarding Wizard</td><td class="url-cell">/sites/{site}/onboard</td><td><span class="pattern-badge">Stepper</span></td><td><span class="role-badge">manage sites</span></td></tr>
+        <tr data-area="settings"><td>29</td><td>Gateways</td><td class="url-cell">/settings/sites/{site}/gateways</td><td><span class="pattern-badge">CRUD table</span></td><td><span class="role-badge">manage devices</span></td></tr>
+        <tr data-area="settings"><td>30</td><td>Gateway Show</td><td class="url-cell">/settings/sites/{site}/gateways/{gw}</td><td><span class="pattern-badge">Detail</span></td><td><span class="role-badge">manage devices</span></td></tr>
+        <tr data-area="settings"><td>31</td><td>Devices (site)</td><td class="url-cell">/settings/sites/{site}/devices</td><td><span class="pattern-badge">Stats + table</span></td><td><span class="role-badge">manage devices</span></td></tr>
+        <tr data-area="settings"><td>32</td><td>Device Show (site)</td><td class="url-cell">/settings/sites/{site}/devices/{dev}</td><td><span class="pattern-badge">Detail</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>33</td><td>Users</td><td class="url-cell">/settings/users</td><td><span class="pattern-badge">CRUD table</span></td><td><span class="role-badge">manage users</span></td></tr>
+        <tr data-area="settings"><td>34</td><td>Alert Rules</td><td class="url-cell">/settings/sites/{site}/alert-rules</td><td><span class="pattern-badge">Card grid</span></td><td><span class="role-badge">manage alert rules</span></td></tr>
+        <tr data-area="settings"><td>35</td><td>Alert Rule Show</td><td class="url-cell">/settings/sites/{site}/alert-rules/{r}</td><td><span class="pattern-badge">Detail</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>35a</td><td>Alert Rule Create</td><td class="url-cell">/sites/{site}/rules/create</td><td><span class="pattern-badge">Form</span></td><td><span class="role-badge">manage alert rules</span></td></tr>
+        <tr data-area="settings"><td>35b</td><td>Alert Rule Edit</td><td class="url-cell">/sites/{site}/rules/{rule}/edit</td><td><span class="pattern-badge">Form</span></td><td><span class="role-badge">manage alert rules</span></td></tr>
+        <tr data-area="settings"><td>36</td><td>Escalation Chains</td><td class="url-cell">/settings/sites/{site}/escalation-chains</td><td><span class="pattern-badge">CRUD table</span></td><td><span class="role-badge">manage alert rules</span></td></tr>
+        <tr data-area="settings"><td>37</td><td>Compliance</td><td class="url-cell">/settings/compliance</td><td><span class="pattern-badge">Event list</span></td><td><span class="role-badge">manage org settings</span></td></tr>
+        <tr data-area="settings"><td>38</td><td>Maintenance Windows</td><td class="url-cell">/settings/sites/{site}/maintenance-windows</td><td><span class="pattern-badge">Card list</span></td><td><span class="role-badge">manage maintenance</span></td></tr>
+        <tr data-area="settings"><td>39</td><td>Report Schedules</td><td class="url-cell">/settings/report-schedules</td><td><span class="pattern-badge">Card list</span></td><td><span class="role-badge">manage reports</span></td></tr>
+        <tr data-area="settings"><td>40</td><td>Site Templates</td><td class="url-cell">/settings/site-templates</td><td><span class="pattern-badge">Card grid</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>41</td><td>Export Data</td><td class="url-cell">/settings/export</td><td><span class="pattern-badge">Form + history</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>42</td><td>Integrations</td><td class="url-cell">/settings/integrations</td><td><span class="pattern-badge">Card list</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>43</td><td>API Keys</td><td class="url-cell">/settings/api-keys</td><td><span class="pattern-badge">Form + table</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>44</td><td>Billing</td><td class="url-cell">/settings/billing</td><td><span class="pattern-badge">Subscription</span></td><td><span class="role-badge">manage org settings</span></td></tr>
+        <tr data-area="settings"><td>45</td><td>Billing Profiles</td><td class="url-cell">/settings/billing/profiles</td><td><span class="pattern-badge">Form + list</span></td><td><span class="role-badge">manage org settings</span></td></tr>
+        <tr data-area="settings"><td>46</td><td>Modules</td><td class="url-cell">/settings/sites/{site}/modules</td><td><span class="pattern-badge">Toggle cards</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>47</td><td>Recipes</td><td class="url-cell">/settings/recipes</td><td><span class="pattern-badge">Card grid</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="settings"><td>48</td><td>Recipe Show</td><td class="url-cell">/settings/recipes/{recipe}</td><td><span class="pattern-badge">Detail</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+
+        <!-- AUTH -->
+        <tr class="area-header" data-area="auth"><td colspan="5">Auth (8 pages)</td></tr>
+        <tr data-area="auth"><td>49</td><td>Login</td><td class="url-cell">/login</td><td><span class="pattern-badge">Auth form</span></td><td><span class="role-badge">Unauthenticated</span></td></tr>
+        <tr data-area="auth"><td>50</td><td>Register</td><td class="url-cell">/register</td><td><span class="pattern-badge">Auth form</span></td><td><span class="role-badge">Unauthenticated</span></td></tr>
+        <tr data-area="auth"><td>51</td><td>Forgot Password</td><td class="url-cell">/forgot-password</td><td><span class="pattern-badge">Auth form</span></td><td><span class="role-badge">Unauthenticated</span></td></tr>
+        <tr data-area="auth"><td>52</td><td>Reset Password</td><td class="url-cell">/reset-password</td><td><span class="pattern-badge">Auth form</span></td><td><span class="role-badge">Unauthenticated</span></td></tr>
+        <tr data-area="auth"><td>53</td><td>Verify Email</td><td class="url-cell">/verify-email</td><td><span class="pattern-badge">Gate</span></td><td><span class="role-badge">Auth unverified</span></td></tr>
+        <tr data-area="auth"><td>54</td><td>Confirm Password</td><td class="url-cell">/confirm-password</td><td><span class="pattern-badge">Gate</span></td><td><span class="role-badge">Authenticated</span></td></tr>
+        <tr data-area="auth"><td>55</td><td>Two-Factor Challenge</td><td class="url-cell">/two-factor-challenge</td><td><span class="pattern-badge">Dual-mode</span></td><td><span class="role-badge">Authenticating</span></td></tr>
+        <tr data-area="auth"><td>56</td><td>Privacy Accept</td><td class="url-cell">/privacy/accept</td><td><span class="pattern-badge">Gate</span></td><td><span class="role-badge">Authenticated</span></td></tr>
+
+        <!-- COMMAND CENTER -->
+        <tr class="area-header" data-area="cc"><td colspan="5">Command Center (8 pages)</td></tr>
+        <tr data-area="cc"><td>57</td><td>CC Index</td><td class="url-cell">/command-center</td><td><span class="pattern-badge">Dashboard</span></td><td><span class="role-badge">Astrea roles</span></td></tr>
+        <tr data-area="cc"><td>58</td><td>CC Alerts</td><td class="url-cell">/command-center/alerts</td><td><span class="pattern-badge">Table</span></td><td><span class="role-badge">Astrea roles</span></td></tr>
+        <tr data-area="cc"><td>59</td><td>CC Devices</td><td class="url-cell">/command-center/devices</td><td><span class="pattern-badge">Stats + table</span></td><td><span class="role-badge">Astrea roles</span></td></tr>
+        <tr data-area="cc"><td>60</td><td>CC Dispatch</td><td class="url-cell">/command-center/dispatch</td><td><span class="pattern-badge">Split + map</span></td><td><span class="role-badge">Astrea roles</span></td></tr>
+        <tr data-area="cc"><td>61</td><td>CC Revenue</td><td class="url-cell">/command-center/revenue</td><td><span class="pattern-badge">Charts</span></td><td><span class="role-badge">Astrea roles</span></td></tr>
+        <tr data-area="cc"><td>62</td><td>CC Work Orders</td><td class="url-cell">/command-center/work-orders</td><td><span class="pattern-badge">Table</span></td><td><span class="role-badge">Astrea roles</span></td></tr>
+        <tr data-area="cc"><td>63</td><td>CC Org Show</td><td class="url-cell">/command-center/organizations/{org}</td><td><span class="pattern-badge">Detail 2-col</span></td><td><span class="role-badge">Astrea roles</span></td></tr>
+        <tr data-area="cc"><td>64</td><td>Partner Portal</td><td class="url-cell">/partner</td><td><span class="pattern-badge">Table + create</span></td><td><span class="role-badge">super_admin</span></td></tr>
+
+        <!-- MODULES -->
+        <tr class="area-header" data-area="modules"><td colspan="5">Modules (3 pages)</td></tr>
+        <tr data-area="modules"><td>65</td><td>IAQ Dashboard</td><td class="url-cell">/modules/iaq</td><td><span class="pattern-badge">Module dashboard</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="modules"><td>66</td><td>Industrial Dashboard</td><td class="url-cell">/modules/industrial</td><td><span class="pattern-badge">Module dashboard</span></td><td><span class="role-badge">All authenticated</span></td></tr>
+        <tr data-area="modules"><td>68</td><td>Platform Status</td><td class="url-cell">/status</td><td><span class="pattern-badge">Public status</span></td><td><span class="role-badge">Public</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- Screen Inventory -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+applyTheme(getTheme());
+
+function filterTable(area, btn) {
+  var buttons = document.querySelectorAll('.filter-btn');
+  for (var i = 0; i < buttons.length; i++) { buttons[i].classList.remove('active'); }
+  btn.classList.add('active');
+  var rows = document.querySelectorAll('#screen-table tbody tr');
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    if (area === 'all') {
+      row.style.display = '';
+    } else {
+      row.style.display = row.getAttribute('data-area') === area ? '' : 'none';
+    }
+  }
+}
+</script>
+</body>
+</html>

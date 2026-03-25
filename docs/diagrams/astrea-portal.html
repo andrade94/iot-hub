@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentation Portal — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12); --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+code { background: var(--bg-alt); padding: 2px 7px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; }
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--nav-bg); border-bottom: 1px solid var(--nav-border);
+  backdrop-filter: blur(12px);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 56px;
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; color: var(--text); letter-spacing: -0.3px; }
+.nav-brand .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+.nav-links { display: flex; gap: 4px; align-items: center; }
+.nav-links a {
+  padding: 6px 14px; border-radius: 6px; font-size: 13.5px; font-weight: 500;
+  color: var(--text-muted); transition: all 0.15s;
+}
+.nav-links a:hover { color: var(--text); background: var(--accent-glow); }
+.nav-links a.active { color: var(--accent); background: var(--accent-light); }
+.theme-btn {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; cursor: pointer; color: var(--text-muted); font-size: 16px;
+  transition: all 0.15s; display: flex; align-items: center;
+}
+.theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 48px 24px 80px; }
+
+.page-header { margin-bottom: 48px; }
+.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.page-header p { font-size: 16px; color: var(--text-muted); max-width: 600px; }
+
+.tier-section { margin-bottom: 48px; }
+.tier-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--accent); margin-bottom: 20px;
+  padding: 5px 14px; background: var(--accent-light); border-radius: 6px;
+}
+
+.card-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.portal-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px 24px;
+  box-shadow: var(--shadow); transition: all 0.2s;
+  display: flex; flex-direction: column; gap: 10px;
+  text-decoration: none; color: inherit;
+}
+.portal-card:hover {
+  border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-2px);
+}
+.portal-card .card-icon {
+  width: 40px; height: 40px; background: var(--accent-light);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.portal-card h3 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+.portal-card p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; flex: 1; }
+.portal-card .card-link {
+  font-size: 13px; font-weight: 600; color: var(--accent);
+  display: flex; align-items: center; gap: 6px; margin-top: 4px;
+}
+
+.faq-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  box-shadow: var(--shadow);
+}
+.faq-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.faq-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 24px; text-align: center;
+  font-size: 13px; color: var(--text-muted);
+}
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+  .card-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="astrea-portal.html" class="active">Portal</a>
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-screens.html">Screens</a>
+      <a href="astrea-progress.html">Progress</a>
+      <a href="astrea-roles.html">Roles</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+        <span id="theme-icon"></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Documentation Portal</h1>
+    <p>All Astrea IoT Platform documentation in one place. Browse by tier: essentials first, then deep dives.</p>
+  </div>
+
+  <div class="tier-section">
+    <div class="tier-label">Tier 1 -- Essential Reading</div>
+    <div class="card-grid">
+      <a href="astrea-guide.html" class="portal-card">
+        <div class="card-icon">&#128214;</div>
+        <h3>System Guide</h3>
+        <p>Architecture overview, segment modules (Cold Chain, Energy, Compliance, Industrial, IAQ), data pipeline, tech stack, and multi-tenancy model.</p>
+        <span class="card-link">Read Guide -></span>
+      </a>
+      <a href="astrea-roles.html" class="portal-card">
+        <div class="card-icon">&#128101;</div>
+        <h3>Roles &amp; Permissions</h3>
+        <p>7 roles across Astrea and client organizations. Permission matrix showing who can manage devices, alerts, users, billing, and more.</p>
+        <span class="card-link">View Roles -></span>
+      </a>
+      <a href="astrea-screens.html" class="portal-card">
+        <div class="card-icon">&#128187;</div>
+        <h3>Screen Inventory</h3>
+        <p>Complete inventory of 72 pages grouped by area: Core, Settings, Auth, Command Center, and Modules. URL patterns and role access.</p>
+        <span class="card-link">Browse Screens -></span>
+      </a>
+      <a href="#faq" class="portal-card">
+        <div class="card-icon">&#10067;</div>
+        <h3>FAQ</h3>
+        <p>Common questions about the platform: authentication, multi-tenancy, real-time updates, mobile app, compliance, and deployment.</p>
+        <span class="card-link">See FAQ below</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="tier-section">
+    <div class="tier-label">Tier 2 -- Deep Dives</div>
+    <div class="card-grid">
+      <a href="astrea-progress.html" class="portal-card">
+        <div class="card-icon">&#128200;</div>
+        <h3>Implementation Progress</h3>
+        <p>Phase-by-phase completion status. Phases 0-12 complete, Phase 13 partial. Gap report: 51 resolved, 11 deferred, 0 remaining.</p>
+        <span class="card-link">View Progress -></span>
+      </a>
+      <a href="astrea-guide.html#architecture" class="portal-card">
+        <div class="card-icon">&#9881;</div>
+        <h3>Architecture</h3>
+        <p>Data pipeline from LoRaWAN sensors through ChirpStack MQTT to Laravel jobs, TimescaleDB storage, Redis hot cache, and Reverb WebSockets.</p>
+        <span class="card-link">View Architecture -></span>
+      </a>
+      <a href="astrea-guide.html#modules" class="portal-card">
+        <div class="card-icon">&#128268;</div>
+        <h3>Segment Modules</h3>
+        <p>Cold Chain, Energy, Compliance, Industrial, IAQ, Safety, People -- activated per client. Recipes and alert templates per vertical.</p>
+        <span class="card-link">View Modules -></span>
+      </a>
+    </div>
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="tier-section" id="faq">
+    <div class="tier-label">Frequently Asked Questions</div>
+    <div style="display:flex;flex-direction:column;gap:16px;max-width:800px;">
+      <div class="faq-card">
+        <h3>How does multi-tenancy work?</h3>
+        <p>Manual scoping with <code>org_id</code> and <code>site_id</code> columns. Two middleware enforce isolation: <strong>EnsureOrganizationScope</strong> binds the current org, and <strong>EnsureSiteAccess</strong> verifies site-level permissions via the <code>user_sites</code> pivot table.</p>
+      </div>
+      <div class="faq-card">
+        <h3>What authentication does the platform use?</h3>
+        <p>Laravel Fortify for web (session-based) with 2FA support, and Laravel Sanctum for the mobile API (token-based). Spatie Laravel Permission manages the 7 roles and 29 permissions.</p>
+      </div>
+      <div class="faq-card">
+        <h3>How are real-time updates delivered?</h3>
+        <p>Laravel Reverb provides the WebSocket server. Three broadcast events push live data: <strong>SensorReadingReceived</strong>, <strong>AlertTriggered</strong>, and <strong>NotificationCreated</strong>. The frontend consumes these via Laravel Echo.</p>
+      </div>
+      <div class="faq-card">
+        <h3>What database does it use?</h3>
+        <p>PostgreSQL 16 with TimescaleDB extension for time-series data. Raw sensor readings are compressed after 7 days (90%+ reduction). Continuous aggregates pre-compute 15m, 1h, and 1d rollups. Redis caches latest readings for sub-millisecond dashboard loads.</p>
+      </div>
+      <div class="faq-card">
+        <h3>Is there a mobile app?</h3>
+        <p>Yes. The Expo SDK 54 (React Native) companion app lives in a separate <code>iot-expo</code> repository. It connects via Sanctum API tokens with 26 endpoints. Push notifications are sent via Expo Push API.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- Documentation Portal -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>

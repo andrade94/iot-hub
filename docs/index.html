@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astrea IoT Platform — Documentation</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f8fafb;
+  --bg-card: #ffffff;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #10b981;
+  --accent-dark: #059669;
+  --accent-light: #d1fae5;
+  --accent-glow: rgba(16, 185, 129, 0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+  --radius: 10px;
+  --nav-bg: #ffffff;
+  --nav-border: #e5e7eb;
+  --code-bg: #f3f4f6;
+}
+[data-theme="dark"] {
+  --bg: #0f1117;
+  --bg-alt: #161923;
+  --bg-card: #1a1d2b;
+  --text: #e5e7eb;
+  --text-muted: #9ca3af;
+  --border: #2d3348;
+  --accent: #10b981;
+  --accent-dark: #34d399;
+  --accent-light: rgba(16, 185, 129, 0.15);
+  --accent-glow: rgba(16, 185, 129, 0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923;
+  --nav-border: #2d3348;
+  --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+
+/* Navbar */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 56px;
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 17px; color: var(--text);
+  letter-spacing: -0.3px;
+}
+.nav-brand .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+.nav-links { display: flex; gap: 4px; align-items: center; }
+.nav-links a {
+  padding: 6px 14px; border-radius: 6px; font-size: 13.5px; font-weight: 500;
+  color: var(--text-muted); transition: all 0.15s;
+}
+.nav-links a:hover { color: var(--text); background: var(--accent-glow); }
+.nav-links a.active { color: var(--accent); background: var(--accent-light); }
+.theme-btn {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; cursor: pointer; color: var(--text-muted); font-size: 16px;
+  transition: all 0.15s; display: flex; align-items: center;
+}
+.theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Hero */
+.hero {
+  max-width: 1200px; margin: 0 auto; padding: 80px 24px 60px;
+  text-align: center;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent-light); color: var(--accent-dark);
+  padding: 6px 16px; border-radius: 20px; font-size: 12.5px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 24px;
+}
+.hero h1 {
+  font-size: clamp(32px, 5vw, 52px); font-weight: 800;
+  letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px;
+}
+.hero h1 .accent { color: var(--accent); }
+.hero p {
+  font-size: 18px; color: var(--text-muted); max-width: 640px; margin: 0 auto 40px;
+  line-height: 1.7;
+}
+
+/* Stats */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px; max-width: 800px; margin: 0 auto 60px;
+}
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px 20px; text-align: center;
+  box-shadow: var(--shadow); transition: all 0.2s;
+}
+.stat-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.stat-number {
+  font-size: 36px; font-weight: 800; color: var(--accent);
+  letter-spacing: -1px; line-height: 1;
+}
+.stat-label {
+  font-size: 12.5px; color: var(--text-muted); margin-top: 8px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* CTA */
+.cta-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px; max-width: 800px; margin: 0 auto 80px;
+}
+.cta-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 32px 28px;
+  box-shadow: var(--shadow); transition: all 0.2s;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.cta-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.cta-card .icon {
+  width: 44px; height: 44px; background: var(--accent-light);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.cta-card h3 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.cta-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; flex:1; }
+.cta-card .link {
+  font-size: 13.5px; font-weight: 600; color: var(--accent);
+  display: flex; align-items: center; gap: 6px;
+}
+.cta-card .link:hover { gap: 10px; }
+
+/* Stack Section */
+.section {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px 80px;
+}
+.section h2 {
+  font-size: 28px; font-weight: 800; letter-spacing: -0.8px;
+  margin-bottom: 8px; text-align: center;
+}
+.section .sub {
+  font-size: 15px; color: var(--text-muted); text-align: center;
+  margin-bottom: 40px;
+}
+.tech-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.tech-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 18px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 14px; font-weight: 500;
+}
+.tech-item .tech-dot {
+  width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 24px; text-align: center;
+  font-size: 13px; color: var(--text-muted);
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+  .hero { padding: 48px 20px 40px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .cta-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand"><span class="dot"></span> Astrea Docs</div>
+    <div class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="diagrams/astrea-portal.html">Portal</a>
+      <a href="diagrams/astrea-guide.html">Guide</a>
+      <a href="diagrams/astrea-screens.html">Screens</a>
+      <a href="diagrams/astrea-progress.html">Progress</a>
+      <a href="diagrams/astrea-roles.html">Roles</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+        <span id="theme-icon"></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">
+    IoT Operations Platform
+  </div>
+  <h1>Astrea <span class="accent">IoT Platform</span></h1>
+  <p>Multi-tenant LoRaWAN operations platform bridging physical sensors and operational decision-makers. Cold chain, energy, compliance, industrial, and IAQ monitoring -- one command center.</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-number">43</div>
+    <div class="stat-label">Models</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">72</div>
+    <div class="stat-label">Pages</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">226</div>
+    <div class="stat-label">Routes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">133</div>
+    <div class="stat-label">Tests</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">7</div>
+    <div class="stat-label">Roles</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">29</div>
+    <div class="stat-label">Permissions</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">120</div>
+    <div class="stat-label">Components</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">58</div>
+    <div class="stat-label">Controllers</div>
+  </div>
+</div>
+
+<div class="cta-grid">
+  <a href="diagrams/astrea-portal.html" class="cta-card" style="text-decoration:none;color:inherit;">
+    <div class="icon">&#9776;</div>
+    <h3>Documentation Portal</h3>
+    <p>Browse all documentation: system guide, screen inventory, implementation progress, roles and permissions, workflows, and more.</p>
+    <span class="link">Open Portal <span>-></span></span>
+  </a>
+  <a href="diagrams/astrea-guide.html" class="cta-card" style="text-decoration:none;color:inherit;">
+    <div class="icon">&#9881;</div>
+    <h3>System Guide</h3>
+    <p>Architecture overview, segment modules (Cold Chain, Energy, Compliance, Industrial, IAQ), data pipeline, and role-based access.</p>
+    <span class="link">Read Guide <span>-></span></span>
+  </a>
+</div>
+
+<div class="section">
+  <h2>Tech Stack</h2>
+  <p class="sub">Laravel 12 + React 19 + Inertia.js 2 -- full-stack TypeScript, real-time WebSockets</p>
+  <div class="tech-grid">
+    <div class="tech-item"><span class="tech-dot"></span> Laravel 12 (PHP 8.2+)</div>
+    <div class="tech-item"><span class="tech-dot"></span> React 19 + TypeScript</div>
+    <div class="tech-item"><span class="tech-dot"></span> Inertia.js 2</div>
+    <div class="tech-item"><span class="tech-dot"></span> Tailwind CSS 4</div>
+    <div class="tech-item"><span class="tech-dot"></span> shadcn/ui (90+ components)</div>
+    <div class="tech-item"><span class="tech-dot"></span> PostgreSQL 16 + TimescaleDB</div>
+    <div class="tech-item"><span class="tech-dot"></span> Redis (cache + queues)</div>
+    <div class="tech-item"><span class="tech-dot"></span> Laravel Reverb (WebSockets)</div>
+    <div class="tech-item"><span class="tech-dot"></span> Spatie Permissions (RBAC)</div>
+    <div class="tech-item"><span class="tech-dot"></span> ChirpStack Cloud (LoRaWAN)</div>
+    <div class="tech-item"><span class="tech-dot"></span> Expo SDK 54 (Mobile)</div>
+    <div class="tech-item"><span class="tech-dot"></span> Pest 4 (Testing)</div>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- Documentation Portal -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>

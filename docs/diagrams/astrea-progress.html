@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Progress — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
+  --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6; --red: #ef4444; --gray: #6b7280;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348; --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
+.nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+.nav-links { display:flex; gap:4px; align-items:center; }
+.nav-links a { padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+.nav-links a:hover { color:var(--text); background:var(--accent-glow); }
+.nav-links a.active { color:var(--accent); background:var(--accent-light); }
+.theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+.page-header { margin-bottom: 48px; }
+.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.page-header p { font-size: 16px; color: var(--text-muted); }
+
+.section { margin-bottom: 56px; }
+.section h2 {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+  margin-bottom: 20px; padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent-light);
+}
+
+/* Summary Cards */
+.summary-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px; margin-bottom: 40px;
+}
+.summary-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 18px;
+  box-shadow: var(--shadow); text-align: center;
+}
+.summary-card .sc-num {
+  font-size: 32px; font-weight: 800; line-height: 1; letter-spacing: -1px;
+}
+.summary-card .sc-label {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-muted); margin-top: 6px;
+}
+.sc-green { color: var(--green); }
+.sc-yellow { color: var(--yellow); }
+.sc-blue { color: var(--blue); }
+.sc-gray { color: var(--gray); }
+
+/* Phase Timeline */
+.phase-list { display: flex; flex-direction: column; gap: 10px; }
+.phase-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 20px;
+  display: flex; align-items: center; gap: 16px;
+  box-shadow: var(--shadow);
+}
+.phase-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.phase-dot.complete { background: var(--green); }
+.phase-dot.partial { background: var(--yellow); }
+.phase-dot.separate { background: var(--blue); }
+.phase-name { font-weight: 700; font-size: 14px; min-width: 200px; }
+.phase-status {
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+}
+.phase-status.complete { background: rgba(16,185,129,0.12); color: var(--green); }
+.phase-status.partial { background: rgba(245,158,11,0.12); color: var(--yellow); }
+.phase-status.separate { background: rgba(59,130,246,0.12); color: var(--blue); }
+.phase-desc { font-size: 13px; color: var(--text-muted); flex: 1; }
+
+/* Progress bar */
+.progress-section { margin-bottom: 40px; }
+.progress-bar-outer {
+  background: var(--bg-alt); border: 1px solid var(--border);
+  border-radius: 8px; height: 32px; overflow: hidden;
+  display: flex; position: relative;
+}
+.progress-bar-fill {
+  height: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: white; transition: width 0.5s;
+}
+.progress-bar-fill.green { background: var(--green); }
+.progress-bar-fill.yellow { background: var(--yellow); }
+.progress-bar-fill.gray { background: var(--gray); }
+.progress-legend {
+  display: flex; gap: 20px; margin-top: 12px; font-size: 13px; color: var(--text-muted);
+}
+.progress-legend .legend-dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Gap Report */
+.gap-table-wrap {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead { background: var(--bg-alt); }
+th {
+  padding: 12px 16px; text-align: left; font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-muted);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+td { padding: 10px 16px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+.status-resolved { color: var(--green); font-weight: 700; }
+.status-deferred { color: var(--yellow); font-weight: 700; }
+
+/* Census */
+.census-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.census-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 18px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.census-label { font-size: 14px; color: var(--text-muted); }
+.census-value { font-size: 20px; font-weight: 800; color: var(--accent); }
+.census-delta { font-size: 11px; color: var(--green); margin-left: 4px; }
+
+.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+  .phase-item { flex-wrap: wrap; }
+  .phase-name { min-width: 100%; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="astrea-portal.html">Portal</a>
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-screens.html">Screens</a>
+      <a href="astrea-progress.html" class="active">Progress</a>
+      <a href="astrea-roles.html">Roles</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span id="theme-icon"></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Implementation Progress</h1>
+    <p>Phase completion status, gap report summary, and platform census as of March 2026.</p>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="sc-num sc-green">51</div>
+      <div class="sc-label">Gaps Resolved</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num sc-yellow">11</div>
+      <div class="sc-label">Deferred (Phase 13)</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num sc-green">0</div>
+      <div class="sc-label">Open Gaps</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num sc-green">0</div>
+      <div class="sc-label">Critical Issues</div>
+    </div>
+  </div>
+
+  <!-- Overall Progress -->
+  <div class="section">
+    <h2>Overall Progress</h2>
+    <div class="progress-section">
+      <div class="progress-bar-outer">
+        <div class="progress-bar-fill green" style="width:85%;">Phases 0-12 Complete</div>
+        <div class="progress-bar-fill yellow" style="width:5%;">P13</div>
+        <div class="progress-bar-fill gray" style="width:10%;font-size:11px;">Deferred</div>
+      </div>
+      <div class="progress-legend">
+        <span><span class="legend-dot" style="background:var(--green);"></span> Complete (12 phases)</span>
+        <span><span class="legend-dot" style="background:var(--yellow);"></span> Partial (Phase 13, 25%)</span>
+        <span><span class="legend-dot" style="background:var(--gray);"></span> Deferred (11 items)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase Timeline -->
+  <div class="section">
+    <h2>Phase Timeline</h2>
+    <div class="phase-list">
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 0: Foundation</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Auth, roles, multi-tenancy, base layout, shadcn/ui setup</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 1: Data Pipeline</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">MQTT listener, sensor readings, TimescaleDB, Redis cache</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 2: Alert Engine</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Rules engine, alert lifecycle, escalation chains, notifications</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 3: Dashboards</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Dashboard, site detail, device detail, charts, live updates</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 4: Cold Chain</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Temperature zones, defrost detection, HACCP reports, compliance</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 5: Energy and Compliance</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Energy monitoring, compliance events, corrective actions</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 6: Command Center</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Multi-org overview, dispatch, revenue, org management</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 7: Billing</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Subscriptions, invoices, CFDI, billing profiles, dunning</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot separate"></span>
+        <span class="phase-name">Phase 8: Mobile App</span>
+        <span class="phase-status separate">Separate Repo</span>
+        <span class="phase-desc">Expo SDK 54 app (iot-expo), 26 API endpoints, push notifications</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 9: Advanced</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Advanced analytics, site comparison, performance metrics</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 10: Operational Excellence</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Maintenance windows, outage declarations, data exports, site templates</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 11: Platform Excellence</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Temp verification, inventory reports, bulk ops, platform status</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot complete"></span>
+        <span class="phase-name">Phase 12: Competitive Edge</span>
+        <span class="phase-status complete">Complete</span>
+        <span class="phase-desc">Batch site import, insurance export, competitive features</span>
+      </div>
+      <div class="phase-item">
+        <span class="phase-dot partial"></span>
+        <span class="phase-name">Phase 13: Scale and Enterprise</span>
+        <span class="phase-status partial">Partial (25%)</span>
+        <span class="phase-desc">Predictive analytics built. Public API, webhooks, SSO deferred.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gap Report Summary -->
+  <div class="section">
+    <h2>Gap Report Summary</h2>
+    <p style="font-size:15px;color:var(--text-muted);margin-bottom:20px;">62 gaps identified on March 23, 2026. All 51 actionable gaps resolved in a single build session. 11 items intentionally deferred to Phase 13.</p>
+
+    <div class="gap-table-wrap">
+      <table>
+        <thead>
+          <tr><th>Severity</th><th>Previous (Mar 23)</th><th>Current (Mar 24)</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Critical</td><td>4</td><td>0</td><td class="status-resolved">All Resolved</td></tr>
+          <tr><td>High</td><td>11</td><td>0</td><td class="status-resolved">All Resolved</td></tr>
+          <tr><td>Medium</td><td>22</td><td>0</td><td class="status-resolved">All Resolved</td></tr>
+          <tr><td>Low</td><td>14</td><td>0</td><td class="status-resolved">All Resolved</td></tr>
+          <tr><td>Deferred</td><td>11</td><td>11</td><td class="status-deferred">Phase 13 Future Scope</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Deferred Items -->
+  <div class="section">
+    <h2>Deferred Items (Phase 13)</h2>
+    <p style="font-size:15px;color:var(--text-muted);margin-bottom:20px;">These 11 items are intentionally deferred and are not blocking launch.</p>
+    <div class="gap-table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Feature</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>F-18</td><td>Public REST API Documentation (Swagger/OpenAPI)</td><td>Requires API stabilization</td></tr>
+          <tr><td>F-19</td><td>Webhook Subscriptions Management UI</td><td>Backend model exists, UI deferred</td></tr>
+          <tr><td>F-20</td><td>Multi-Currency Support</td><td>Currently MXN-only by design</td></tr>
+          <tr><td>F-21</td><td>Partner Portal Enhancements</td><td>Revenue share, SLA dashboards</td></tr>
+          <tr><td>F-22</td><td>Digital Signatures (e-signatures)</td><td>Not required for launch</td></tr>
+          <tr><td>F-23</td><td>Anonymized Benchmarks</td><td>Requires multi-org data</td></tr>
+          <tr><td>F-24</td><td>Custom Dashboard Builder</td><td>Drag-and-drop, post-launch</td></tr>
+          <tr><td>A-12</td><td>Dispatch Route Optimization</td><td>Mapping works, optimization deferred</td></tr>
+          <tr><td>--</td><td>Predictive Analytics (remaining 75%)</td><td>Battery/compressor/drift built</td></tr>
+          <tr><td>--</td><td>Public API (OAuth2, rate limits)</td><td>Sanctum API exists</td></tr>
+          <tr><td>--</td><td>Enterprise Features (SSO, SLAs, white-label)</td><td>Post-launch scope</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Census -->
+  <div class="section">
+    <h2>Platform Census</h2>
+    <p style="font-size:15px;color:var(--text-muted);margin-bottom:20px;">Current codebase metrics as of the March 24 build session.</p>
+    <div class="census-grid">
+      <div class="census-item">
+        <span class="census-label">Models</span>
+        <span class="census-value">43 <span class="census-delta">+1</span></span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Controllers</span>
+        <span class="census-value">58 <span class="census-delta">+3</span></span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Services</span>
+        <span class="census-value">42</span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Jobs</span>
+        <span class="census-value">21</span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Policies</span>
+        <span class="census-value">18 <span class="census-delta">+4</span></span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Migrations</span>
+        <span class="census-value">65 <span class="census-delta">+8</span></span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Pages</span>
+        <span class="census-value">72 <span class="census-delta">+7</span></span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Components</span>
+        <span class="census-value">120 <span class="census-delta">+1</span></span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Hooks</span>
+        <span class="census-value">12 <span class="census-delta">+1</span></span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Utils</span>
+        <span class="census-value">13 <span class="census-delta">+3</span></span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Tests</span>
+        <span class="census-value">133 <span class="census-delta">+7</span></span>
+      </div>
+      <div class="census-item">
+        <span class="census-label">Routes</span>
+        <span class="census-value">226 <span class="census-delta">+14</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- Implementation Progress -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>

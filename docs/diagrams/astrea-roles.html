@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roles and Permissions — Astrea IoT Platform</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f8fafb; --bg-card: #ffffff; --text: #111827;
+  --text-muted: #6b7280; --border: #e5e7eb; --accent: #10b981;
+  --accent-dark: #059669; --accent-light: #d1fae5;
+  --accent-glow: rgba(16,185,129,0.12);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
+  --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
+  --green: #10b981; --blue: #3b82f6;
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
+  --text-muted: #9ca3af; --border: #2d3348; --accent: #10b981;
+  --accent-dark: #34d399; --accent-light: rgba(16,185,129,0.15);
+  --accent-glow: rgba(16,185,129,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg: #161923; --nav-border: #2d3348; --code-bg: #1e2231;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); }
+code {
+  background: var(--code-bg); padding: 2px 7px; border-radius: 4px;
+  font-size: 12.5px; font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
+.nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
+.nav-links { display:flex; gap:4px; align-items:center; }
+.nav-links a { padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+.nav-links a:hover { color:var(--text); background:var(--accent-glow); }
+.nav-links a.active { color:var(--accent); background:var(--accent-light); }
+.theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
+.theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 48px 24px 80px; }
+.page-header { margin-bottom: 48px; }
+.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.page-header p { font-size: 16px; color: var(--text-muted); }
+
+.section { margin-bottom: 56px; }
+.section h2 {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+  margin-bottom: 20px; padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent-light);
+}
+
+/* Role Cards */
+.role-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px; margin-bottom: 32px;
+}
+.role-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  box-shadow: var(--shadow);
+}
+.role-card .role-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+}
+.role-card .role-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.role-card .role-name {
+  font-size: 16px; font-weight: 700;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.role-card .role-owner {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 2px 8px; border-radius: 4px;
+  margin-left: auto;
+}
+.role-card .role-owner.astrea { background: rgba(16,185,129,0.12); color: var(--green); }
+.role-card .role-owner.client { background: rgba(59,130,246,0.12); color: var(--blue); }
+.role-card .role-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
+.role-card .role-scope { font-size: 13px; }
+.role-card .role-scope strong { color: var(--accent); }
+
+/* Permission Matrix */
+.matrix-wrap {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { background: var(--bg-alt); }
+th {
+  padding: 10px 12px; text-align: center; font-weight: 700; font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+th:first-child { text-align: left; min-width: 200px; }
+td {
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  text-align: center; font-size: 15px;
+}
+td:first-child { text-align: left; font-size: 13px; font-weight: 500; }
+tr:last-child td { border-bottom: none; }
+tr:hover { background: var(--accent-glow); }
+.perm-yes { color: var(--green); }
+.perm-no { color: var(--border); }
+.perm-partial { color: #f59e0b; }
+
+.area-sep td {
+  background: var(--bg-alt); font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent);
+  padding: 8px 12px;
+}
+
+/* Notification Channels */
+.notif-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.notif-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 18px 20px;
+}
+.notif-card h4 {
+  font-size: 14px; font-weight: 700;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  margin-bottom: 8px;
+}
+.notif-row {
+  display: flex; justify-content: space-between; font-size: 13px;
+  padding: 3px 0; color: var(--text-muted);
+}
+.notif-value { font-weight: 600; color: var(--text); }
+
+.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
+@media (max-width: 640px) {
+  .nav-links a { padding: 6px 8px; font-size: 12px; }
+  .role-grid { grid-template-columns: 1fr; }
+  th, td { padding: 6px 8px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="astrea-portal.html">Portal</a>
+      <a href="astrea-guide.html">Guide</a>
+      <a href="astrea-screens.html">Screens</a>
+      <a href="astrea-progress.html">Progress</a>
+      <a href="astrea-roles.html" class="active">Roles</a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span id="theme-icon"></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Roles and Permissions</h1>
+    <p>7 roles across Astrea (internal) and client organizations, with 29 granular permissions.</p>
+  </div>
+
+  <!-- Role Cards -->
+  <div class="section">
+    <h2>Role Definitions</h2>
+    <div class="role-grid">
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-dot" style="background:var(--green);"></span>
+          <span class="role-name">super_admin</span>
+          <span class="role-owner astrea">Astrea</span>
+        </div>
+        <div class="role-desc">Full platform access. All organizations, all sites. Command Center access. Can create/delete organizations, manage billing, and configure the entire platform.</div>
+        <div class="role-scope"><strong>Scope:</strong> All sites, all organizations</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-dot" style="background:var(--green);"></span>
+          <span class="role-name">support</span>
+          <span class="role-owner astrea">Astrea</span>
+        </div>
+        <div class="role-desc">Astrea support staff. Read access to all organizations for troubleshooting. Can view devices, alerts, and logs. Cannot modify billing or org settings.</div>
+        <div class="role-scope"><strong>Scope:</strong> All sites (read), all organizations (read)</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-dot" style="background:var(--green);"></span>
+          <span class="role-name">account_manager</span>
+          <span class="role-owner astrea">Astrea</span>
+        </div>
+        <div class="role-desc">Manages client relationships. Can view and manage billing, subscriptions, and org-level configuration for assigned client accounts.</div>
+        <div class="role-scope"><strong>Scope:</strong> Assigned organizations, all sites within</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-dot" style="background:var(--green);"></span>
+          <span class="role-name">technician</span>
+          <span class="role-owner astrea">Astrea</span>
+        </div>
+        <div class="role-desc">Field technician. Device diagnostics, work orders, battery and signal info. Can complete work orders, upload photos, and manage device replacements.</div>
+        <div class="role-scope"><strong>Scope:</strong> Assigned sites (via user_sites)</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-dot" style="background:var(--blue);"></span>
+          <span class="role-name">client_org_admin</span>
+          <span class="role-owner client">Client</span>
+        </div>
+        <div class="role-desc">Client organization administrator. Full access to their org: all sites, billing, user management, alert configuration, reports, and settings.</div>
+        <div class="role-scope"><strong>Scope:</strong> All sites in their organization</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-dot" style="background:var(--blue);"></span>
+          <span class="role-name">client_site_manager</span>
+          <span class="role-owner client">Client</span>
+        </div>
+        <div class="role-desc">Regional manager. Monitors multiple assigned sites. Dashboards, alerts, reports, site comparison. Can acknowledge alerts and manage work orders.</div>
+        <div class="role-scope"><strong>Scope:</strong> Multiple assigned sites (via user_sites)</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-dot" style="background:var(--blue);"></span>
+          <span class="role-name">client_site_viewer</span>
+          <span class="role-owner client">Client</span>
+        </div>
+        <div class="role-desc">Store manager. Read-only access to a single site. Can view dashboards and reports, acknowledge alerts, and request maintenance.</div>
+        <div class="role-scope"><strong>Scope:</strong> Single assigned site</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permission Matrix -->
+  <div class="section">
+    <h2>Permission Matrix</h2>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">29 permissions across 11 domains. Check marks indicate full access, tilde (~) indicates partial/read-only access.</p>
+    <div class="matrix-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>super_admin</th>
+            <th>support</th>
+            <th>acct_mgr</th>
+            <th>technician</th>
+            <th>org_admin</th>
+            <th>site_mgr</th>
+            <th>site_viewer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Organizations -->
+          <tr class="area-sep"><td colspan="8">Organizations</td></tr>
+          <tr><td>manage organizations</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-partial">~</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <tr><td>manage org settings</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-partial">~</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <!-- Sites -->
+          <tr class="area-sep"><td colspan="8">Sites</td></tr>
+          <tr><td>manage sites</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-partial">~</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <tr><td>view sites</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td></tr>
+          <!-- Devices -->
+          <tr class="area-sep"><td colspan="8">Devices</td></tr>
+          <tr><td>manage devices</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <tr><td>view devices</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td></tr>
+          <!-- Alerts -->
+          <tr class="area-sep"><td colspan="8">Alerts</td></tr>
+          <tr><td>manage alert rules</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <tr><td>view alerts</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td></tr>
+          <tr><td>acknowledge alerts</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td></tr>
+          <!-- Users -->
+          <tr class="area-sep"><td colspan="8">Users</td></tr>
+          <tr><td>manage users</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <tr><td>view users</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-partial">~</td><td class="perm-no">--</td></tr>
+          <!-- Work Orders -->
+          <tr class="area-sep"><td colspan="8">Work Orders</td></tr>
+          <tr><td>manage work orders</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td></tr>
+          <tr><td>view work orders</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td></tr>
+          <!-- Reports -->
+          <tr class="area-sep"><td colspan="8">Reports and Analytics</td></tr>
+          <tr><td>view reports</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td></tr>
+          <tr><td>manage report schedules</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <tr><td>view analytics</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td></tr>
+          <!-- Billing -->
+          <tr class="area-sep"><td colspan="8">Billing</td></tr>
+          <tr><td>manage billing</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <tr><td>view billing</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <!-- Settings -->
+          <tr class="area-sep"><td colspan="8">Settings and Config</td></tr>
+          <tr><td>manage maintenance windows</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <tr><td>manage templates</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+          <tr><td>export data</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td></tr>
+          <!-- Command Center -->
+          <tr class="area-sep"><td colspan="8">Command Center</td></tr>
+          <tr><td>access command center</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-yes">&#10003;</td><td class="perm-no">--</td><td class="perm-no">--</td><td class="perm-no">--</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Notification Channels -->
+  <div class="section">
+    <h2>Notification Channels by Role</h2>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">Each role receives alerts through different channels based on urgency and responsibility.</p>
+    <div class="notif-grid">
+      <div class="notif-card">
+        <h4>client_site_viewer</h4>
+        <div class="notif-row"><span>WhatsApp</span><span class="notif-value">Critical + High alerts</span></div>
+        <div class="notif-row"><span>Push (App)</span><span class="notif-value">All alerts</span></div>
+        <div class="notif-row"><span>Web</span><span class="notif-value">Daily monitoring</span></div>
+        <div class="notif-row"><span>Use case</span><span class="notif-value">My store status</span></div>
+      </div>
+      <div class="notif-card">
+        <h4>client_site_manager</h4>
+        <div class="notif-row"><span>WhatsApp</span><span class="notif-value">Critical only (escalation)</span></div>
+        <div class="notif-row"><span>Push (App)</span><span class="notif-value">High + trends</span></div>
+        <div class="notif-row"><span>Web</span><span class="notif-value">Compare sites, KPIs</span></div>
+        <div class="notif-row"><span>Use case</span><span class="notif-value">My stores overview</span></div>
+      </div>
+      <div class="notif-card">
+        <h4>technician</h4>
+        <div class="notif-row"><span>WhatsApp</span><span class="notif-value">Device offline + battery</span></div>
+        <div class="notif-row"><span>Push (App)</span><span class="notif-value">Device alerts</span></div>
+        <div class="notif-row"><span>Web</span><span class="notif-value">Diagnostics</span></div>
+        <div class="notif-row"><span>Use case</span><span class="notif-value">What needs fixing</span></div>
+      </div>
+      <div class="notif-card">
+        <h4>client_org_admin</h4>
+        <div class="notif-row"><span>WhatsApp</span><span class="notif-value">Never (escalation only)</span></div>
+        <div class="notif-row"><span>Push (App)</span><span class="notif-value">Weekly summary</span></div>
+        <div class="notif-row"><span>Web</span><span class="notif-value">Full config + reports</span></div>
+        <div class="notif-row"><span>Use case</span><span class="notif-value">Operations overview</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Site Scoping -->
+  <div class="section">
+    <h2>Site-Level Scoping</h2>
+    <p style="font-size:15px;margin-bottom:16px;">Access is enforced via the <code>user_sites</code> pivot table with Spatie Laravel Permission. The <code>EnsureSiteAccess</code> middleware verifies every site-scoped request.</p>
+    <div class="matrix-wrap" style="max-width:700px;">
+      <table>
+        <thead>
+          <tr><th>Role</th><th>Site Access Pattern</th><th>Assigned How</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>super_admin</code></td><td>All sites, all organizations</td><td>Automatic (no entries needed)</td></tr>
+          <tr><td><code>support</code></td><td>All sites (read-only)</td><td>Automatic (no entries needed)</td></tr>
+          <tr><td><code>account_manager</code></td><td>All sites in assigned orgs</td><td>Org-level assignment</td></tr>
+          <tr><td><code>technician</code></td><td>Multiple assigned sites</td><td>user_sites entries</td></tr>
+          <tr><td><code>client_org_admin</code></td><td>All sites in their org</td><td>Automatic (org_id match)</td></tr>
+          <tr><td><code>client_site_manager</code></td><td>Multiple assigned sites</td><td>user_sites entries (10-15 stores)</td></tr>
+          <tr><td><code>client_site_viewer</code></td><td>Single assigned site</td><td>One user_sites entry</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Test Credentials -->
+  <div class="section">
+    <h2>Test Credentials</h2>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">After running <code>php artisan migrate:fresh --seed</code>, these accounts are available.</p>
+    <div class="matrix-wrap" style="max-width:700px;">
+      <table>
+        <thead>
+          <tr><th>Email</th><th>Password</th><th>Role</th><th>Owner</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>super@example.com</code></td><td><code>password</code></td><td>super_admin</td><td>Astrea</td></tr>
+          <tr><td><code>support@example.com</code></td><td><code>password</code></td><td>support</td><td>Astrea</td></tr>
+          <tr><td><code>account@example.com</code></td><td><code>password</code></td><td>account_manager</td><td>Astrea</td></tr>
+          <tr><td><code>tech@example.com</code></td><td><code>password</code></td><td>technician</td><td>Astrea</td></tr>
+          <tr><td><code>admin@example.com</code></td><td><code>password</code></td><td>client_org_admin</td><td>Client</td></tr>
+          <tr><td><code>manager@example.com</code></td><td><code>password</code></td><td>client_site_manager</td><td>Client</td></tr>
+          <tr><td><code>viewer@example.com</code></td><td><code>password</code></td><td>client_site_viewer</td><td>Client</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Astrea IoT Platform -- Roles and Permissions -- Generated 2026-03-25
+</footer>
+
+<script>
+function getTheme() {
+  return localStorage.getItem('astrea-docs-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon = document.getElementById('theme-icon');
+  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  localStorage.setItem('astrea-docs-theme', t);
+}
+function toggleTheme() {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+applyTheme(getTheme());
+</script>
+</body>
+</html>
