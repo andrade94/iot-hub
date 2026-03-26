@@ -14,6 +14,7 @@
   --shadow-lg: 0 4px 16px rgba(0,0,0,0.08); --radius: 10px;
   --nav-bg: #ffffff; --nav-border: #e5e7eb; --code-bg: #f3f4f6;
   --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6; --red: #ef4444; --purple: #8b5cf6;
+  --orange: #f97316; --sidebar-w: 260px;
 }
 [data-theme="dark"] {
   --bg: #0f1117; --bg-alt: #161923; --bg-card: #1a1d2b; --text: #e5e7eb;
@@ -34,10 +35,12 @@ code { background: var(--code-bg); padding: 2px 7px; border-radius: 4px; font-si
 pre {
   background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
   padding: 16px 20px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace;
-  overflow-x: auto; line-height: 1.6; margin-bottom: 20px;
+  overflow-x: auto; line-height: 1.6; margin-bottom: 16px; white-space: pre-wrap;
 }
-.nav { position:sticky; top:0; z-index:100; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
-.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
+
+/* Nav */
+.nav { position:sticky; top:0; z-index:200; background:var(--nav-bg); border-bottom:1px solid var(--nav-border); backdrop-filter:blur(12px); }
+.nav-inner { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; }
 .nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; color:var(--text); letter-spacing:-0.3px; }
 .nav-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; }
 .nav-links { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
@@ -48,121 +51,243 @@ pre {
 .theme-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--text-muted); font-size:16px; transition:all 0.15s; display:flex; align-items:center; }
 .theme-btn:hover { border-color:var(--accent); color:var(--accent); }
 
-.container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
-.page-header { margin-bottom: 32px; }
-.page-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
-.page-header p { font-size: 16px; color: var(--text-muted); }
-.page-header .print-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 12px; padding: 8px 16px; border: 1px solid var(--border);
-  border-radius: 6px; font-size: 13px; font-weight: 600;
-  color: var(--text-muted); background: var(--bg-card); cursor: pointer;
-  transition: all 0.15s;
-}
-.page-header .print-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* Layout: sidebar + main */
+.layout { display: flex; min-height: calc(100vh - 56px); }
 
-/* Summary cards */
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w); position: sticky; top: 56px;
+  height: calc(100vh - 56px); overflow-y: auto; border-right: 1px solid var(--border);
+  background: var(--bg-alt); padding: 16px 0; font-size: 13px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 5px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.sidebar-section { margin-bottom: 6px; }
+.sidebar-section-title {
+  padding: 6px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-muted); cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 6px;
+}
+.sidebar-section-title:hover { color: var(--accent); }
+.sidebar-section-title .arrow { font-size: 9px; transition: transform 0.15s; }
+.sidebar-section-title.collapsed .arrow { transform: rotate(-90deg); }
+.sidebar-links { padding: 0 8px; }
+.sidebar-links.hidden { display: none; }
+.sidebar-link {
+  display: block; padding: 4px 12px; border-radius: 5px; color: var(--text-muted);
+  font-size: 12.5px; line-height: 1.5; transition: all 0.1s; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.sidebar-link:hover { color: var(--text); background: var(--accent-glow); }
+.sidebar-link.active { color: var(--accent); background: var(--accent-light); font-weight: 600; }
+
+/* Main content */
+.main { flex: 1; min-width: 0; padding: 32px 40px 80px; max-width: 1100px; }
+
+/* Progress bar */
+.progress-bar-wrap {
+  position: sticky; top: 56px; z-index: 100; background: var(--bg);
+  padding: 12px 0 8px; border-bottom: 1px solid var(--border); margin: -32px -40px 24px;
+  padding-left: 40px; padding-right: 40px;
+}
+.progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.progress-header h2 { font-size: 15px; font-weight: 700; }
+.progress-header .progress-text { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+.progress-header .progress-pct { color: var(--accent); font-weight: 800; }
+.progress-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s ease; }
+.progress-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.btn-sm {
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px;
+  border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 600;
+  color: var(--text-muted); background: var(--bg-card); cursor: pointer; transition: all 0.15s;
+}
+.btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+.btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-accent:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
+.btn-red { color: var(--red); border-color: var(--red); }
+.btn-red:hover { background: rgba(239,68,68,0.08); }
+
+/* Page header */
+.page-header { margin-bottom: 28px; }
+.page-header h1 { font-size: 30px; font-weight: 800; letter-spacing: -1px; margin-bottom: 6px; }
+.page-header p { font-size: 15px; color: var(--text-muted); }
+
+/* Summary cards row */
 .summary-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px; margin-bottom: 40px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px; margin-bottom: 28px;
 }
 .summary-card {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 18px 14px; text-align: center;
+  border-radius: var(--radius); padding: 14px 12px; text-align: center;
   box-shadow: var(--shadow);
 }
-.summary-card .sc-num { font-size: 28px; font-weight: 800; line-height: 1; }
-.summary-card .sc-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-top: 6px; }
+.summary-card .sc-num { font-size: 26px; font-weight: 800; line-height: 1; }
+.summary-card .sc-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-top: 5px; }
 
-/* Section */
-.section { margin-bottom: 48px; }
-.section h2 {
-  font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
-  margin-bottom: 16px; padding-bottom: 12px;
-  border-bottom: 2px solid var(--accent-light);
+/* Phase section */
+.phase-section { margin-bottom: 16px; }
+.phase-header {
+  display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); cursor: pointer; user-select: none; transition: all 0.15s;
 }
-.section h3 { font-size: 17px; font-weight: 700; margin: 20px 0 12px; color: var(--accent-dark); }
-.section p { font-size: 15px; margin-bottom: 12px; }
+.phase-header:hover { border-color: var(--accent); }
+.phase-header .phase-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; width: 16px; }
+.phase-header.collapsed .phase-arrow { transform: rotate(-90deg); }
+.phase-header .phase-title { font-size: 17px; font-weight: 700; flex: 1; }
+.phase-header .phase-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.phase-header .phase-progress {
+  font-size: 12px; font-weight: 600; color: var(--text-muted); min-width: 70px; text-align: right;
+}
+.phase-body { padding: 8px 0 16px; }
+.phase-body.hidden { display: none; }
+.phase-note {
+  padding: 10px 16px; margin-bottom: 12px; font-size: 13px; color: var(--text-muted);
+  background: var(--accent-glow); border-radius: 6px; border-left: 3px solid var(--accent);
+}
 
-/* Credentials table */
-.cred-table {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); box-shadow: var(--shadow);
-  overflow-x: auto; margin-bottom: 24px;
+/* Test card */
+.test-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden;
 }
-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.test-card-header {
+  display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+  cursor: pointer; user-select: none; transition: background 0.1s;
+}
+.test-card-header:hover { background: var(--accent-glow); }
+.test-card-header .tc-arrow { font-size: 10px; color: var(--text-muted); transition: transform 0.2s; width: 14px; }
+.test-card-header.collapsed .tc-arrow { transform: rotate(-90deg); }
+.test-card-header .tc-title { font-weight: 700; font-size: 15px; flex: 1; }
+.test-card-header .tc-url { font-size: 12px; color: var(--text-muted); font-family: 'SF Mono', 'Fira Code', monospace; }
+.test-card-header .tc-check-count {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+  background: var(--accent-light); color: var(--accent-dark);
+}
+.test-card-body { padding: 0 18px 18px; border-top: 1px solid var(--border); }
+.test-card-body.hidden { display: none; border-top: none; }
+
+/* Subsections inside card */
+.tc-section { margin-top: 14px; }
+.tc-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-dark); margin-bottom: 8px; }
+
+/* Checklist */
+.checklist { list-style: none; }
+.checklist li {
+  display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; font-size: 13.5px;
+  line-height: 1.5;
+}
+.checklist li input[type="checkbox"] {
+  margin-top: 4px; accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0;
+}
+.checklist li label { cursor: pointer; }
+.checklist li.checked label { color: var(--text-muted); text-decoration: line-through; }
+
+/* Tables inside cards */
+.tc-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
 thead { background: var(--bg-alt); }
 th {
-  padding: 10px 14px; text-align: left; font-weight: 700; font-size: 11px;
+  padding: 8px 12px; text-align: left; font-weight: 700; font-size: 11px;
   text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
   border-bottom: 1px solid var(--border);
 }
-td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
 tr:last-child td { border-bottom: none; }
 tr:hover { background: var(--accent-glow); }
-td code { font-size: 12.5px; }
+td code { font-size: 12px; }
 
-/* Phase cards */
-.phase-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px; margin-bottom: 24px;
+/* Textareas */
+.tc-textarea {
+  width: 100%; min-height: 60px; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--bg-alt); color: var(--text); font-size: 13px;
+  font-family: inherit; resize: vertical; line-height: 1.5;
 }
-.phase-card {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 20px;
-  box-shadow: var(--shadow); transition: all 0.2s;
-  text-decoration: none; color: inherit; display: block;
+.tc-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+.tc-textarea::placeholder { color: var(--text-muted); }
+
+/* Tags */
+.tag {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 4px; margin-right: 4px;
 }
-.phase-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
-.phase-card .pc-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 10px;
-}
-.phase-card .pc-name { font-size: 15px; font-weight: 700; }
-.phase-card .pc-badge {
-  font-size: 11px; font-weight: 700; padding: 3px 10px;
-  border-radius: 12px; text-transform: uppercase; letter-spacing: 0.3px;
-}
-.phase-card .pc-desc { font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px; }
-.phase-card .pc-stats {
-  display: flex; gap: 16px; font-size: 12px; color: var(--text-muted);
-}
-.phase-card .pc-stats strong { color: var(--text); font-weight: 700; }
+.tag-gap { background: rgba(249,115,22,0.12); color: var(--orange); }
+.tag-bug { background: rgba(239,68,68,0.12); color: var(--red); }
 
 /* Legend */
 .legend-grid {
-  display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
-  padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); box-shadow: var(--shadow);
-}
-.legend-item {
-  display: flex; align-items: center; gap: 8px; font-size: 13px;
-}
-.legend-item code { font-size: 12px; }
-
-/* Print styles */
-@media print {
-  .nav, .theme-btn, .print-btn { display: none !important; }
-  body { background: #fff; color: #000; font-size: 11px; }
-  .container { max-width: 100%; padding: 12px; }
-  .phase-card { break-inside: avoid; }
-  .summary-grid { grid-template-columns: repeat(6, 1fr); }
-  [data-theme="dark"] { --bg:#fff; --text:#000; --bg-card:#fff; --border:#ccc; --text-muted:#555; --code-bg:#f5f5f5; --bg-alt:#f9f9f9; }
+  display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;
+  padding: 14px 18px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); font-size: 12.5px;
 }
 
-.footer { border-top:1px solid var(--border); padding:32px 24px; text-align:center; font-size:13px; color:var(--text-muted); }
-@media (max-width: 640px) {
+/* Setup section */
+.setup-section { margin-bottom: 32px; }
+.setup-section h2 { font-size: 20px; font-weight: 700; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--accent-light); }
+.setup-section h3 { font-size: 15px; font-weight: 700; margin: 16px 0 8px; color: var(--accent-dark); }
+.cred-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto; margin-bottom: 16px; }
+
+/* Appendix */
+.appendix { margin-top: 40px; padding-top: 24px; border-top: 2px solid var(--border); }
+.appendix h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+.appendix h3 { font-size: 16px; font-weight: 700; margin: 20px 0 10px; color: var(--accent-dark); }
+.appendix p { font-size: 14px; margin-bottom: 10px; }
+.appendix .tc-table-wrap { margin-bottom: 16px; }
+
+/* Footer */
+.footer { border-top:1px solid var(--border); padding:24px; text-align:center; font-size:13px; color:var(--text-muted); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { padding: 20px 16px 60px; }
+  .progress-bar-wrap { margin: -20px -16px 20px; padding-left: 16px; padding-right: 16px; }
   .nav-links a { padding: 6px 8px; font-size: 12px; }
-  .phase-grid { grid-template-columns: 1fr; }
   .summary-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .nav-links a { padding: 4px 6px; font-size: 11px; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Sidebar toggle for mobile */
+.sidebar-toggle {
+  display: none; background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 10px; cursor: pointer; color: var(--text-muted); font-size: 14px;
+}
+@media (max-width: 900px) {
+  .sidebar-toggle { display: flex; align-items: center; }
+  .sidebar.mobile-open { display: block; position: fixed; top: 56px; left: 0; z-index: 150; height: calc(100vh - 56px); box-shadow: var(--shadow-lg); }
+}
+
+/* Print */
+@media print {
+  .nav, .theme-btn, .sidebar, .progress-bar-wrap, .btn-sm, .sidebar-toggle { display: none !important; }
+  body { background: #fff; color: #000; font-size: 10px; }
+  .layout { display: block; }
+  .main { max-width: 100%; padding: 12px; }
+  .phase-body.hidden, .test-card-body.hidden { display: block !important; }
+  .phase-header .phase-arrow, .test-card-header .tc-arrow { display: none; }
+  .test-card { break-inside: avoid; page-break-inside: avoid; }
+  .tc-textarea { border: 1px solid #ccc; min-height: 40px; }
+  [data-theme="dark"] { --bg:#fff; --text:#000; --bg-card:#fff; --border:#ccc; --text-muted:#555; --code-bg:#f5f5f5; --bg-alt:#f9f9f9; }
 }
 </style>
 </head>
 <body>
+
+<!-- NAV -->
 <nav class="nav">
   <div class="nav-inner">
     <a href="../index.html" class="nav-brand"><span class="dot"></span> Astrea Docs</a>
     <div class="nav-links">
+      <button class="sidebar-toggle" onclick="toggleMobileSidebar()" title="Menu">&#9776;</button>
       <a href="astrea-guide.html">Guide</a>
       <a href="astrea-scenarios.html">Scenarios</a>
       <a href="astrea-roles.html">Roles</a>
@@ -179,46 +304,65 @@ td code { font-size: 12.5px; }
   </div>
 </nav>
 
-<div class="container">
-  <div class="page-header">
-    <h1>QA Testing Guide</h1>
-    <p>Manual QA testing guide for the Astrea IoT Hub. Walk through every page and feature, testing functionality and evaluating UX/UI across all 7 roles.</p>
-    <button class="print-btn" onclick="window.print()">Print for offline use</button>
-  </div>
+<div class="layout">
 
-  <!-- Summary -->
-  <div class="summary-grid">
-    <div class="summary-card">
-      <div class="sc-num" style="color:var(--green);">8</div>
-      <div class="sc-label">Test Phases</div>
-    </div>
-    <div class="summary-card">
-      <div class="sc-num" style="color:var(--blue);">72</div>
-      <div class="sc-label">Pages Tested</div>
-    </div>
-    <div class="summary-card">
-      <div class="sc-num" style="color:var(--purple);">7</div>
-      <div class="sc-label">Roles Tested</div>
-    </div>
-    <div class="summary-card">
-      <div class="sc-num" style="color:var(--yellow);">200+</div>
-      <div class="sc-label">Test Checks</div>
-    </div>
-    <div class="summary-card">
-      <div class="sc-num" style="color:var(--red);">98</div>
-      <div class="sc-label">Business Rules</div>
-    </div>
-    <div class="summary-card">
-      <div class="sc-num" style="color:var(--accent);">30</div>
-      <div class="sc-label">Workflows</div>
-    </div>
-  </div>
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar"></aside>
 
-  <!-- Setup -->
-  <div class="section">
-    <h2>Setup Instructions</h2>
-    <h3>Environment Preparation</h3>
-    <pre># 1. Reset database with fresh seed data
+<!-- MAIN CONTENT -->
+<div class="main" id="top">
+
+<!-- PROGRESS TRACKER -->
+<div class="progress-bar-wrap" id="progress-bar">
+  <div class="progress-header">
+    <h2>QA Progress</h2>
+    <div class="progress-text"><span id="progress-checked">0</span> / <span id="progress-total">0</span> checks (<span class="progress-pct" id="progress-pct">0%</span>)</div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="progress-actions">
+    <button class="btn-sm btn-accent" onclick="exportJSON()">Export to Clipboard (JSON)</button>
+    <button class="btn-sm" onclick="window.print()">Print</button>
+    <button class="btn-sm" onclick="expandAll()">Expand All</button>
+    <button class="btn-sm" onclick="collapseAll()">Collapse All</button>
+    <button class="btn-sm btn-red" onclick="resetAll()">Reset All</button>
+  </div>
+</div>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <h1>QA Testing Guide</h1>
+  <p>Manual QA testing guide for the Astrea IoT Hub. Walk through every page and feature, testing functionality and evaluating UX/UI across all 7 roles. Version 2.0 -- 2026-03-25.</p>
+</div>
+
+<!-- SUMMARY -->
+<div class="summary-grid">
+  <div class="summary-card"><div class="sc-num" style="color:var(--green);">11</div><div class="sc-label">Test Phases</div></div>
+  <div class="summary-card"><div class="sc-num" style="color:var(--blue);">72</div><div class="sc-label">Pages Tested</div></div>
+  <div class="summary-card"><div class="sc-num" style="color:var(--purple);">7</div><div class="sc-label">Roles Tested</div></div>
+  <div class="summary-card"><div class="sc-num" style="color:var(--yellow);" id="total-checks-display">0</div><div class="sc-label">Test Checks</div></div>
+  <div class="summary-card"><div class="sc-num" style="color:var(--red);">7</div><div class="sc-label">Known Bugs</div></div>
+  <div class="summary-card"><div class="sc-num" style="color:var(--orange);">8</div><div class="sc-label">Perm Gaps</div></div>
+</div>
+
+<!-- LEGEND -->
+<div id="legend" class="legend-grid">
+  <div><code>[ ]</code> Checkbox -- mark when passed</div>
+  <div><strong>SA</strong> = super_admin</div>
+  <div><strong>SUP</strong> = support</div>
+  <div><strong>AM</strong> = account_manager</div>
+  <div><strong>TECH</strong> = technician</div>
+  <div><strong>OA</strong> = client_org_admin</div>
+  <div><strong>SM</strong> = client_site_manager</div>
+  <div><strong>SV</strong> = client_site_viewer</div>
+  <div><span class="tag tag-gap">(gap)</span> = known missing feature</div>
+  <div><span class="tag tag-bug">BUG</span> = confirmed bug</div>
+</div>
+
+<!-- SETUP -->
+<div id="setup" class="setup-section">
+  <h2>Setup Instructions</h2>
+  <h3>Environment Preparation</h3>
+  <pre># 1. Reset database with fresh seed data
 php artisan migrate:fresh --seed
 
 # 2. Start development services (Vite, queue, Reverb WebSocket, logs)
@@ -227,242 +371,676 @@ composer dev
 # 3. Verify the app loads
 open http://iot-hub.test</pre>
 
-    <h3>Test Credentials</h3>
-    <div class="cred-table">
-      <table>
-        <thead>
-          <tr><th>#</th><th>Email</th><th>Password</th><th>Role</th><th>Owner</th><th>Sidebar Scope</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>1</td><td><code>super@example.com</code></td><td><code>password</code></td><td>super_admin</td><td>Astrea</td><td>Full (all nav + CC + Partner)</td></tr>
-          <tr><td>2</td><td><code>support@example.com</code></td><td><code>password</code></td><td>support</td><td>Astrea</td><td>Full minus some admin actions</td></tr>
-          <tr><td>3</td><td><code>account@example.com</code></td><td><code>password</code></td><td>account_manager</td><td>Astrea</td><td>Full minus some admin actions</td></tr>
-          <tr><td>4</td><td><code>tech@example.com</code></td><td><code>password</code></td><td>technician</td><td>Astrea</td><td>Reduced (no admin, no analytics)</td></tr>
-          <tr><td>5</td><td><code>admin@example.com</code></td><td><code>password</code></td><td>client_org_admin</td><td>Client</td><td>Full client (no CC, no Partner)</td></tr>
-          <tr><td>6</td><td><code>manager@example.com</code></td><td><code>password</code></td><td>client_site_manager</td><td>Client</td><td>Moderate client</td></tr>
-          <tr><td>7</td><td><code>viewer@example.com</code></td><td><code>password</code></td><td>client_site_viewer</td><td>Client</td><td>Minimal (overview + alerts)</td></tr>
-        </tbody>
-      </table>
-    </div>
+  <h3>Test Credentials</h3>
+  <div class="cred-table">
+    <table>
+      <thead><tr><th>#</th><th>Email</th><th>Password</th><th>Role</th><th>Owner</th><th>Sidebar Scope</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><code>super@example.com</code></td><td><code>password</code></td><td>super_admin</td><td>Astrea</td><td>Full (all nav + CC + Partner)</td></tr>
+        <tr><td>2</td><td><code>support@example.com</code></td><td><code>password</code></td><td>support</td><td>Astrea</td><td>Full minus some admin actions</td></tr>
+        <tr><td>3</td><td><code>account@example.com</code></td><td><code>password</code></td><td>account_manager</td><td>Astrea</td><td>Full minus some admin actions</td></tr>
+        <tr><td>4</td><td><code>tech@example.com</code></td><td><code>password</code></td><td>technician</td><td>Astrea</td><td>Reduced (no admin, no analytics)</td></tr>
+        <tr><td>5</td><td><code>admin@example.com</code></td><td><code>password</code></td><td>client_org_admin</td><td>Client</td><td>Full client (no CC, no Partner)</td></tr>
+        <tr><td>6</td><td><code>manager@example.com</code></td><td><code>password</code></td><td>client_site_manager</td><td>Client</td><td>Moderate client</td></tr>
+        <tr><td>7</td><td><code>viewer@example.com</code></td><td><code>password</code></td><td>client_site_viewer</td><td>Client</td><td>Minimal (overview + alerts)</td></tr>
+      </tbody>
+    </table>
   </div>
 
-  <!-- Legend -->
-  <div class="section">
-    <h2>Legend</h2>
-    <div class="legend-grid">
-      <div class="legend-item"><code>[ ]</code> Checkbox -- mark [x] when passed</div>
-      <div class="legend-item"><strong>SA</strong> = super_admin</div>
-      <div class="legend-item"><strong>SUP</strong> = support</div>
-      <div class="legend-item"><strong>AM</strong> = account_manager</div>
-      <div class="legend-item"><strong>TECH</strong> = technician</div>
-      <div class="legend-item"><strong>OA</strong> = client_org_admin</div>
-      <div class="legend-item"><strong>SM</strong> = client_site_manager</div>
-      <div class="legend-item"><strong>SV</strong> = client_site_viewer</div>
-      <div class="legend-item"><strong>(gap)</strong> = known missing feature</div>
-      <div class="legend-item"><strong>BUG</strong> = confirmed bug</div>
-    </div>
-  </div>
-
-  <!-- Phase Overview -->
-  <div class="section">
-    <h2>Phase Overview</h2>
-    <p>Testing is organized into 8 phases, progressing from setup through authentication, configuration, monitoring, operations, and advanced features.</p>
-
-    <div class="phase-grid">
-      <div class="phase-card">
-        <div class="pc-header">
-          <span class="pc-name">Phase 0: Setup</span>
-          <span class="pc-badge" style="background:var(--accent-light);color:var(--accent-dark);">Foundation</span>
-        </div>
-        <div class="pc-desc">Environment preparation, database seeding, service startup, and credential verification.</div>
-        <div class="pc-stats">
-          <span>Pages: <strong>0</strong></span>
-          <span>Checks: <strong>6</strong></span>
-          <span>Roles: <strong>All 7</strong></span>
-        </div>
-      </div>
-
-      <div class="phase-card">
-        <div class="pc-header">
-          <span class="pc-name">Phase 1: Authentication</span>
-          <span class="pc-badge" style="background:rgba(59,130,246,0.12);color:var(--blue);">Auth</span>
-        </div>
-        <div class="pc-desc">Login, register, forgot/reset password, email verification, 2FA challenge, privacy accept.</div>
-        <div class="pc-stats">
-          <span>Pages: <strong>8</strong></span>
-          <span>Checks: <strong>28</strong></span>
-          <span>Roles: <strong>Unauthenticated</strong></span>
-        </div>
-      </div>
-
-      <div class="phase-card">
-        <div class="pc-header">
-          <span class="pc-name">Phase 2: Catalogs &amp; Config</span>
-          <span class="pc-badge" style="background:rgba(139,92,246,0.12);color:var(--purple);">Settings</span>
-        </div>
-        <div class="pc-desc">Organization settings, sites, users, alert rules, escalation chains, recipes, modules, billing, compliance, integrations.</div>
-        <div class="pc-stats">
-          <span>Pages: <strong>27</strong></span>
-          <span>Checks: <strong>60+</strong></span>
-          <span>Roles: <strong>SA, OA</strong></span>
-        </div>
-      </div>
-
-      <div class="phase-card">
-        <div class="pc-header">
-          <span class="pc-name">Phase 3: Monitoring</span>
-          <span class="pc-badge" style="background:rgba(16,185,129,0.12);color:var(--green);">Core</span>
-        </div>
-        <div class="pc-desc">Dashboard, device list, device detail, gateway status, real-time readings, WebSocket updates.</div>
-        <div class="pc-stats">
-          <span>Pages: <strong>8</strong></span>
-          <span>Checks: <strong>30+</strong></span>
-          <span>Roles: <strong>All client roles</strong></span>
-        </div>
-      </div>
-
-      <div class="phase-card">
-        <div class="pc-header">
-          <span class="pc-name">Phase 4: Alerts &amp; Actions</span>
-          <span class="pc-badge" style="background:rgba(239,68,68,0.12);color:var(--red);">Alerts</span>
-        </div>
-        <div class="pc-desc">Alert list, alert detail, acknowledgment, resolution, corrective actions, escalation flow, work orders.</div>
-        <div class="pc-stats">
-          <span>Pages: <strong>10</strong></span>
-          <span>Checks: <strong>35+</strong></span>
-          <span>Roles: <strong>SM, SV, TECH</strong></span>
-        </div>
-      </div>
-
-      <div class="phase-card">
-        <div class="pc-header">
-          <span class="pc-name">Phase 5: Reports &amp; Analytics</span>
-          <span class="pc-badge" style="background:rgba(249,115,22,0.12);color:#f97316;">Reports</span>
-        </div>
-        <div class="pc-desc">Report generation, HACCP reports, energy reports, alert analytics, scheduled reports, data export.</div>
-        <div class="pc-stats">
-          <span>Pages: <strong>8</strong></span>
-          <span>Checks: <strong>25+</strong></span>
-          <span>Roles: <strong>OA, SM, SV</strong></span>
-        </div>
-      </div>
-
-      <div class="phase-card">
-        <div class="pc-header">
-          <span class="pc-name">Phase 6: Command Center</span>
-          <span class="pc-badge" style="background:rgba(16,185,129,0.12);color:var(--green);">Astrea</span>
-        </div>
-        <div class="pc-desc">Multi-org map view, fleet statistics, outage declarations, partner portal, organization management.</div>
-        <div class="pc-stats">
-          <span>Pages: <strong>6</strong></span>
-          <span>Checks: <strong>20+</strong></span>
-          <span>Roles: <strong>SA only</strong></span>
-        </div>
-      </div>
-
-      <div class="phase-card">
-        <div class="pc-header">
-          <span class="pc-name">Phase 7: Cross-Cutting</span>
-          <span class="pc-badge" style="background:rgba(107,114,128,0.12);color:var(--text-muted);">Quality</span>
-        </div>
-        <div class="pc-desc">Responsive design, dark/light theme, i18n, flash messages, error pages, accessibility, performance.</div>
-        <div class="pc-stats">
-          <span>Pages: <strong>5</strong></span>
-          <span>Checks: <strong>20+</strong></span>
-          <span>Roles: <strong>All</strong></span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Testing Approach -->
-  <div class="section">
-    <h2>Testing Approach</h2>
-
-    <h3>Per-Page Testing Template</h3>
-    <p>For each page in the inventory, follow this structure:</p>
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px;">
-      <p style="margin-bottom:8px;"><strong>1. How to get here:</strong> Direct URL + navigation path</p>
-      <p style="margin-bottom:8px;"><strong>2. Content (verify these exist):</strong> Checkbox list of expected UI elements</p>
-      <p style="margin-bottom:8px;"><strong>3. Actions and Destinations:</strong> Table of user actions, expected results, and navigation targets</p>
-      <p style="margin-bottom:8px;"><strong>4. Role differences:</strong> What each role sees (visibility matrix)</p>
-      <p style="margin-bottom:8px;"><strong>5. Business rules to verify:</strong> BR-xxx references with expected behavior</p>
-      <p style="margin-bottom:8px;"><strong>6. Screen states to test:</strong> Default, loading, empty, error, success, validation</p>
-      <p style="margin-bottom:0;"><strong>7. Issues found:</strong> Space for documenting bugs and UX issues</p>
-    </div>
-
-    <h3>Role-Based Testing Order</h3>
-    <p>Test each phase with the recommended roles in this order:</p>
-    <div class="cred-table">
-      <table>
-        <thead>
-          <tr><th>Phase</th><th>Primary Role</th><th>Secondary Roles</th><th>Focus</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Phase 0-1</td><td>All (sequential login)</td><td>--</td><td>Each role logs in, verify sidebar</td></tr>
-          <tr><td>Phase 2</td><td>super_admin</td><td>org_admin</td><td>Full config, then client perspective</td></tr>
-          <tr><td>Phase 3</td><td>site_viewer</td><td>site_manager, technician</td><td>Single-site, then multi-site</td></tr>
-          <tr><td>Phase 4</td><td>site_manager</td><td>site_viewer, technician</td><td>Alert flow, work order flow</td></tr>
-          <tr><td>Phase 5</td><td>org_admin</td><td>site_manager</td><td>Report access and generation</td></tr>
-          <tr><td>Phase 6</td><td>super_admin</td><td>--</td><td>Astrea-only features</td></tr>
-          <tr><td>Phase 7</td><td>All</td><td>--</td><td>Cross-cutting quality checks</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3>Key Business Rules to Verify</h3>
-    <p>The most critical rules that must be verified during QA:</p>
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);">
-      <p style="margin-bottom:6px;"><strong>BR-029:</strong> All routes scoped to user's organization (EnsureOrganizationScope)</p>
-      <p style="margin-bottom:6px;"><strong>BR-030:</strong> Site access validated via canAccessSite() -- super_admin=all, org_admin=org, others=pivot</p>
-      <p style="margin-bottom:6px;"><strong>BR-010:</strong> Alert rules evaluated per-reading, scoped to site + device</p>
-      <p style="margin-bottom:6px;"><strong>BR-011:</strong> Duration-based thresholds -- only sustained breaches trigger alerts</p>
-      <p style="margin-bottom:6px;"><strong>BR-013:</strong> Auto-resolution -- 2 consecutive normal readings resolve active alert</p>
-      <p style="margin-bottom:6px;"><strong>BR-017:</strong> Escalation chain levels with delay, users, and channels</p>
-      <p style="margin-bottom:6px;"><strong>BR-025:</strong> CFDI timbrado via Facturapi using billing profile</p>
-      <p style="margin-bottom:6px;"><strong>BR-047:</strong> Site onboarding is 5-step wizard (gateway, devices, floor plans, modules, escalation)</p>
-      <p style="margin-bottom:0;"><strong>BR-048:</strong> Onboarding completion requires 1+ gateway, 1+ device, 1+ module</p>
-    </div>
-  </div>
-
-  <!-- Full Guide Reference -->
-  <div class="section">
-    <h2>Full Guide Reference</h2>
-    <p>This HTML page provides an overview of the QA testing structure. The complete testing guide with all per-page checklists is available in the Markdown source file:</p>
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);">
-      <p><strong>Source file:</strong> <code>docs/project/MANUAL_QA_GUIDE.md</code></p>
-      <p style="margin-top:8px;">The Markdown guide contains the full per-page testing template for all 72 pages, including:</p>
-      <ul style="margin-top:8px;padding-left:20px;font-size:14px;color:var(--text-muted);">
-        <li>Detailed content checklists for each page</li>
-        <li>Action-to-destination tables</li>
-        <li>Role visibility matrices</li>
-        <li>Business rule references per page</li>
-        <li>Screen state test cases</li>
-        <li>Space for issue documentation</li>
-      </ul>
-    </div>
+  <h3>Role-Based Testing Order</h3>
+  <div class="cred-table">
+    <table>
+      <thead><tr><th>Phase</th><th>Primary Role</th><th>Secondary Roles</th><th>Focus</th></tr></thead>
+      <tbody>
+        <tr><td>Phase 0-1</td><td>All (sequential login)</td><td>--</td><td>Each role logs in, verify sidebar</td></tr>
+        <tr><td>Phase 2</td><td>super_admin</td><td>org_admin</td><td>Full config, then client perspective</td></tr>
+        <tr><td>Phase 3</td><td>site_viewer</td><td>site_manager, technician</td><td>Single-site, then multi-site</td></tr>
+        <tr><td>Phase 4</td><td>site_manager</td><td>site_viewer, technician</td><td>Alert flow, work order flow</td></tr>
+        <tr><td>Phase 5</td><td>org_admin</td><td>site_manager</td><td>Report access and generation</td></tr>
+        <tr><td>Phase 6</td><td>super_admin</td><td>--</td><td>Astrea-only features</td></tr>
+        <tr><td>Phase 7</td><td>All</td><td>--</td><td>Cross-cutting quality checks</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
+<!-- All phase sections are rendered by JavaScript below -->
+<div id="phases-container"></div>
+
+<!-- APPENDICES -->
+<div class="appendix" id="appendix-a">
+  <h2>Appendix A: Role-Based Access Summary</h2>
+  <h3>Page Access Matrix</h3>
+  <div class="tc-table-wrap" id="access-matrix-table"></div>
+  <h3>Key Action Permissions</h3>
+  <div class="tc-table-wrap" id="action-perms-table"></div>
+</div>
+
+<div class="appendix" id="appendix-b">
+  <h2>Appendix B: Known Bugs &amp; Gaps Summary</h2>
+  <h3>Confirmed Bugs</h3>
+  <div class="tc-table-wrap" id="bugs-table"></div>
+  <h3>Permission Gaps</h3>
+  <div class="tc-table-wrap" id="perm-gaps-table"></div>
+  <h3>Missing Skeleton/Loading States</h3>
+  <div id="skeleton-gaps" style="font-size:13px;margin-bottom:16px;"></div>
+  <h3>Design Inconsistencies</h3>
+  <div class="tc-table-wrap" id="design-inconsistencies-table"></div>
+</div>
+
+</div><!-- .main -->
+</div><!-- .layout -->
+
 <footer class="footer">
-  Astrea IoT Platform -- QA Testing Guide -- Generated 2026-03-25
+  Astrea IoT Platform -- QA Testing Guide v2.0 -- Generated 2026-03-25
 </footer>
 
 <script>
+// ============================================================
+// PHASE METADATA
+// ============================================================
+var PHASE_META = [
+  {num:0,title:'Phase 0: Setup',badge:'Foundation',badgeBg:'var(--accent-light)',badgeColor:'var(--accent-dark)',note:''},
+  {num:1,title:'Phase 1: Authentication (8 pages)',badge:'Auth',badgeBg:'rgba(59,130,246,0.12)',badgeColor:'var(--blue)',note:''},
+  {num:2,title:'Phase 2: Catalogs & Configuration (27 pages)',badge:'Settings',badgeBg:'rgba(139,92,246,0.12)',badgeColor:'var(--purple)',note:'Test as: super_admin first, then org_admin. These pages configure entities used by all other features.'},
+  {num:3,title:'Phase 3: Core Operations',badge:'Core',badgeBg:'rgba(16,185,129,0.12)',badgeColor:'var(--green)',note:'Test as: org_admin first, then site_manager, site_viewer, technician. Verify role-based access differences.'},
+  {num:4,title:'Phase 4: Analytics & Reports',badge:'Reports',badgeBg:'rgba(249,115,22,0.12)',badgeColor:'var(--orange)',note:''},
+  {num:5,title:'Phase 5: Command Center (Astrea only)',badge:'Astrea',badgeBg:'rgba(16,185,129,0.12)',badgeColor:'var(--green)',note:'Test as: super_admin first. All CC pages restricted to Astrea roles (SA, SUP, AM, TECH).'},
+  {num:6,title:'Phase 6: Global Features',badge:'Quality',badgeBg:'rgba(107,114,128,0.12)',badgeColor:'var(--text-muted)',note:''},
+  {num:7,title:'Phase 7: Account (avatar dropdown)',badge:'Account',badgeBg:'rgba(59,130,246,0.12)',badgeColor:'var(--blue)',note:''},
+  {num:8,title:'Phase 8: Billing (Deactivated)',badge:'Deactivated',badgeBg:'rgba(239,68,68,0.12)',badgeColor:'var(--red)',note:'Billing module is currently deactivated. Verify graceful deactivation only.'},
+  {num:9,title:'Phase 9: Platform',badge:'Platform',badgeBg:'rgba(107,114,128,0.12)',badgeColor:'var(--text-muted)',note:''},
+  {num:10,title:'Phase 10: Module Dashboards',badge:'Modules',badgeBg:'rgba(139,92,246,0.12)',badgeColor:'var(--purple)',note:''}
+];
+
+// ============================================================
+// DATA: All test cards per phase
+// ============================================================
+var PHASE_DATA = {};
+
+PHASE_DATA[0] = [
+  {id:'p0-env',title:'0.1 Environment Preparation',url:'',
+   howTo:'',
+   checks:['migrate:fresh --seed completes without errors','composer dev starts Vite, queue worker, Reverb, and log tail','http://iot-hub.test loads (should redirect to /login)'],
+   actions:[],roleDiffs:'',rules:'',states:[]},
+  {id:'p0-creds',title:'0.2 Test Credentials Verification',url:'',
+   howTo:'',
+   checks:['Login with each credential succeeds','Each role sees the appropriate sidebar items','Org switcher appears only for Astrea roles (SA/SUP/AM/TECH)'],
+   actions:[],roleDiffs:'',rules:'',states:[]}
+];
+
+PHASE_DATA[1] = [
+  {id:'p1-login',title:'Login',url:'/login',
+   howTo:'Direct URL: http://iot-hub.test/login -- / redirects here -- After logout',
+   checks:['Email input field','Password input field','"Keep me signed in" checkbox','Submit button with Spinner during processing','"Forgot password" link','Register link (if canRegister prop is true; may be hidden)'],
+   actions:[['Submit valid credentials','POST /login','/dashboard'],['"Forgot password" link','Navigate','/forgot-password'],['Register link','Navigate (if visible)','/register'],['Submit invalid credentials','Validation error displayed','Same page']],
+   roleDiffs:'None -- unauthenticated page.',
+   rules:'BR-029: After login, all routes are scoped to user\'s organization',
+   states:['Default: empty form','Validation errors: wrong email/password shows error messages','Processing: Spinner shows in button during submission','Status message: appears after password reset (redirected from /reset-password)']},
+  {id:'p1-register',title:'Register',url:'/register',
+   howTo:'From Login page: "Register" link (if enabled) -- Direct URL: http://iot-hub.test/register',
+   checks:['Name input','Email input','Password input','Password confirmation input','Submit button with Spinner'],
+   actions:[['Submit valid form','POST /register','/dashboard (or /verify-email)'],['"Login" link','Navigate','/login']],
+   roleDiffs:'None -- unauthenticated page.',rules:'',
+   states:['Default: empty form','Validation errors: duplicate email, weak password, mismatched confirmation','Processing: Spinner during submission']},
+  {id:'p1-forgot',title:'Forgot Password',url:'/forgot-password',
+   howTo:'From Login page: "Forgot password" link -- Direct URL: http://iot-hub.test/forgot-password',
+   checks:['Email input field','Submit button','"Back to login" link','<span class="tag tag-bug">BUG</span> Design inconsistency: Uses LoaderCircle instead of Spinner'],
+   actions:[['Submit valid email','POST /forgot-password','Same page (success message)'],['"Back to login" link','Navigate','/login']],
+   roleDiffs:'',rules:'',
+   states:['Default: empty form','Validation errors: invalid email format','Processing: LoaderCircle shows (note inconsistency with Spinner)','Success: status message displayed ("reset link sent")']},
+  {id:'p1-reset',title:'Reset Password',url:'/reset-password',
+   howTo:'From email: password reset link with token -- Direct URL requires valid token and email query params',
+   checks:['Email field (pre-filled, read-only)','Password input','Password confirmation input','Hidden token field','Submit button'],
+   actions:[['Submit valid passwords','POST /reset-password','/login with status message']],
+   roleDiffs:'',rules:'',
+   states:['Default: email pre-filled from link','Validation errors: weak password, mismatched confirmation','Processing: Spinner during submission','Invalid/expired token: error message']},
+  {id:'p1-verify',title:'Verify Email',url:'/verify-email',
+   howTo:'Automatic redirect when authenticated but email unverified',
+   checks:['Informational message about verification requirement','"Resend verification email" button','Logout link'],
+   actions:[['"Resend" button','POST /email/verification-notification','Same page (success status)'],['Logout link','POST /logout','/login'],['Click email verification link','GET verify URL','/dashboard']],
+   roleDiffs:'',rules:'',
+   states:['Default: message + resend button','After resend: success status message']},
+  {id:'p1-confirm',title:'Confirm Password',url:'/confirm-password',
+   howTo:'Automatic redirect when accessing sensitive actions requiring re-authentication',
+   checks:['Explanation text','Password input field','Submit button'],
+   actions:[['Submit correct password','POST','Originally intended route']],
+   roleDiffs:'',rules:'',
+   states:['Default: password form','Validation errors: wrong password','Processing state']},
+  {id:'p1-2fa',title:'Two-Factor Challenge',url:'/two-factor-challenge',
+   howTo:'Automatic redirect after login when 2FA is enabled on account',
+   checks:['Mode toggle: TOTP code vs Recovery code','TOTP mode: 6-digit code input','Recovery mode: recovery code text input','Submit button'],
+   actions:[['Submit valid TOTP code','POST /two-factor-challenge','/dashboard'],['Submit valid recovery code','POST /two-factor-challenge','/dashboard'],['Toggle mode link','Client-side mode switch','Same page (different input)']],
+   roleDiffs:'',rules:'',
+   states:['TOTP mode (default): 6-digit input','Recovery mode: text input','Validation errors: invalid code','Processing state']},
+  {id:'p1-privacy',title:'Privacy Accept',url:'/privacy/accept',
+   howTo:'Automatic redirect when authenticated user has not accepted privacy policy',
+   checks:['LFPDPPP (Mexican federal privacy law) policy text','Accept checkbox','Submit button (disabled until checkbox checked)'],
+   actions:[['Check checkbox + submit','POST','/dashboard']],
+   roleDiffs:'',rules:'',
+   states:['Default: checkbox unchecked, button disabled','Checked: button enabled','Processing state']}
+];
+
+PHASE_DATA[2] = [
+  {id:'p2-org',title:'2.1 Organization Settings',url:'/settings/organization',
+   howTo:'Sidebar: Settings > Organization -- Direct URL',
+   checks:['Name field','Timezone select','Opening hour time input','Branding section: primary_color color picker','Branding section: secondary_color color picker','Branding section: font select','Branding section: logo upload','Save button'],
+   actions:[['Save','PATCH organization','Same page (toast confirmation)'],['Upload logo','File upload','Same page (preview updates)']],
+   roleDiffs:'<table><thead><tr><th>Element</th><th>SA</th><th>OA</th><th>SM</th><th>SV</th><th>TECH</th></tr></thead><tbody><tr><td>Entire page</td><td>Visible</td><td>Visible</td><td>Hidden (403)</td><td>Hidden (403)</td><td>Hidden (403)</td></tr></tbody></table><p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Gated by: "manage org settings" permission.</p>',
+   rules:'BR-029: Organization scope enforced -- can only edit own org (unless super_admin switching)\nBR-031: super_admin can switch orgs via session',
+   states:['Pristine form with current values','Dirty form (unsaved changes)','Submitting state','Validation errors']},
+  {id:'p2-sites',title:'2.2 Sites Settings',url:'/settings/sites',
+   howTo:'Sidebar: Settings > Sites -- Direct URL',
+   checks:['Table columns: name, address, timezone, status badge, device count, action buttons','"Add Site" button (opens SiteForm dialog)','Edit button per row (opens SiteForm dialog)','Delete button per row (opens ConfirmationDialog)','"Onboard" button per site (when status = onboarding)'],
+   actions:[['"Add Site" button','Opens SiteForm dialog','Same page (dialog)'],['Edit button','Opens SiteForm dialog pre-filled','Same page (dialog)'],['Delete button','Opens ConfirmationDialog','Same page (row removed on confirm)'],['"Onboard" button','Navigate','/sites/{id}/onboard'],['Dialog Submit (create)','POST','Same page (new row in table)'],['Dialog Submit (edit)','PATCH','Same page (row updated)']],
+   roleDiffs:'<table><thead><tr><th>Element</th><th>SA</th><th>OA</th><th>SM</th><th>SV</th><th>TECH</th></tr></thead><tbody><tr><td>Add/Edit/Delete</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Hidden</td><td>Hidden</td></tr><tr><td>Onboard button</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Hidden</td><td>Hidden</td></tr></tbody></table><p style="font-size:12px;color:var(--text-muted);margin-top:6px;">All CRUD gated by "manage sites" permission.</p>',
+   rules:'BR-047: Site onboarding is sequential 5-step wizard\nBR-048: Onboarding completion requires >= 1 gateway, >= 1 device, >= 1 module',
+   states:['Empty table state (no sites)','Populated table','Dialog open state','Dialog submitting state']},
+  {id:'p2-batch',title:'2.2a Batch Site Import',url:'/settings/sites/batch-import',howTo:'From Sites Settings: batch import button/link -- Direct URL',checks:['CSV upload form','Template download link','Validation results display','Submit/import button'],actions:[['Upload CSV','Validates file','Same page (shows validation results)'],['Submit import','POST batch create','/settings/sites (with toast)']],roleDiffs:'Gated by "manage sites" permission.',rules:'',states:['Default: upload form','File selected: validation preview','Validation errors in CSV','Import success']},
+  {id:'p2-onboard',title:'2.3 Onboarding Wizard',url:'/sites/{site}/onboard',howTo:'From Sites Settings: "Onboard" button on a site with status = onboarding -- Direct URL',checks:['Stepper component showing 5 steps','Step 1 -- Gateway: serial input, model select, register button','Step 2 -- Devices: name, dev_eui, model, app_key, zone inputs, register button','Step 3 -- Floor Plans: upload dropzone, device marker placement','Step 4 -- Modules: toggle cards (cold_chain, energy, iaq, industrial)','Step 5 -- Complete: review summary, "Complete Onboarding" button'],actions:[['Register Gateway (Step 1)','POST ChirpStack API','Same step (gateway added to list)'],['Register Devices (Step 2)','POST','Same step (devices added)'],['Upload Floor Plan (Step 3)','POST file','Same step (preview shown)'],['Activate Modules (Step 4)','POST','Same step (modules toggled)'],['Complete Onboarding (Step 5)','PATCH site status -> active','/sites/{id}'],['Step navigation','Click stepper','Same page (different step)']],roleDiffs:'Entire page gated by "manage sites" permission.',rules:'BR-047: Sequential 5-step wizard\nBR-048: Completion requires >= 1 gateway, >= 1 device, >= 1 module\nBR-050: Module activation auto-applies matching recipes\nBR-043: Recipe application auto-creates AlertRules',states:['Step 1: empty gateway list, form validation','Step 2: empty device list, form validation','Step 3: no floor plans uploaded (optional step)','Step 4: no modules selected','Step 5: requirements not met (button disabled)','Step 5: all requirements met (button enabled)','ChirpStack API error: toast displayed','Completion summary: correct counts shown']},
+  {id:'p2-users',title:'2.4 User Management',url:'/settings/users',howTo:'Sidebar: Settings > Users -- Direct URL',checks:['Table columns: name, email, role badge, site access, app access, status, actions','"Add User" button (opens UserForm dialog)','Edit button per row (opens UserForm dialog)','Delete button per row (opens ConfirmationDialog)','UserForm dialog: name, email, role select, site access multi-select, app access toggle'],actions:[['"Add User" button','Opens UserForm dialog','Same page (dialog)'],['Edit button','Opens UserForm dialog pre-filled','Same page (dialog)'],['Delete button','Opens ConfirmationDialog','Same page (row removed)'],['Dialog Submit (create)','POST','Same page (new row)'],['Dialog Submit (edit)','PATCH','Same page (row updated)']],roleDiffs:'<table><thead><tr><th>Element</th><th>SA</th><th>OA</th><th>SM</th><th>SV</th><th>TECH</th></tr></thead><tbody><tr><td>Entire page</td><td>Visible</td><td>Visible</td><td>Hidden (403)</td><td>Hidden (403)</td><td>Hidden (403)</td></tr><tr><td>Role select options</td><td>All roles</td><td>Client roles only</td><td>N/A</td><td>N/A</td><td>N/A</td></tr></tbody></table><p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Gated by "manage users". Role select filtered by RoleDefinitions.assignable.</p>',rules:'BR-030: Site access validated via canAccessSite()\nBR-033: User permissions cached 5 minutes',states:['Empty table','Populated table with multiple roles','Dialog open: role select shows only assignable roles','Dialog submitting state','Validation errors (duplicate email, etc.)']},
+  {id:'p2-gateways',title:'2.5 Gateways',url:'/settings/sites/{site}/gateways',howTo:'Sidebar: Settings > [Site] > Gateways (site-scoped) -- Direct URL',checks:['Table columns: name, serial, model, status badge, connected devices count, last seen, actions','"Add Gateway" button (opens dialog)','Edit button per row (opens dialog)','Delete button per row (opens ConfirmationDialog)','Gateway form dialog'],actions:[['"Add Gateway"','Opens dialog','Same page'],['Edit button','Opens dialog pre-filled','Same page'],['Delete button','Opens ConfirmationDialog','Same page'],['Row click','Navigate to detail','/settings/sites/{site}/gateways/{gateway}']],roleDiffs:'All CRUD gated by "manage devices" permission.',rules:'BR-004: Gateway marked offline after 30 minutes with no heartbeat\nSM-009: Gateway status: offline <-> online based on heartbeat',states:['Empty table','Populated table with online/offline gateways','Dialog states']},
+  {id:'p2-gw-detail',title:'2.5a Gateway Detail',url:'/settings/sites/{site}/gateways/{gateway}',howTo:'From Gateways table: row click',checks:['Gateway details card: name, serial, model, firmware, status, last seen','Connected devices table: device name, model, status, last seen'],actions:[['(Read-only page)','No actions','N/A']],roleDiffs:'None.',rules:'',states:['Gateway with connected devices','Gateway with empty devices table']},
+  {id:'p2-devices-site',title:'2.6 Devices (Site-Scoped)',url:'/settings/sites/{site}/devices',howTo:'Sidebar: Settings > [Site] > Devices (site-scoped) -- Direct URL',checks:['Stats bar: total, online, offline, critical battery','Filter bar: status select, search input','Table columns: name, model, status, battery, signal, last seen, actions','"Add Device" button (opens dialog)'],actions:[['"Add Device" button','Opens dialog','Same page'],['Row click','Navigate','/settings/sites/{site}/devices/{device}'],['Status filter','Re-fetches with filter','Same page'],['Search input','Debounced re-fetch','Same page']],roleDiffs:'Add button gated by "manage devices" permission.',rules:'BR-003: Device marked offline after 15 minutes with no reading\nBR-006: Auto-create work order when device battery < 20%',states:['Empty table (no filters)','Empty table (filters active)','Populated table','Stats bar counts match table data']},
+  {id:'p2-device-detail-site',title:'2.6a Device Detail (Site-Scoped)',url:'/settings/sites/{site}/devices/{device}',howTo:'From Devices (site-scoped) table: row click',checks:['Device details: name, dev_eui, model, firmware, zone, status, battery, signal','Gateway link','Recipe link (if assigned)'],actions:[['Gateway link','Navigate','Gateway detail page'],['Recipe link','Navigate','/settings/recipes/{recipe}']],roleDiffs:'None (read-only).',rules:'',states:['Device with gateway and recipe assigned','Device without recipe']},
+  {id:'p2-devices-global',title:'2.7 Devices (Global Index)',url:'/devices',howTo:'Sidebar: Devices -- Direct URL',checks:['Header with total device count','Filter bar: site select, status select, search input','Table columns: name, model (mono font), site, zone, status badge, battery % (mono font), last seen date','Pagination controls','<span class="tag tag-gap">(gap)</span> No skeleton loading state'],actions:[['Row click','Navigate','/devices/{id}'],['Site filter','Re-fetches with filter','Same page'],['Status filter','Re-fetches with filter','Same page'],['Search input','Debounced re-fetch','Same page']],roleDiffs:'None.',rules:'BR-003: Devices offline > 15 min shown with offline status badge\nBR-008: Device status auto-recovers to active when new reading received',states:['<span class="tag tag-gap">(gap)</span> No skeleton -- verify page renders promptly','Empty with filters: "No devices match your filters"','Empty without filters: "No devices found"','Populated: table with rows, pagination working']},
+  {id:'p2-device-detail',title:'2.8 Device Detail',url:'/devices/{device}',howTo:'From Devices Index: row click -- From Zone Detail: device row click',checks:['Header: device name, model, status badge, dev_eui','4 StatCards: battery level, signal strength, last seen, alert count','Chart with period/metric toggle controls (Recharts)','Latest readings grid (metric name -> current value)','Sidebar: device info card (model, firmware, zone, site)','Sidebar: alert history list','Replace device button (if permission)','DeviceShowSkeleton loading state'],actions:[['Period toggle (24h/7d/30d)','Re-fetches chartData','Same page'],['Metric select dropdown','Re-fetches chartData','Same page'],['"Replace device" button','Opens replacement dialog','Same page (dialog)'],['Alert history item click','Navigate','/alerts/{id}']],roleDiffs:'<table><thead><tr><th>Element</th><th>SA</th><th>OA</th><th>SM</th><th>SV</th><th>TECH</th></tr></thead><tbody><tr><td>Replace device button</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Hidden</td><td>Hidden</td></tr></tbody></table><p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Replace button gated by "manage devices" permission.</p>',rules:'BR-001: MQTT payloads decoded via DecoderFactory matching device.model\nBR-002: Sensor readings dual-written (PostgreSQL + Redis)\nBR-007: All sensor readings broadcast via Reverb WebSocket',states:['DeviceShowSkeleton appears on load','Chart populated with data for selected period/metric','Chart empty: message when no readings','Alert history populated','Alert history empty: message','Replacement dialog flow']},
+  {id:'p2-recipes',title:'2.9 Recipes',url:'/settings/recipes',howTo:'Sidebar: Settings > Recipes -- Direct URL',checks:['Card grid: recipe name, module, description, threshold count','Cards are clickable'],actions:[['Card click','Navigate','/settings/recipes/{recipe}']],roleDiffs:'None (read-only).',rules:'',states:['Empty state (no recipes)','Populated card grid']},
+  {id:'p2-recipe-detail',title:'2.9a Recipe Detail',url:'/settings/recipes/{recipe}',howTo:'From Recipes: card click -- From Device Detail (site-scoped): recipe link',checks:['Recipe details: name, module, description','Default thresholds list','Override thresholds editor (when editable flag is true)'],actions:[['Save Overrides','PATCH','Same page (toast)'],['Back','Navigate','/settings/recipes']],roleDiffs:'editable flag controls whether override editor is shown.',rules:'BR-043: Recipe application auto-creates AlertRules from Recipe.default_rules',states:['Read-only mode (editable = false)','Editable mode (editable = true): override inputs visible','Save validation']},
+  {id:'p2-alert-rules',title:'2.10 Alert Rules',url:'/settings/sites/{site}/alert-rules',howTo:'Sidebar: Settings > [Site] > Alert Rules -- From Alert Tuning: "Tune" links -- Direct URL',checks:['Card grid: rule name, metric, operator + threshold, severity badge, enabled toggle','Add Rule button','Edit/delete actions per card'],actions:[['Add Rule','Navigate or dialog','POST new rule'],['Toggle enable/disable','PATCH inline','Same page'],['Edit button','Navigate','Edit form or detail'],['Delete button','Opens ConfirmationDialog','Same page (card removed)'],['Card click','Navigate','/settings/sites/{site}/alert-rules/{rule}']],roleDiffs:'All actions gated by "manage alert rules" permission.',rules:'BR-010: Alert rules scoped to site + device, evaluated per-reading\nBR-011: Duration-based threshold: fires only after N consecutive readings breach\nBR-012: Cooldown: no duplicate alert within cooldown_minutes',states:['Empty state (no rules)','Populated card grid with enabled/disabled rules','Toggle switches work']},
+  {id:'p2-alert-rule-detail',title:'2.10a Alert Rule Detail',url:'/settings/sites/{site}/alert-rules/{rule}',howTo:'From Alert Rules: card click -- From Alert Tuning: "Tune" link',checks:['Rule details: name, metric, operator, threshold, severity, hysteresis, cooldown, enabled status','Escalation chain link (if assigned)','<span class="tag tag-bug">BUG</span> No edit form -- edit button navigates here but only shows read-only detail'],actions:[['(Read-only page -- should have edit form)','No edit actions','N/A'],['Escalation chain link','Navigate','Escalation chain page']],roleDiffs:'',rules:'',states:['Standard detail view','Verify BUG: no edit capability exists']},
+  {id:'p2-alert-rule-create',title:'2.10b Alert Rule Create',url:'/sites/{site}/rules/create',howTo:'From Alert Rules: "Add Rule" button -- Direct URL',checks:['RuleBuilder form','Fields for name, metric, operator, threshold, severity, etc.','Submit button'],actions:[['Submit form','POST create rule','Alert Rules index']],roleDiffs:'Gated by "manage alert rules" permission.',rules:'',states:['Default empty form','Validation errors','Submitting state']},
+  {id:'p2-alert-rule-edit',title:'2.10c Alert Rule Edit',url:'/sites/{site}/rules/{rule}/edit',howTo:'From Alert Rules: edit action on a card -- Direct URL',checks:['RuleBuilder form pre-filled with existing rule data','Submit button'],actions:[['Submit form','PATCH update rule','Alert Rules index']],roleDiffs:'Gated by "manage alert rules" permission.',rules:'',states:['Pre-filled form','Validation errors','Submitting state']},
+  {id:'p2-escalation',title:'2.11 Escalation Chains',url:'/settings/sites/{site}/escalation-chains',howTo:'Sidebar: Settings > [Site] > Escalation Chains -- Direct URL',checks:['Table columns: name, levels count, actions','"Add Chain" button','Chain form with LevelBuilder: ordered levels, each with delay, recipients, channels','Edit/delete actions per chain'],actions:[['Add Chain','Opens form','Same page'],['Edit Chain','Opens form pre-filled','Same page'],['Delete Chain','Opens ConfirmationDialog','Same page']],roleDiffs:'All actions gated by "manage alert rules" permission.',rules:'BR-017: Escalation chain: each level has delay_minutes, user_ids, and channels',states:['Empty table','Populated table','LevelBuilder: add/remove levels, configure channels']},
+  {id:'p2-modules',title:'2.12 Modules',url:'/settings/sites/{site}/modules',howTo:'Sidebar: Settings > [Site] > Modules -- Direct URL',checks:['Module cards: cold_chain, energy, iaq, industrial','Each card: name, description, enabled toggle'],actions:[['Toggle module switch','PATCH','Same page (module toggled)']],roleDiffs:'<span class="tag tag-gap">(gap)</span> No permission gate -- any authenticated user can toggle modules.',rules:'BR-050: Module activation auto-applies matching recipes to site devices',states:['All modules disabled','Some modules enabled','Toggle and verify recipe application']},
+  {id:'p2-templates',title:'2.13 Site Templates',url:'/settings/site-templates',howTo:'Sidebar: Settings > Site Templates -- Direct URL',checks:['Card grid: template name, source site, device count, module list','"Create Template" button (opens dialog)','Delete button per card'],actions:[['Create Template','Opens dialog','Same page (dialog)'],['Delete Template','DELETE','Same page (card removed)']],roleDiffs:'<span class="tag tag-gap">(gap)</span> No permission gates on any action.',rules:'',states:['Empty state (no templates)','Populated card grid','Create from source site dialog','Delete action (no confirmation dialog reported)']},
+  {id:'p2-maint',title:'2.14 Maintenance Windows',url:'/settings/sites/{site}/maintenance-windows',howTo:'Sidebar: Settings > [Site] > Maintenance Windows -- Direct URL',checks:['Card list: title, schedule, suppress_alerts toggle, status','"Add Window" button (opens WindowFormDialog)','WindowFormDialog: title, description, start, end, recurrence, suppress_alerts','Edit/delete actions per card'],actions:[['Add Window','Opens dialog','Same page'],['Edit Window','Opens dialog pre-filled','Same page'],['Delete Window','Opens ConfirmationDialog','Same page'],['Toggle suppress_alerts','PATCH','Same page']],roleDiffs:'CRUD gated by "manage maintenance windows". <span class="tag tag-gap">(gap)</span> Suppress toggle has no permission gate.',rules:'',states:['Empty state','Populated card list','Dialog states','Active vs expired windows']},
+  {id:'p2-schedules',title:'2.15 Report Schedules',url:'/settings/report-schedules',howTo:'Sidebar: Settings > Report Schedules -- Direct URL',checks:['Card list: report type, site, frequency, recipient, enabled toggle, actions','"Add Schedule" button (opens form)','Schedule form: report type select, site select, frequency select, recipient email','Note: Only 1 recipient captured despite model supporting array'],actions:[['Add Schedule','Opens form','Same page'],['Toggle enable/disable','PATCH','Same page'],['Delete schedule','DELETE','Same page']],roleDiffs:'Only create is properly gated. <span class="tag tag-gap">(gap)</span> Toggle and delete have no permission checks.',rules:'',states:['Empty state','Populated card list','Form validation']},
+  {id:'p2-compliance',title:'2.16 Compliance Calendar',url:'/settings/compliance',howTo:'Sidebar: Settings > Compliance -- Direct URL',checks:['Events grouped by month','Each event: type, description, date, status','Client-side type/date filtering'],actions:[['Filter by type','Client-side filter','Same page'],['Filter by date','Client-side filter','Same page']],roleDiffs:'Entire page gated by "manage org settings" permission.',rules:'BR-038: Compliance reminders sent at 30, 7, and 1 day before due date\nSM-006: Compliance event lifecycle: upcoming -> overdue -> completed',states:['Empty state (no events)','Populated with events in multiple states']},
+  {id:'p2-api',title:'2.17 API Keys',url:'/settings/api-keys',howTo:'Sidebar: Settings > API Keys -- Direct URL',checks:['Create form: name input, Generate button','Token display (one-time, after generation)','Table columns: name, last used, created, actions (delete)'],actions:[['Generate Key','POST -> shows token','Same page (token displayed once)'],['Delete Key','DELETE','Same page (row removed)']],roleDiffs:'None -- no permission checks. <span class="tag tag-gap">(gap)</span> Delete has no confirmation dialog.',rules:'',states:['Empty table','Token display (verify it appears only once)','Populated table','Delete without confirmation (gap)']},
+  {id:'p2-integrations',title:'2.18 Integrations',url:'/settings/integrations',howTo:'Sidebar: Settings > Integrations -- Direct URL',checks:['SAP integration card: enabled toggle, cron schedule input','CONTPAQi integration card: enabled toggle, cron schedule input'],actions:[['Toggle integration','PATCH','Same page'],['Update schedule + save','PATCH','Same page']],roleDiffs:'None.',rules:'BR-028: SAP/CONTPAQ exports are non-blocking\nBR-045: Webhook auto-deactivation after 10 consecutive failures',states:['Both disabled','Both enabled','Toggle states']},
+  {id:'p2-export',title:'2.19 Export Data',url:'/settings/export',howTo:'Sidebar: Settings > Export Data -- Direct URL',checks:['Export request form: site select, data type select, date range, format (CSV/Excel)','Export history list: requested date, site, type, format, status, download link'],actions:[['Request Export','POST','Same page (new entry in history)'],['Download link','Download file','Browser download']],roleDiffs:'<span class="tag tag-gap">(gap)</span> No permission checks -- any authenticated user can export.',rules:'',states:['Empty history','Export in-progress state','Completed export with download link','Form validation']},
+  {id:'p2-billing',title:'2.20 Billing',url:'/settings/billing',howTo:'Sidebar: Settings > Billing -- Direct URL',checks:['Subscription card: plan name, status, monthly amount, next billing date','Invoices table: date, amount, status badge, download link','Generate invoice button','Manage Profiles link'],actions:[['Generate Invoice','POST','Same page'],['Download Invoice','Download PDF','Browser download'],['Manage Profiles','Navigate','/settings/billing/profiles']],roleDiffs:'Entire page gated by "manage org settings" permission.',rules:'BR-021 - BR-027: Full billing lifecycle\nSM-003: Invoice lifecycle: draft -> sent -> paid (or overdue)',states:['Deactivated state (verify graceful handling)','Empty invoices table','Page accessible only by org_admin / super_admin'],note:'Billing is currently deactivated. Quick check only.'},
+  {id:'p2-billing-profiles',title:'2.20a Billing Profiles',url:'/settings/billing/profiles',howTo:'From Billing page: "Manage Profiles" link -- Direct URL',checks:['Profile form (Mexican fiscal fields): razon_social, RFC, regimen_fiscal, uso_CFDI, domicilio_fiscal','Existing profiles list (read-only)','<span class="tag tag-bug">BUG</span> No edit/delete for existing profiles'],actions:[['Create Profile','POST','Same page (new profile in list)'],['Back','Navigate','/settings/billing']],roleDiffs:'Gated by "manage org settings".',rules:'BR-025: CFDI timbrado via Facturapi using billing profile',states:['Empty list','Form validation (RFC format, etc.)','Verify BUG: cannot edit/delete existing profiles']}
+];
+
+PHASE_DATA[3] = [
+  {id:'p3-dashboard',title:'3.1 Dashboard',url:'/dashboard',howTo:'Sidebar: Dashboard -- Post-login redirect -- Direct URL',checks:['Hero header displaying current organization name','4 StatCards: Total Devices, Online, Active Alerts, Open Work Orders','CircularProgress gauge for fleet health percentage','"Needs Attention" card: unacknowledged alerts, overdue work orders, critical battery devices','Sites section: grid/map toggle rendering SiteCards','DashboardSkeleton loading state'],actions:[['Toggle Grid/Map','Button','Same page (re-renders sites section)'],['ActionItem click (Needs Attention)','Navigate','Filtered list (alerts/WOs/devices)'],['SiteCard click','Navigate','/sites/{id}']],roleDiffs:'None -- all roles see the same dashboard scoped to their accessible sites.',rules:'BR-029: All data scoped to user\'s organization\nBR-030: Site access validated',states:['DashboardSkeleton loading state on first load','EmptyState: when organization has no sites','Populated: all StatCards, SiteCards, Needs Attention items']},
+  {id:'p3-sites',title:'3.2 Sites Index',url:'/sites',howTo:'Sidebar: Sites -- Direct URL',checks:['Header with total site count','Card grid: site name, device count, status badge, online ratio with progress bar, active alert count','<span class="tag tag-gap">(gap)</span> No skeleton loading state','<span class="tag tag-gap">(gap)</span> No empty state'],actions:[['Card click','Navigate','/sites/{id}']],roleDiffs:'None.',rules:'BR-030: User only sees sites they have access to',states:['<span class="tag tag-gap">(gap)</span> No skeleton -- verify page loads promptly','<span class="tag tag-gap">(gap)</span> No empty state -- verify behavior when no sites','Populated: card grid with multiple sites']},
+  {id:'p3-site-detail',title:'3.3 Site Detail',url:'/sites/{site}',howTo:'From Sites Index: card click -- From Dashboard: SiteCard click -- From CC Org Show: site row click -- Direct URL',checks:['Header: site name, status badge, timezone, report quick-links','5 StatCards (site-level KPIs)','CircularProgress fleet health gauge','FloorPlanView (if floor plans uploaded)','Zones grid: ZoneCard with temperature reading + device progress bar','Sidebar: Active Alerts list','SiteShowSkeleton loading state'],actions:[['Temperature Report link','Navigate','/sites/{id}/reports/temperature'],['Summary Report link','Navigate','/sites/{id}/reports/summary'],['Zone card click','Navigate','/sites/{id}/zones/{zone}'],['Alert card click','Navigate','/alerts/{id}'],['"View all alerts" link','Navigate','/alerts (filtered by site)']],roleDiffs:'None.',rules:'BR-030: Site access validated\nBR-047: Onboarding checklist visible if site status = onboarding',states:['SiteShowSkeleton loading state','Empty zones: message when no zones configured','Empty alerts: message when no active alerts','Populated: zones grid + alerts sidebar','Floor plan view (when floor plans exist)']},
+  {id:'p3-zone',title:'3.4 Zone Detail',url:'/sites/{site}/zones/{zone}',howTo:'From Site Detail: zone card click',checks:['Header: zone name, device count breakdown (online/total)','ZoneChart: Recharts AreaChart with period toggle (24h/7d/30d)','Metric summary cards','Devices table columns: name + online dot, model, status, battery %, signal strength, last seen','Alerts sidebar','<span class="tag tag-gap">(gap)</span> No skeleton loading state'],actions:[['Period toggle (24h/7d/30d)','Re-fetches chartData via Inertia visit','Same page'],['Device row click','Navigate','/devices/{id}'],['Alert card click','Navigate','/alerts/{id}']],roleDiffs:'None.',rules:'BR-007: Sensor readings broadcast via Reverb for real-time updates',states:['<span class="tag tag-gap">(gap)</span> No skeleton','Chart populated with data','Chart empty: text message when no data for period','Alerts empty: text message','Populated devices table']},
+  {id:'p3-alerts',title:'3.5 Alerts Index',url:'/alerts',howTo:'Sidebar: Alerts -- From Dashboard: action cards -- From Site/Zone: alert links',checks:['Header with severity pill counts','Filter bar: severity select, status select, date range picker','Table columns: checkbox, severity badge, alert name, device + zone, reading, status badge, relative time, action buttons','Pagination component','AlertIndexSkeleton loading state'],actions:[['Row click','Navigate','/alerts/{id}'],['"Acknowledge" button (per-row)','PATCH inline','Same page (toast)'],['"Resolve" button (per-row)','PATCH inline','Same page (toast)'],['"Dismiss" button (per-row)','DELETE inline','Same page (toast)'],['Bulk Acknowledge','PATCH batch','Same page (toast)'],['Bulk Resolve','PATCH batch','Same page (toast)'],['Severity filter','Re-fetches','Same page'],['Status filter','Re-fetches','Same page'],['Date range filter','Re-fetches','Same page']],roleDiffs:'<table><thead><tr><th>Element</th><th>SA</th><th>OA</th><th>SM</th><th>SV</th><th>TECH</th></tr></thead><tbody><tr><td>Acknowledge</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Visible</td></tr><tr><td>Resolve</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Visible</td></tr><tr><td>Dismiss</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Hidden</td></tr><tr><td>Bulk actions</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Visible</td></tr></tbody></table>',rules:'BR-010: Alert rules scoped to site + device\nBR-013: Auto-resolution after 2 consecutive normal readings\nBR-020: Only active/acknowledged alerts can be resolved\nSM-001: Alert lifecycle state transitions',states:['AlertIndexSkeleton on first load','Empty with no filters','Empty with filters applied','Populated: table with rows, severity badges, status badges','Bulk action bar appears when rows selected']},
+  {id:'p3-alert-detail',title:'3.6 Alert Detail',url:'/alerts/{alert}',howTo:'From Alerts Index: row click -- From Site/Zone: alert card click -- From Alert Tuning: links',checks:['Header: rule name, severity badge, status badge, snooze indicator','Main column: Trigger Details card','Main column: Notification Log card','Main column: Corrective Actions card (critical/high only)','Sidebar: Timeline (triggered -> acknowledged -> resolved)','Sidebar: Details card','<span class="tag tag-gap">(gap)</span> No skeleton loading state'],actions:[['Back button','Navigate','/alerts'],['Acknowledge','PATCH','Same page'],['Resolve','PATCH','Same page'],['Snooze dropdown (30m/1h/2h/4h/8h)','POST','Same page'],['Cancel snooze','DELETE snooze','Same page'],['Dismiss','DELETE','Same page'],['Log corrective action','POST form','Same page'],['Verify corrective action','PATCH','Same page'],['Device link','Navigate','/devices/{device_id}']],roleDiffs:'<table><thead><tr><th>Element</th><th>SA</th><th>OA</th><th>SM</th><th>SV</th><th>TECH</th></tr></thead><tbody><tr><td>Acknowledge</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Visible</td></tr><tr><td>Resolve</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Visible</td></tr><tr><td>Dismiss</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Hidden</td></tr><tr><td>Log corrective</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Visible</td></tr><tr><td>Verify corrective</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Visible</td></tr></tbody></table><p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Verify requires different user than logger.</p>',rules:'BR-013: Auto-resolution: 2 consecutive normal readings\nBR-014: Defrost suppression during defrost windows\nBR-015: Alert routing by severity\nBR-016: Rate limiting (> 5 in 10 min triggers batch)\nBR-020: Only active/acknowledged can be resolved\nSM-001: Full alert lifecycle transitions',states:['<span class="tag tag-gap">(gap)</span> No skeleton','Active alert: all action buttons visible (per role)','Acknowledged: resolve/dismiss visible','Resolved: no action buttons (terminal)','Dismissed: no action buttons (terminal)','Snoozed: indicator visible, cancel snooze shown','No notifications: Log card hidden','Corrective Actions: only on critical/high','Warning banner when no corrective actions logged']},
+  {id:'p3-workorders',title:'3.7 Work Orders Index',url:'/work-orders',howTo:'Sidebar: Work Orders -- From Dashboard: action cards -- Direct URL',checks:['Header with status counts','"New Work Order" button (disabled -- placeholder)','Filter bar: "My WOs" toggle, status, priority, type selects','Table columns: checkbox, title, type, priority, status, assigned to, site, created date','Pagination','WorkOrderIndexSkeleton loading state'],actions:[['Row click','Navigate','/work-orders/{id}'],['New Work Order button','Currently disabled','N/A'],['Bulk assign','Technician select in BulkActionBar','Same page (PATCH batch)'],['"My WOs" toggle','Filter to assigned WOs','Same page'],['Status/Priority/Type filters','Re-fetches','Same page']],roleDiffs:'<table><thead><tr><th>Element</th><th>SA</th><th>OA</th><th>SM</th><th>SV</th><th>TECH</th></tr></thead><tbody><tr><td>New WO button</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Hidden</td></tr><tr><td>Checkboxes</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Hidden</td></tr><tr><td>"My WOs" toggle</td><td>Hidden</td><td>Hidden</td><td>Hidden</td><td>Hidden</td><td>Visible</td></tr></tbody></table>',rules:'BR-005: Auto-create WO when device offline > 2 hours\nBR-006: Auto-create WO when battery < 20%\nSM-002: Work order lifecycle',states:['WorkOrderIndexSkeleton on first load','Empty with filters','Empty without filters','Populated table','Bulk action bar when rows selected']},
+  {id:'p3-wo-detail',title:'3.8 Work Order Detail',url:'/work-orders/{workOrder}',howTo:'From Work Orders Index: row click -- From CC: row click or dispatch list',checks:['Header: title, priority badge, status badge','Status action buttons (contextual)','Details card: type, description, device, site','Photos grid with upload dropzone','Notes list with inline add-note form','Sidebar: Timeline (status history)','<span class="tag tag-gap">(gap)</span> No skeleton loading state'],actions:[['Assign (select technician)','PATCH','Same page'],['Start work','PATCH (assigned -> in_progress)','Same page'],['Complete','PATCH (in_progress -> completed)','Same page'],['Cancel','PATCH (-> cancelled)','Same page'],['Upload photo','POST','Same page'],['Add note','POST','Same page'],['Device link','Navigate','Device detail'],['Site link','Navigate','Site detail']],roleDiffs:'<table><thead><tr><th>Element</th><th>SA</th><th>OA</th><th>SM</th><th>SV</th><th>TECH</th></tr></thead><tbody><tr><td>Assign</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Hidden</td></tr><tr><td>Cancel</td><td>Visible</td><td>Visible</td><td>Visible</td><td>Hidden</td><td>Hidden</td></tr><tr><td>Start work</td><td>Hidden</td><td>Hidden</td><td>Hidden</td><td>Hidden</td><td>Visible</td></tr><tr><td>Complete</td><td>Hidden</td><td>Hidden</td><td>Hidden</td><td>Hidden</td><td>Visible</td></tr><tr><td>Upload/Note</td><td>Visible*</td><td>Visible*</td><td>Visible*</td><td>Hidden</td><td>Visible*</td></tr></tbody></table><p style="font-size:12px;color:var(--text-muted);margin-top:6px;">*Hidden when completed/cancelled.</p>',rules:'BR-044: WO completion can auto-resolve linked alert\nSM-002: Work order state transitions with guards',states:['<span class="tag tag-gap">(gap)</span> No skeleton','Status: open -- assign visible','Status: assigned -- start work visible (technician)','Status: in_progress -- complete visible (technician)','Status: completed -- no actions','Status: cancelled -- no actions','Photo upload flow','Note add flow','Timeline shows status history']},
+  {id:'p3-verification',title:'3.9 Temperature Verification',url:'/sites/{site}/verifications',howTo:'From Site Detail: verification link -- Direct URL',checks:['Verification form','Checklist items','Submit button'],actions:[['Submit verification','POST','Same page or site detail']],roleDiffs:'All authenticated users.',rules:'BR-038: Compliance tracking',states:['Default empty form','Form validation','Submitted state']}
+];
+
+PHASE_DATA[4] = [
+  {id:'p4-tuning',title:'4.1 Alert Tuning',url:'/analytics/alerts',howTo:'Sidebar: Analytics > Alert Tuning -- Direct URL',checks:['4 KPI cards: total alerts, noise ratio, MTTR, auto-resolved %','Noisiest Rules table: rule name, site, fire count, false positive %, "Tune" link','Trend chart: CSS-rendered bar chart','Resolution Breakdown: horizontal bars by resolution type','Suggested Tuning cards: AI-generated recommendations'],actions:[['Site filter','Re-fetches all data','Same page'],['Period toggle (30d/90d)','Re-fetches all data','Same page'],['"Tune" link','Navigate','/sites/{site_id}/rules/{rule_id}']],roleDiffs:'None.',rules:'BR-012: Cooldown helps reduce noise\nBR-013: Auto-resolution rate visible in auto-resolved %',states:['EmptyState when no alerts exist','Populated with KPIs, table, chart, breakdown']},
+  {id:'p4-performance',title:'4.2 Performance Analytics',url:'/analytics/performance',howTo:'Sidebar: Analytics > Performance -- Direct URL',checks:['4 KPI cards with target indicators: uptime, MTTR, compliance, device health','Trend chart: CSS-rendered bar chart','Site Breakdown table: site name, uptime %, alerts, MTTR, compliance score','PerformanceSkeleton loading state'],actions:[['Period toggle (30d/90d/365d)','Re-fetches all data','Same page'],['Row click (Site Breakdown)','Navigate','/sites/{id}']],roleDiffs:'None.',rules:'',states:['PerformanceSkeleton on load','Empty table state','Populated with KPIs, chart, breakdown table']},
+  {id:'p4-compare',title:'4.3 Site Comparison',url:'/sites/compare',howTo:'Sidebar: Analytics > Site Comparison -- Direct URL',checks:['Summary cards: best site, average value, worst site','Ranking table: rank, site name, metric value, vs-average badge','Metric select dropdown','Period toggle (30d/90d/365d)','SiteComparisonSkeleton loading state'],actions:[['Metric select','Re-fetches rankings','Same page'],['Period toggle','Re-fetches rankings','Same page'],['Row click','Navigate','/sites/{id}']],roleDiffs:'None.',rules:'',states:['SiteComparisonSkeleton on load','Empty: fewer than 2 sites','Populated: ranking table with badges']},
+  {id:'p4-reports',title:'4.4 Reports Index',url:'/reports',howTo:'Sidebar: Reports -- Direct URL',checks:['3 report type cards:','Temperature Report: site select, date range, Generate button','Energy Report: site select, date range, Generate button','Morning Summary: site select, Generate button (no date range)','ReportsIndexSkeleton loading state'],actions:[['Generate Temperature','Navigate','/sites/{id}/reports/temperature'],['Generate Energy','Navigate','/sites/{id}/reports/energy'],['Generate Summary','Navigate','/sites/{id}/reports/summary']],roleDiffs:'None.',rules:'',states:['ReportsIndexSkeleton on load','No sites: informational message','All 3 cards render with controls']},
+  {id:'p4-temp-report',title:'4.5 Temperature Report',url:'/sites/{site}/reports/temperature',howTo:'From Reports Index: Generate Temperature -- From Site Detail -- Direct URL with from/to params',checks:['Summary cards: compliance %, excursion count','Compliance by Zone: horizontal bar chart','Per-zone sections: trend line chart + device table','Export PDF button','Date range controls + Generate button','<span class="tag tag-gap">(gap)</span> No skeleton loading state'],actions:[['Export PDF','Triggers PDF download','New tab / download'],['Date range + Generate','Re-fetches report','Same page']],roleDiffs:'None.',rules:'',states:['<span class="tag tag-gap">(gap)</span> No skeleton','Populated report with charts and tables','Date range change re-generates report']},
+  {id:'p4-energy-report',title:'4.6 Energy Report',url:'/sites/{site}/reports/energy',howTo:'From Reports Index: Generate Energy -- Direct URL with from/to params',checks:['4 KPI cards: total kWh, total cost, avg daily, peak day','Daily Consumption area chart (dual axis: kWh + cost)','Per-device table: device name, total kWh, avg daily, peak','Daily Totals table: date, kWh, cost','Export PDF button','<span class="tag tag-bug">BUG</span> Second Export PDF button rendered (duplicate)','<span class="tag tag-gap">(gap)</span> No skeleton loading state'],actions:[['Export PDF','Triggers PDF download','New tab / download'],['Date range + Generate','Re-fetches report','Same page']],roleDiffs:'None.',rules:'BR-041: Night waste detection -- energy consumption between 22:00-06:00',states:['<span class="tag tag-gap">(gap)</span> No skeleton','Populated report','Verify BUG: duplicate Export PDF button']},
+  {id:'p4-summary',title:'4.7 Morning Summary',url:'/sites/{site}/reports/summary',howTo:'From Reports Index: Generate Summary -- From Site Detail -- Direct URL',checks:['Fleet health score','4 device stat cards: total, online, offline, critical battery','2 alert stat cards: active, unacknowledged','Zone status cards (per-zone)','<span class="tag tag-gap">(gap)</span> No skeleton loading state'],actions:[],roleDiffs:'None.',rules:'BR-034: Morning summary sent at site opening_hour (timezone-aware)\nBR-037: Summaries deliver via push + email',states:['<span class="tag tag-gap">(gap)</span> No skeleton','Populated summary']},
+  {id:'p4-inventory',title:'4.8 Device Inventory Report',url:'/sites/{site}/reports/inventory',howTo:'From Reports Index or Site Detail -- Direct URL',checks:['Device inventory table','Summary statistics'],actions:[],roleDiffs:'None.',rules:'',states:['Populated inventory','Empty inventory']},
+  {id:'p4-timeline',title:'4.9 Site Timeline',url:'/sites/{site}/timeline',howTo:'From Site Detail: navigation -- Direct URL',checks:['Header with total event count','Filter bar: date range picker, event type select, zone select','Timeline: events grouped by hour with type icon, description, "View details" link','SiteTimelineSkeleton loading state'],actions:[['Date filter','Re-fetches events','Same page'],['Type filter','Re-fetches events','Same page'],['Zone filter','Re-fetches events','Same page'],['"View details" link','Navigate','Varies (alert, WO, etc.)']],roleDiffs:'None.',rules:'',states:['SiteTimelineSkeleton on load','Empty state when no events match filters','Populated timeline with grouped events']},
+  {id:'p4-audit',title:'4.10 Site Audit',url:'/sites/{site}/audit',howTo:'From Site Detail: navigation -- Direct URL',checks:['5 summary cards: compliance score, excursions, corrective actions, calibrations, gaps','Temperature Excursions table','Corrective Actions table','Sensor Calibrations table','Monitoring Gaps table (conditional)','Period toggle: 90d/180d/365d','<span class="tag tag-gap">(gap)</span> No skeleton loading state'],actions:[['Period toggle','Re-fetches all data','Same page'],['Excursion row click','Navigate','/alerts/{id}']],roleDiffs:'None.',rules:'BR-038: Compliance reminders and tracking\nSM-006: Compliance event lifecycle',states:['<span class="tag tag-gap">(gap)</span> No skeleton','Populated with all tables','Monitoring Gaps: visible only when gaps exist','Period change re-fetches data']}
+];
+
+PHASE_DATA[5] = [
+  {id:'p5-cc-dashboard',title:'5.1 CC Dashboard',url:'/command-center',howTo:'Sidebar: Command Center -- Direct URL',checks:['6 KPI cards: total orgs, total sites, total devices, active alerts, open WOs, fleet health','Organization table: name, sites, devices, alerts, health score','Outage declaration dialog','Delivery health section'],actions:[['Declare Outage','Opens dialog -> POST','Same page (outage declared)'],['Org row click','Navigate','/command-center/organizations/{org}']],roleDiffs:'Astrea roles only. Client roles get 403.',rules:'BR-032: Command Center restricted to Astrea roles',states:['Normal state (no outage)','Active outage banner state','Populated org table','Client role gets 403']},
+  {id:'p5-cc-alerts',title:'5.2 CC Alerts',url:'/command-center/alerts',howTo:'From CC Dashboard: sub-navigation -- Direct URL',checks:['Alert table: severity, alert name, organization, site, device, status, time','Pagination','Note: Read-only -- no ack/resolve/dismiss from CC level'],actions:[['(Read-only)','No drill-down actions','N/A']],roleDiffs:'Astrea roles only.',rules:'',states:['Empty state','Populated table with cross-org alerts']},
+  {id:'p5-cc-devices',title:'5.3 CC Devices',url:'/command-center/devices',howTo:'From CC Dashboard: sub-navigation -- Direct URL',checks:['Stats bar: total devices, online, offline, critical','Device table: name, model, organization, site, status, battery, last seen','<span class="tag tag-gap">(gap)</span> No row click action -- cannot drill down'],actions:[['<span class="tag tag-gap">(gap)</span> No actions','Read-only, no drill-down','N/A']],roleDiffs:'Astrea roles only.',rules:'',states:['Empty state','Populated table','Verify: rows are not clickable']},
+  {id:'p5-cc-dispatch',title:'5.4 CC Dispatch',url:'/command-center/dispatch',howTo:'From CC Dashboard: sub-navigation -- Direct URL',checks:['Left Panel: Work order list','Left Panel: Technician assignment select per WO','Right Panel: Leaflet map with site markers and technician locations'],actions:[['Assign Technician','PATCH work order','Same page'],['WO click','Highlights on map / expands detail','Same page']],roleDiffs:'Astrea roles only.',rules:'',states:['Empty WO list','Map loading state','Populated list + map markers','Assign technician flow']},
+  {id:'p5-cc-revenue',title:'5.5 CC Revenue',url:'/command-center/revenue',howTo:'From CC Dashboard: sub-navigation -- Direct URL',checks:['MRR charts (monthly recurring revenue trends)','Organization table: name, plan, MRR, device count, status','Period selection'],actions:[['Org row click','Drill-down','CC Org Show or inline detail'],['Period select','Re-fetches data','Same page']],roleDiffs:'Astrea roles only.',rules:'BR-021 - BR-026: Subscription and pricing rules in MRR',states:['Empty when no billing data','Populated with charts and table']},
+  {id:'p5-cc-workorders',title:'5.6 CC Work Orders',url:'/command-center/work-orders',howTo:'From CC Dashboard: sub-navigation -- Direct URL',checks:['Table: title, type, priority, status, organization, site, assigned technician, created date'],actions:[['Row click','Navigate','/work-orders/{id} (main app)']],roleDiffs:'Astrea roles only.',rules:'',states:['Empty state','Populated table with cross-org work orders']},
+  {id:'p5-cc-org',title:'5.7 CC Org Detail',url:'/command-center/organizations/{org}',howTo:'From CC Dashboard: org row click -- From Partner Portal: org row click',checks:['Organization header: name, segment, plan','Main column: Sites table (name, status, device count, health score)','Sidebar: Active alerts list','Sidebar: Recent activity feed'],actions:[['Site row click','Navigate','/sites/{id}']],roleDiffs:'Astrea roles only.',rules:'',states:['Empty sites','Empty alerts','Empty activity','Populated state']},
+  {id:'p5-partner',title:'5.8 Partner Portal',url:'/partner',howTo:'Sidebar: Partner Portal -- Direct URL',checks:['Organization table: name, segment, sites count, devices count, status, MRR','"Create Organization" button (opens dialog)','Create dialog: name, segment select, plan select','Design inconsistency: uses "Creating..." text instead of Spinner'],actions:[['Create Organization','Opens dialog -> POST','Same page (new org in table)'],['Org row click','Navigate','/command-center/organizations/{org}']],roleDiffs:'super_admin only -- all other roles get 403.',rules:'BR-032: Partner Portal restricted to super_admin\nBR-049: Org creation auto-generates subscription',states:['Empty table','Populated table','Create dialog processing state','Non-SA role gets 403']}
+];
+
+PHASE_DATA[6] = [
+  {id:'p6-search',title:'6.1 Global Search (Cmd+K)',url:'Cmd+K / Ctrl+K',howTo:'Keyboard shortcut: Cmd+K (Mac) / Ctrl+K (Windows) -- Search icon in header',checks:['Search input field','Results grouped by type (sites, devices, alerts, etc.)','Keyboard navigation support'],actions:[['Type query','Searches across entities','Same dialog (results appear)'],['Click result','Navigate','Respective detail page'],['Escape key','Close','Dismisses search']],roleDiffs:'Results scoped to user\'s accessible entities.',rules:'',states:['Empty state (no query)','Results found','No results','Keyboard navigation works']},
+  {id:'p6-org-switch',title:'6.2 Org Switcher',url:'Header dropdown',howTo:'Header: org switcher dropdown (Astrea roles only)',checks:['Current org name displayed','Dropdown with list of organizations','Search within dropdown (if many orgs)'],actions:[['Select different org','Sets session org','Same page (data reloads)']],roleDiffs:'Only visible to Astrea roles (SA/SUP/AM/TECH).',rules:'BR-031: super_admin can switch organizations via session',states:['Dropdown opens with org list','Switch org: data refreshes','Client roles: switcher hidden']},
+  {id:'p6-lang',title:'6.3 Language Switcher',url:'Header / Settings',howTo:'Header or settings area',checks:['Language toggle: English / Spanish (en/es)'],actions:[['Switch language','Persists locale','Same page (labels reload)']],roleDiffs:'',rules:'',states:['Switch to Spanish: verify UI labels change','Switch back to English: verify labels revert','Persists across page navigation']},
+  {id:'p6-theme',title:'6.4 Theme Toggle',url:'Header / Settings',howTo:'Header: appearance toggle -- Settings > Appearance page',checks:['Theme options: light, dark, system'],actions:[['Select theme','Persists to localStorage/cookie','Same page (theme applies)']],roleDiffs:'',rules:'',states:['Light mode','Dark mode','System mode (follows OS preference)','Persists across sessions']},
+  {id:'p6-notif',title:'6.5 Notifications Page',url:'/notifications',howTo:'Header: notification bell icon -- Sidebar (if present) -- Direct URL',checks:['Header with total/unread counts','"Mark all read" button','"Delete read" button','Filter: all / unread / read','Notification list grouped by date','Per-notification: mark read/unread button, delete button'],actions:[['Mark all read','PATCH batch','Same page'],['Delete read','DELETE batch','Same page'],['Mark single read/unread','PATCH','Same page'],['Delete single','DELETE','Same page'],['Notification click','Navigate','Linked resource'],['Pagination','Loads next page','Same page']],roleDiffs:'None.',rules:'',states:['Empty: all notifications','Empty: unread filter','Empty: read filter','Populated: grouped by date','<span class="tag tag-gap">(gap)</span> Uses window.confirm for delete instead of ConfirmationDialog']},
+  {id:'p6-activity',title:'6.6 Activity Log',url:'/activity-log',howTo:'Sidebar: Activity Log -- Direct URL',checks:['Header with total activity count','Event type filter','Timeline grouped by date, each entry with expandable change diff','<span class="tag tag-gap">(gap)</span> No skeleton loading state'],actions:[['Event type filter','Re-fetches activities','Same page'],['Refresh button','Re-fetches activities','Same page'],['Load more','Appends next page','Same page']],roleDiffs:'None.',rules:'',states:['<span class="tag tag-gap">(gap)</span> No skeleton','Custom EmptyState when no activities match filter','Populated timeline with expandable diffs','<span class="tag tag-gap">(gap)</span> Uses window.confirm instead of ConfirmationDialog']}
+];
+
+PHASE_DATA[7] = [
+  {id:'p7-profile',title:'7.1 Profile',url:'/settings/profile',howTo:'Header: avatar dropdown > Profile -- Sidebar: Settings > Profile -- Direct URL',checks:['Section 1 -- Personal Info: name, email, phone fields','Section 2 -- Quiet Hours: enabled toggle, start time, end time','Section 3 -- Notification Preferences: channel toggles per notification type','Save button per section'],actions:[['Save (each section)','PATCH /user/profile-information','Same page (toast)']],roleDiffs:'None.',rules:'',states:['Pristine form with current values','Dirty form','Submitting state','Validation errors (invalid email, etc.)']},
+  {id:'p7-password',title:'7.2 Security / Password',url:'/settings/password',howTo:'Sidebar: Settings > Password -- Direct URL',checks:['Current password field','New password field','Password confirmation field','Submit button'],actions:[['Update password','PUT /user/password (Fortify)','Same page (toast)']],roleDiffs:'None.',rules:'',states:['Pristine form','Validation errors (wrong current, weak new, mismatch)','Success toast']},
+  {id:'p7-appearance',title:'7.3 Appearance',url:'/settings/appearance',howTo:'Sidebar: Settings > Appearance -- Direct URL',checks:['AppearanceTabs component','Theme options: light, dark, system (clickable cards)','Selected state indicator on active theme'],actions:[['Set theme (card click)','Persists to localStorage/cookie','Same page (theme applies)']],roleDiffs:'None.',rules:'',states:['Current theme highlighted','Theme switch applies immediately']},
+  {id:'p7-2fa',title:'7.4 Two-Factor Setup',url:'/settings/two-factor',howTo:'Sidebar: Settings > Two-Factor Authentication -- Direct URL',checks:['Status card: enabled/disabled indicator','Enable flow: QR code -> TOTP confirm -> recovery codes','Disable flow: confirmation -> TOTP code -> disabled','Recovery codes: view/regenerate buttons'],actions:[['Enable 2FA','POST -> shows QR modal','Same page (modal)'],['Confirm setup','POST confirm with TOTP code','Same page (enabled)'],['Disable 2FA','DELETE','Same page (disabled)'],['View recovery codes','GET','Same page (codes displayed)'],['Regenerate codes','POST','Same page (new codes)']],roleDiffs:'None.',rules:'',states:['Disabled state: enable button visible','Setup-in-progress: QR code displayed, code input','Enabled state: disable button, view/regenerate codes','Recovery codes display']}
+];
+
+PHASE_DATA[8] = [
+  {id:'p8-billing-check',title:'Billing Deactivation Check',url:'/settings/billing',howTo:'Quick checks for deactivated billing module',checks:['/settings/billing loads without errors','/settings/billing/profiles loads without errors','Sidebar billing link correctly shown or hidden','No broken links to billing from other pages'],actions:[],roleDiffs:'',rules:'',states:[]}
+];
+
+PHASE_DATA[9] = [
+  {id:'p9-status',title:'9.1 Status Page',url:'/status',howTo:'Direct URL: http://iot-hub.test/status -- Public (no auth required)',checks:['Platform status indicators','Active outage information (if any)'],actions:[],roleDiffs:'',rules:'',states:['Normal state (all systems operational)','Outage state (when outage declared from CC)','Accessible without authentication']},
+  {id:'p9-health',title:'9.2 Health Check',url:'/health',howTo:'Direct URL: http://iot-hub.test/health',checks:['Health check response (JSON or status page)'],actions:[],roleDiffs:'',rules:'',states:['Returns 200 with health data','Accessible without authentication']}
+];
+
+PHASE_DATA[10] = [
+  {id:'p10-iaq',title:'10.1 IAQ Dashboard',url:'/modules/iaq',howTo:'Sidebar: Modules > IAQ (when module enabled) -- Direct URL',checks:['IAQ score ring (overall air quality index)','Zone cards: zone name, current AQI score, primary pollutant','Trend chart with period toggle (Recharts)'],actions:[['Period toggle','Re-fetches chart data','Same page'],['Zone card click','Navigate (if linked)','Zone Detail']],roleDiffs:'None (module must be enabled for site).',rules:'BR-054: IAQ zone scoring -- composite air quality scores from AM307 sensor data',states:['Module enabled: dashboard renders','Module disabled: graceful handling','Period toggle changes chart data'],note:'<span class="tag tag-bug">BUG</span> Uses window.location.search for query params -- not SSR-safe'},
+  {id:'p10-industrial',title:'10.2 Industrial Dashboard',url:'/modules/industrial',howTo:'Sidebar: Modules > Industrial (when module enabled) -- Direct URL',checks:['KPI cards (OEE, uptime, energy efficiency, etc.)','Equipment cards: machine name, status, current metrics','Compressor health section','Trend chart with period toggle'],actions:[['Period toggle','Re-fetches chart data','Same page'],['Equipment card click','Navigate (if linked)','Device detail']],roleDiffs:'None (module must be enabled for site).',rules:'BR-052: Compressor duty cycle analytics',states:['Module enabled: dashboard renders','Module disabled: graceful handling','Period toggle changes chart data'],note:'<span class="tag tag-bug">BUG</span> KPICard uses dynamic Tailwind classes -- won\'t survive CSS purge'}
+];
+
+// ============================================================
+// SIDEBAR DATA
+// ============================================================
+var SIDEBAR_DATA = [
+  {title:'Overview',links:[{href:'#top',text:'Progress Tracker'},{href:'#setup',text:'Setup'},{href:'#legend',text:'Legend'}]},
+  {title:'Phase 0: Setup',links:[{href:'#phase-0',text:'Phase Overview'},{href:'#p0-env',text:'0.1 Environment'},{href:'#p0-creds',text:'0.2 Credentials'}]},
+  {title:'Phase 1: Auth (8)',links:[{href:'#phase-1',text:'Phase Overview'},{href:'#p1-login',text:'Login'},{href:'#p1-register',text:'Register'},{href:'#p1-forgot',text:'Forgot Password'},{href:'#p1-reset',text:'Reset Password'},{href:'#p1-verify',text:'Verify Email'},{href:'#p1-confirm',text:'Confirm Password'},{href:'#p1-2fa',text:'Two-Factor Challenge'},{href:'#p1-privacy',text:'Privacy Accept'}]},
+  {title:'Phase 2: Config (27)',links:[{href:'#phase-2',text:'Phase Overview'},{href:'#p2-org',text:'2.1 Org Settings'},{href:'#p2-sites',text:'2.2 Sites Settings'},{href:'#p2-batch',text:'2.2a Batch Import'},{href:'#p2-onboard',text:'2.3 Onboarding'},{href:'#p2-users',text:'2.4 Users'},{href:'#p2-gateways',text:'2.5 Gateways'},{href:'#p2-gw-detail',text:'2.5a GW Detail'},{href:'#p2-devices-site',text:'2.6 Devices (Site)'},{href:'#p2-device-detail-site',text:'2.6a Dev Detail (Site)'},{href:'#p2-devices-global',text:'2.7 Devices (Global)'},{href:'#p2-device-detail',text:'2.8 Device Detail'},{href:'#p2-recipes',text:'2.9 Recipes'},{href:'#p2-recipe-detail',text:'2.9a Recipe Detail'},{href:'#p2-alert-rules',text:'2.10 Alert Rules'},{href:'#p2-alert-rule-detail',text:'2.10a Rule Detail'},{href:'#p2-alert-rule-create',text:'2.10b Rule Create'},{href:'#p2-alert-rule-edit',text:'2.10c Rule Edit'},{href:'#p2-escalation',text:'2.11 Escalation'},{href:'#p2-modules',text:'2.12 Modules'},{href:'#p2-templates',text:'2.13 Templates'},{href:'#p2-maint',text:'2.14 Maintenance'},{href:'#p2-schedules',text:'2.15 Schedules'},{href:'#p2-compliance',text:'2.16 Compliance'},{href:'#p2-api',text:'2.17 API Keys'},{href:'#p2-integrations',text:'2.18 Integrations'},{href:'#p2-export',text:'2.19 Export'},{href:'#p2-billing',text:'2.20 Billing'},{href:'#p2-billing-profiles',text:'2.20a Billing Profiles'}]},
+  {title:'Phase 3: Operations',links:[{href:'#phase-3',text:'Phase Overview'},{href:'#p3-dashboard',text:'3.1 Dashboard'},{href:'#p3-sites',text:'3.2 Sites Index'},{href:'#p3-site-detail',text:'3.3 Site Detail'},{href:'#p3-zone',text:'3.4 Zone Detail'},{href:'#p3-alerts',text:'3.5 Alerts Index'},{href:'#p3-alert-detail',text:'3.6 Alert Detail'},{href:'#p3-workorders',text:'3.7 Work Orders'},{href:'#p3-wo-detail',text:'3.8 WO Detail'},{href:'#p3-verification',text:'3.9 Temp Verification'}]},
+  {title:'Phase 4: Analytics',links:[{href:'#phase-4',text:'Phase Overview'},{href:'#p4-tuning',text:'4.1 Alert Tuning'},{href:'#p4-performance',text:'4.2 Performance'},{href:'#p4-compare',text:'4.3 Site Comparison'},{href:'#p4-reports',text:'4.4 Reports Index'},{href:'#p4-temp-report',text:'4.5 Temp Report'},{href:'#p4-energy-report',text:'4.6 Energy Report'},{href:'#p4-summary',text:'4.7 Morning Summary'},{href:'#p4-inventory',text:'4.8 Inventory'},{href:'#p4-timeline',text:'4.9 Timeline'},{href:'#p4-audit',text:'4.10 Audit'}]},
+  {title:'Phase 5: Command Center',links:[{href:'#phase-5',text:'Phase Overview'},{href:'#p5-cc-dashboard',text:'5.1 CC Dashboard'},{href:'#p5-cc-alerts',text:'5.2 CC Alerts'},{href:'#p5-cc-devices',text:'5.3 CC Devices'},{href:'#p5-cc-dispatch',text:'5.4 CC Dispatch'},{href:'#p5-cc-revenue',text:'5.5 CC Revenue'},{href:'#p5-cc-workorders',text:'5.6 CC Work Orders'},{href:'#p5-cc-org',text:'5.7 CC Org Detail'},{href:'#p5-partner',text:'5.8 Partner Portal'}]},
+  {title:'Phase 6: Global',links:[{href:'#phase-6',text:'Phase Overview'},{href:'#p6-search',text:'6.1 Global Search'},{href:'#p6-org-switch',text:'6.2 Org Switcher'},{href:'#p6-lang',text:'6.3 Language'},{href:'#p6-theme',text:'6.4 Theme'},{href:'#p6-notif',text:'6.5 Notifications'},{href:'#p6-activity',text:'6.6 Activity Log'}]},
+  {title:'Phase 7: Account',links:[{href:'#phase-7',text:'Phase Overview'},{href:'#p7-profile',text:'7.1 Profile'},{href:'#p7-password',text:'7.2 Password'},{href:'#p7-appearance',text:'7.3 Appearance'},{href:'#p7-2fa',text:'7.4 Two-Factor'}]},
+  {title:'Phase 8: Billing',links:[{href:'#phase-8',text:'Quick Check'}]},
+  {title:'Phase 9: Platform',links:[{href:'#phase-9',text:'Phase Overview'},{href:'#p9-status',text:'9.1 Status Page'},{href:'#p9-health',text:'9.2 Health Check'}]},
+  {title:'Phase 10: Modules',links:[{href:'#phase-10',text:'Phase Overview'},{href:'#p10-iaq',text:'10.1 IAQ'},{href:'#p10-industrial',text:'10.2 Industrial'}]},
+  {title:'Appendices',links:[{href:'#appendix-a',text:'A: Access Matrix'},{href:'#appendix-b',text:'B: Bugs & Gaps'}]}
+];
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderSidebar() {
+  var sb = document.getElementById('sidebar');
+  var h = '';
+  SIDEBAR_DATA.forEach(function(sec) {
+    h += '<div class="sidebar-section">';
+    h += '<div class="sidebar-section-title" onclick="toggleSidebarSection(this)"><span class="arrow">&#9660;</span> ' + escHtml(sec.title) + '</div>';
+    h += '<div class="sidebar-links">';
+    sec.links.forEach(function(l) {
+      h += '<a class="sidebar-link" href="' + l.href + '">' + escHtml(l.text) + '</a>';
+    });
+    h += '</div></div>';
+  });
+  sb.textContent = '';
+  sb.insertAdjacentHTML('beforeend', h);
+}
+
+function renderCard(card) {
+  var h = '<div class="test-card" id="' + card.id + '">';
+  h += '<div class="test-card-header collapsed" onclick="toggleCard(this)">';
+  h += '<span class="tc-arrow">&#9660;</span>';
+  h += '<span class="tc-title">' + card.title + '</span>';
+  if (card.url) h += '<span class="tc-url">' + escHtml(card.url) + '</span>';
+  h += '<span class="tc-check-count" data-card="' + card.id + '"></span>';
+  h += '</div>';
+  h += '<div class="test-card-body hidden">';
+
+  if (card.note) h += '<div class="phase-note" style="margin-top:12px;">' + card.note + '</div>';
+
+  if (card.howTo) {
+    h += '<div class="tc-section"><div class="tc-section-title">How to Get Here</div>';
+    h += '<p style="font-size:13px;color:var(--text-muted);">' + escHtml(card.howTo).replace(/ -- /g, ' &mdash; ') + '</p></div>';
+  }
+
+  if (card.checks && card.checks.length) {
+    h += '<div class="tc-section"><div class="tc-section-title">Content Checklist</div><ul class="checklist">';
+    card.checks.forEach(function(c, i) {
+      var cid = card.id + '-c' + i;
+      h += '<li><input type="checkbox" data-id="' + cid + '"><label>' + c + '</label></li>';
+    });
+    h += '</ul></div>';
+  }
+
+  if (card.actions && card.actions.length) {
+    h += '<div class="tc-section"><div class="tc-section-title">Actions &rarr; Destinations</div>';
+    h += '<div class="tc-table-wrap"><table><thead><tr><th>Click/Action</th><th>What Happens</th><th>Destination</th></tr></thead><tbody>';
+    card.actions.forEach(function(a) {
+      h += '<tr><td>' + a[0] + '</td><td>' + a[1] + '</td><td>' + a[2] + '</td></tr>';
+    });
+    h += '</tbody></table></div></div>';
+  }
+
+  if (card.roleDiffs) {
+    h += '<div class="tc-section"><div class="tc-section-title">Role Differences</div>';
+    if (card.roleDiffs.charAt(0) === '<') {
+      h += card.roleDiffs;
+    } else {
+      h += '<p style="font-size:13px;color:var(--text-muted);">' + card.roleDiffs + '</p>';
+    }
+    h += '</div>';
+  }
+
+  if (card.rules) {
+    h += '<div class="tc-section"><div class="tc-section-title">Business Rules</div>';
+    card.rules.split('\n').forEach(function(r) {
+      if (r.trim()) h += '<p style="font-size:13px;margin-bottom:4px;">' + escHtml(r) + '</p>';
+    });
+    h += '</div>';
+  }
+
+  if (card.states && card.states.length) {
+    h += '<div class="tc-section"><div class="tc-section-title">Screen States</div><ul class="checklist">';
+    card.states.forEach(function(s, i) {
+      var sid = card.id + '-s' + i;
+      h += '<li><input type="checkbox" data-id="' + sid + '"><label>' + s + '</label></li>';
+    });
+    h += '</ul></div>';
+  }
+
+  h += '<div class="tc-section"><div class="tc-section-title">Your Notes</div>';
+  h += '<textarea class="tc-textarea" data-note="' + card.id + '-notes" placeholder="Notes..."></textarea></div>';
+  h += '<div class="tc-section"><div class="tc-section-title">Issues Found</div>';
+  h += '<textarea class="tc-textarea" data-note="' + card.id + '-issues" placeholder="Issues..."></textarea></div>';
+
+  h += '</div></div>';
+  return h;
+}
+
+function renderPhases() {
+  var container = document.getElementById('phases-container');
+  var html = '';
+  PHASE_META.forEach(function(pm) {
+    var cards = PHASE_DATA[pm.num] || [];
+    html += '<div class="phase-section" id="phase-' + pm.num + '">';
+    html += '<div class="phase-header" onclick="togglePhase(this)">';
+    html += '<span class="phase-arrow">&#9660;</span>';
+    html += '<span class="phase-title">' + escHtml(pm.title) + '</span>';
+    html += '<span class="phase-badge" style="background:' + pm.badgeBg + ';color:' + pm.badgeColor + ';">' + escHtml(pm.badge) + '</span>';
+    html += '<span class="phase-progress" data-phase="' + pm.num + '"></span>';
+    html += '</div>';
+    html += '<div class="phase-body">';
+    if (pm.note) html += '<div class="phase-note">' + escHtml(pm.note) + '</div>';
+    cards.forEach(function(card) { html += renderCard(card); });
+    html += '</div></div>';
+  });
+  container.textContent = '';
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+function renderAppendices() {
+  var am = '<table><thead><tr><th>Page</th><th>SA</th><th>SUP</th><th>AM</th><th>TECH</th><th>OA</th><th>SM</th><th>SV</th></tr></thead><tbody>';
+  [['Login/Register/Reset','Pre','Pre','Pre','Pre','Pre','Pre','Pre'],
+   ['Dashboard','Y','Y','Y','Y','Y','Y','Y'],
+   ['Sites Index/Show','Y','Y','Y','Y','Y','Y','Y'],
+   ['Zone Detail','Y','Y','Y','Y','Y','Y','Y'],
+   ['Alerts Index/Show','Y','Y','Y','Y','Y','Y','Y'],
+   ['Devices Index/Show','Y','Y','Y','Y','Y','Y','Y'],
+   ['Work Orders','Y','Y','Y','Y','Y','Y','Y'],
+   ['Analytics (all)','Y','Y','Y','Y','Y','Y','Y'],
+   ['Reports (all)','Y','Y','Y','Y','Y','Y','Y'],
+   ['Profile/Password/Appearance','Y','Y','Y','Y','Y','Y','Y'],
+   ['Organization Settings','Y','-','-','-','Y','-','-'],
+   ['Sites Settings','Y','-','-','-','Y','-','-'],
+   ['Users','Y','-','-','-','Y','-','-'],
+   ['Gateways','Y','-','-','-','Y','Y','-'],
+   ['Alert Rules','Y','-','-','-','Y','Y','-'],
+   ['Compliance','Y','-','-','-','Y','-','-'],
+   ['Billing','Y','-','-','-','Y','-','-'],
+   ['CC Dashboard','Y','Y','Y','Y','-','-','-'],
+   ['CC (all sub-pages)','Y','Y','Y','Y','-','-','-'],
+   ['Partner Portal','Y','-','-','-','-','-','-'],
+   ['Status Page','Pub','Pub','Pub','Pub','Pub','Pub','Pub'],
+   ['Health Check','Pub','Pub','Pub','Pub','Pub','Pub','Pub']
+  ].forEach(function(r) {
+    am += '<tr>';
+    r.forEach(function(c, i) {
+      am += i===0 ? '<td><strong>'+escHtml(c)+'</strong></td>' : '<td style="text-align:center;">'+escHtml(c)+'</td>';
+    });
+    am += '</tr>';
+  });
+  am += '</tbody></table>';
+  var el1 = document.getElementById('access-matrix-table');
+  el1.textContent = '';
+  el1.insertAdjacentHTML('beforeend', am);
+
+  var ap = '<table><thead><tr><th>Action</th><th>Required Permission</th><th>Roles</th></tr></thead><tbody>';
+  [['Acknowledge alert','acknowledge alerts','SA, SUP, AM, TECH, OA, SM'],
+   ['Dismiss alert','manage alert rules','SA, OA, SM'],
+   ['Log corrective action','log corrective actions','SA, OA, SM, TECH'],
+   ['Verify corrective action','verify corrective actions','SA, OA, SM, TECH (different user)'],
+   ['Manage devices','manage devices','SA, OA, SM'],
+   ['Manage sites','manage sites','SA, OA'],
+   ['Manage users','manage users','SA, OA'],
+   ['Manage work orders','manage work orders','SA, OA, SM'],
+   ['Complete work orders','complete work orders','SA, TECH'],
+   ['Manage org settings','manage org settings','SA, OA'],
+   ['Manage alert rules','manage alert rules','SA, OA, SM'],
+   ['Manage maintenance','manage maintenance windows','SA, OA, SM'],
+   ['Manage report schedules','manage report schedules','SA, OA, SM']
+  ].forEach(function(p) {
+    ap += '<tr><td>'+escHtml(p[0])+'</td><td><code>'+escHtml(p[1])+'</code></td><td>'+escHtml(p[2])+'</td></tr>';
+  });
+  ap += '</tbody></table>';
+  var el2 = document.getElementById('action-perms-table');
+  el2.textContent = '';
+  el2.insertAdjacentHTML('beforeend', ap);
+
+  var bt = '<table><thead><tr><th>#</th><th>Page</th><th>Bug</th><th>Severity</th></tr></thead><tbody>';
+  [['1','Energy Report','Duplicate "Export PDF" button rendered','Low'],
+   ['2','Alert Rule Show','No edit form -- only read-only detail','Medium'],
+   ['3','Billing Profiles','No edit/delete for existing profiles','Medium'],
+   ['4','IAQ Dashboard','Uses window.location.search -- not SSR-safe','Medium'],
+   ['5','Industrial Dashboard','Dynamic Tailwind classes won\'t survive CSS purge','Medium'],
+   ['6','CC Devices','No row click action -- cannot drill down','Low'],
+   ['7','Welcome page','Orphaned Laravel boilerplate -- unreachable','Low']
+  ].forEach(function(b) {
+    bt += '<tr><td>'+escHtml(b[0])+'</td><td>'+escHtml(b[1])+'</td><td>'+escHtml(b[2])+'</td><td>'+escHtml(b[3])+'</td></tr>';
+  });
+  bt += '</tbody></table>';
+  var el3 = document.getElementById('bugs-table');
+  el3.textContent = '';
+  el3.insertAdjacentHTML('beforeend', bt);
+
+  var pg = '<table><thead><tr><th>Page</th><th>Action</th><th>Issue</th></tr></thead><tbody>';
+  [['Modules toggle','Toggle module on/off','No permission gate'],
+   ['Maintenance Windows','Suppress alerts toggle','No permission gate'],
+   ['Report Schedules','Toggle enable + Delete','No permission gate'],
+   ['Site Templates','Delete template','No permission gate'],
+   ['Export Data','All actions','No permission checks'],
+   ['API Keys','Delete','No confirmation dialog'],
+   ['Notifications','Delete actions','Uses window.confirm'],
+   ['Activity Log','Destructive actions','Uses window.confirm']
+  ].forEach(function(g) {
+    pg += '<tr><td>'+escHtml(g[0])+'</td><td>'+escHtml(g[1])+'</td><td>'+escHtml(g[2])+'</td></tr>';
+  });
+  pg += '</tbody></table>';
+  var el4 = document.getElementById('perm-gaps-table');
+  el4.textContent = '';
+  el4.insertAdjacentHTML('beforeend', pg);
+
+  var el5 = document.getElementById('skeleton-gaps');
+  el5.textContent = '';
+  el5.insertAdjacentHTML('beforeend',
+    '<p><strong>Priority 1 (high-traffic):</strong> Sites Index, Devices Index, Alert Show, Work Order Show</p>' +
+    '<p><strong>Priority 2 (moderate):</strong> Zone Detail, Site Audit, Activity Log, all report pages</p>' +
+    '<p><strong>Priority 3 (lower):</strong> All CC pages, all module dashboards, most settings pages</p>');
+
+  var di = '<table><thead><tr><th>#</th><th>Issue</th><th>Location</th></tr></thead><tbody>';
+  [['1','LoaderCircle instead of Spinner','Forgot Password form'],
+   ['2','"Creating..." text instead of Spinner','Partner Portal create dialog'],
+   ['3','Only 1 recipient captured','Report Schedules (model supports array)'],
+   ['4','Mixed form patterns','Various settings pages']
+  ].forEach(function(d) {
+    di += '<tr><td>'+escHtml(d[0])+'</td><td>'+escHtml(d[1])+'</td><td>'+escHtml(d[2])+'</td></tr>';
+  });
+  di += '</tbody></table>';
+  var el6 = document.getElementById('design-inconsistencies-table');
+  el6.textContent = '';
+  el6.insertAdjacentHTML('beforeend', di);
+}
+
+// ============================================================
+// INTERACTIVITY
+// ============================================================
 function getTheme() {
   return localStorage.getItem('astrea-docs-theme') ||
     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 }
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
-  var icon = document.getElementById('theme-icon');
-  icon.textContent = t === 'dark' ? '\u2600' : '\u263D';
+  document.getElementById('theme-icon').textContent = t === 'dark' ? '\u2600' : '\u263D';
   localStorage.setItem('astrea-docs-theme', t);
 }
-function toggleTheme() {
-  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+function toggleTheme() { applyTheme(getTheme() === 'dark' ? 'light' : 'dark'); }
+
+function togglePhase(el) {
+  el.classList.toggle('collapsed');
+  el.nextElementSibling.classList.toggle('hidden');
 }
-applyTheme(getTheme());
+function toggleCard(el) {
+  el.classList.toggle('collapsed');
+  el.nextElementSibling.classList.toggle('hidden');
+}
+function toggleSidebarSection(el) {
+  el.classList.toggle('collapsed');
+  el.nextElementSibling.classList.toggle('hidden');
+}
+function toggleMobileSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+}
+function expandAll() {
+  document.querySelectorAll('.phase-header.collapsed').forEach(function(h) { h.classList.remove('collapsed'); h.nextElementSibling.classList.remove('hidden'); });
+  document.querySelectorAll('.test-card-header.collapsed').forEach(function(h) { h.classList.remove('collapsed'); h.nextElementSibling.classList.remove('hidden'); });
+}
+function collapseAll() {
+  document.querySelectorAll('.phase-header:not(.collapsed)').forEach(function(h) { h.classList.add('collapsed'); h.nextElementSibling.classList.add('hidden'); });
+  document.querySelectorAll('.test-card-header:not(.collapsed)').forEach(function(h) { h.classList.add('collapsed'); h.nextElementSibling.classList.add('hidden'); });
+}
+
+// ============================================================
+// PERSISTENCE
+// ============================================================
+var CHECKS_KEY = 'astrea-qa-checks';
+var NOTES_KEY = 'astrea-qa-notes';
+
+function loadChecks() { try { return JSON.parse(localStorage.getItem(CHECKS_KEY)) || {}; } catch(e) { return {}; } }
+function saveChecks(o) { localStorage.setItem(CHECKS_KEY, JSON.stringify(o)); }
+function loadNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; } catch(e) { return {}; } }
+function saveNotes(o) { localStorage.setItem(NOTES_KEY, JSON.stringify(o)); }
+
+function restoreState() {
+  var checks = loadChecks();
+  var notes = loadNotes();
+  document.querySelectorAll('input[type="checkbox"][data-id]').forEach(function(cb) {
+    if (checks[cb.dataset.id]) { cb.checked = true; cb.closest('li').classList.add('checked'); }
+  });
+  document.querySelectorAll('textarea[data-note]').forEach(function(ta) {
+    if (notes[ta.dataset.note]) { ta.value = notes[ta.dataset.note]; }
+  });
+}
+
+function bindEvents() {
+  document.addEventListener('change', function(e) {
+    if (e.target.matches('input[type="checkbox"][data-id]')) {
+      var checks = loadChecks();
+      if (e.target.checked) { checks[e.target.dataset.id] = true; e.target.closest('li').classList.add('checked'); }
+      else { delete checks[e.target.dataset.id]; e.target.closest('li').classList.remove('checked'); }
+      saveChecks(checks);
+      updateProgress();
+    }
+  });
+  var noteTimer;
+  document.addEventListener('input', function(e) {
+    if (e.target.matches('textarea[data-note]')) {
+      clearTimeout(noteTimer);
+      noteTimer = setTimeout(function() {
+        var notes = loadNotes();
+        if (e.target.value.trim()) { notes[e.target.dataset.note] = e.target.value; }
+        else { delete notes[e.target.dataset.note]; }
+        saveNotes(notes);
+      }, 500);
+    }
+  });
+  document.querySelectorAll('.sidebar-link').forEach(function(l) {
+    l.addEventListener('click', function() { document.getElementById('sidebar').classList.remove('mobile-open'); });
+  });
+}
+
+// ============================================================
+// PROGRESS
+// ============================================================
+function updateProgress() {
+  var all = document.querySelectorAll('input[type="checkbox"][data-id]');
+  var checked = document.querySelectorAll('input[type="checkbox"][data-id]:checked');
+  var total = all.length, done = checked.length;
+  var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progress-checked').textContent = done;
+  document.getElementById('progress-total').textContent = total;
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('total-checks-display').textContent = total;
+
+  document.querySelectorAll('.phase-progress[data-phase]').forEach(function(el) {
+    var s = document.getElementById('phase-' + el.dataset.phase);
+    if (!s) return;
+    var pA = s.querySelectorAll('input[type="checkbox"][data-id]');
+    var pD = s.querySelectorAll('input[type="checkbox"][data-id]:checked');
+    el.textContent = pD.length + '/' + pA.length;
+  });
+  document.querySelectorAll('.tc-check-count[data-card]').forEach(function(el) {
+    var c = document.getElementById(el.dataset.card);
+    if (!c) return;
+    var cA = c.querySelectorAll('input[type="checkbox"][data-id]');
+    var cD = c.querySelectorAll('input[type="checkbox"][data-id]:checked');
+    el.textContent = cD.length + '/' + cA.length;
+  });
+}
+
+// ============================================================
+// EXPORT / RESET
+// ============================================================
+function exportJSON() {
+  var data = {
+    exportDate: new Date().toISOString(),
+    checks: loadChecks(),
+    notes: loadNotes(),
+    progress: {
+      total: document.querySelectorAll('input[type="checkbox"][data-id]').length,
+      checked: document.querySelectorAll('input[type="checkbox"][data-id]:checked').length
+    }
+  };
+  var json = JSON.stringify(data, null, 2);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(json).then(function() {
+      alert('QA data exported to clipboard (' + data.progress.checked + '/' + data.progress.total + ' checks, ' + Object.keys(data.notes).length + ' notes)');
+    });
+  } else {
+    prompt('Copy this JSON:', json);
+  }
+}
+function resetAll() {
+  if (!confirm('Reset ALL checkboxes and notes? This cannot be undone.')) return;
+  localStorage.removeItem(CHECKS_KEY);
+  localStorage.removeItem(NOTES_KEY);
+  document.querySelectorAll('input[type="checkbox"][data-id]').forEach(function(cb) { cb.checked = false; cb.closest('li').classList.remove('checked'); });
+  document.querySelectorAll('textarea[data-note]').forEach(function(ta) { ta.value = ''; });
+  updateProgress();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(function init() {
+  applyTheme(getTheme());
+  renderSidebar();
+  renderPhases();
+  renderAppendices();
+  restoreState();
+  bindEvents();
+  updateProgress();
+  // Collapse all phases by default
+  document.querySelectorAll('.phase-header').forEach(function(h) {
+    h.classList.add('collapsed');
+    h.nextElementSibling.classList.add('hidden');
+  });
+})();
 </script>
 </body>
 </html>
