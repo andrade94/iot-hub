@@ -69,7 +69,7 @@ export function LanguageSwitcher({
 
         // Persist locale change on the server
         router.post(
-            route('locale.update'),
+            '/locale',
             { locale: languageCode },
             {
                 preserveScroll: true,

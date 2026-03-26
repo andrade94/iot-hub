@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useLang } from '@/hooks/use-lang';
 import AuthLayout from '@/layouts/auth-layout';
 import { request } from '@/routes/password';
 import { store } from '@/routes/login';
@@ -17,12 +18,14 @@ interface LoginProps {
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
+    const { t } = useLang();
+
     return (
         <AuthLayout
-            title="Welcome back"
-            description="Sign in to your Astrea IoT Platform account"
+            title={t('Welcome back')}
+            description={t('Sign in to your Astrea IoT Platform account')}
         >
-            <Head title="Sign in — Astrea" />
+            <Head title={t('Sign in') + ' — Astrea'} />
 
             <Form
                 {...store.form()}
@@ -33,7 +36,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <>
                         <div className="grid gap-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email</Label>
+                                <Label htmlFor="email">{t('Email')}</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -50,14 +53,14 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password">{t('Password')}</Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
                                             className="ml-auto text-xs"
                                             tabIndex={5}
                                         >
-                                            Forgot password?
+                                            {t('Forgot password?')}
                                         </TextLink>
                                     )}
                                 </div>
@@ -81,7 +84,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     tabIndex={3}
                                 />
                                 <Label htmlFor="remember" className="text-sm font-normal text-muted-foreground">
-                                    Keep me signed in
+                                    {t('Keep me signed in')}
                                 </Label>
                             </div>
 
@@ -93,12 +96,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}
-                                Sign in
+                                {t('Sign in')}
                             </Button>
                         </div>
 
                         <p className="text-center text-xs text-muted-foreground/60">
-                            Need an account? Contact your Astrea administrator.
+                            {t('Need an account? Contact your Astrea administrator.')}
                         </p>
                     </>
                 )}

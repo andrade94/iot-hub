@@ -1,4 +1,7 @@
+import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { useLang } from '@/hooks/use-lang';
 import { Link } from '@inertiajs/react';
 import { Activity, Radio, Shield, Thermometer, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -12,6 +15,8 @@ export default function AuthLayout({
     title: string;
     description: string;
 }) {
+    const { t } = useLang();
+
     return (
         <div className="relative grid min-h-dvh lg:grid-cols-[1fr_480px]">
             {/* Left panel — Astrea brand showcase */}
@@ -36,11 +41,11 @@ export default function AuthLayout({
                     {/* Hero text */}
                     <div className="max-w-md space-y-6">
                         <h2 className="text-3xl font-bold leading-tight tracking-tight text-white">
-                            Operations intelligence,<br />
-                            <span className="text-emerald-400">not just monitoring.</span>
+                            {t('Operations intelligence,')}<br />
+                            <span className="text-emerald-400">{t('not just monitoring.')}</span>
                         </h2>
                         <p className="text-base leading-relaxed text-zinc-400">
-                            From sensor to decision. Temperature compliance, alert management, predictive maintenance — all in one command center.
+                            {t('From sensor to decision. Temperature compliance, alert management, predictive maintenance — all in one command center.')}
                         </p>
 
                         {/* Live stats animation */}
@@ -49,16 +54,22 @@ export default function AuthLayout({
 
                     {/* Bottom features */}
                     <div className="grid grid-cols-2 gap-4">
-                        <FeatureChip icon={<Thermometer className="h-3.5 w-3.5" />} label="Cold Chain" />
-                        <FeatureChip icon={<Zap className="h-3.5 w-3.5" />} label="Energy" />
-                        <FeatureChip icon={<Shield className="h-3.5 w-3.5" />} label="Compliance" />
-                        <FeatureChip icon={<Activity className="h-3.5 w-3.5" />} label="Predictive" />
+                        <FeatureChip icon={<Thermometer className="h-3.5 w-3.5" />} label={t('Cold Chain')} />
+                        <FeatureChip icon={<Zap className="h-3.5 w-3.5" />} label={t('Energy')} />
+                        <FeatureChip icon={<Shield className="h-3.5 w-3.5" />} label={t('Compliance')} />
+                        <FeatureChip icon={<Activity className="h-3.5 w-3.5" />} label={t('Predictive')} />
                     </div>
                 </div>
             </div>
 
             {/* Right panel — Login form */}
-            <div className="flex items-center justify-center bg-background px-6 py-12">
+            <div className="relative flex items-center justify-center bg-background px-6 py-12">
+                {/* Language + Theme toggle */}
+                <div className="absolute right-4 top-4 flex items-center gap-1">
+                    <LanguageSwitcher size="icon" />
+                    <AppearanceToggleDropdown />
+                </div>
+
                 <div className="w-full max-w-[360px] space-y-8">
                     {/* Mobile logo */}
                     <div className="flex flex-col items-center gap-4 lg:hidden">
@@ -86,10 +97,12 @@ export default function AuthLayout({
 }
 
 function LiveMetrics() {
+    const { t } = useLang();
+
     const [metrics, setMetrics] = useState([
-        { label: 'Sensors Online', value: 847, suffix: '' },
-        { label: 'Readings/min', value: 2340, suffix: '' },
-        { label: 'Uptime', value: 99.97, suffix: '%' },
+        { key: 'sensors_online', label: t('Sensors Online'), value: 847, suffix: '' },
+        { key: 'readings_min', label: t('Readings/min'), value: 2340, suffix: '' },
+        { key: 'uptime', label: t('Uptime'), value: 99.97, suffix: '%' },
     ]);
 
     useEffect(() => {
@@ -110,7 +123,7 @@ function LiveMetrics() {
     return (
         <div className="flex gap-6">
             {metrics.map((m) => (
-                <div key={m.label}>
+                <div key={m.key}>
                     <div className="flex items-baseline gap-1">
                         <Radio className="h-2 w-2 animate-pulse text-emerald-400" />
                         <span className="font-mono text-lg font-bold tabular-nums text-white transition-all duration-700">

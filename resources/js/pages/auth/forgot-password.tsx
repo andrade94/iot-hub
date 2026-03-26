@@ -9,15 +9,18 @@ import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useLang } from '@/hooks/use-lang';
 import AuthLayout from '@/layouts/auth-layout';
 
 export default function ForgotPassword({ status }: { status?: string }) {
+    const { t } = useLang();
+
     return (
         <AuthLayout
-            title="Forgot password"
-            description="Enter your email to receive a password reset link"
+            title={t('Forgot password')}
+            description={t('Enter your email to receive a password reset link')}
         >
-            <Head title="Forgot password" />
+            <Head title={t('Forgot password')} />
 
             <FadeIn>
                 {status && (
@@ -31,7 +34,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                         {({ processing, errors }) => (
                             <>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
+                                    <Label htmlFor="email">{t('Email address')}</Label>
                                     <Input
                                         id="email"
                                         type="email"
@@ -51,7 +54,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                         data-test="email-password-reset-link-button"
                                     >
                                         {processing && <Spinner />}
-                                        Email password reset link
+                                        {t('Email password reset link')}
                                     </Button>
                                 </div>
                             </>
@@ -59,8 +62,8 @@ export default function ForgotPassword({ status }: { status?: string }) {
                     </Form>
 
                     <div className="space-x-1 text-center text-sm text-muted-foreground">
-                        <span>Or, return to</span>
-                        <TextLink href={login()}>log in</TextLink>
+                        <span>{t('Or, return to')}</span>
+                        <TextLink href={login()}>{t('log in')}</TextLink>
                     </div>
                 </div>
             </FadeIn>

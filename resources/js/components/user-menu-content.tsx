@@ -71,17 +71,21 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link
-                    className="block w-full"
-                    href={logout()}
-                    as="button"
-                    onClick={handleLogout}
-                    data-test="logout-button"
-                >
-                    <LogOut className="mr-2" />
-                    Log out
-                </Link>
+            <DropdownMenuItem
+                onClick={() => {
+                    handleLogout();
+                    router.post(logout(), {}, {
+                        onFinish: () => {
+                            // Full page reload ensures fresh CSRF token on login page
+                            window.location.href = '/login';
+                        },
+                    });
+                }}
+                data-test="logout-button"
+                className="cursor-pointer"
+            >
+                <LogOut className="mr-2" />
+                Log out
             </DropdownMenuItem>
         </>
     );

@@ -7,6 +7,7 @@ import {
     InputOTPGroup,
     InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { useLang } from '@/hooks/use-lang';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
 import AuthLayout from '@/layouts/auth-layout';
 import { store } from '@/routes/two-factor/login';
@@ -15,6 +16,7 @@ import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { useMemo, useState } from 'react';
 
 export default function TwoFactorChallenge() {
+    const { t } = useLang();
     const [showRecoveryInput, setShowRecoveryInput] = useState<boolean>(false);
     const [code, setCode] = useState<string>('');
 
@@ -25,20 +27,20 @@ export default function TwoFactorChallenge() {
     }>(() => {
         if (showRecoveryInput) {
             return {
-                title: 'Recovery Code',
+                title: t('Recovery Code'),
                 description:
-                    'Please confirm access to your account by entering one of your emergency recovery codes.',
-                toggleText: 'login using an authentication code',
+                    t('Please confirm access to your account by entering one of your emergency recovery codes.'),
+                toggleText: t('login using an authentication code'),
             };
         }
 
         return {
-            title: 'Authentication Code',
+            title: t('Authentication Code'),
             description:
-                'Enter the authentication code provided by your authenticator application.',
-            toggleText: 'login using a recovery code',
+                t('Enter the authentication code provided by your authenticator application.'),
+            toggleText: t('login using a recovery code'),
         };
-    }, [showRecoveryInput]);
+    }, [showRecoveryInput, t]);
 
     const toggleRecoveryMode = (clearErrors: () => void): void => {
         setShowRecoveryInput(!showRecoveryInput);
@@ -51,7 +53,7 @@ export default function TwoFactorChallenge() {
             title={authConfigContent.title}
             description={authConfigContent.description}
         >
-            <Head title="Two-Factor Authentication" />
+            <Head title={t('Two-Factor Authentication')} />
 
             <FadeIn>
                 <div className="space-y-6">
@@ -68,7 +70,7 @@ export default function TwoFactorChallenge() {
                                         <Input
                                             name="recovery_code"
                                             type="text"
-                                            placeholder="Enter recovery code"
+                                            placeholder={t('Enter recovery code')}
                                             autoFocus={showRecoveryInput}
                                             required
                                         />
@@ -109,11 +111,11 @@ export default function TwoFactorChallenge() {
                                     className="w-full"
                                     disabled={processing}
                                 >
-                                    Continue
+                                    {t('Continue')}
                                 </Button>
 
                                 <div className="text-center text-sm text-muted-foreground">
-                                    <span>or you can </span>
+                                    <span>{t('or you can')} </span>
                                     <button
                                         type="button"
                                         className="cursor-pointer text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
