@@ -27,6 +27,7 @@ export interface NavItem {
     tooltip?: string;
     requiredRole?: string;
     requiredPermission?: string;
+    subGroupLabel?: string;
 }
 
 export interface Organization {

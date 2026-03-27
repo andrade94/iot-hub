@@ -99,12 +99,14 @@ export const navigation: NavGroup[] = [
     {
         title: 'Catalogs',
         items: [
+            // — Clients —
             {
                 title: 'Organizations',
                 href: '/settings/organizations',
                 icon: Building2,
                 tooltip: 'Organization catalog',
                 requiredRole: 'super_admin',
+                subGroupLabel: 'Clients',
             },
             {
                 title: 'Sites',
@@ -119,11 +121,13 @@ export const navigation: NavGroup[] = [
                 tooltip: 'User management',
                 requiredPermission: 'manage users',
             },
+            // — Infrastructure —
             {
                 title: 'Devices',
                 href: '/devices',
                 icon: Cpu,
                 tooltip: 'Device catalog',
+                subGroupLabel: 'Infrastructure',
             },
             {
                 title: 'Gateways',
@@ -132,24 +136,26 @@ export const navigation: NavGroup[] = [
                 tooltip: 'Gateway catalog',
             },
             {
-                title: 'Recipes',
-                href: '/recipes',
-                icon: BookOpen,
-                tooltip: 'Sensor recipes',
+                title: 'Sensor Models',
+                href: '/settings/sensor-models',
+                icon: Microchip,
+                tooltip: 'Sensor model catalog',
+                requiredRole: 'super_admin',
             },
+            // — Configuration —
             {
                 title: 'Modules',
                 href: '/settings/modules-catalog',
                 icon: Boxes,
                 tooltip: 'Platform module catalog',
                 requiredRole: 'super_admin',
+                subGroupLabel: 'Configuration',
             },
             {
-                title: 'Sensor Models',
-                href: '/settings/sensor-models',
-                icon: Microchip,
-                tooltip: 'Sensor model catalog',
-                requiredRole: 'super_admin',
+                title: 'Recipes',
+                href: '/recipes',
+                icon: BookOpen,
+                tooltip: 'Alert rule templates',
             },
             {
                 title: 'Segments',

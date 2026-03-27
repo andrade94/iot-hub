@@ -199,6 +199,11 @@ function NavSection({ group, index }: NavSectionProps) {
 
                                 return (
                                     <SidebarMenuItem key={item.title}>
+                                        {item.subGroupLabel && (
+                                            <div className="px-2 pb-0.5 pt-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50 first:pt-0">
+                                                {item.subGroupLabel}
+                                            </div>
+                                        )}
                                         <SidebarMenuButton
                                             asChild
                                             isActive={isActive}
