@@ -1,5 +1,5 @@
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import { send } from '@/routes/verification';
+// Email verification disabled — using direct route instead of wayfinder
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, router, usePage } from '@inertiajs/react';
@@ -116,7 +116,7 @@ export default function Profile({
                                                         Your email address is
                                                         unverified.{' '}
                                                         <Link
-                                                            href={send()}
+                                                            href="/email/verification-notification"
                                                             as="button"
                                                             className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                                                         >

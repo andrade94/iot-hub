@@ -21,6 +21,7 @@ use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrganizationCatalogController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RecipeController;
@@ -72,7 +73,7 @@ Route::middleware('auth')->group(function () {
     })->name('privacy.accept');
 });
 
-Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function () {
+Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     // Global Search (Cmd+K)
@@ -431,6 +432,16 @@ Route::middleware(['auth', 'verified', 'org.scope', 'privacy'])->group(function 
 
     // Recipe Overrides
     Route::post('recipes/{recipe}/overrides', [RecipeController::class, 'storeOverride'])->name('recipes.overrides.store');
+
+    // Organization Catalog (super_admin)
+    Route::middleware('role:super_admin')->prefix('settings/organizations')->name('organizations.')->group(function () {
+        Route::get('/', [OrganizationCatalogController::class, 'index'])->name('index');
+        Route::get('{organization}', [OrganizationCatalogController::class, 'show'])->name('show');
+        Route::put('{organization}', [OrganizationCatalogController::class, 'update'])->name('update');
+        Route::post('{organization}/suspend', [OrganizationCatalogController::class, 'suspend'])->name('suspend');
+        Route::post('{organization}/reactivate', [OrganizationCatalogController::class, 'reactivate'])->name('reactivate');
+        Route::delete('{organization}', [OrganizationCatalogController::class, 'destroy'])->name('destroy');
+    });
 
     // Partner Portal (super_admin)
     Route::middleware('role:super_admin')->group(function () {

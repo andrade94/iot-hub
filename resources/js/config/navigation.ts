@@ -139,6 +139,13 @@ export const navigation: NavGroup[] = [
         title: 'Administration',
         items: [
             {
+                title: 'Organizations',
+                href: '/settings/organizations',
+                icon: Building2,
+                tooltip: 'Organization catalog',
+                requiredRole: 'super_admin',
+            },
+            {
                 title: 'Organization',
                 href: '/settings/organization',
                 icon: Building2,

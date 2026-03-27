@@ -39,6 +39,7 @@ class User extends Authenticatable
         'notify_email',
         'notify_min_severity',
         'deactivated_at',
+        'locale',
     ];
 
     protected $hidden = [
@@ -110,6 +111,25 @@ class User extends Authenticatable
         }
 
         return $this->sites()->where('sites.id', $siteId)->exists();
+    }
+
+    /**
+     * Get the user's preferred locale for notifications.
+     * Used by Laravel's notification system to send emails in the right language.
+     */
+    public function preferredLocale(): string
+    {
+        return $this->locale ?? 'en';
+    }
+
+    public function getLocale(): ?string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(string $locale): void
+    {
+        $this->locale = $locale;
     }
 
     public function isSuperAdmin(): bool

@@ -144,9 +144,11 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Registration disabled — users are created by org_admins
+        // Features::registration(),
         Features::resetPasswords(),
-        Features::emailVerification(),
+        // Email verification disabled — internal platform, users created by admins
+        // Features::emailVerification(),
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,
