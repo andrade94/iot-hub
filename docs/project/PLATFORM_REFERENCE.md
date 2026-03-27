@@ -2,7 +2,7 @@
 
 > **Tier 3 Living Reference** -- for developers and AI assistants working on the codebase.
 > Generated from source code. Keep in sync with actual implementations.
-> Last updated: 2026-03-24 (Phases 0-12 complete, Phase 13 partial — 43 models, 226 routes, 126 tests, 72 pages)
+> Last updated: 2026-03-26 (Phases 0-12 complete, Phase 13 partial — 45 models, 243 routes, 133 tests, 78 pages)
 
 ---
 
@@ -76,10 +76,10 @@ Astrea is a **multi-tenant LoRaWAN operations platform** that bridges physical s
 ```
 app/
 ├── Http/
-│   ├── Controllers/          58 controllers (web + API + settings)
+│   ├── Controllers/          62 controllers (web + API + settings)
 │   ├── Middleware/            8 middleware (EnsureOrganizationScope, EnsureSiteAccess, EnsurePrivacyConsent, ApplyOrgBranding, etc.)
 │   └── Requests/             3 form request classes
-├── Models/                   43 Eloquent models
+├── Models/                   45 Eloquent models
 ├── Services/                 42 service classes across 15 domains
 ├── Jobs/                     21 queued jobs
 ├── Events/                   3 broadcast events
@@ -94,11 +94,11 @@ app/
 
 ```
 resources/js/
-├── pages/                    72 Inertia page components
-├── components/               Custom + shadcn/ui (120 components)
+├── pages/                    78 Inertia page components
+├── components/               Custom + shadcn/ui (133 components)
 │   └── ui/                   shadcn components (kebab-case)
 ├── layouts/                  AppLayout, AuthLayout, SettingsLayout
-├── hooks/                    12 custom hooks
+├── hooks/                    15 custom hooks
 ├── config/                   navigation.ts (sidebar structure)
 ├── i18n/                     509 translation keys (en + es)
 ├── types/                    TypeScript definitions
@@ -157,7 +157,7 @@ Every page load receives these props via `HandleInertiaRequests`:
 
 ## 4. Database Schema
 
-43 Eloquent models organized by domain. Phase 10 added: CorrectiveAction, DeviceAnomaly (S1), MaintenanceWindow, OutageDeclaration (S2), ReportSchedule, DataExport, SiteTemplate (S3).
+45 Eloquent models organized by domain. Phase 10 added: CorrectiveAction, DeviceAnomaly (S1), MaintenanceWindow, OutageDeclaration (S2), ReportSchedule, DataExport, SiteTemplate (S3).
 
 ### Core Domain
 
@@ -342,9 +342,13 @@ Feature module (cold_chain, energy, compliance, industrial, iaq, safety, people)
 | `slug` | -- | Unique identifier |
 | `name` | -- | Display name |
 | `description` | -- | Module description |
+| `icon` | -- | Lucide icon name for catalog display |
+| `color` | -- | Brand color hex for catalog display |
+| `is_active` | boolean | Whether module is available for activation |
+| `sort_order` | integer | Display ordering in catalog |
 
 **Traits:** HasFactory, LogsActivity
-**Relations:** hasMany(Recipe), belongsToMany(Site via site_modules)
+**Relations:** hasMany(Recipe), belongsToMany(Site via site_modules), belongsToMany(Segment)
 
 #### SiteModule (`app/Models/SiteModule.php`)
 
@@ -402,6 +406,42 @@ Auto-learned defrost cycle windows per device.
 | `confirmed_at` | datetime | User confirmation timestamp |
 
 **Relations:** belongsTo(Device), belongsTo(Site), belongsTo(User, 'confirmed_by')
+
+
+
+#### Segment (`app/Models/Segment.php`)
+
+Industry vertical for classifying organizations (retail, logistics, industrial, hospitality, commercial, pharma).
+
+| Field | Cast | Description |
+|---|---|---|
+| `slug` | -- | Unique identifier (retail, logistics, etc.) |
+| `name` | -- | Display name |
+| `description` | -- | Segment description |
+| `icon` | -- | Lucide icon name |
+| `color` | -- | Brand color hex |
+| `is_active` | boolean | Whether segment is available |
+| `sort_order` | integer | Display ordering |
+
+**Traits:** HasFactory
+**Relations:** belongsToMany(Module), hasMany(Organization)
+
+#### SensorModel (`app/Models/SensorModel.php`)
+
+Hardware sensor model definition for the platform catalog.
+
+| Field | Cast | Description |
+|---|---|---|
+| `slug` | -- | Unique identifier (em300-th, ct101, etc.) |
+| `name` | -- | Display name |
+| `manufacturer` | -- | Manufacturer name (Milesight, etc.) |
+| `description` | -- | Model description |
+| `metrics` | array | Supported metrics (JSON: ["temperature", "humidity"]) |
+| `image_url` | -- | Product image URL |
+| `is_active` | boolean | Whether model is available |
+
+**Traits:** HasFactory
+**Relations:** hasMany(Device), hasMany(Recipe)
 
 ### Alerts Domain
 
@@ -1121,7 +1161,7 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 
 ## 8. Frontend Pages
 
-72 Inertia page components organized by domain.
+78 Inertia page components organized by domain.
 
 ### Auth Pages
 
@@ -1236,6 +1276,12 @@ Login, register, forgot-password, reset-password, email verification, two-factor
 | Report Schedules | `pages/settings/report-schedules/index.tsx` | `settings/report-schedules/index` |
 | Data Export | `pages/settings/export-data/index.tsx` | `settings/export-data/index` |
 | Site Templates | `pages/settings/site-templates/index.tsx` | `settings/site-templates/index` |
+| Organizations Index | `pages/settings/organizations/index.tsx` | `settings/organizations/index` |
+| Organization Show | `pages/settings/organizations/show.tsx` | `settings/organizations/show` |
+| Segments Index | `pages/settings/segments/index.tsx` | `settings/segments/index` |
+| Modules Catalog | `pages/settings/modules/catalog.tsx` | `settings/modules/catalog` |
+| Sensor Models Index | `pages/settings/sensor-models/index.tsx` | `settings/sensor-models/index` |
+| Global Gateways | `pages/settings/gateways/global.tsx` | `settings/gateways/global` |
 
 ### Privacy Pages (Phase 10)
 
@@ -1444,7 +1490,7 @@ Dispatches events to external systems via `WebhookSubscription` configurations. 
 
 ## 12. Navigation Structure
 
-Sidebar navigation defined in `resources/js/config/navigation.ts`. Four groups with 14 items total.
+Sidebar navigation defined in `resources/js/config/navigation.ts`. Six groups with 25+ items total.
 
 ### Overview Group
 
@@ -1452,32 +1498,53 @@ Sidebar navigation defined in `resources/js/config/navigation.ts`. Four groups w
 |---|---|---|---|
 | Dashboard | LayoutGrid | `/dashboard` | Platform overview |
 | Alerts | Bell | `/alerts` | Alert center |
+| Reports | BarChart3 | `/reports` | View reports |
+| Performance | TrendingUp | `/analytics/performance` | SLA & KPI dashboard |
+| Compare Sites | Scale | `/sites/compare` | Rank and compare site performance |
+
+### Operations Group
+
+| Item | Icon | Route | Tooltip |
+|---|---|---|---|
+| Work Orders | ClipboardList | `/work-orders` | Manage work orders |
+| Command Center | Monitor | `/command-center` | Global operations view (super_admin) |
+| Partner Portal | Building2 | `/partner` | Partner management (super_admin) |
+
+### Catalogs Group
+
+| Item | Icon | Route | Tooltip | Access |
+|---|---|---|---|---|
+| Organizations | Building2 | `/settings/organizations` | Organization catalog | super_admin |
+| Sites | MapPin | `/sites` | Sites catalog | All |
+| Users | Users | `/settings/users` | User management | manage users |
+| Devices | Cpu | `/devices` | Device catalog | All |
+| Gateways | Radio | `/settings/gateways` | Gateway catalog | All |
+| Recipes | BookOpen | `/recipes` | Sensor recipes | All |
+| Modules | Boxes | `/settings/modules-catalog` | Platform module catalog | super_admin |
+| Sensor Models | Microchip | `/settings/sensor-models` | Sensor model catalog | super_admin |
+| Segments | Layers | `/settings/segments` | Industry segment catalog | super_admin |
+
+### Analytics Group
+
+| Item | Icon | Route | Tooltip |
+|---|---|---|---|
+| Alert Tuning | BarChart3 | `/analytics/alerts` | Alert analytics & tuning |
 | Activity | Activity | `/activity-log` | View activity log |
-
-### Monitor Group
-
-| Item | Icon | Route | Tooltip |
-|---|---|---|---|
-| Sites | MapPin | `/sites` | Manage sites |
-| Devices | Cpu | `/devices` | Manage devices |
-
-### Account Group
-
-| Item | Icon | Route | Tooltip |
-|---|---|---|---|
-| Profile | User | `/settings/profile` | Manage your profile |
-| Security | Shield | `/settings/password` | Security settings |
-| Appearance | Palette | `/settings/appearance` | Theme settings |
 
 ### Administration Group
 
 | Item | Icon | Route | Tooltip |
 |---|---|---|---|
 | Organization | Building2 | `/settings/organization` | Organization settings |
-| Sites | MapPin | `/settings/sites` | Manage sites |
-| Gateways | Radio | `/settings/gateways` | Manage gateways |
-| Recipes | BookOpen | `/recipes` | Sensor recipes |
-| Users | Users | `/settings/users` | Manage users |
+| Escalation Chains | GitBranch | `/settings/escalation-chains` | Alert escalation setup |
+| Compliance | Calendar | `/settings/compliance` | Compliance events |
+| Maintenance | CalendarCheck | `/settings/maintenance-windows` | Maintenance windows |
+| Report Schedules | Copy | `/settings/report-schedules` | Report scheduling |
+| Site Templates | Layers | `/settings/site-templates` | Golden site templates |
+| Data Export | Download | `/settings/export-data` | Export data |
+| Integrations | GitBranch | `/settings/integrations` | Third-party integrations |
+| API Keys | -- | `/settings/api-keys` | API key management |
+| Billing | CreditCard | `/settings/billing` | Subscription & invoices |
 
 ### Navigation Utilities
 

@@ -1149,6 +1149,197 @@ Replace button gated by "manage devices" permission.
 
 ---
 
+### 2.13a Organizations Catalog (`/settings/organizations`)
+
+**How to get here:**
+- Sidebar: Catalogs > Organizations
+- Direct URL
+
+**Content (verify these exist):**
+- [ ] DataTable with organization list: name, slug, segment, plan, sites count, users count, status
+- [ ] Search/filter toolbar
+- [ ] Row click navigates to organization show page
+- [ ] Only visible for super_admin role
+
+**Actions -> Destinations:**
+| Click/Action | What happens | Destination |
+|---|---|---|
+| Row click | Navigate to org detail | `/settings/organizations/{org}` |
+| Search | Filters table | Same page |
+
+**Role differences:**
+| Element | SA | SUP | AM | TECH | OA | SM | SV |
+|---|---|---|---|---|---|---|---|
+| Entire page | Visible | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) |
+
+**Screen states to test:**
+- [ ] Table with populated organizations
+- [ ] Empty search results
+- [ ] Segment badges display correctly
+
+**Your notes:**
+>
+>
+
+**Issues found:**
+- [ ]
+- [ ]
+
+---
+
+### 2.13b Organization Show (`/settings/organizations/{org}`)
+
+**How to get here:**
+- From Organizations Catalog: row click
+- Direct URL
+
+**Content (verify these exist):**
+- [ ] Organization details: name, slug, segment, plan, timezone, opening hour
+- [ ] Sites list for this organization
+- [ ] Users list for this organization
+- [ ] Branding/logo section
+
+**Actions -> Destinations:**
+| Click/Action | What happens | Destination |
+|---|---|---|
+| Back | Navigate | `/settings/organizations` |
+
+**Role differences:** Only super_admin.
+
+**Screen states to test:**
+- [ ] Organization with sites and users
+- [ ] Organization with no sites
+- [ ] Branding data displays correctly
+
+**Your notes:**
+>
+>
+
+**Issues found:**
+- [ ]
+- [ ]
+
+---
+
+### 2.13c Segments Catalog (`/settings/segments`)
+
+**How to get here:**
+- Sidebar: Catalogs > Segments
+- Direct URL
+
+**Content (verify these exist):**
+- [ ] DataTable with segment list: name, slug, icon, color, module count, organization count, status
+- [ ] Search/filter toolbar
+- [ ] Only visible for super_admin role
+
+**Actions -> Destinations:**
+| Click/Action | What happens | Destination |
+|---|---|---|
+| Search | Filters table | Same page |
+
+**Role differences:**
+| Element | SA | SUP | AM | TECH | OA | SM | SV |
+|---|---|---|---|---|---|---|---|
+| Entire page | Visible | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) |
+
+**Business rules to verify:**
+- Segments represent industry verticals: retail, logistics, industrial, hospitality, commercial, pharma
+- Each segment links to applicable modules
+
+**Screen states to test:**
+- [ ] Table with all 6 segments displayed
+- [ ] Color badges render correctly
+- [ ] Module count is accurate per segment
+
+**Your notes:**
+>
+>
+
+**Issues found:**
+- [ ]
+- [ ]
+
+---
+
+### 2.13d Modules Catalog (`/settings/modules-catalog`)
+
+**How to get here:**
+- Sidebar: Catalogs > Modules
+- Direct URL
+
+**Content (verify these exist):**
+- [ ] Card grid or table: module name, slug, description, icon, color, recipe count, active status
+- [ ] Only visible for super_admin role
+
+**Actions -> Destinations:**
+| Click/Action | What happens | Destination |
+|---|---|---|
+| (Read-only catalog view) | No CRUD actions expected | N/A |
+
+**Role differences:**
+| Element | SA | SUP | AM | TECH | OA | SM | SV |
+|---|---|---|---|---|---|---|---|
+| Entire page | Visible | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) |
+
+**Business rules to verify:**
+- Modules catalog shows all platform modules (cold_chain, energy, compliance, industrial, iaq, safety, people)
+- New fields: icon, color, is_active, sort_order display correctly
+
+**Screen states to test:**
+- [ ] All modules displayed with correct icons and colors
+- [ ] Active/inactive status badges
+- [ ] Recipe count per module is accurate
+
+**Your notes:**
+>
+>
+
+**Issues found:**
+- [ ]
+- [ ]
+
+---
+
+### 2.13e Sensor Models Catalog (`/settings/sensor-models`)
+
+**How to get here:**
+- Sidebar: Catalogs > Sensor Models
+- Direct URL
+
+**Content (verify these exist):**
+- [ ] DataTable with sensor model list: name, slug, manufacturer, metrics list, device count, active status
+- [ ] Search/filter toolbar
+- [ ] Only visible for super_admin role
+
+**Actions -> Destinations:**
+| Click/Action | What happens | Destination |
+|---|---|---|
+| Search | Filters table | Same page |
+
+**Role differences:**
+| Element | SA | SUP | AM | TECH | OA | SM | SV |
+|---|---|---|---|---|---|---|---|
+| Entire page | Visible | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) | Hidden (403) |
+
+**Business rules to verify:**
+- Sensor model slugs match hardware identifiers (em300-th, ct101, ws301, etc.)
+- Metrics field shows supported measurement types per model
+
+**Screen states to test:**
+- [ ] Table with all sensor models displayed
+- [ ] Metrics badges render correctly (temperature, humidity, CO2, etc.)
+- [ ] Manufacturer grouping or filtering
+
+**Your notes:**
+>
+>
+
+**Issues found:**
+- [ ]
+- [ ]
+
+---
+
 ### 2.14 Maintenance Windows (`/settings/sites/{site}/maintenance-windows`)
 
 **How to get here:**

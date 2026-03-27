@@ -1,7 +1,7 @@
 # Implementation Gap Report
 
 > **Astrea IoT Platform** -- Spec vs. Current Codebase Comparison
-> Refreshed: 2026-03-24 | Post-build validation (all 62 gaps addressed, 68 pages redesigned)
+> Refreshed: 2026-03-26 | Post-catalog-build validation (catalog session complete, 78 pages total)
 > Sources: prd_platform.md, SYSTEM_BEHAVIOR_SPEC.md, WORKFLOW_UX_DESIGN.md, ENTITY_REFERENCE.md
 > Previous report: 2026-03-23 (62 gaps identified across Phases 11-13)
 
@@ -67,22 +67,45 @@
 - **Login page redesign** (completed earlier)
 - **Support + account_manager test users** (completed earlier)
 
+### What Was Built Since Mar 24 (Catalog Session)
+
+**Catalog infrastructure build -- 6 new pages, sidebar restructured:**
+
+- **Segment model + controller**: Industry verticals (retail, logistics, industrial, hospitality, commercial, pharma). `SegmentController` + `settings/segments/index.tsx`.
+- **SensorModel model + controller**: Hardware sensor model catalog. `SensorModelController` + `settings/sensor-models/index.tsx`.
+- **OrganizationCatalogController**: Organizations index + show pages for super_admin. `settings/organizations/index.tsx` and `settings/organizations/show.tsx`.
+- **ModuleCatalogController**: Modules catalog page for super_admin. `settings/modules/catalog.tsx`.
+- **Sidebar restructured**: New "Catalogs" section with 9 items (Organizations, Sites, Users, Devices, Gateways, Recipes, Modules, Sensor Models, Segments).
+- **Recipes full CRUD**: Store, update, destroy actions added to RecipeController.
+- **Sites index rewritten**: DataTable with 9 columns + filters replacing card grid.
+- **Users, Gateways, Recipes**: FilterToolbar + ContentWithSidebar pattern applied.
+- **Filter sidebars**: Default to closed on all pages.
+- **Auth i18n**: Login, register, forgot-password, reset-password, verify-email pages translated to Spanish.
+- **Email templates branded**: Astrea branding applied to all email templates.
+- **Registration + email verification disabled**: Production-appropriate auth flow.
+- **Logout CSRF fix**: Full page reload on logout to clear CSRF state.
+- **Language switcher**: Added to auth layout.
+- **Locale column**: Added to users table migration.
+- **Users controller**: Fixed for super_admin without org context.
+- **OperationalDataSeeder**: Alert rules, work orders, escalation chains, compliance, maintenance, report schedules.
+
 ### Census Changes
 
-| Metric | Mar 23 | Mar 24 | Delta |
-|---|---|---|---|
-| Models | 42 | 43 | +1 |
-| Controllers | 55 | 58 | +3 |
-| Services | 42 | 42 | -- |
-| Jobs | 21 | 21 | -- |
-| Policies | 14 | 18 | +4 |
-| Migrations | 57 | 65 | +8 |
-| Pages | 65 | 72 | +7 |
-| Components | 119 | 120 | +1 |
-| Hooks | 11 | 12 | +1 |
-| Utils | 10 | 13 | +3 |
-| Tests | 124 | 126 | +2 |
-| Routes | 212 | 226 | +14 |
+| Metric | Mar 23 | Mar 24 | Mar 26 | Delta (24->26) |
+|---|---|---|---|---|
+| Models | 42 | 43 | 45 | +2 (Segment, SensorModel) |
+| Controllers | 55 | 58 | 62 | +4 (OrganizationCatalog, Segment, SensorModel, ModuleCatalog) |
+| Services | 42 | 42 | 42 | -- |
+| Jobs | 21 | 21 | 21 | -- |
+| Policies | 14 | 18 | 18 | -- |
+| Migrations | 57 | 65 | 69 | +4 (locale, catalog fields, segments, sensor_models) |
+| Seeders | -- | 10 | 13 | +3 (OperationalDataSeeder + others) |
+| Pages | 65 | 72 | 78 | +6 (org index/show, segments, modules catalog, sensor models, global gateways) |
+| Components | 119 | 120 | 133 | +13 |
+| Hooks | 11 | 12 | 15 | +3 |
+| Utils | 10 | 13 | 13 | -- |
+| Tests | 124 | 126 | 133 | +7 |
+| Routes | 212 | 226 | 243 | +17 |
 
 ---
 
@@ -254,22 +277,23 @@ These items are intentionally deferred to Phase 13 and are NOT blocking:
 
 ## 5. Platform Health Summary
 
-### Current State (2026-03-24)
+### Current State (2026-03-26)
 
 | Metric | Value |
 |---|---|
-| **Models** | 43 |
-| **Controllers** | 58 |
+| **Models** | 45 |
+| **Controllers** | 62 |
 | **Services** | 42 |
 | **Jobs** | 21 |
 | **Policies** | 18 |
-| **Migrations** | 65 |
-| **Frontend Pages** | 72 |
-| **Components** | 120 (27 custom + 93 shadcn/ui) |
-| **Hooks** | 12 |
+| **Migrations** | 69 |
+| **Seeders** | 13 |
+| **Frontend Pages** | 78 |
+| **Components** | 133 (40 custom + 93 shadcn/ui) |
+| **Hooks** | 15 |
 | **Utils** | 13 |
-| **Tests** | 126 |
-| **Routes** | 226 (197 web + 29 API) |
+| **Tests** | 133 |
+| **Routes** | 243 (214 web + 29 API) |
 | **Roles** | 7 |
 | **Permissions** | 29 |
 

@@ -2,15 +2,15 @@
 
 > **Sensor to Decision in 60 seconds**
 
-Platform Architecture Reference -- Generated 2026-03-25
+Platform Architecture Reference -- Generated 2026-03-26
 
 ## Hero Stats
 
 | Metric | Value |
 |--------|-------|
-| Models | 43 |
-| Pages | 72 |
-| Routes | 233 |
+| Models | 45 |
+| Pages | 78 |
+| Routes | 243 |
 | Roles | 7 |
 
 ### Tech Stack
@@ -37,7 +37,7 @@ B2B SaaS sold per-site with tiered plans (Starter, Professional, Enterprise). Re
 |-----------|-------------|
 | **WhatsApp Bot** | Real-time alert delivery and acknowledgment via WhatsApp Business API. Serves store managers who don't use the web app. Webhook receiver in `routes/api.php`. |
 | **Mobile App (iot-expo)** | React Native / Expo SDK 54 companion app. Technician-focused: work order management, device scanning, photo evidence, push notifications. 26 API endpoints via Sanctum. |
-| **Web Platform (iot-hub)** | Full-featured SPA built with React + Inertia.js. Dashboards, analytics, reporting, device management, alert configuration, compliance workflows, command center. 72 pages, all Inertia-rendered. |
+| **Web Platform (iot-hub)** | Full-featured SPA built with React + Inertia.js. Dashboards, analytics, reporting, device management, alert configuration, compliance workflows, command center, catalog management. 78 pages, all Inertia-rendered. |
 
 ---
 
@@ -737,12 +737,18 @@ Sidebar groups, key user flows, and page-to-page connections.
 | Command Center | `/command-center` |
 | Partner Portal | `/partner` |
 
-#### Monitor
-| Item | URL |
-|------|-----|
-| Sites | `/sites` |
-| Devices | `/devices` |
-| Gateways | `/settings/gateways` |
+#### Catalogs
+| Item | URL | Access |
+|------|-----|--------|
+| Organizations | `/settings/organizations` | super_admin |
+| Sites | `/sites` | All |
+| Users | `/settings/users` | manage users |
+| Devices | `/devices` | All |
+| Gateways | `/settings/gateways` | All |
+| Recipes | `/recipes` | All |
+| Modules | `/settings/modules-catalog` | super_admin |
+| Sensor Models | `/settings/sensor-models` | super_admin |
+| Segments | `/settings/segments` | super_admin |
 
 #### Analytics
 | Item | URL |
@@ -757,7 +763,6 @@ Sidebar groups, key user flows, and page-to-page connections.
 | Users | `/settings/users` |
 | Site Mgmt | `/settings/sites` |
 | Escalations | `/settings/escalation-chains` |
-| Recipes | `/recipes` |
 | Compliance | `/settings/compliance` |
 | Maintenance | `/settings/maintenance-windows` |
 | Report Sched. | `/settings/report-schedules` |
@@ -784,6 +789,12 @@ Site Manager creates WO -> WO Index -> Assign Tech -> WO Detail -> Start -> Add 
 #### Site Onboarding Flow
 ```
 Partner Portal -> Create Org -> Site Mgmt: Create Site -> Onboarding Wizard -> Gateway -> Devices -> Modules -> Site Detail
+```
+
+#### Catalog Chain
+```
+Segments -> Modules -> Recipes -> Sensor Models
+(Industry verticals define which modules are relevant; modules contain recipes; recipes target sensor models)
 ```
 
 #### Report Generation Flow

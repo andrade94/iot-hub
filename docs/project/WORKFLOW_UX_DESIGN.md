@@ -1,7 +1,7 @@
 # Workflow UX Design
 
-> **Astrea IoT Platform** — Complete screen-level UX specification for all 72 frontend pages.
-> Regenerated: 2026-03-24 | Updated after massive build session (62 gaps resolved, 7 new pages)
+> **Astrea IoT Platform** — Complete screen-level UX specification for all 78 frontend pages.
+> Regenerated: 2026-03-26 | Updated after catalog build session (new catalog pages, sidebar restructured)
 > Cross-references: SYSTEM_BEHAVIOR_SPEC.md, ASTREA_WORKFLOWS.md, ASTREA_FEATURE_SPECS.md
 
 ---
@@ -10,6 +10,7 @@
 
 1. [Screen Inventory](#1-screen-inventory)
 2. [Screen Detail — Core (21 pages)](#2-screen-detail--core-21-pages)
+   - *Note: 5 new catalog pages added to Settings section*
 3. [Screen Detail — Settings (27 pages)](#3-screen-detail--settings-27-pages)
 4. [Screen Detail — Auth (8 pages)](#4-screen-detail--auth-8-pages)
 5. [Screen Detail — Command Center (8 pages)](#5-screen-detail--command-center-8-pages)
@@ -21,7 +22,7 @@
 
 ## 1. Screen Inventory
 
-Master table of all 72 pages sorted by area.
+Master table of all 78 pages sorted by area.
 
 | # | Page | URL | Pattern | Roles | Primary Workflow |
 |---|------|-----|---------|-------|-----------------|
@@ -102,8 +103,14 @@ Master table of all 72 pages sorted by area.
 | 65 | IAQ Dashboard | `/modules/iaq` | Module dashboard | All authenticated | WF-011 Module & Recipe |
 | 66 | Industrial Dashboard | `/modules/industrial` | Module dashboard | All authenticated | WF-011 Module & Recipe |
 | 67 | Welcome (DEAD) | `/welcome` | Orphaned boilerplate | — | — |
+| **Catalogs** | | | | | |
+| 69 | Organizations Index | `/settings/organizations` | DataTable + detail cards | super_admin only | WF-001 Onboarding |
+| 70 | Organization Show | `/settings/organizations/{org}` | Detail 2-column | super_admin only | WF-001 Onboarding |
+| 71 | Segments Index | `/settings/segments` | DataTable catalog | super_admin only | WF-011 Module & Recipe |
+| 72 | Modules Catalog | `/settings/modules-catalog` | Card grid catalog | super_admin only | WF-011 Module & Recipe |
+| 73 | Sensor Models Index | `/settings/sensor-models` | DataTable catalog | super_admin only | WF-011 Module & Recipe |
 | **New Pages** | | | | | |
-| 68 | Platform Status | `/status` | Public status page | All (public) | — |
+| 74 | Platform Status | `/status` | Public status page | All (public) | — |
 
 ---
 

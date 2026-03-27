@@ -1,7 +1,7 @@
 # Entity Reference -- Astrea IoT Platform
 
 > Tier 3 Model Reference. Generated from source code in `app/Models/` and `database/migrations/`.
-> 40 models across 12 domains. Last updated: 2026-03-23 (Phase 1 re-census).
+> 45 models across 13 domains. Last updated: 2026-03-26 (catalog build census).
 
 ---
 
@@ -52,6 +52,9 @@
   - [ReportSchedule](#reportschedule)
   - [DataExport](#dataexport)
   - [SiteTemplate](#sitetemplate)
+- [Catalogs](#catalogs)
+  - [Segment](#segment)
+  - [SensorModel](#sensormodel)
 - [Integrations](#integrations)
   - [ApiKey](#apikey)
   - [WebhookSubscription](#webhooksubscription)
@@ -1390,6 +1393,68 @@ Logged fields: `status`, `cfdi_uuid`, `paid_at`, `payment_method`. Dirty-only, n
 | recipe_assignments | json | yes | -- | `array` | [{zone, recipe_id}] |
 | escalation_structure | json | yes | -- | `array` | Escalation chain levels |
 | created_by | foreignId | no | -- | -- | FK -> users |
+
+---
+
+## Catalogs
+
+### Segment
+
+**Model**: `App\Models\Segment`
+**Table**: `segments`
+**Traits**: `HasFactory`
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| slug | string | no | -- | -- | unique (retail, logistics, industrial, hospitality, commercial, pharma) |
+| name | string | no | -- | -- | Display name |
+| description | text | yes | -- | -- | |
+| icon | string | yes | -- | -- | Lucide icon name |
+| color | string | yes | -- | -- | Brand color hex |
+| is_active | boolean | no | true | boolean | |
+| sort_order | integer | no | 0 | -- | |
+| created_at | timestamp | yes | -- | -- | |
+| updated_at | timestamp | yes | -- | -- | |
+
+#### Relations
+
+| Method | Type | Related Model | FK / Pivot |
+|--------|------|---------------|------------|
+| `modules()` | belongsToMany | Module | pivot `module_segment` |
+| `organizations()` | hasMany | Organization | `segment_id` |
+
+---
+
+### SensorModel
+
+**Model**: `App\Models\SensorModel`
+**Table**: `sensor_models`
+**Traits**: `HasFactory`
+
+#### Fields
+
+| Column | Type | Nullable | Default | Cast | Notes |
+|--------|------|----------|---------|------|-------|
+| id | bigint (PK) | no | auto | -- | |
+| slug | string | no | -- | -- | unique (em300-th, ct101, ws301, etc.) |
+| name | string | no | -- | -- | Display name |
+| manufacturer | string | no | -- | -- | Manufacturer name (Milesight, etc.) |
+| description | text | yes | -- | -- | |
+| metrics | json | yes | -- | array | Supported metrics (["temperature", "humidity"]) |
+| image_url | string | yes | -- | -- | Product image URL |
+| is_active | boolean | no | true | boolean | |
+| created_at | timestamp | yes | -- | -- | |
+| updated_at | timestamp | yes | -- | -- | |
+
+#### Relations
+
+| Method | Type | Related Model | FK / Pivot |
+|--------|------|---------------|------------|
+| `devices()` | hasMany | Device | `sensor_model_id` |
+| `recipes()` | hasMany | Recipe | `sensor_model_id` |
 
 ---
 

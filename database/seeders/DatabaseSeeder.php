@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             GatewaySeeder::class,
             DeviceSeeder::class,
             Phase10DemoSeeder::class,
+            OperationalDataSeeder::class,
         ]);
     }
 }
