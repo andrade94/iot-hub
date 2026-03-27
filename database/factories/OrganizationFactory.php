@@ -14,7 +14,7 @@ class OrganizationFactory extends Factory
         return [
             'name' => fake()->company(),
             'slug' => fake()->unique()->slug(),
-            'segment' => fake()->randomElement(['retail', 'cold_chain', 'industrial', 'commercial', 'foodservice']),
+            'segment' => fake()->randomElement(['retail', 'logistics', 'industrial', 'hospitality', 'commercial', 'pharma']),
             'plan' => fake()->randomElement(['starter', 'professional', 'enterprise']),
             'settings' => [],
             'logo' => null,

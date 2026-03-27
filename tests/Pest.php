@@ -49,7 +49,7 @@ function createOrg(array $attrs = []): \App\Models\Organization
     return \App\Models\Organization::create(array_merge([
         'name' => 'Test Org',
         'slug' => 'test-org-' . \Illuminate\Support\Str::random(5),
-        'segment' => 'cold_chain',
+        'segment' => 'retail',
     ], $attrs));
 }
 

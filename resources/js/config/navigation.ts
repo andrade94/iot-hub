@@ -10,6 +10,7 @@ import {
     BarChart3,
     Bell,
     BookOpen,
+    Boxes,
     Building2,
     Calendar,
     CalendarCheck,
@@ -134,6 +135,13 @@ export const navigation: NavGroup[] = [
                 href: '/recipes',
                 icon: BookOpen,
                 tooltip: 'Sensor recipes',
+            },
+            {
+                title: 'Modules',
+                href: '/settings/modules-catalog',
+                icon: Boxes,
+                tooltip: 'Platform module catalog',
+                requiredRole: 'super_admin',
             },
             {
                 title: 'Segments',

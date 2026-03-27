@@ -19,6 +19,7 @@ use App\Http\Controllers\EscalationChainController;
 use App\Http\Controllers\GatewayController;
 use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\ModuleCatalogController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationCatalogController;
@@ -442,6 +443,14 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::post('{organization}/suspend', [OrganizationCatalogController::class, 'suspend'])->name('suspend');
         Route::post('{organization}/reactivate', [OrganizationCatalogController::class, 'reactivate'])->name('reactivate');
         Route::delete('{organization}', [OrganizationCatalogController::class, 'destroy'])->name('destroy');
+    });
+
+    // Module Catalog (super_admin)
+    Route::middleware('role:super_admin')->prefix('settings/modules-catalog')->name('modules-catalog.')->group(function () {
+        Route::get('/', [ModuleCatalogController::class, 'index'])->name('index');
+        Route::post('/', [ModuleCatalogController::class, 'store'])->name('store');
+        Route::put('{module}', [ModuleCatalogController::class, 'update'])->name('update');
+        Route::delete('{module}', [ModuleCatalogController::class, 'destroy'])->name('destroy');
     });
 
     // Segment Catalog (super_admin)

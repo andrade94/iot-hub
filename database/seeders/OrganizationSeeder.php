@@ -12,7 +12,7 @@ class OrganizationSeeder extends Seeder
         Organization::create([
             'name' => 'Cadena Frio Demo',
             'slug' => 'cadena-frio-demo',
-            'segment' => 'cold_chain',
+            'segment' => 'retail',
             'plan' => 'professional',
             'settings' => ['alerts_enabled' => true, 'report_frequency' => 'daily'],
             'default_timezone' => 'America/Mexico_City',
@@ -21,12 +21,12 @@ class OrganizationSeeder extends Seeder
         Organization::create([
             'name' => 'Retail Energy Demo',
             'slug' => 'retail-energy-demo',
-            'segment' => 'energy',
+            'segment' => 'industrial',
             'plan' => 'starter',
             'settings' => ['alerts_enabled' => true, 'report_frequency' => 'weekly'],
             'default_timezone' => 'America/Mexico_City',
         ]);
 
-        $this->command->info('✓ Created 2 demo organizations');
+        $this->command->info('Created 2 demo organizations');
     }
 }
