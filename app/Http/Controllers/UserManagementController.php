@@ -220,6 +220,19 @@ class UserManagementController extends Controller
             return Organization::findOrFail($user->org_id);
         }
 
+        // super_admin without org_id — try session org switcher, then first org
+        if ($user->hasRole('super_admin')) {
+            $sessionOrgId = session('current_org_id');
+            if ($sessionOrgId) {
+                return Organization::findOrFail($sessionOrgId);
+            }
+
+            $firstOrg = Organization::first();
+            if ($firstOrg) {
+                return $firstOrg;
+            }
+        }
+
         abort(403, 'No organization selected.');
     }
 }
