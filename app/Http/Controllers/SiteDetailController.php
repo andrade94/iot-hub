@@ -18,19 +18,28 @@ class SiteDetailController extends Controller
         $sites = Site::whereIn('id', $siteIds)
             ->withCount([
                 'devices',
+                'devices as online_count' => fn ($q) => $q->where('status', 'active')->where('last_seen_at', '>=', now()->subMinutes(15)),
                 'alerts as active_alerts_count' => fn ($q) => $q->whereIn('status', ['active', 'acknowledged']),
+                'workOrders as open_work_orders_count' => fn ($q) => $q->whereNotIn('status', ['completed', 'cancelled']),
+                'gateways as gateways_count',
             ])
+            ->with('organization:id,name')
             ->get()
             ->map(fn ($site) => [
                 'id' => $site->id,
                 'name' => $site->name,
                 'status' => $site->status,
+                'timezone' => $site->timezone,
+                'organization_name' => $site->organization?->name,
                 'device_count' => $site->devices_count,
-                'online_count' => $site->devices()->where('status', 'active')->where('last_seen_at', '>=', now()->subMinutes(15))->count(),
+                'online_count' => $site->online_count,
+                'gateway_count' => $site->gateways_count,
                 'active_alerts' => $site->active_alerts_count,
+                'open_work_orders' => $site->open_work_orders_count,
+                'created_at' => $site->created_at?->toISOString(),
             ]);
 
-        $timezones = timezone_identifiers_list(\DateTimeZone::AMERICA);
+        $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::AMERICA);
 
         return Inertia::render('sites/index', [
             'sites' => $sites,
