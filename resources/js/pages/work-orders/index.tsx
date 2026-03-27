@@ -113,7 +113,7 @@ export default function WorkOrderIndex({
     const [showFilters, setShowFilters] = useState(() => {
         try {
             const stored = localStorage.getItem('work-orders-show-filters');
-            return stored !== null ? stored === 'true' : true;
+            return stored === 'true';
         } catch {
             return true;
         }

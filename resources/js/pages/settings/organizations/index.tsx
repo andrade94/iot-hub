@@ -80,7 +80,7 @@ export default function OrganizationsIndex({ organizations }: Props) {
     // Filter sidebar visibility with localStorage persistence
     const [showFilters, setShowFilters] = useState(() => {
         try {
-            return localStorage.getItem('orgs-show-filters') !== 'false';
+            return localStorage.getItem('orgs-show-filters') === 'true';
         } catch {
             return true;
         }

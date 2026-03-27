@@ -39,7 +39,7 @@ export default function RecipeIndex({ recipes }: Props) {
     // Filter sidebar visibility with localStorage persistence
     const [showFilters, setShowFilters] = useState(() => {
         try {
-            return localStorage.getItem('recipes-show-filters') !== 'false';
+            return localStorage.getItem('recipes-show-filters') === 'true';
         } catch {
             return true;
         }

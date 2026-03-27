@@ -68,7 +68,7 @@ export default function GatewayGlobalIndex({ gateways }: Props) {
     // Filter sidebar visibility with localStorage persistence
     const [showFilters, setShowFilters] = useState(() => {
         try {
-            return localStorage.getItem('gateways-show-filters') !== 'false';
+            return localStorage.getItem('gateways-show-filters') === 'true';
         } catch {
             return true;
         }

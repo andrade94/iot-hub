@@ -57,7 +57,7 @@ export default function SiteIndex({ sites, timezones }: Props) {
     // Filter sidebar visibility with localStorage persistence
     const [showFilters, setShowFilters] = useState(() => {
         try {
-            return localStorage.getItem('sites-show-filters') !== 'false';
+            return localStorage.getItem('sites-show-filters') === 'true';
         } catch {
             return true;
         }

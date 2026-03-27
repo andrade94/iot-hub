@@ -75,7 +75,7 @@ export default function UsersIndex({ users, sites, roles }: Props) {
     // Filter sidebar visibility with localStorage persistence
     const [showFilters, setShowFilters] = useState(() => {
         try {
-            return localStorage.getItem('users-show-filters') !== 'false';
+            return localStorage.getItem('users-show-filters') === 'true';
         } catch {
             return true;
         }

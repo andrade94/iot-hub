@@ -51,7 +51,7 @@ export default function DeviceIndex({ devices, sites, filters }: Props) {
     const [showFilters, setShowFilters] = useState(() => {
         try {
             const stored = localStorage.getItem('devices-show-filters');
-            return stored !== null ? stored === 'true' : true;
+            return stored === 'true';
         } catch {
             return true;
         }
