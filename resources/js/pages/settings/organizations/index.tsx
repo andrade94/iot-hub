@@ -1,21 +1,40 @@
 import InputError from '@/components/input-error';
 import { type OrganizationRow, getOrganizationColumns } from '@/components/organizations/columns';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { ContentWithSidebar } from '@/components/ui/content-with-sidebar';
+import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { FadeIn } from '@/components/ui/fade-in';
+import { FilterToolbar } from '@/components/ui/filter-toolbar';
+import type { FilterPill } from '@/components/ui/filter-toolbar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import { useValidatedForm } from '@/hooks/use-validated-form';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { Building2, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { Building2, Plus, Search } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import { z } from 'zod';
 
 interface Props {
@@ -25,23 +44,25 @@ interface Props {
 const SEGMENTS = ['retail', 'cold_chain', 'industrial', 'commercial', 'foodservice'] as const;
 const PLANS = ['starter', 'standard', 'enterprise'] as const;
 
+const SEGMENT_LABELS: Record<string, string> = {
+    retail: 'Retail',
+    cold_chain: 'Cold Chain',
+    industrial: 'Industrial',
+    commercial: 'Commercial',
+    foodservice: 'Foodservice',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+    active: 'Active',
+    onboarding: 'Onboarding',
+    suspended: 'Suspended',
+    archived: 'Archived',
+};
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Settings', href: '/settings/profile' },
     { title: 'Organizations', href: '#' },
 ];
-
-/* -- Section Divider -------------------------------------------------- */
-
-function SectionDivider({ label }: { label: string }) {
-    return (
-        <div className="flex items-center gap-3">
-            <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
-                {label}
-            </span>
-            <div className="h-px flex-1 bg-border" />
-        </div>
-    );
-}
 
 export default function OrganizationsIndex({ organizations }: Props) {
     const { t } = useLang();
@@ -51,6 +72,98 @@ export default function OrganizationsIndex({ organizations }: Props) {
     const [reactivateOrg, setReactivateOrg] = useState<OrganizationRow | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
 
+    // Client-side filters
+    const [segmentFilter, setSegmentFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Filter sidebar visibility with localStorage persistence
+    const [showFilters, setShowFilters] = useState(() => {
+        try {
+            return localStorage.getItem('orgs-show-filters') !== 'false';
+        } catch {
+            return true;
+        }
+    });
+
+    function toggleFilters() {
+        const next = !showFilters;
+        setShowFilters(next);
+        try {
+            localStorage.setItem('orgs-show-filters', String(next));
+        } catch {
+            // ignore
+        }
+    }
+
+    // Client-side filtering
+    const filteredOrgs = useMemo(() => {
+        let result = organizations;
+
+        if (segmentFilter !== 'all') {
+            result = result.filter((org) => org.segment === segmentFilter);
+        }
+
+        if (statusFilter !== 'all') {
+            result = result.filter((org) => org.status === statusFilter);
+        }
+
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            result = result.filter(
+                (org) =>
+                    org.name.toLowerCase().includes(query) ||
+                    org.slug.toLowerCase().includes(query),
+            );
+        }
+
+        return result;
+    }, [organizations, segmentFilter, statusFilter, searchQuery]);
+
+    const hasFilters = segmentFilter !== 'all' || statusFilter !== 'all' || searchQuery.trim() !== '';
+
+    function clearAllFilters() {
+        setSegmentFilter('all');
+        setStatusFilter('all');
+        setSearchQuery('');
+    }
+
+    // Build filter pills
+    const filterPills = useMemo<FilterPill[]>(() => {
+        const pills: FilterPill[] = [];
+        if (segmentFilter !== 'all') {
+            pills.push({
+                key: 'segment',
+                label: `Segment: ${SEGMENT_LABELS[segmentFilter] ?? segmentFilter}`,
+                onRemove: () => setSegmentFilter('all'),
+            });
+        }
+        if (statusFilter !== 'all') {
+            pills.push({
+                key: 'status',
+                label: `Status: ${STATUS_LABELS[statusFilter] ?? statusFilter}`,
+                onRemove: () => setStatusFilter('all'),
+            });
+        }
+        if (searchQuery.trim()) {
+            pills.push({
+                key: 'search',
+                label: `Search: "${searchQuery}"`,
+                onRemove: () => setSearchQuery(''),
+            });
+        }
+        return pills;
+    }, [segmentFilter, statusFilter, searchQuery]);
+
+    // Column definitions (memoized)
+    const columns = useMemo(() => getOrganizationColumns({ t }), [t]);
+
+    // Row click handler
+    const handleRowClick = useCallback((org: OrganizationRow) => {
+        router.get(`/settings/organizations/${org.id}`);
+    }, []);
+
+    // Actions
     function handleSuspend() {
         if (!suspendOrg) return;
         setActionLoading(true);
@@ -78,13 +191,90 @@ export default function OrganizationsIndex({ organizations }: Props) {
         });
     }
 
-    const columns = getOrganizationColumns({
-        onView: (org) => router.get(`/settings/organizations/${org.id}`),
-        onSuspend: (org) => setSuspendOrg(org),
-        onReactivate: (org) => setReactivateOrg(org),
-        onArchive: (org) => setArchiveOrg(org),
-        t,
-    });
+    // Empty state
+    const emptyStateNode = (
+        <EmptyState
+            size="sm"
+            variant="muted"
+            icon={<Building2 className="h-5 w-5 text-muted-foreground" />}
+            title={
+                hasFilters
+                    ? t('No organizations match these filters')
+                    : t('No organizations registered')
+            }
+            description={
+                hasFilters
+                    ? t('Try adjusting your filters to see more results')
+                    : t('Create your first organization to get started')
+            }
+            action={
+                hasFilters ? (
+                    <Button variant="outline" size="sm" onClick={clearAllFilters}>
+                        {t('Clear filters')}
+                    </Button>
+                ) : undefined
+            }
+        />
+    );
+
+    // Filter sidebar
+    const filterSidebar = (
+        <Card className="shadow-elevation-1">
+            <CardContent className="flex flex-col gap-4 p-4">
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                        {t('Segment')}
+                    </Label>
+                    <Select value={segmentFilter} onValueChange={setSegmentFilter}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder={t('Segment')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('All Segments')}</SelectItem>
+                            {SEGMENTS.map((seg) => (
+                                <SelectItem key={seg} value={seg}>
+                                    {seg.replace('_', ' ')}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                        {t('Status')}
+                    </Label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder={t('Status')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('All Status')}</SelectItem>
+                            <SelectItem value="active">{t('Active')}</SelectItem>
+                            <SelectItem value="onboarding">{t('Onboarding')}</SelectItem>
+                            <SelectItem value="suspended">{t('Suspended')}</SelectItem>
+                            <SelectItem value="archived">{t('Archived')}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                        {t('Search')}
+                    </Label>
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder={t('Name or slug...')}
+                            className="pl-8"
+                        />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -125,47 +315,32 @@ export default function OrganizationsIndex({ organizations }: Props) {
                     </div>
                 </FadeIn>
 
-                {/* -- Table Section ------------------------------------------- */}
+                {/* -- FilterToolbar + ContentWithSidebar ---------------------- */}
                 <FadeIn delay={75} duration={400}>
-                    <SectionDivider label={t('All Organizations')} />
+                    <FilterToolbar
+                        showSidebar={showFilters}
+                        onToggleSidebar={toggleFilters}
+                        pills={filterPills}
+                        onClearAll={hasFilters ? clearAllFilters : undefined}
+                    />
                 </FadeIn>
 
-                <FadeIn delay={150} duration={400}>
-                    <Card className="shadow-elevation-1">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    {columns.map((col) => (
-                                        <TableHead key={col.key}>{col.header}</TableHead>
-                                    ))}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {organizations.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={columns.length} className="py-12 text-center">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Building2 className="h-8 w-8 text-muted-foreground/50" />
-                                                <p className="text-sm text-muted-foreground">{t('No organizations registered')}</p>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    organizations.map((org) => (
-                                        <TableRow
-                                            key={org.id}
-                                            className="cursor-pointer hover:bg-muted/50"
-                                            onClick={() => router.get(`/settings/organizations/${org.id}`)}
-                                        >
-                                            {columns.map((col) => (
-                                                <TableCell key={col.key}>{col.render(org)}</TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </Card>
+                <FadeIn delay={150} duration={500}>
+                    <ContentWithSidebar
+                        showSidebar={showFilters}
+                        sidebar={filterSidebar}
+                    >
+                        <Card className="flex-1 shadow-elevation-1">
+                            <DataTable
+                                columns={columns}
+                                data={filteredOrgs}
+                                getRowId={(row) => String(row.id)}
+                                onRowClick={handleRowClick}
+                                bordered={false}
+                                emptyState={emptyStateNode}
+                            />
+                        </Card>
+                    </ContentWithSidebar>
                 </FadeIn>
             </div>
 
@@ -342,5 +517,60 @@ function CreateOrganizationForm({ onSuccess }: { onSuccess: () => void }) {
                 {form.processing ? t('Creating...') : t('Create Organization')}
             </Button>
         </form>
+    );
+}
+
+/* -- Skeleton --------------------------------------------------------- */
+
+export function OrganizationsSkeleton() {
+    return (
+        <div className="flex flex-col gap-6 p-4 md:p-6">
+            {/* Header */}
+            <div className="rounded-xl border p-6 md:p-8">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="mt-3 h-8 w-48" />
+                <Skeleton className="mt-2 h-4 w-36" />
+            </div>
+            {/* Filter Toolbar */}
+            <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-24" />
+            </div>
+            {/* Table */}
+            <Card>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <TableHead key={i}>
+                                    <Skeleton className="h-3 w-16" />
+                                </TableHead>
+                            ))}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        <Skeleton className="h-8 w-8 rounded-full" />
+                                        <div>
+                                            <Skeleton className="h-4 w-28" />
+                                            <Skeleton className="mt-1 h-3 w-20" />
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-3 w-16" /></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </Card>
+        </div>
     );
 }

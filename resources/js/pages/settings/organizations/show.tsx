@@ -3,19 +3,26 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { DataTable } from '@/components/ui/data-table';
 import { DetailCard } from '@/components/ui/detail-card';
 import { FadeIn } from '@/components/ui/fade-in';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useLang } from '@/hooks/use-lang';
 import { useValidatedForm } from '@/hooks/use-validated-form';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, Subscription } from '@/types';
 import { formatTimeAgo } from '@/utils/date';
 import { Head, router } from '@inertiajs/react';
+import type { ColumnDef } from '@tanstack/react-table';
 import {
     ArrowLeft,
     MapPin,
@@ -25,8 +32,10 @@ import {
     Settings,
     Users,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { z } from 'zod';
+
+/* -- Types ------------------------------------------------------------ */
 
 interface SiteWithCounts {
     id: number;
@@ -67,6 +76,8 @@ interface Props {
     timezones: string[];
 }
 
+/* -- Constants -------------------------------------------------------- */
+
 const SEGMENTS = ['retail', 'cold_chain', 'industrial', 'commercial', 'foodservice'] as const;
 const PLANS = ['starter', 'standard', 'enterprise'] as const;
 
@@ -94,16 +105,19 @@ const siteStatusVariants: Record<string, 'success' | 'warning' | 'outline'> = {
 
 /* -- Section Divider -------------------------------------------------- */
 
-function SectionDivider({ label }: { label: string }) {
+function SectionDivider({ label, badge }: { label: string; badge?: React.ReactNode }) {
     return (
         <div className="flex items-center gap-3">
             <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
                 {label}
             </span>
+            {badge}
             <div className="h-px flex-1 bg-border" />
         </div>
     );
 }
+
+/* -- Main Component --------------------------------------------------- */
 
 export default function OrganizationShow({ organization, sites, users, timezones }: Props) {
     const { t } = useLang();
@@ -142,6 +156,85 @@ export default function OrganizationShow({ organization, sites, users, timezones
             onFinish: () => { setActionLoading(false); setArchiveOpen(false); },
         });
     }
+
+    // -- Sites DataTable columns --
+    const siteColumns = useMemo<ColumnDef<SiteWithCounts>[]>(
+        () => [
+            {
+                accessorKey: 'name',
+                header: () => t('Name'),
+                cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+            },
+            {
+                accessorKey: 'status',
+                header: () => t('Status'),
+                cell: ({ row }) => (
+                    <Badge variant={siteStatusVariants[row.original.status] ?? 'outline'} className="text-xs capitalize">
+                        {row.original.status}
+                    </Badge>
+                ),
+            },
+            {
+                accessorKey: 'devices_count',
+                header: () => t('Devices'),
+                cell: ({ row }) => (
+                    <span className="font-mono tabular-nums">{row.original.devices_count}</span>
+                ),
+            },
+            {
+                accessorKey: 'gateways_count',
+                header: () => t('Gateways'),
+                cell: ({ row }) => (
+                    <span className="font-mono tabular-nums">{row.original.gateways_count}</span>
+                ),
+            },
+        ],
+        [t],
+    );
+
+    // -- Users DataTable columns --
+    const userColumns = useMemo<ColumnDef<UserSummary>[]>(
+        () => [
+            {
+                accessorKey: 'name',
+                header: () => t('Name'),
+                cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+            },
+            {
+                accessorKey: 'email',
+                header: () => t('Email'),
+                cell: ({ row }) => (
+                    <span className="text-muted-foreground">{row.original.email}</span>
+                ),
+            },
+            {
+                accessorKey: 'role',
+                header: () => t('Role'),
+                cell: ({ row }) => (
+                    <Badge variant="outline" className="text-xs">
+                        {row.original.role.replace('_', ' ')}
+                    </Badge>
+                ),
+            },
+        ],
+        [t],
+    );
+
+    // -- Sites empty state --
+    const sitesEmptyState = (
+        <div className="flex flex-col items-center gap-2 py-8">
+            <MapPin className="h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">{t('No sites configured')}</p>
+        </div>
+    );
+
+    // -- Users empty state --
+    const usersEmptyState = (
+        <div className="flex flex-col items-center gap-2 py-8">
+            <Users className="h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">{t('No users')}</p>
+        </div>
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -200,7 +293,7 @@ export default function OrganizationShow({ organization, sites, users, timezones
                                 className="shadow-elevation-1"
                                 items={[
                                     { label: t('Name'), value: organization.name },
-                                    { label: t('Slug'), value: <code className="text-xs font-mono">{organization.slug}</code> },
+                                    { label: t('Slug'), value: <code className="font-mono text-xs">{organization.slug}</code> },
                                     {
                                         label: t('Segment'),
                                         value: organization.segment ? (
@@ -227,96 +320,48 @@ export default function OrganizationShow({ organization, sites, users, timezones
 
                         {/* Sites */}
                         <FadeIn delay={150} duration={400}>
-                            <SectionDivider label={`${t('Sites')} (${sites.length})`} />
+                            <SectionDivider
+                                label={t('Sites')}
+                                badge={
+                                    <Badge variant="secondary" className="font-mono text-xs tabular-nums">
+                                        {sites.length}
+                                    </Badge>
+                                }
+                            />
                         </FadeIn>
                         <FadeIn delay={175} duration={400}>
                             <Card className="shadow-elevation-1">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{t('Name')}</TableHead>
-                                            <TableHead>{t('Status')}</TableHead>
-                                            <TableHead>{t('Devices')}</TableHead>
-                                            <TableHead>{t('Gateways')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {sites.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="py-8 text-center">
-                                                    <MapPin className="mx-auto h-8 w-8 text-muted-foreground/40" />
-                                                    <p className="mt-2 text-sm text-muted-foreground">{t('No sites configured')}</p>
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : (
-                                            sites.map((site) => (
-                                                <TableRow
-                                                    key={site.id}
-                                                    className="cursor-pointer"
-                                                    onClick={() => router.get(`/sites/${site.id}`)}
-                                                >
-                                                    <TableCell className="font-medium">{site.name}</TableCell>
-                                                    <TableCell>
-                                                        <Badge variant={siteStatusVariants[site.status] ?? 'outline'} className="text-xs capitalize">
-                                                            {site.status}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="font-mono tabular-nums">{site.devices_count}</TableCell>
-                                                    <TableCell className="font-mono tabular-nums">{site.gateways_count}</TableCell>
-                                                </TableRow>
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
+                                <DataTable
+                                    columns={siteColumns}
+                                    data={sites}
+                                    getRowId={(row) => String(row.id)}
+                                    onRowClick={(site) => router.get(`/sites/${site.id}`)}
+                                    bordered={false}
+                                    emptyState={sitesEmptyState}
+                                />
                             </Card>
                         </FadeIn>
 
                         {/* Users */}
                         <FadeIn delay={225} duration={400}>
-                            <SectionDivider label={`${t('Users')} (${users.length})`} />
+                            <SectionDivider
+                                label={t('Users')}
+                                badge={
+                                    <Badge variant="secondary" className="font-mono text-xs tabular-nums">
+                                        {users.length}
+                                    </Badge>
+                                }
+                            />
                         </FadeIn>
                         <FadeIn delay={250} duration={400}>
                             <Card className="shadow-elevation-1">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{t('Name')}</TableHead>
-                                            <TableHead>{t('Email')}</TableHead>
-                                            <TableHead>{t('Role')}</TableHead>
-                                            <TableHead>{t('Status')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {users.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="py-8 text-center">
-                                                    <Users className="mx-auto h-8 w-8 text-muted-foreground/40" />
-                                                    <p className="mt-2 text-sm text-muted-foreground">{t('No users')}</p>
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : (
-                                            users.map((user) => (
-                                                <TableRow key={user.id}>
-                                                    <TableCell className="font-medium">{user.name}</TableCell>
-                                                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                                                    <TableCell>
-                                                        <Badge variant="outline" className="text-xs">
-                                                            {user.role.replace('_', ' ')}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge
-                                                            variant={user.status === 'active' ? 'success' : 'secondary'}
-                                                            className="text-xs capitalize"
-                                                        >
-                                                            {user.status}
-                                                        </Badge>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
+                                <DataTable
+                                    columns={userColumns}
+                                    data={users}
+                                    getRowId={(row) => String(row.id)}
+                                    bordered={false}
+                                    emptyState={usersEmptyState}
+                                />
                             </Card>
                         </FadeIn>
                     </div>
@@ -335,7 +380,10 @@ export default function OrganizationShow({ organization, sites, users, timezones
 
                         {/* Actions */}
                         <FadeIn delay={250} duration={400}>
-                            <FormSection title={t('Actions')} icon={Settings} description={t('Organization lifecycle management')}>
+                            <SectionDivider label={t('Actions')} />
+                        </FadeIn>
+                        <FadeIn delay={275} duration={400}>
+                            <FormSection title={t('Lifecycle')} icon={Settings} description={t('Organization lifecycle management')} className="shadow-elevation-1">
                                 <div className="space-y-3">
                                     {['active', 'onboarding'].includes(organization.status) && (
                                         <Button
@@ -438,7 +486,7 @@ function EditOrganizationForm({ organization, timezones }: { organization: Organ
     }
 
     return (
-        <FormSection title={t('Edit Organization')} icon={Pencil} description={t('Update organization details')}>
+        <FormSection title={t('Edit Organization')} icon={Pencil} description={t('Update organization details')} className="shadow-elevation-1">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                     <Label>{t('Name')}</Label>
@@ -553,7 +601,7 @@ function BrandingSection({ organization }: { organization: OrganizationDetail })
     }
 
     return (
-        <FormSection title={t('Branding')} icon={Palette} description={t('Visual identity settings')}>
+        <FormSection title={t('Branding')} icon={Palette} description={t('Visual identity settings')} className="shadow-elevation-1">
             <div className="space-y-4">
                 <div className="space-y-2">
                     <Label>{t('Logo URL')}</Label>

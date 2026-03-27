@@ -1,7 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Archive, Building2, Eye, Pause, Play } from 'lucide-react';
+import { formatTimeAgo } from '@/utils/date';
+import type { ColumnDef } from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ArrowUpDown, Building2 } from 'lucide-react';
+
+/* -- Types ------------------------------------------------------------ */
 
 export interface OrganizationRow {
     id: number;
@@ -17,13 +21,40 @@ export interface OrganizationRow {
     created_at: string;
 }
 
-interface ColumnOptions {
-    onView: (org: OrganizationRow) => void;
-    onSuspend: (org: OrganizationRow) => void;
-    onReactivate: (org: OrganizationRow) => void;
-    onArchive: (org: OrganizationRow) => void;
+export interface OrganizationColumnOptions {
     t: (key: string) => string;
 }
+
+/* -- Sortable Header -------------------------------------------------- */
+
+function SortableHeader({
+    column,
+    title,
+}: {
+    column: { getIsSorted: () => false | 'asc' | 'desc'; toggleSorting: (desc: boolean) => void };
+    title: string;
+}) {
+    const sorted = column.getIsSorted();
+    return (
+        <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 font-medium"
+            onClick={() => column.toggleSorting(sorted === 'asc')}
+        >
+            {title}
+            {sorted === 'asc' ? (
+                <ArrowUp className="ml-1.5 h-3.5 w-3.5" />
+            ) : sorted === 'desc' ? (
+                <ArrowDown className="ml-1.5 h-3.5 w-3.5" />
+            ) : (
+                <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 text-muted-foreground/50" />
+            )}
+        </Button>
+    );
+}
+
+/* -- Badge Variants --------------------------------------------------- */
 
 const segmentVariants: Record<string, 'info' | 'secondary' | 'outline' | 'warning' | 'success'> = {
     retail: 'info',
@@ -46,136 +77,122 @@ const statusVariants: Record<string, 'success' | 'warning' | 'destructive' | 'se
     archived: 'secondary',
 };
 
-export function getOrganizationColumns(options: ColumnOptions) {
-    const { onView, onSuspend, onReactivate, onArchive, t } = options;
+/* -- Column Definitions ----------------------------------------------- */
 
+export function getOrganizationColumns({ t }: OrganizationColumnOptions): ColumnDef<OrganizationRow>[] {
     return [
+        // -- Name with Avatar --
         {
-            key: 'name' as const,
-            header: t('Organization'),
-            render: (org: OrganizationRow) => (
-                <div className="flex items-center gap-3">
-                    <Avatar size="sm">
-                        {org.logo ? <AvatarImage src={org.logo} alt={org.name} /> : null}
-                        <AvatarFallback>
-                            <Building2 className="h-4 w-4" />
-                        </AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <span className="font-medium">{org.name}</span>
-                        <p className="text-xs text-muted-foreground">{org.slug}</p>
+            accessorKey: 'name',
+            header: ({ column }) => <SortableHeader column={column} title={t('Organization')} />,
+            cell: ({ row }) => {
+                const org = row.original;
+                return (
+                    <div className="flex items-center gap-3">
+                        <Avatar size="sm">
+                            {org.logo ? <AvatarImage src={org.logo} alt={org.name} /> : null}
+                            <AvatarFallback>
+                                <Building2 className="h-4 w-4" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <span className="font-medium">{org.name}</span>
+                            <p className="text-xs text-muted-foreground">{org.slug}</p>
+                        </div>
                     </div>
-                </div>
-            ),
+                );
+            },
         },
+
+        // -- Segment --
         {
-            key: 'segment' as const,
-            header: t('Segment'),
-            render: (org: OrganizationRow) =>
-                org.segment ? (
-                    <Badge variant={segmentVariants[org.segment] ?? 'outline'} className="text-xs capitalize">
-                        {org.segment.replace('_', ' ')}
+            accessorKey: 'segment',
+            header: ({ column }) => <SortableHeader column={column} title={t('Segment')} />,
+            cell: ({ row }) => {
+                const segment = row.original.segment;
+                return segment ? (
+                    <Badge variant={segmentVariants[segment] ?? 'outline'} className="text-xs capitalize">
+                        {segment.replace('_', ' ')}
                     </Badge>
                 ) : (
                     <span className="text-muted-foreground">--</span>
-                ),
+                );
+            },
         },
+
+        // -- Plan --
         {
-            key: 'plan' as const,
-            header: t('Plan'),
-            render: (org: OrganizationRow) =>
-                org.plan ? (
-                    <Badge variant={planVariants[org.plan] ?? 'outline'} className="text-xs capitalize">
-                        {org.plan}
+            accessorKey: 'plan',
+            header: () => t('Plan'),
+            cell: ({ row }) => {
+                const plan = row.original.plan;
+                return plan ? (
+                    <Badge variant={planVariants[plan] ?? 'outline'} className="text-xs capitalize">
+                        {plan}
                     </Badge>
                 ) : (
                     <span className="text-muted-foreground">--</span>
-                ),
+                );
+            },
+            enableSorting: false,
         },
+
+        // -- Sites count --
         {
-            key: 'sites_count' as const,
-            header: t('Sites'),
-            render: (org: OrganizationRow) => (
-                <span className="font-mono tabular-nums">{org.sites_count}</span>
+            accessorKey: 'sites_count',
+            header: ({ column }) => <SortableHeader column={column} title={t('Sites')} />,
+            cell: ({ row }) => (
+                <span className="font-mono tabular-nums">{row.original.sites_count}</span>
             ),
         },
+
+        // -- Devices count --
         {
-            key: 'devices_count' as const,
-            header: t('Devices'),
-            render: (org: OrganizationRow) => (
-                <span className="font-mono tabular-nums">{org.devices_count}</span>
+            accessorKey: 'devices_count',
+            header: () => t('Devices'),
+            cell: ({ row }) => (
+                <span className="font-mono tabular-nums">{row.original.devices_count}</span>
             ),
+            enableSorting: false,
         },
+
+        // -- Users count --
         {
-            key: 'users_count' as const,
-            header: t('Users'),
-            render: (org: OrganizationRow) => (
-                <span className="font-mono tabular-nums">{org.users_count}</span>
+            accessorKey: 'users_count',
+            header: () => t('Users'),
+            cell: ({ row }) => (
+                <span className="font-mono tabular-nums">{row.original.users_count}</span>
             ),
+            enableSorting: false,
         },
+
+        // -- Status --
         {
-            key: 'status' as const,
-            header: t('Status'),
-            render: (org: OrganizationRow) => (
-                <Badge variant={statusVariants[org.status] ?? 'outline'} className="text-xs capitalize">
-                    {org.status}
+            accessorKey: 'status',
+            header: ({ column }) => <SortableHeader column={column} title={t('Status')} />,
+            cell: ({ row }) => (
+                <Badge variant={statusVariants[row.original.status] ?? 'outline'} className="text-xs capitalize">
+                    {row.original.status}
                 </Badge>
             ),
+            sortingFn: (rowA, rowB) => {
+                const order: Record<string, number> = { active: 0, onboarding: 1, suspended: 2, archived: 3 };
+                const a = order[rowA.original.status] ?? 4;
+                const b = order[rowB.original.status] ?? 4;
+                return a - b;
+            },
         },
+
+        // -- Created --
         {
-            key: 'actions' as const,
-            header: '',
-            render: (org: OrganizationRow) => (
-                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon-sm" onClick={() => onView(org)} title={t('View')}>
-                        <Eye className="h-3.5 w-3.5" />
-                    </Button>
-                    {['active', 'onboarding'].includes(org.status) && (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                className="text-amber-600 hover:text-amber-700"
-                                onClick={() => onSuspend(org)}
-                                title={t('Suspend')}
-                            >
-                                <Pause className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => onArchive(org)}
-                                title={t('Archive')}
-                            >
-                                <Archive className="h-3.5 w-3.5" />
-                            </Button>
-                        </>
-                    )}
-                    {org.status === 'suspended' && (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                className="text-emerald-600 hover:text-emerald-700"
-                                onClick={() => onReactivate(org)}
-                                title={t('Reactivate')}
-                            >
-                                <Play className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => onArchive(org)}
-                                title={t('Archive')}
-                            >
-                                <Archive className="h-3.5 w-3.5" />
-                            </Button>
-                        </>
-                    )}
-                </div>
+            accessorKey: 'created_at',
+            header: () => t('Created'),
+            cell: ({ row }) => (
+                <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                    {formatTimeAgo(row.original.created_at)}
+                </span>
             ),
+            enableSorting: false,
         },
     ];
 }
