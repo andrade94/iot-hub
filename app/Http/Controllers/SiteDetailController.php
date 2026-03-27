@@ -30,8 +30,11 @@ class SiteDetailController extends Controller
                 'active_alerts' => $site->active_alerts_count,
             ]);
 
+        $timezones = timezone_identifiers_list(\DateTimeZone::AMERICA);
+
         return Inertia::render('sites/index', [
             'sites' => $sites,
+            'timezones' => $timezones,
         ]);
     }
 

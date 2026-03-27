@@ -1,3 +1,4 @@
+import { Can } from '@/components/Can';
 import { getDeviceColumns } from '@/components/devices/columns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,11 +12,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, Device, Site } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Cpu, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Cpu, Plus, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 interface PaginatedDevices {
@@ -217,17 +219,34 @@ export default function DeviceIndex({ devices, sites, filters }: Props) {
                 <FadeIn direction="down" duration={400}>
                     <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
                         <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
-                        <div className="relative p-6 md:p-8">
-                            <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
-                                {t('Monitor')}
-                            </p>
-                            <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
-                                {t('Devices')}
-                            </h1>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                <span className="font-mono font-medium text-foreground">{devices.total}</span>{' '}
-                                {t('devices across all sites')}
-                            </p>
+                        <div className="relative flex items-start justify-between p-6 md:p-8">
+                            <div>
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('Monitor')}
+                                </p>
+                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                    {t('Devices')}
+                                </h1>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    <span className="font-mono font-medium text-foreground">{devices.total}</span>{' '}
+                                    {t('devices across all sites')}
+                                </p>
+                            </div>
+                            <Can permission="manage devices">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span tabIndex={0}>
+                                            <Button disabled>
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                {t('Register Device')}
+                                            </Button>
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {t('Register devices via site management')}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </Can>
                         </div>
                     </div>
                 </FadeIn>

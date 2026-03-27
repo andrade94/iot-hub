@@ -94,25 +94,45 @@ export const navigation: NavGroup[] = [
         ],
     },
     {
-        title: 'Monitor',
+        title: 'Catalogs',
         items: [
+            {
+                title: 'Organizations',
+                href: '/settings/organizations',
+                icon: Building2,
+                tooltip: 'Organization catalog',
+                requiredRole: 'super_admin',
+            },
             {
                 title: 'Sites',
                 href: '/sites',
                 icon: MapPin,
-                tooltip: 'View sites',
+                tooltip: 'Sites catalog',
+            },
+            {
+                title: 'Users',
+                href: '/settings/users',
+                icon: Users,
+                tooltip: 'User management',
+                requiredPermission: 'manage users',
             },
             {
                 title: 'Devices',
                 href: '/devices',
                 icon: Cpu,
-                tooltip: 'View devices',
+                tooltip: 'Device catalog',
             },
             {
                 title: 'Gateways',
                 href: '/settings/gateways',
                 icon: Radio,
-                tooltip: 'View gateways',
+                tooltip: 'Gateway catalog',
+            },
+            {
+                title: 'Recipes',
+                href: '/recipes',
+                icon: BookOpen,
+                tooltip: 'Sensor recipes',
             },
         ],
     },
@@ -139,13 +159,6 @@ export const navigation: NavGroup[] = [
         title: 'Administration',
         items: [
             {
-                title: 'Organizations',
-                href: '/settings/organizations',
-                icon: Building2,
-                tooltip: 'Organization catalog',
-                requiredRole: 'super_admin',
-            },
-            {
                 title: 'Organization',
                 href: '/settings/organization',
                 icon: Building2,
@@ -153,31 +166,11 @@ export const navigation: NavGroup[] = [
                 requiredPermission: 'manage org settings',
             },
             {
-                title: 'Users',
-                href: '/settings/users',
-                icon: Users,
-                tooltip: 'Manage users',
-                requiredPermission: 'manage users',
-            },
-            {
-                title: 'Site Management',
-                href: '/settings/sites',
-                icon: MapPin,
-                tooltip: 'Create and configure sites',
-                requiredPermission: 'manage sites',
-            },
-            {
                 title: 'Escalation Chains',
                 href: '/settings/escalation-chains',
                 icon: GitBranch,
                 tooltip: 'Alert escalation setup',
                 requiredPermission: 'manage alert rules',
-            },
-            {
-                title: 'Recipes',
-                href: '/recipes',
-                icon: BookOpen,
-                tooltip: 'Sensor recipes',
             },
             {
                 title: 'Compliance',

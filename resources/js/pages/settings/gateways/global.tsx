@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -7,10 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, Gateway, Site } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { ChevronLeft, ChevronRight, Radio } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, Info, Radio } from 'lucide-react';
 import { useMemo } from 'react';
 
 interface GatewayWithSite extends Gateway {
@@ -104,6 +104,13 @@ export default function GatewayGlobalIndex({ gateways }: Props) {
                             <p className="mt-1 text-sm text-muted-foreground">
                                 <span className="font-mono font-medium text-foreground">{gateways.total}</span>{' '}
                                 {t('gateways across all sites')}
+                            </p>
+                            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <Info className="h-3.5 w-3.5 shrink-0" />
+                                {t('Gateways are managed per site.')}{' '}
+                                <Link href="/sites" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
+                                    {t('View Sites')}
+                                </Link>
                             </p>
                         </div>
                     </div>
