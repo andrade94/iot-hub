@@ -1,11 +1,15 @@
 import { Can, usePermission } from '@/components/Can';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { ContentWithSidebar } from '@/components/ui/content-with-sidebar';
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { FadeIn } from '@/components/ui/fade-in';
+import { FilterToolbar } from '@/components/ui/filter-toolbar';
+import type { FilterPill } from '@/components/ui/filter-toolbar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,7 +23,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { userSchema } from '@/utils/schemas';
 import { Head, router } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Plus, Search, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 interface SiteOption {
@@ -32,6 +36,21 @@ interface Props {
     sites: SiteOption[];
     roles: string[];
 }
+
+const ROLE_LABELS: Record<string, string> = {
+    super_admin: 'Super Admin',
+    support: 'Support',
+    account_manager: 'Account Manager',
+    technician: 'Technician',
+    client_org_admin: 'Org Admin',
+    client_site_manager: 'Site Manager',
+    client_site_viewer: 'Site Viewer',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+    active: 'Active',
+    deactivated: 'Deactivated',
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Settings', href: '/settings/profile' },
@@ -47,6 +66,93 @@ export default function UsersIndex({ users, sites, roles }: Props) {
     const [deleting, setDeleting] = useState(false);
 
     const canManage = can('manage users');
+
+    // Client-side filters
+    const [roleFilter, setRoleFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Filter sidebar visibility with localStorage persistence
+    const [showFilters, setShowFilters] = useState(() => {
+        try {
+            return localStorage.getItem('users-show-filters') !== 'false';
+        } catch {
+            return true;
+        }
+    });
+
+    function toggleFilters() {
+        const next = !showFilters;
+        setShowFilters(next);
+        try {
+            localStorage.setItem('users-show-filters', String(next));
+        } catch {
+            // ignore
+        }
+    }
+
+    // Client-side filtering
+    const filteredUsers = useMemo(() => {
+        let result = users;
+
+        if (roleFilter !== 'all') {
+            result = result.filter((user) => user.role === roleFilter);
+        }
+
+        if (statusFilter !== 'all') {
+            if (statusFilter === 'active') {
+                result = result.filter((user) => !('deactivated_at' in user) || !(user as Record<string, unknown>).deactivated_at);
+            } else if (statusFilter === 'deactivated') {
+                result = result.filter((user) => 'deactivated_at' in user && !!(user as Record<string, unknown>).deactivated_at);
+            }
+        }
+
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            result = result.filter(
+                (user) =>
+                    user.name.toLowerCase().includes(query) ||
+                    user.email.toLowerCase().includes(query),
+            );
+        }
+
+        return result;
+    }, [users, roleFilter, statusFilter, searchQuery]);
+
+    const hasFilters = roleFilter !== 'all' || statusFilter !== 'all' || searchQuery.trim() !== '';
+
+    function clearAllFilters() {
+        setRoleFilter('all');
+        setStatusFilter('all');
+        setSearchQuery('');
+    }
+
+    // Build filter pills
+    const filterPills = useMemo<FilterPill[]>(() => {
+        const pills: FilterPill[] = [];
+        if (roleFilter !== 'all') {
+            pills.push({
+                key: 'role',
+                label: `Role: ${ROLE_LABELS[roleFilter] ?? roleFilter.replace('_', ' ')}`,
+                onRemove: () => setRoleFilter('all'),
+            });
+        }
+        if (statusFilter !== 'all') {
+            pills.push({
+                key: 'status',
+                label: `Status: ${STATUS_LABELS[statusFilter] ?? statusFilter}`,
+                onRemove: () => setStatusFilter('all'),
+            });
+        }
+        if (searchQuery.trim()) {
+            pills.push({
+                key: 'search',
+                label: `Search: "${searchQuery}"`,
+                onRemove: () => setSearchQuery(''),
+            });
+        }
+        return pills;
+    }, [roleFilter, statusFilter, searchQuery]);
 
     const columns = useMemo(
         () =>
@@ -71,66 +177,162 @@ export default function UsersIndex({ users, sites, roles }: Props) {
         });
     }
 
+    // Empty state
+    const emptyStateNode = (
+        <EmptyState
+            size="sm"
+            variant="muted"
+            icon={<Users className="h-5 w-5 text-muted-foreground" />}
+            title={
+                hasFilters
+                    ? t('No users match these filters')
+                    : t('No users registered')
+            }
+            description={
+                hasFilters
+                    ? t('Try adjusting your filters to see more results')
+                    : t('Add your first user to get started')
+            }
+            action={
+                hasFilters ? (
+                    <Button variant="outline" size="sm" onClick={clearAllFilters}>
+                        {t('Clear filters')}
+                    </Button>
+                ) : undefined
+            }
+        />
+    );
+
+    // Filter sidebar
+    const filterSidebar = (
+        <Card className="shadow-elevation-1">
+            <CardContent className="flex flex-col gap-4 p-4">
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                        {t('Role')}
+                    </Label>
+                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder={t('Role')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('All Roles')}</SelectItem>
+                            {roles.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                    {ROLE_LABELS[role] ?? role.replace('_', ' ')}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                        {t('Status')}
+                    </Label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder={t('Status')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('All Status')}</SelectItem>
+                            <SelectItem value="active">{t('Active')}</SelectItem>
+                            <SelectItem value="deactivated">{t('Deactivated')}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                        {t('Search')}
+                    </Label>
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder={t('Name or email...')}
+                            className="pl-8"
+                        />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Users')} />
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-                {/* ── Header card with bg-dots ── */}
-                <FadeIn>
-                    <Card className="shadow-elevation-1 overflow-hidden">
-                        <div className="bg-dots relative border-b px-6 py-5">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                                        {t('User Management')}
-                                    </p>
-                                    <h1 className="font-display mt-1 text-2xl font-bold tracking-tight">
-                                        {t('Users')}
-                                    </h1>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        <span className="font-mono tabular-nums">{users.length}</span>{' '}
-                                        {t('user(s)')}
-                                    </p>
-                                </div>
-                                <Can permission="manage users">
-                                    <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                                        <DialogTrigger asChild>
-                                            <Button>
-                                                <Plus className="mr-2 h-4 w-4" />
-                                                {t('Add User')}
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-lg">
-                                            <DialogHeader>
-                                                <DialogTitle>{t('Add User')}</DialogTitle>
-                                            </DialogHeader>
-                                            <UserForm
-                                                sites={sites}
-                                                roles={roles}
-                                                onSuccess={() => setShowCreate(false)}
-                                            />
-                                        </DialogContent>
-                                    </Dialog>
-                                </Can>
+                {/* -- Header -------------------------------------------------- */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
+                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
+                        <div className="relative flex items-start justify-between p-6 md:p-8">
+                            <div>
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('User Management')}
+                                </p>
+                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                    {t('Users')}
+                                </h1>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    <span className="font-mono tabular-nums font-medium text-foreground">{users.length}</span>{' '}
+                                    {t('user(s) registered')}
+                                </p>
                             </div>
+                            <Can permission="manage users">
+                                <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                                    <DialogTrigger asChild>
+                                        <Button>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            {t('Add User')}
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-lg">
+                                        <DialogHeader>
+                                            <DialogTitle>{t('Add User')}</DialogTitle>
+                                        </DialogHeader>
+                                        <UserForm
+                                            sites={sites}
+                                            roles={roles}
+                                            onSuccess={() => setShowCreate(false)}
+                                        />
+                                    </DialogContent>
+                                </Dialog>
+                            </Can>
                         </div>
-                    </Card>
+                    </div>
                 </FadeIn>
 
-                {/* ── Users table ── */}
-                <FadeIn delay={100}>
-                    <Card className="shadow-elevation-1">
-                        <DataTable
-                            columns={columns}
-                            data={users}
-                            bordered={false}
-                            noResultsMessage={t('No users')}
-                        />
-                    </Card>
+                {/* -- FilterToolbar + ContentWithSidebar ---------------------- */}
+                <FadeIn delay={75} duration={400}>
+                    <FilterToolbar
+                        showSidebar={showFilters}
+                        onToggleSidebar={toggleFilters}
+                        pills={filterPills}
+                        onClearAll={hasFilters ? clearAllFilters : undefined}
+                    />
+                </FadeIn>
+
+                <FadeIn delay={150} duration={500}>
+                    <ContentWithSidebar
+                        showSidebar={showFilters}
+                        sidebar={filterSidebar}
+                    >
+                        <Card className="flex-1 shadow-elevation-1">
+                            <DataTable
+                                columns={columns}
+                                data={filteredUsers}
+                                bordered={false}
+                                emptyState={emptyStateNode}
+                            />
+                        </Card>
+                    </ContentWithSidebar>
                 </FadeIn>
             </div>
 
-            {/* ── Edit dialog (controlled outside table) ── */}
+            {/* -- Edit dialog (controlled outside table) -- */}
             <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
@@ -161,7 +363,7 @@ export default function UsersIndex({ users, sites, roles }: Props) {
     );
 }
 
-/* ── User Form ───────────────────────────────────── */
+/* -- User Form --------------------------------------------------- */
 
 function UserForm({
     user,
@@ -328,26 +530,23 @@ function UserForm({
     );
 }
 
-/* ── Skeleton ────────────────────────────────────── */
+/* -- Skeleton --------------------------------------------------------- */
 
 export function UsersIndexSkeleton() {
     return (
         <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-            {/* Header card */}
-            <Card className="shadow-elevation-1 overflow-hidden">
-                <div className="border-b px-6 py-5">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                            <Skeleton className="h-3 w-24" />
-                            <Skeleton className="h-8 w-20" />
-                            <Skeleton className="h-4 w-24" />
-                        </div>
-                        <Skeleton className="h-9 w-28" />
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="shadow-elevation-1">
+            {/* Header */}
+            <div className="rounded-xl border p-6 md:p-8">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="mt-3 h-8 w-20" />
+                <Skeleton className="mt-2 h-4 w-24" />
+            </div>
+            {/* Filter Toolbar */}
+            <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-24" />
+            </div>
+            {/* Table */}
+            <Card>
                 <Table>
                     <TableHeader>
                         <TableRow>
