@@ -6,6 +6,7 @@ use App\Models\BillingProfile;
 use App\Models\Organization;
 use App\Services\Billing\SubscriptionService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class PartnerController extends Controller
@@ -18,6 +19,7 @@ class PartnerController extends Controller
 
         return Inertia::render('partner/index', [
             'organizations' => $organizations,
+            'segments' => \App\Models\Segment::active()->pluck('name'),
         ]);
     }
 
@@ -26,7 +28,7 @@ class PartnerController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:organizations,slug',
-            'segment' => 'required|string|in:retail,cold_chain,industrial,commercial,foodservice',
+            'segment' => ['required', 'string', Rule::in(\App\Models\Segment::active()->pluck('name'))],
             'plan' => 'required|string|in:starter,standard,enterprise',
             'default_timezone' => 'nullable|string|max:50',
             'default_opening_hour' => 'nullable|date_format:H:i',

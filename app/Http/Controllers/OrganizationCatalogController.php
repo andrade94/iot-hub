@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Organization;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class OrganizationCatalogController extends Controller
@@ -34,6 +35,7 @@ class OrganizationCatalogController extends Controller
 
         return Inertia::render('settings/organizations/index', [
             'organizations' => $organizations,
+            'segments' => \App\Models\Segment::active()->pluck('name'),
         ]);
     }
 
@@ -88,6 +90,7 @@ class OrganizationCatalogController extends Controller
             'users' => $users,
             'subscription' => $organization->subscriptions->first(),
             'timezones' => $timezones,
+            'segments' => \App\Models\Segment::active()->pluck('name'),
         ]);
     }
 
@@ -96,7 +99,7 @@ class OrganizationCatalogController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:organizations,slug,' . $organization->id,
-            'segment' => 'required|string|in:retail,cold_chain,industrial,commercial,foodservice',
+            'segment' => ['required', 'string', Rule::in(\App\Models\Segment::active()->pluck('name'))],
             'plan' => 'required|string|in:starter,standard,enterprise',
             'default_timezone' => 'nullable|string|max:50',
             'default_opening_hour' => 'nullable|date_format:H:i',

@@ -35,6 +35,7 @@ use App\Http\Controllers\MaintenanceWindowController;
 use App\Http\Controllers\ReportScheduleController;
 use App\Http\Controllers\SiteTemplateController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SegmentController;
 use App\Http\Controllers\StatusController;
 use App\Http\Controllers\TemperatureVerificationController;
 use App\Http\Controllers\WorkOrderController;
@@ -441,6 +442,14 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::post('{organization}/suspend', [OrganizationCatalogController::class, 'suspend'])->name('suspend');
         Route::post('{organization}/reactivate', [OrganizationCatalogController::class, 'reactivate'])->name('reactivate');
         Route::delete('{organization}', [OrganizationCatalogController::class, 'destroy'])->name('destroy');
+    });
+
+    // Segment Catalog (super_admin)
+    Route::middleware('role:super_admin')->prefix('settings/segments')->name('segments.')->group(function () {
+        Route::get('/', [SegmentController::class, 'index'])->name('index');
+        Route::post('/', [SegmentController::class, 'store'])->name('store');
+        Route::put('{segment}', [SegmentController::class, 'update'])->name('update');
+        Route::delete('{segment}', [SegmentController::class, 'destroy'])->name('destroy');
     });
 
     // Partner Portal (super_admin)

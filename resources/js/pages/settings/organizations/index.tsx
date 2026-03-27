@@ -39,9 +39,9 @@ import { z } from 'zod';
 
 interface Props {
     organizations: OrganizationRow[];
+    segments: string[];
 }
 
-const SEGMENTS = ['retail', 'cold_chain', 'industrial', 'commercial', 'foodservice'] as const;
 const PLANS = ['starter', 'standard', 'enterprise'] as const;
 
 const SEGMENT_LABELS: Record<string, string> = {
@@ -64,7 +64,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Organizations', href: '#' },
 ];
 
-export default function OrganizationsIndex({ organizations }: Props) {
+export default function OrganizationsIndex({ organizations, segments }: Props) {
     const { t } = useLang();
     const [showCreate, setShowCreate] = useState(false);
     const [suspendOrg, setSuspendOrg] = useState<OrganizationRow | null>(null);
@@ -231,7 +231,7 @@ export default function OrganizationsIndex({ organizations }: Props) {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">{t('All Segments')}</SelectItem>
-                            {SEGMENTS.map((seg) => (
+                            {segments.map((seg) => (
                                 <SelectItem key={seg} value={seg}>
                                     {seg.replace('_', ' ')}
                                 </SelectItem>
@@ -308,7 +308,7 @@ export default function OrganizationsIndex({ organizations }: Props) {
                                     <DialogHeader>
                                         <DialogTitle>{t('Create Organization')}</DialogTitle>
                                     </DialogHeader>
-                                    <CreateOrganizationForm onSuccess={() => setShowCreate(false)} />
+                                    <CreateOrganizationForm segments={segments} onSuccess={() => setShowCreate(false)} />
                                 </DialogContent>
                             </Dialog>
                         </div>
@@ -394,7 +394,7 @@ const organizationSchema = z.object({
     default_opening_hour: z.string().min(1, 'Opening hour is required'),
 });
 
-function CreateOrganizationForm({ onSuccess }: { onSuccess: () => void }) {
+function CreateOrganizationForm({ segments, onSuccess }: { segments: string[]; onSuccess: () => void }) {
     const { t } = useLang();
     const form = useValidatedForm(organizationSchema, {
         name: '',
@@ -461,7 +461,7 @@ function CreateOrganizationForm({ onSuccess }: { onSuccess: () => void }) {
                             <SelectValue placeholder={t('Select segment')} />
                         </SelectTrigger>
                         <SelectContent>
-                            {SEGMENTS.map((seg) => (
+                            {segments.map((seg) => (
                                 <SelectItem key={seg} value={seg}>
                                     {seg.replace('_', ' ')}
                                 </SelectItem>

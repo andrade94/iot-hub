@@ -108,6 +108,14 @@ class Organization extends Model
         return $this->hasMany(Invoice::class, 'org_id');
     }
 
+    /**
+     * Get the Segment model for this organization (matched by name string).
+     */
+    public function segmentModel(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Segment::class, 'segment', 'name');
+    }
+
     public function isSegment(string $segment): bool
     {
         return $this->segment === $segment;

@@ -74,11 +74,11 @@ interface Props {
     users: UserSummary[];
     subscription?: Subscription | null;
     timezones: string[];
+    segments: string[];
 }
 
 /* -- Constants -------------------------------------------------------- */
 
-const SEGMENTS = ['retail', 'cold_chain', 'industrial', 'commercial', 'foodservice'] as const;
 const PLANS = ['starter', 'standard', 'enterprise'] as const;
 
 const statusVariants: Record<string, 'success' | 'warning' | 'destructive' | 'secondary'> = {
@@ -119,7 +119,7 @@ function SectionDivider({ label, badge }: { label: string; badge?: React.ReactNo
 
 /* -- Main Component --------------------------------------------------- */
 
-export default function OrganizationShow({ organization, sites, users, timezones }: Props) {
+export default function OrganizationShow({ organization, sites, users, timezones, segments }: Props) {
     const { t } = useLang();
     const [suspendOpen, setSuspendOpen] = useState(false);
     const [archiveOpen, setArchiveOpen] = useState(false);
@@ -370,7 +370,7 @@ export default function OrganizationShow({ organization, sites, users, timezones
                     <div className="space-y-6">
                         {/* Edit Form */}
                         <FadeIn delay={100} duration={400}>
-                            <EditOrganizationForm organization={organization} timezones={timezones} />
+                            <EditOrganizationForm organization={organization} timezones={timezones} segments={segments} />
                         </FadeIn>
 
                         {/* Branding */}
@@ -467,7 +467,7 @@ const editSchema = z.object({
     default_opening_hour: z.string().optional(),
 });
 
-function EditOrganizationForm({ organization, timezones }: { organization: OrganizationDetail; timezones: string[] }) {
+function EditOrganizationForm({ organization, timezones, segments }: { organization: OrganizationDetail; timezones: string[]; segments: string[] }) {
     const { t } = useLang();
     const form = useValidatedForm(editSchema, {
         name: organization.name,
@@ -507,7 +507,7 @@ function EditOrganizationForm({ organization, timezones }: { organization: Organ
                             <SelectValue placeholder={t('Select segment')} />
                         </SelectTrigger>
                         <SelectContent>
-                            {SEGMENTS.map((seg) => (
+                            {segments.map((seg) => (
                                 <SelectItem key={seg} value={seg}>
                                     {seg.replace('_', ' ')}
                                 </SelectItem>
