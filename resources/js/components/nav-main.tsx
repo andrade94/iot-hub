@@ -200,8 +200,12 @@ function NavSection({ group, index }: NavSectionProps) {
                                 return (
                                     <SidebarMenuItem key={item.title}>
                                         {item.subGroupLabel && (
-                                            <div className="px-2 pb-0.5 pt-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50 first:pt-0">
-                                                {item.subGroupLabel}
+                                            <div className="flex items-center gap-2 px-2 pb-1 pt-4 first:pt-1">
+                                                <div className="h-px flex-1 bg-sidebar-border/40" />
+                                                <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/40">
+                                                    {item.subGroupLabel}
+                                                </span>
+                                                <div className="h-px flex-1 bg-sidebar-border/40" />
                                             </div>
                                         )}
                                         <SidebarMenuButton
