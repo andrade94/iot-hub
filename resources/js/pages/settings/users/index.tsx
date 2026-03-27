@@ -35,6 +35,7 @@ interface Props {
     users: UserRecord[];
     sites: SiteOption[];
     roles: string[];
+    allOrgsMode?: boolean;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -57,7 +58,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '#' },
 ];
 
-export default function UsersIndex({ users, sites, roles }: Props) {
+export default function UsersIndex({ users, sites, roles, allOrgsMode = false }: Props) {
     const { t } = useLang();
     const { can } = usePermission();
     const [showCreate, setShowCreate] = useState(false);
@@ -70,7 +71,15 @@ export default function UsersIndex({ users, sites, roles }: Props) {
     // Client-side filters
     const [roleFilter, setRoleFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [orgFilter, setOrgFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Unique org names for filter dropdown (only used in allOrgsMode)
+    const orgNames = useMemo(() => {
+        if (!allOrgsMode) return [];
+        const names = new Set(users.map((u) => u.organization_name).filter(Boolean) as string[]);
+        return Array.from(names).sort();
+    }, [users, allOrgsMode]);
 
     // Filter sidebar visibility with localStorage persistence
     const [showFilters, setShowFilters] = useState(() => {
@@ -101,10 +110,14 @@ export default function UsersIndex({ users, sites, roles }: Props) {
 
         if (statusFilter !== 'all') {
             if (statusFilter === 'active') {
-                result = result.filter((user) => !('deactivated_at' in user) || !(user as Record<string, unknown>).deactivated_at);
+                result = result.filter((user) => !user.deactivated_at);
             } else if (statusFilter === 'deactivated') {
-                result = result.filter((user) => 'deactivated_at' in user && !!(user as Record<string, unknown>).deactivated_at);
+                result = result.filter((user) => !!user.deactivated_at);
             }
+        }
+
+        if (allOrgsMode && orgFilter !== 'all') {
+            result = result.filter((user) => user.organization_name === orgFilter);
         }
 
         if (searchQuery.trim()) {
@@ -117,19 +130,27 @@ export default function UsersIndex({ users, sites, roles }: Props) {
         }
 
         return result;
-    }, [users, roleFilter, statusFilter, searchQuery]);
+    }, [users, roleFilter, statusFilter, orgFilter, allOrgsMode, searchQuery]);
 
-    const hasFilters = roleFilter !== 'all' || statusFilter !== 'all' || searchQuery.trim() !== '';
+    const hasFilters = roleFilter !== 'all' || statusFilter !== 'all' || orgFilter !== 'all' || searchQuery.trim() !== '';
 
     function clearAllFilters() {
         setRoleFilter('all');
         setStatusFilter('all');
+        setOrgFilter('all');
         setSearchQuery('');
     }
 
     // Build filter pills
     const filterPills = useMemo<FilterPill[]>(() => {
         const pills: FilterPill[] = [];
+        if (orgFilter !== 'all') {
+            pills.push({
+                key: 'org',
+                label: `Organization: ${orgFilter}`,
+                onRemove: () => setOrgFilter('all'),
+            });
+        }
         if (roleFilter !== 'all') {
             pills.push({
                 key: 'role',
@@ -152,7 +173,7 @@ export default function UsersIndex({ users, sites, roles }: Props) {
             });
         }
         return pills;
-    }, [roleFilter, statusFilter, searchQuery]);
+    }, [orgFilter, roleFilter, statusFilter, searchQuery]);
 
     const columns = useMemo(
         () =>
@@ -161,8 +182,9 @@ export default function UsersIndex({ users, sites, roles }: Props) {
                 onDelete: (user) => setDeleteUser(user),
                 t,
                 canManage,
+                allOrgsMode,
             }),
-        [t, canManage],
+        [t, canManage, allOrgsMode],
     );
 
     function handleDelete() {
@@ -207,6 +229,27 @@ export default function UsersIndex({ users, sites, roles }: Props) {
     const filterSidebar = (
         <Card className="shadow-elevation-1">
             <CardContent className="flex flex-col gap-4 p-4">
+                {allOrgsMode && (
+                    <div className="space-y-1.5">
+                        <Label className="text-xs font-medium text-muted-foreground">
+                            {t('Organization')}
+                        </Label>
+                        <Select value={orgFilter} onValueChange={setOrgFilter}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder={t('Organization')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">{t('All Organizations')}</SelectItem>
+                                {orgNames.map((name) => (
+                                    <SelectItem key={name} value={name}>
+                                        {name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+
                 <div className="space-y-1.5">
                     <Label className="text-xs font-medium text-muted-foreground">
                         {t('Role')}

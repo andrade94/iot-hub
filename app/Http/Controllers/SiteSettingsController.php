@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organization;
 use App\Models\Site;
 use App\Models\SiteTemplate;
 use Illuminate\Http\Request;
@@ -12,34 +13,62 @@ class SiteSettingsController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $orgId = $user->org_id;
+        $org = $this->resolveOrganization($request);
+        $allOrgsMode = $org === null;
 
-        $sites = Site::where('org_id', $orgId)
-            ->withCount(['devices', 'gateways'])
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($site) => [
-                'id' => $site->id,
-                'name' => $site->name,
-                'address' => $site->address,
-                'status' => $site->status,
-                'timezone' => $site->timezone,
-                'opening_hour' => $site->opening_hour?->format('H:i'),
-                'device_count' => $site->devices_count,
-                'gateway_count' => $site->gateways_count,
-                'created_at' => $site->created_at->toIso8601String(),
-            ]);
+        if ($allOrgsMode) {
+            // Super admin with no org context — show sites from ALL organizations
+            $sites = Site::with('organization:id,name')
+                ->withCount(['devices', 'gateways'])
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($site) => [
+                    'id' => $site->id,
+                    'name' => $site->name,
+                    'address' => $site->address,
+                    'status' => $site->status,
+                    'timezone' => $site->timezone,
+                    'opening_hour' => $site->opening_hour?->format('H:i'),
+                    'device_count' => $site->devices_count,
+                    'gateway_count' => $site->gateways_count,
+                    'organization_name' => $site->organization?->name,
+                    'created_at' => $site->created_at->toIso8601String(),
+                ]);
+        } else {
+            $sites = Site::where('org_id', $org->id)
+                ->withCount(['devices', 'gateways'])
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($site) => [
+                    'id' => $site->id,
+                    'name' => $site->name,
+                    'address' => $site->address,
+                    'status' => $site->status,
+                    'timezone' => $site->timezone,
+                    'opening_hour' => $site->opening_hour?->format('H:i'),
+                    'device_count' => $site->devices_count,
+                    'gateway_count' => $site->gateways_count,
+                    'created_at' => $site->created_at->toIso8601String(),
+                ]);
+        }
 
         $timezones = timezone_identifiers_list(\DateTimeZone::AMERICA);
 
         return Inertia::render('settings/sites/index', [
             'sites' => $sites,
             'timezones' => $timezones,
+            'allOrgsMode' => $allOrgsMode,
         ]);
     }
 
     public function store(Request $request)
     {
+        $org = $this->resolveOrganization($request);
+
+        if (! $org) {
+            return back()->with('error', 'Select an organization before creating sites.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
@@ -50,11 +79,9 @@ class SiteSettingsController extends Controller
             'status' => 'required|string|in:draft,active,suspended',
         ]);
 
-        $user = $request->user();
-
         Site::create([
             ...$validated,
-            'org_id' => $user->org_id,
+            'org_id' => $org->id,
         ]);
 
         return back()->with('success', "Site '{$validated['name']}' created.");
@@ -79,10 +106,14 @@ class SiteSettingsController extends Controller
 
     public function batchImport(Request $request)
     {
-        $user = $request->user();
-        $orgId = $user->org_id;
+        $org = $this->resolveOrganization($request);
 
-        $templates = SiteTemplate::where('org_id', $orgId)
+        if (! $org) {
+            return redirect()->route('sites.settings.index')
+                ->with('error', 'Select an organization before importing sites.');
+        }
+
+        $templates = SiteTemplate::where('org_id', $org->id)
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -96,6 +127,12 @@ class SiteSettingsController extends Controller
 
     public function processBatchImport(Request $request)
     {
+        $org = $this->resolveOrganization($request);
+
+        if (! $org) {
+            return back()->with('error', 'Select an organization before importing sites.');
+        }
+
         $request->validate([
             'sites' => 'required|array|min:1',
             'sites.*.name' => 'required|string|max:255',
@@ -104,13 +141,11 @@ class SiteSettingsController extends Controller
             'sites.*.template_name' => 'nullable|string|max:255',
         ]);
 
-        $user = $request->user();
-        $orgId = $user->org_id;
         $created = 0;
 
         foreach ($request->input('sites') as $siteData) {
             Site::create([
-                'org_id' => $orgId,
+                'org_id' => $org->id,
                 'name' => $siteData['name'],
                 'address' => $siteData['address'] ?? null,
                 'timezone' => $siteData['timezone'] ?? null,
@@ -129,5 +164,30 @@ class SiteSettingsController extends Controller
         $site->delete();
 
         return back()->with('success', "Site '{$name}' deleted.");
+    }
+
+    private function resolveOrganization(Request $request): ?Organization
+    {
+        if (app()->bound('current_organization')) {
+            return app('current_organization');
+        }
+
+        $user = $request->user();
+
+        if ($user->org_id) {
+            return Organization::findOrFail($user->org_id);
+        }
+
+        // super_admin without org_id — try session org switcher, return null for all-orgs mode
+        if ($user->hasRole('super_admin')) {
+            $sessionOrgId = session('current_org_id');
+            if ($sessionOrgId) {
+                return Organization::findOrFail($sessionOrgId);
+            }
+
+            return null; // All orgs mode
+        }
+
+        abort(403, 'No organization selected.');
     }
 }

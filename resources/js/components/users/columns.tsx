@@ -12,6 +12,8 @@ export interface UserRecord {
     has_app_access: boolean;
     role: string | null;
     sites: { id: number; name: string }[];
+    organization_name?: string;
+    deactivated_at?: string | null;
     created_at: string;
 }
 
@@ -27,9 +29,10 @@ interface UserColumnOptions {
     onDelete: (user: UserRecord) => void;
     t: (key: string) => string;
     canManage: boolean;
+    allOrgsMode?: boolean;
 }
 
-export function getUserColumns({ onEdit, onDelete, t, canManage }: UserColumnOptions): ColumnDef<UserRecord>[] {
+export function getUserColumns({ onEdit, onDelete, t, canManage, allOrgsMode }: UserColumnOptions): ColumnDef<UserRecord>[] {
     const columns: ColumnDef<UserRecord>[] = [
         {
             accessorKey: 'name',
@@ -63,6 +66,29 @@ export function getUserColumns({ onEdit, onDelete, t, canManage }: UserColumnOpt
                 <span className="text-muted-foreground">{row.getValue('email')}</span>
             ),
         },
+    ];
+
+    if (allOrgsMode) {
+        columns.push({
+            accessorKey: 'organization_name',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-3 h-8"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                >
+                    {t('Organization')}
+                    <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+            ),
+            cell: ({ row }) => (
+                <span className="text-muted-foreground">{row.original.organization_name ?? '-'}</span>
+            ),
+        });
+    }
+
+    columns.push(
         {
             accessorKey: 'role',
             header: ({ column }) => (
@@ -121,7 +147,7 @@ export function getUserColumns({ onEdit, onDelete, t, canManage }: UserColumnOpt
                 );
             },
         },
-    ];
+    );
 
     if (canManage) {
         columns.push({

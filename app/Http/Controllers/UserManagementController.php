@@ -17,27 +17,52 @@ class UserManagementController extends Controller
     public function index(Request $request)
     {
         $org = $this->resolveOrganization($request);
+        $allOrgsMode = $org === null;
 
-        $users = User::where('org_id', $org->id)
-            ->with(['roles', 'sites:id,name'])
-            ->orderBy('name')
-            ->get()
-            ->map(fn (User $user) => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'whatsapp_phone' => $user->whatsapp_phone,
-                'has_app_access' => $user->has_app_access,
-                'role' => $user->roles->first()?->name,
-                'sites' => $user->sites->map(fn ($s) => ['id' => $s->id, 'name' => $s->name]),
-                'created_at' => $user->created_at,
-            ]);
+        if ($allOrgsMode) {
+            // Super admin with no org context — show users from ALL organizations
+            $users = User::with(['roles', 'sites:id,name', 'organization:id,name'])
+                ->whereNotNull('org_id')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (User $user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'whatsapp_phone' => $user->whatsapp_phone,
+                    'has_app_access' => $user->has_app_access,
+                    'role' => $user->roles->first()?->name,
+                    'sites' => $user->sites->map(fn ($s) => ['id' => $s->id, 'name' => $s->name]),
+                    'organization_name' => $user->organization?->name,
+                    'deactivated_at' => $user->deactivated_at,
+                    'created_at' => $user->created_at,
+                ]);
 
-        $sites = Site::where('org_id', $org->id)
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
+            $sites = Site::select('id', 'name')->orderBy('name')->get();
+        } else {
+            $users = User::where('org_id', $org->id)
+                ->with(['roles', 'sites:id,name'])
+                ->orderBy('name')
+                ->get()
+                ->map(fn (User $user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'whatsapp_phone' => $user->whatsapp_phone,
+                    'has_app_access' => $user->has_app_access,
+                    'role' => $user->roles->first()?->name,
+                    'sites' => $user->sites->map(fn ($s) => ['id' => $s->id, 'name' => $s->name]),
+                    'deactivated_at' => $user->deactivated_at,
+                    'created_at' => $user->created_at,
+                ]);
+
+            $sites = Site::where('org_id', $org->id)
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get();
+        }
 
         // org_admin can only assign client roles; super_admin can assign all except super_admin
         $assignableRoles = $request->user()->hasRole('super_admin')
@@ -55,12 +80,17 @@ class UserManagementController extends Controller
             'sites' => $sites,
             'roles' => $assignableRoles,
             'roleOptions' => $roleOptions,
+            'allOrgsMode' => $allOrgsMode,
         ]);
     }
 
     public function store(Request $request)
     {
         $org = $this->resolveOrganization($request);
+
+        if (! $org) {
+            return back()->with('error', 'Select an organization before creating users.');
+        }
 
         $allowedRoles = $request->user()->hasRole('super_admin')
             ? ['client_org_admin', 'client_site_manager', 'client_site_viewer', 'technician']
@@ -108,7 +138,8 @@ class UserManagementController extends Controller
     {
         $org = $this->resolveOrganization($request);
 
-        if ($user->org_id !== $org->id) {
+        // In all-orgs mode, super_admin can edit any user; otherwise check org ownership
+        if ($org && $user->org_id !== $org->id) {
             abort(403);
         }
 
@@ -137,7 +168,10 @@ class UserManagementController extends Controller
 
         $user->syncRoles([$validated['role']]);
 
-        $orgSiteIds = Site::where('org_id', $org->id)
+        // Use user's own org for site scoping in all-orgs mode
+        $scopeOrgId = $org?->id ?? $user->org_id;
+
+        $orgSiteIds = Site::where('org_id', $scopeOrgId)
             ->whereIn('id', $validated['site_ids'] ?? [])
             ->pluck('id');
 
@@ -157,7 +191,8 @@ class UserManagementController extends Controller
     {
         $org = $this->resolveOrganization($request);
 
-        if ($user->org_id !== $org->id) {
+        // In all-orgs mode, super_admin can delete any user; otherwise check org ownership
+        if ($org && $user->org_id !== $org->id) {
             abort(403);
         }
 
@@ -175,7 +210,8 @@ class UserManagementController extends Controller
     {
         $org = $this->resolveOrganization($request);
 
-        if ($user->org_id !== $org->id) {
+        // In all-orgs mode, super_admin can deactivate any user; otherwise check org ownership
+        if ($org && $user->org_id !== $org->id) {
             abort(403);
         }
 
@@ -198,7 +234,8 @@ class UserManagementController extends Controller
     {
         $org = $this->resolveOrganization($request);
 
-        if ($user->org_id !== $org->id) {
+        // In all-orgs mode, super_admin can reactivate any user; otherwise check org ownership
+        if ($org && $user->org_id !== $org->id) {
             abort(403);
         }
 
@@ -208,7 +245,7 @@ class UserManagementController extends Controller
         return back()->with('success', 'User reactivated.');
     }
 
-    private function resolveOrganization(Request $request): Organization
+    private function resolveOrganization(Request $request): ?Organization
     {
         if (app()->bound('current_organization')) {
             return app('current_organization');
@@ -220,17 +257,14 @@ class UserManagementController extends Controller
             return Organization::findOrFail($user->org_id);
         }
 
-        // super_admin without org_id — try session org switcher, then first org
+        // super_admin without org_id — try session org switcher, return null for all-orgs mode
         if ($user->hasRole('super_admin')) {
             $sessionOrgId = session('current_org_id');
             if ($sessionOrgId) {
                 return Organization::findOrFail($sessionOrgId);
             }
 
-            $firstOrg = Organization::first();
-            if ($firstOrg) {
-                return $firstOrg;
-            }
+            return null; // All orgs mode
         }
 
         abort(403, 'No organization selected.');

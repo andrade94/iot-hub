@@ -31,12 +31,14 @@ interface SiteRecord {
     opening_hour: string | null;
     device_count: number;
     gateway_count: number;
+    organization_name?: string;
     created_at: string;
 }
 
 interface Props {
     sites: SiteRecord[];
     timezones: string[];
+    allOrgsMode?: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -63,7 +65,7 @@ function SectionDivider({ label }: { label: string }) {
     );
 }
 
-export default function SitesIndex({ sites, timezones }: Props) {
+export default function SitesIndex({ sites, timezones, allOrgsMode = false }: Props) {
     const { t } = useLang();
     const [showCreate, setShowCreate] = useState(false);
     const [editSite, setEditSite] = useState<SiteRecord | null>(null);
@@ -131,6 +133,7 @@ export default function SitesIndex({ sites, timezones }: Props) {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>{t('Name')}</TableHead>
+                                    {allOrgsMode && <TableHead>{t('Organization')}</TableHead>}
                                     <TableHead>{t('Status')}</TableHead>
                                     <TableHead>{t('Timezone')}</TableHead>
                                     <TableHead>{t('Opening Hour')}</TableHead>
@@ -143,7 +146,7 @@ export default function SitesIndex({ sites, timezones }: Props) {
                             <TableBody>
                                 {sites.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="py-12 text-center">
+                                        <TableCell colSpan={allOrgsMode ? 9 : 8} className="py-12 text-center">
                                             <div className="flex flex-col items-center gap-2">
                                                 <MapPin className="h-8 w-8 text-muted-foreground/50" />
                                                 <p className="text-sm text-muted-foreground">{t('No sites configured')}</p>
@@ -154,6 +157,9 @@ export default function SitesIndex({ sites, timezones }: Props) {
                                     sites.map((site) => (
                                         <TableRow key={site.id}>
                                             <TableCell className="font-medium">{site.name}</TableCell>
+                                            {allOrgsMode && (
+                                                <TableCell className="text-muted-foreground">{site.organization_name ?? '-'}</TableCell>
+                                            )}
                                             <TableCell>
                                                 <Badge variant={statusBadgeVariant[site.status] ?? 'outline'}>
                                                     {site.status}
