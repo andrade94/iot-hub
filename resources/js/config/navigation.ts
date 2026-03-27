@@ -23,6 +23,7 @@ import {
     Layers,
     LayoutGrid,
     MapPin,
+    Microchip,
     Monitor,
     Radio,
     Scale,
@@ -141,6 +142,13 @@ export const navigation: NavGroup[] = [
                 href: '/settings/modules-catalog',
                 icon: Boxes,
                 tooltip: 'Platform module catalog',
+                requiredRole: 'super_admin',
+            },
+            {
+                title: 'Sensor Models',
+                href: '/settings/sensor-models',
+                icon: Microchip,
+                tooltip: 'Sensor model catalog',
                 requiredRole: 'super_admin',
             },
             {

@@ -37,6 +37,7 @@ use App\Http\Controllers\ReportScheduleController;
 use App\Http\Controllers\SiteTemplateController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SegmentController;
+use App\Http\Controllers\SensorModelController;
 use App\Http\Controllers\StatusController;
 use App\Http\Controllers\TemperatureVerificationController;
 use App\Http\Controllers\WorkOrderController;
@@ -464,6 +465,14 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::post('/', [SegmentController::class, 'store'])->name('store');
         Route::put('{segment}', [SegmentController::class, 'update'])->name('update');
         Route::delete('{segment}', [SegmentController::class, 'destroy'])->name('destroy');
+    });
+
+    // Sensor Model Catalog (super_admin)
+    Route::middleware('role:super_admin')->prefix('settings/sensor-models')->name('sensor-models.')->group(function () {
+        Route::get('/', [SensorModelController::class, 'index'])->name('index');
+        Route::post('/', [SensorModelController::class, 'store'])->name('store');
+        Route::put('{sensorModel}', [SensorModelController::class, 'update'])->name('update');
+        Route::delete('{sensorModel}', [SensorModelController::class, 'destroy'])->name('destroy');
     });
 
     // Partner Portal (super_admin)
