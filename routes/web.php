@@ -199,6 +199,11 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     // Recipe management
     Route::get('recipes', [RecipeController::class, 'index'])->name('recipes.index');
     Route::get('recipes/{recipe}', [RecipeController::class, 'show'])->name('recipes.show');
+    Route::middleware('role:super_admin')->group(function () {
+        Route::post('recipes', [RecipeController::class, 'store'])->name('recipes.store');
+        Route::put('recipes/{recipe}', [RecipeController::class, 'update'])->name('recipes.update');
+        Route::delete('recipes/{recipe}', [RecipeController::class, 'destroy'])->name('recipes.destroy');
+    });
 
     // Site, Device & Gateway index (monitor pages)
     Route::get('sites', [SiteDetailController::class, 'index'])->name('sites.index');

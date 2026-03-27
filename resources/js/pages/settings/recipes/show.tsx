@@ -1,18 +1,32 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { DetailCard } from '@/components/ui/detail-card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import InputError from '@/components/input-error';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { AlertRuleCondition, BreadcrumbItem, Recipe, Site, SiteRecipeOverride } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, FlaskConical, Save, ShieldAlert } from 'lucide-react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { ArrowLeft, FlaskConical, Pencil, Plus, Save, ShieldAlert, Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
+
+/* ── Types ────────────────────────────────────────────────────────── */
 
 interface Props {
     recipe: Recipe;
@@ -20,8 +34,42 @@ interface Props {
     overrides: SiteRecipeOverride[];
 }
 
+interface ConditionRow {
+    metric: string;
+    condition: string;
+    threshold: string;
+    duration_minutes: string;
+    severity: string;
+}
+
+const EMPTY_CONDITION: ConditionRow = {
+    metric: '',
+    condition: 'above',
+    threshold: '',
+    duration_minutes: '0',
+    severity: 'medium',
+};
+
+/* ── Main Component ───────────────────────────────────────────────── */
+
 export default function RecipeShow({ recipe, sites, overrides }: Props) {
     const { t } = useLang();
+    const { auth } = usePage<{ auth: { roles: string[] } }>().props;
+    const isSuperAdmin = auth.roles?.includes('super_admin');
+
+    const [editOpen, setEditOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    function handleDelete() {
+        setDeleteLoading(true);
+        router.delete(`/recipes/${recipe.id}`, {
+            onFinish: () => {
+                setDeleteLoading(false);
+                setDeleteOpen(false);
+            },
+        });
+    }
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Recipes', href: '/recipes' },
@@ -54,6 +102,26 @@ export default function RecipeShow({ recipe, sites, overrides }: Props) {
                                     <p className="mt-1 text-sm text-muted-foreground">{recipe.description}</p>
                                 )}
                             </div>
+                            {isSuperAdmin && (
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setEditOpen(true)}
+                                    >
+                                        <Pencil className="mr-2 h-3.5 w-3.5" />
+                                        {t('Edit')}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setDeleteOpen(true)}
+                                    >
+                                        <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" />
+                                        {t('Delete')}
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </FadeIn>
@@ -187,7 +255,356 @@ export default function RecipeShow({ recipe, sites, overrides }: Props) {
                     </FadeIn>
                 </div>
             </div>
+
+            {/* ── Edit Dialog ──────────────────────────────────── */}
+            {isSuperAdmin && (
+                <RecipeEditDialog
+                    open={editOpen}
+                    onOpenChange={setEditOpen}
+                    recipe={recipe}
+                />
+            )}
+
+            {/* ── Delete Confirmation ──────────────────────────── */}
+            <ConfirmationDialog
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                title={t('Delete Recipe')}
+                description={`Are you sure you want to delete "${recipe.name}"?`}
+                warningMessage={t('This action cannot be undone. Any devices using this recipe will lose their recipe reference.')}
+                loading={deleteLoading}
+                onConfirm={handleDelete}
+                actionLabel={t('Delete')}
+            />
         </AppLayout>
+    );
+}
+
+/* ── Recipe Edit Dialog ──────────────────────────────────────────── */
+
+function RecipeEditDialog({
+    open,
+    onOpenChange,
+    recipe,
+}: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    recipe: Recipe;
+}) {
+    const { t } = useLang();
+
+    // Form state
+    const [name, setName] = useState(recipe.name);
+    const [sensorModel, setSensorModel] = useState(recipe.sensor_model);
+    const [description, setDescription] = useState(recipe.description ?? '');
+    const [editable, setEditable] = useState(recipe.editable);
+    const [conditions, setConditions] = useState<ConditionRow[]>(
+        recipe.default_rules.map((rule) => ({
+            metric: rule.metric,
+            condition: rule.condition,
+            threshold: String(rule.threshold),
+            duration_minutes: String(rule.duration_minutes),
+            severity: rule.severity,
+        })),
+    );
+    const [processing, setProcessing] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const resetForm = useCallback(() => {
+        setName(recipe.name);
+        setSensorModel(recipe.sensor_model);
+        setDescription(recipe.description ?? '');
+        setEditable(recipe.editable);
+        setConditions(
+            recipe.default_rules.map((rule) => ({
+                metric: rule.metric,
+                condition: rule.condition,
+                threshold: String(rule.threshold),
+                duration_minutes: String(rule.duration_minutes),
+                severity: rule.severity,
+            })),
+        );
+        setErrors({});
+    }, [recipe]);
+
+    const handleOpenChange = useCallback(
+        (nextOpen: boolean) => {
+            if (nextOpen) resetForm();
+            onOpenChange(nextOpen);
+        },
+        [onOpenChange, resetForm],
+    );
+
+    function addCondition() {
+        setConditions((prev) => [...prev, { ...EMPTY_CONDITION }]);
+    }
+
+    function removeCondition(index: number) {
+        if (conditions.length <= 1) return;
+        setConditions((prev) => prev.filter((_, i) => i !== index));
+    }
+
+    function updateCondition(index: number, field: keyof ConditionRow, value: string) {
+        setConditions((prev) => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], [field]: value };
+            return updated;
+        });
+    }
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        setProcessing(true);
+        setErrors({});
+
+        const payload = {
+            name,
+            module_id: recipe.module_id,
+            sensor_model: sensorModel,
+            description: description || null,
+            editable,
+            default_rules: conditions.map((c) => ({
+                metric: c.metric,
+                condition: c.condition,
+                threshold: Number(c.threshold),
+                duration_minutes: Number(c.duration_minutes),
+                severity: c.severity,
+            })),
+        };
+
+        router.put(`/recipes/${recipe.id}`, payload, {
+            onSuccess: () => {
+                setProcessing(false);
+                onOpenChange(false);
+            },
+            onError: (errs) => {
+                setProcessing(false);
+                setErrors(errs);
+            },
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>{t('Edit Recipe')}</DialogTitle>
+                    <DialogDescription>
+                        {t('Update the recipe details and default alert rules.')}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Basic Fields */}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="sm:col-span-2">
+                            <Label htmlFor="recipe-name">{t('Name')} *</Label>
+                            <Input
+                                id="recipe-name"
+                                className="mt-1.5"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                            />
+                            {errors.name && (
+                                <p className="mt-1 text-xs text-destructive">{errors.name}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <Label>{t('Module')}</Label>
+                            <Input
+                                className="mt-1.5"
+                                value={recipe.module?.name ?? '--'}
+                                disabled
+                            />
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {t('Module cannot be changed after creation.')}
+                            </p>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="sensor-model">{t('Sensor Model')} *</Label>
+                            <Input
+                                id="sensor-model"
+                                className="mt-1.5 font-mono"
+                                value={sensorModel}
+                                onChange={(e) => setSensorModel(e.target.value)}
+                                required
+                            />
+                            {errors.sensor_model && (
+                                <p className="mt-1 text-xs text-destructive">{errors.sensor_model}</p>
+                            )}
+                        </div>
+
+                        <div className="sm:col-span-2">
+                            <Label htmlFor="description">{t('Description')}</Label>
+                            <Textarea
+                                id="description"
+                                className="mt-1.5"
+                                rows={2}
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder={t('Optional description...')}
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-3 sm:col-span-2">
+                            <Switch
+                                id="editable-toggle"
+                                checked={editable}
+                                onCheckedChange={setEditable}
+                            />
+                            <Label htmlFor="editable-toggle">
+                                {t('Allow site-level overrides')}
+                            </Label>
+                        </div>
+                    </div>
+
+                    {/* Conditions / Default Rules */}
+                    <div>
+                        <div className="mb-3 flex items-center gap-3">
+                            <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                {t('Default Rules')}
+                            </p>
+                            <div className="h-px flex-1 bg-border" />
+                            <Badge variant="outline" className="font-mono tabular-nums">
+                                {conditions.length}
+                            </Badge>
+                        </div>
+
+                        {errors.default_rules && (
+                            <p className="mb-2 text-xs text-destructive">{errors.default_rules}</p>
+                        )}
+
+                        <div className="space-y-3">
+                            {conditions.map((cond, idx) => (
+                                <Card key={idx} className="shadow-sm">
+                                    <CardHeader className="flex flex-row items-center justify-between px-4 py-3">
+                                        <CardTitle className="text-sm">
+                                            {t('Rule')} {idx + 1}
+                                        </CardTitle>
+                                        {conditions.length > 1 && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                onClick={() => removeCondition(idx)}
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                            </Button>
+                                        )}
+                                    </CardHeader>
+                                    <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
+                                        <div>
+                                            <Label className="text-xs">{t('Metric')}</Label>
+                                            <Input
+                                                className="mt-1"
+                                                value={cond.metric}
+                                                onChange={(e) =>
+                                                    updateCondition(idx, 'metric', e.target.value)
+                                                }
+                                                placeholder="temperature"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">{t('Condition')}</Label>
+                                            <Select
+                                                value={cond.condition}
+                                                onValueChange={(v) =>
+                                                    updateCondition(idx, 'condition', v)
+                                                }
+                                            >
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="above">{t('Above')}</SelectItem>
+                                                    <SelectItem value="below">{t('Below')}</SelectItem>
+                                                    <SelectItem value="equals">{t('Equals')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">{t('Threshold')}</Label>
+                                            <Input
+                                                type="number"
+                                                step="any"
+                                                className="mt-1 font-mono"
+                                                value={cond.threshold}
+                                                onChange={(e) =>
+                                                    updateCondition(idx, 'threshold', e.target.value)
+                                                }
+                                                placeholder="8"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">{t('Duration (min)')}</Label>
+                                            <Input
+                                                type="number"
+                                                className="mt-1 font-mono"
+                                                min={0}
+                                                value={cond.duration_minutes}
+                                                onChange={(e) =>
+                                                    updateCondition(idx, 'duration_minutes', e.target.value)
+                                                }
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">{t('Severity')}</Label>
+                                            <Select
+                                                value={cond.severity}
+                                                onValueChange={(v) =>
+                                                    updateCondition(idx, 'severity', v)
+                                                }
+                                            >
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="critical">{t('Critical')}</SelectItem>
+                                                    <SelectItem value="high">{t('High')}</SelectItem>
+                                                    <SelectItem value="medium">{t('Medium')}</SelectItem>
+                                                    <SelectItem value="low">{t('Low')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full border-dashed"
+                                onClick={addCondition}
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                {t('Add Rule')}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            disabled={processing}
+                        >
+                            {t('Cancel')}
+                        </Button>
+                        <Button type="submit" disabled={processing}>
+                            <FlaskConical className="mr-2 h-4 w-4" />
+                            {processing ? t('Saving...') : t('Save Changes')}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
 
