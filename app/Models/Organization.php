@@ -108,6 +108,11 @@ class Organization extends Model
         return $this->hasMany(Invoice::class, 'org_id');
     }
 
+    public function notes(): HasMany
+    {
+        return $this->hasMany(OrganizationNote::class, 'org_id');
+    }
+
     /**
      * Get the Segment model for this organization (matched by name string).
      */

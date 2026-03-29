@@ -128,6 +128,14 @@ export default function OrganizationsIndex({ organizations, segments }: Props) {
         setSearchQuery('');
     }
 
+    // Computed stats
+    const stats = useMemo(() => ({
+        active: organizations.filter((o) => o.status === 'active').length,
+        suspended: organizations.filter((o) => o.status === 'suspended').length,
+        totalSites: organizations.reduce((sum, o) => sum + o.sites_count, 0),
+        totalDevices: organizations.reduce((sum, o) => sum + o.devices_count, 0),
+    }), [organizations]);
+
     // Build filter pills
     const filterPills = useMemo<FilterPill[]>(() => {
         const pills: FilterPill[] = [];
@@ -219,14 +227,14 @@ export default function OrganizationsIndex({ organizations, segments }: Props) {
 
     // Filter sidebar
     const filterSidebar = (
-        <Card className="shadow-elevation-1">
-            <CardContent className="flex flex-col gap-4 p-4">
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">
+        <Card className="border-border/10 shadow-none">
+            <CardContent className="flex flex-col gap-5 p-5">
+                <div className="space-y-2">
+                    <Label className="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
                         {t('Segment')}
                     </Label>
                     <Select value={segmentFilter} onValueChange={setSegmentFilter}>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full border-border/10">
                             <SelectValue placeholder={t('Segment')} />
                         </SelectTrigger>
                         <SelectContent>
@@ -240,12 +248,12 @@ export default function OrganizationsIndex({ organizations, segments }: Props) {
                     </Select>
                 </div>
 
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">
+                <div className="space-y-2">
+                    <Label className="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
                         {t('Status')}
                     </Label>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full border-border/10">
                             <SelectValue placeholder={t('Status')} />
                         </SelectTrigger>
                         <SelectContent>
@@ -258,8 +266,8 @@ export default function OrganizationsIndex({ organizations, segments }: Props) {
                     </Select>
                 </div>
 
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">
+                <div className="space-y-2">
+                    <Label className="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
                         {t('Search')}
                     </Label>
                     <div className="relative">
@@ -268,7 +276,7 @@ export default function OrganizationsIndex({ organizations, segments }: Props) {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={t('Name or slug...')}
-                            className="pl-8"
+                            className="border-border/10 pl-8 font-mono text-sm"
                         />
                     </div>
                 </div>
@@ -279,27 +287,25 @@ export default function OrganizationsIndex({ organizations, segments }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Organizations')} />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="obsidian flex h-full flex-1 flex-col gap-6 bg-background p-5 md:p-8">
                 {/* -- Header -------------------------------------------------- */}
                 <FadeIn direction="down" duration={400}>
-                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
-                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
-                        <div className="relative flex items-start justify-between p-6 md:p-8">
+                    <div className="rounded-2xl bg-card px-6 py-8 md:px-10 md:py-10">
+                        <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
-                                    {t('Organizations')}
+                                <p className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('Platform Administration')}
                                 </p>
-                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
-                                    {t('Organization Catalog')}
+                                <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
+                                    {t('Organizations')}
                                 </h1>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    <span className="font-mono tabular-nums font-medium text-foreground">{organizations.length}</span>{' '}
-                                    {t('organization(s) registered')}
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    {t('Manage client entities, subscriptions, and lifecycle status.')}
                                 </p>
                             </div>
                             <Dialog open={showCreate} onOpenChange={setShowCreate}>
                                 <DialogTrigger asChild>
-                                    <Button>
+                                    <Button size="lg" className="shrink-0">
                                         <Plus className="mr-2 h-4 w-4" />
                                         {t('Create Organization')}
                                     </Button>
@@ -311,6 +317,14 @@ export default function OrganizationsIndex({ organizations, segments }: Props) {
                                     <CreateOrganizationForm segments={segments} onSuccess={() => setShowCreate(false)} />
                                 </DialogContent>
                             </Dialog>
+                        </div>
+
+                        {/* -- KPI Strip ------------------------------------------- */}
+                        <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+                            <KpiCard label={t('Total')} value={organizations.length} />
+                            <KpiCard label={t('Active')} value={stats.active} accent="emerald" />
+                            <KpiCard label={t('Suspended')} value={stats.suspended} accent="coral" />
+                            <KpiCard label={t('Total Sites')} value={stats.totalSites} accent="cyan" />
                         </div>
                     </div>
                 </FadeIn>
@@ -330,7 +344,7 @@ export default function OrganizationsIndex({ organizations, segments }: Props) {
                         showSidebar={showFilters}
                         sidebar={filterSidebar}
                     >
-                        <Card className="flex-1 shadow-elevation-1">
+                        <Card className="flex-1 border-border/10 shadow-none">
                             <DataTable
                                 columns={columns}
                                 data={filteredOrgs}
@@ -380,6 +394,28 @@ export default function OrganizationsIndex({ organizations, segments }: Props) {
                 actionLabel={t('Archive')}
             />
         </AppLayout>
+    );
+}
+
+/* -- KPI Card (pure styling, uses obsidian tokens) -------------------- */
+
+const KPI_ACCENTS = {
+    emerald: 'border-l-ob-emerald',
+    coral: 'border-l-ob-coral',
+    cyan: 'border-l-ob-cyan',
+    steel: 'border-l-ob-steel',
+} as const;
+
+function KpiCard({ label, value, accent }: { label: string; value: number; accent?: keyof typeof KPI_ACCENTS }) {
+    return (
+        <div className={`rounded-lg bg-accent/40 px-4 py-3.5 ${accent ? `border-l-2 ${KPI_ACCENTS[accent]}` : ''}`}>
+            <p className="font-label text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                {label}
+            </p>
+            <p className="mt-1 font-mono text-xl font-bold tabular-nums text-foreground">
+                {String(value).padStart(2, '0')}
+            </p>
+        </div>
     );
 }
 
@@ -449,6 +485,7 @@ function CreateOrganizationForm({ segments, onSuccess }: { segments: string[]; o
                     value={form.data.slug}
                     onChange={(e) => form.setData('slug', e.target.value)}
                     placeholder={t('e.g. acme-corp')}
+                    className="font-mono"
                 />
                 <InputError message={form.errors.slug} />
             </div>
@@ -497,6 +534,7 @@ function CreateOrganizationForm({ segments, onSuccess }: { segments: string[]; o
                         value={form.data.default_timezone}
                         onChange={(e) => form.setData('default_timezone', e.target.value)}
                         placeholder="America/Mexico_City"
+                        className="font-mono text-sm"
                     />
                     <InputError message={form.errors.default_timezone} />
                 </div>
@@ -508,6 +546,7 @@ function CreateOrganizationForm({ segments, onSuccess }: { segments: string[]; o
                         type="time"
                         value={form.data.default_opening_hour}
                         onChange={(e) => form.setData('default_opening_hour', e.target.value)}
+                        className="font-mono"
                     />
                     <InputError message={form.errors.default_opening_hour} />
                 </div>
@@ -524,19 +563,24 @@ function CreateOrganizationForm({ segments, onSuccess }: { segments: string[]; o
 
 export function OrganizationsSkeleton() {
     return (
-        <div className="flex flex-col gap-6 p-4 md:p-6">
+        <div className="flex flex-col gap-6 p-5 md:p-8">
             {/* Header */}
-            <div className="rounded-xl border p-6 md:p-8">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="mt-3 h-8 w-48" />
-                <Skeleton className="mt-2 h-4 w-36" />
+            <div className="rounded-2xl bg-card p-8 md:p-10">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="mt-3 h-9 w-56" />
+                <Skeleton className="mt-2 h-4 w-48" />
+                <div className="mt-8 grid grid-cols-4 gap-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-16 rounded-lg" />
+                    ))}
+                </div>
             </div>
             {/* Filter Toolbar */}
             <div className="flex items-center gap-2">
                 <Skeleton className="h-8 w-24" />
             </div>
             {/* Table */}
-            <Card>
+            <Card className="border-border/10">
                 <Table>
                     <TableHeader>
                         <TableRow>

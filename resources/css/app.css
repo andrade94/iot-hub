@@ -15,9 +15,33 @@
         'Noto Color Emoji';
     --font-display:
         'Syne', ui-sans-serif, system-ui, sans-serif;
+    --font-label:
+        'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
     --font-mono:
         'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', 'Monaco',
         'Consolas', 'Liberation Mono', monospace;
+
+    /* Obsidian Metric Design System — Surface Hierarchy */
+    --color-ob-base: #0e0e0e;
+    --color-ob-low: #131313;
+    --color-ob-mid: #191a1a;
+    --color-ob-high: #1f2020;
+    --color-ob-highest: #252626;
+    --color-ob-bright: #2c2c2c;
+
+    /* Obsidian Metric — Text Hierarchy */
+    --color-ob-text: #e7e5e4;
+    --color-ob-muted: #acabaa;
+    --color-ob-dim: #484848;
+    --color-ob-outline: #767575;
+
+    /* Obsidian Metric — Accent Colors */
+    --color-ob-steel: #b9c7df;
+    --color-ob-steel-dim: #abbad1;
+    --color-ob-cyan: #17a8ec;
+    --color-ob-coral: #ee7d77;
+    --color-ob-ember: #ff716a;
+    --color-ob-emerald: #10b981;
 
     /* Type Scale - 1.25 ratio (Major Third) */
     --text-display: 3rem;
@@ -559,6 +583,86 @@
 .animate-collapsible-up {
     animation: collapsible-up 0.2s ease-out;
 }
+
+/* ================================================================
+   Obsidian Metric Theme — Scoped Design System Override
+   Apply `.obsidian` to a wrapper to retheme shadcn components inside.
+   ================================================================ */
+
+.obsidian {
+    --background: #0e0e0e;
+    --foreground: #e7e5e4;
+    --card: #131313;
+    --card-foreground: #e7e5e4;
+    --popover: #1f2020;
+    --popover-foreground: #e7e5e4;
+    --primary: #b9c7df;
+    --primary-foreground: #131313;
+    --secondary: #1f2020;
+    --secondary-foreground: #acabaa;
+    --muted: #191a1a;
+    --muted-foreground: #767575;
+    --accent: #252626;
+    --accent-foreground: #e7e5e4;
+    --destructive: #3b1413;
+    --destructive-foreground: #ee7d77;
+    --border: #1f2020;
+    --input: #0e0e0e;
+    --ring: #b9c7df;
+    --success: #10b981;
+    --success-foreground: #e7e5e4;
+    --warning: #ff716a;
+    --warning-foreground: #e7e5e4;
+    --info: #17a8ec;
+    --info-foreground: #e7e5e4;
+}
+
+/* Obsidian — Font utility */
+.font-label {
+    font-family: var(--font-label);
+}
+
+/* Obsidian — Stat card left accent bar */
+.ob-accent-bar {
+    position: relative;
+}
+.ob-accent-bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+}
+.ob-accent-bar--steel::before { background: #b9c7df; }
+.ob-accent-bar--cyan::before { background: #17a8ec; }
+.ob-accent-bar--coral::before { background: #ee7d77; }
+.ob-accent-bar--ember::before { background: #ff716a; }
+.ob-accent-bar--emerald::before { background: #10b981; }
+.ob-accent-bar--dim::before { background: #484848; }
+
+/* Obsidian — Ghost border utility */
+.ob-ghost-border {
+    box-shadow: inset 0 0 0 1px rgba(72, 72, 72, 0.12);
+}
+
+/* Obsidian — Ambient shadow for floating elements */
+.ob-ambient-shadow {
+    box-shadow: 0 20px 40px rgba(6, 14, 32, 0.4);
+}
+
+/* Obsidian — Glow effects */
+.ob-glow-emerald { box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+.ob-glow-cyan { box-shadow: 0 0 8px rgba(23, 168, 236, 0.5); }
+.ob-glow-coral { box-shadow: 0 0 8px rgba(238, 125, 119, 0.5); }
+
+/* Obsidian — Table row accent (works around border-collapse limitations) */
+.ob-row-accent-emerald { box-shadow: inset 4px 0 0 0 #10b981; }
+.ob-row-accent-cyan { box-shadow: inset 4px 0 0 0 #17a8ec; }
+.ob-row-accent-coral { box-shadow: inset 4px 0 0 0 #ee7d77; }
+.ob-row-accent-ember { box-shadow: inset 4px 0 0 0 #ff716a; }
+.ob-row-accent-steel { box-shadow: inset 4px 0 0 0 #b9c7df; }
+.ob-row-accent-dim { box-shadow: inset 4px 0 0 0 #484848; }
 
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
