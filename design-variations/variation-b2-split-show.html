@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variation B2 — Split Panel Editorial — Organization Show</title>
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700&family=playfair-display:400,500,600,700,800,900" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Dark panel */
+    --dark-bg: #111111;
+    --dark-surface: #181818;
+    --dark-text: #f5f4f0;
+    --dark-muted: #8a8987;
+    --dark-border: #2a2a28;
+    /* Light panel */
+    --light-bg: #fafaf8;
+    --light-surface: #ffffff;
+    --light-text: #1a1917;
+    --light-muted: #9a9895;
+    --light-border: #e8e6e2;
+    /* Accents */
+    --emerald: #059669;
+    --emerald-light: #06b57d;
+    --blue: #2563eb;
+    --red: #dc2626;
+    --amber: #d97706;
+    --violet: #7c3aed;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--light-bg);
+    color: var(--light-text);
+    display: flex;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ─── Variation Label ─── */
+  .variation-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    background: var(--dark-bg);
+    color: var(--dark-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    opacity: 0;
+    animation: fadeSlideIn 0.6s 1.4s forwards;
+  }
+
+  /* ─── Left Panel ─── */
+  .left-panel {
+    width: 320px;
+    min-width: 320px;
+    height: 100vh;
+    background: var(--dark-bg);
+    color: var(--dark-text);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 28px 24px;
+    overflow-y: auto;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 10;
+  }
+
+  .left-panel::-webkit-scrollbar { width: 4px; }
+  .left-panel::-webkit-scrollbar-track { background: transparent; }
+  .left-panel::-webkit-scrollbar-thumb { background: var(--dark-border); border-radius: 2px; }
+
+  /* Back link */
+  .back-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dark-muted);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.2s;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeSlideIn 0.4s 0.1s forwards;
+  }
+  .back-link:hover { color: var(--dark-text); }
+  .back-link svg { transition: transform 0.2s; }
+  .back-link:hover svg { transform: translateX(-2px); }
+
+  /* Org Header */
+  .org-header {
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeSlideIn 0.5s 0.15s forwards;
+  }
+
+  .org-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark-text);
+    line-height: 1.15;
+    margin-bottom: 6px;
+  }
+
+  .org-slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dark-muted);
+    margin-bottom: 14px;
+  }
+
+  .badge-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .left-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    gap: 6px;
+  }
+
+  .left-badge-active { background: rgba(5,150,105,0.15); color: #34d399; }
+  .left-badge-retail { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .left-badge-enterprise { background: rgba(245,244,240,0.1); color: var(--dark-text); }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--dark-border);
+    margin: 20px 0;
+    opacity: 0;
+    animation: fadeIn 0.3s 0.3s forwards;
+  }
+
+  /* Details Section */
+  .section-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--dark-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+    opacity: 0;
+    animation: fadeSlideIn 0.4s 0.35s forwards;
+  }
+
+  .detail-grid {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    opacity: 0;
+    animation: fadeSlideIn 0.35s forwards;
+  }
+  .detail-row:nth-child(1) { animation-delay: 0.38s; }
+  .detail-row:nth-child(2) { animation-delay: 0.42s; }
+  .detail-row:nth-child(3) { animation-delay: 0.46s; }
+  .detail-row:nth-child(4) { animation-delay: 0.50s; }
+  .detail-row:nth-child(5) { animation-delay: 0.54s; }
+  .detail-row:nth-child(6) { animation-delay: 0.58s; }
+  .detail-row:nth-child(7) { animation-delay: 0.62s; }
+
+  .detail-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    color: var(--dark-muted);
+  }
+
+  .detail-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--dark-text);
+    text-align: right;
+  }
+
+  /* Branding Swatches */
+  .swatches-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    opacity: 0;
+    animation: fadeSlideIn 0.4s 0.65s forwards;
+  }
+
+  .swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 2px solid var(--dark-border);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.2s;
+  }
+  .swatch:hover { transform: scale(1.1); border-color: #555; }
+
+  .swatch-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--dark-muted);
+    margin-top: 2px;
+    opacity: 0;
+    animation: fadeSlideIn 0.3s 0.68s forwards;
+  }
+
+  /* Contact */
+  .contact-block {
+    opacity: 0;
+    animation: fadeSlideIn 0.4s 0.7s forwards;
+  }
+
+  .contact-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: 4px;
+  }
+
+  .contact-detail {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--dark-muted);
+    line-height: 1.7;
+  }
+
+  .contact-detail a {
+    color: var(--dark-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .contact-detail a:hover { color: var(--dark-text); }
+
+  /* Action Buttons */
+  .actions-group {
+    margin-top: auto;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeSlideIn 0.4s 0.85s forwards;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 10px 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--emerald);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--emerald-light); transform: translateY(-1px); }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-secondary {
+    flex: 1;
+    background: var(--dark-surface);
+    color: var(--dark-muted);
+    border: 1px solid var(--dark-border);
+  }
+  .btn-secondary:hover { color: var(--dark-text); border-color: #444; }
+
+  .btn-danger {
+    flex: 1;
+    background: var(--dark-surface);
+    color: var(--amber);
+    border: 1px solid rgba(217,119,6,0.2);
+  }
+  .btn-danger:hover { background: rgba(217,119,6,0.08); border-color: rgba(217,119,6,0.35); }
+
+  .btn-ghost {
+    flex: 1;
+    background: transparent;
+    color: var(--dark-muted);
+    border: 1px solid var(--dark-border);
+  }
+  .btn-ghost:hover { color: var(--dark-text); border-color: #444; }
+
+  /* ─── Right Panel ─── */
+  .right-panel {
+    flex: 1;
+    margin-left: 320px;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 28px 36px 48px;
+  }
+
+  .right-panel::-webkit-scrollbar { width: 6px; }
+  .right-panel::-webkit-scrollbar-track { background: transparent; }
+  .right-panel::-webkit-scrollbar-thumb { background: var(--light-border); border-radius: 3px; }
+
+  /* KPI Strip */
+  .kpi-strip {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.25s forwards;
+  }
+
+  .kpi-card {
+    flex: 1;
+    background: var(--light-surface);
+    border: 1px solid var(--light-border);
+    border-radius: 10px;
+    padding: 16px 18px 14px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 0 0 10px 10px;
+  }
+  .kpi-card.kpi-sites::after { background: var(--emerald); }
+  .kpi-card.kpi-devices::after { background: var(--blue); }
+  .kpi-card.kpi-alerts::after { background: var(--red); }
+  .kpi-card.kpi-work-orders::after { background: var(--amber); }
+  .kpi-card.kpi-users::after { background: var(--violet); }
+
+  .kpi-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--light-text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .kpi-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--light-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  /* Chart Cards */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.4s forwards;
+  }
+
+  .chart-card {
+    background: var(--light-surface);
+    border: 1px solid var(--light-border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .chart-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--light-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  /* Horizontal bar chart */
+  .h-bar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .h-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .h-bar-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--light-text);
+    width: 100px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .h-bar-track {
+    flex: 1;
+    height: 22px;
+    background: #f3f2ef;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .h-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+  }
+
+  .h-bar-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--light-text);
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Vertical bar chart */
+  .v-bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 110px;
+    padding-top: 8px;
+  }
+
+  .v-bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .v-bar {
+    width: 100%;
+    max-width: 36px;
+    border-radius: 5px 5px 2px 2px;
+    transition: height 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .v-bar-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--light-text);
+  }
+
+  .v-bar-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: var(--light-muted);
+    text-align: center;
+    line-height: 1.2;
+    max-width: 54px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--light-border);
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeSlideUp 0.4s 0.55s forwards;
+  }
+
+  .tab-item {
+    padding: 10px 20px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--light-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+    bottom: -1px;
+  }
+  .tab-item:hover { color: var(--light-text); }
+  .tab-item.active { color: var(--light-text); border-bottom-color: var(--light-text); }
+
+  .tab-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: #f0efec;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tab-item.active .tab-count { background: #e8e6e2; }
+
+  /* Sites Table */
+  .content-table-wrapper {
+    background: var(--light-surface);
+    border: 1px solid var(--light-border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.6s forwards;
+  }
+
+  .content-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .content-table thead th {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--light-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--light-border);
+    background: #fdfdfb;
+  }
+  .content-table thead th:first-child { padding-left: 20px; }
+
+  .content-table tbody tr {
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .content-table tbody tr:hover { background: #f7f6f3; }
+  .content-table tbody tr:not(:last-child) td { border-bottom: 1px solid var(--light-border); }
+
+  .content-table tbody td {
+    padding: 12px 16px;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  .content-table tbody td:first-child { padding-left: 20px; }
+
+  .site-name {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    color: var(--light-text);
+  }
+
+  .data-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+
+  .online-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+  .online-pct.high { color: var(--emerald); }
+  .online-pct.mid { color: var(--amber); }
+  .online-pct.low { color: var(--red); }
+
+  .mini-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  .mini-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Notes Section */
+  .notes-section {
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.7s forwards;
+  }
+
+  .notes-heading {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--light-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+
+  .note-compose {
+    background: var(--light-surface);
+    border: 1px solid var(--light-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+
+  .note-textarea {
+    width: 100%;
+    min-height: 60px;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: var(--light-text);
+    resize: vertical;
+    outline: none;
+  }
+  .note-textarea::placeholder { color: var(--light-muted); opacity: 0.6; }
+
+  .note-compose-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  .note-submit {
+    padding: 6px 16px;
+    background: var(--light-text);
+    color: var(--light-surface);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .note-submit:hover { opacity: 0.85; }
+
+  .note-card {
+    background: var(--light-surface);
+    border: 1px solid var(--light-border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+  }
+
+  .note-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .note-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .note-author {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--light-text);
+  }
+
+  .note-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--light-muted);
+    margin-left: auto;
+  }
+
+  .note-body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: #4a4945;
+    line-height: 1.6;
+    padding-left: 38px;
+  }
+
+  /* ─── Animations ─── */
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes growWidth {
+    from { width: 0; }
+  }
+  @keyframes growHeight {
+    from { height: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Variation Label -->
+<div class="variation-label">Variation B2 — Split Panel</div>
+
+<!-- ─── Left Panel ─── -->
+<aside class="left-panel">
+  <!-- Back -->
+  <a href="#" class="back-link">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Organizations
+  </a>
+
+  <!-- Org Header -->
+  <div class="org-header">
+    <div class="org-name">OXXO Corporativo</div>
+    <div class="org-slug">oxxo-corporativo</div>
+    <div class="badge-row">
+      <span class="left-badge left-badge-active"><span class="badge-dot" style="background:#34d399;"></span>Active</span>
+      <span class="left-badge left-badge-retail">Retail</span>
+      <span class="left-badge left-badge-enterprise">Enterprise</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Organization Details -->
+  <div class="section-label">Organization Details</div>
+  <div class="detail-grid">
+    <div class="detail-row">
+      <span class="detail-label">Slug</span>
+      <span class="detail-value">oxxo-corporativo</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Segment</span>
+      <span class="detail-value">Retail</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Plan</span>
+      <span class="detail-value">Enterprise</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Timezone</span>
+      <span class="detail-value">America/Monterrey</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Opening</span>
+      <span class="detail-value">07:00</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Created</span>
+      <span class="detail-value">Mar 2024</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Last Active</span>
+      <span class="detail-value" style="color:#34d399;">2h ago</span>
+    </div>
+  </div>
+
+  <!-- Branding Swatches -->
+  <div style="margin-top:6px;">
+    <div class="section-label" style="margin-bottom:8px;">Branding</div>
+    <div class="swatches-row">
+      <div class="swatch" style="background:#dc2626;" title="#dc2626"></div>
+      <div class="swatch" style="background:#ffffff;" title="#ffffff"></div>
+      <div class="swatch" style="background:#d4a017;" title="#d4a017"></div>
+    </div>
+    <div class="swatch-label" style="margin-top:6px;">Primary, Background, Accent</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Primary Contact -->
+  <div class="section-label">Primary Contact</div>
+  <div class="contact-block">
+    <div class="contact-name">Roberto Campos</div>
+    <div class="contact-detail">
+      <a href="mailto:rcampos@oxxo.com.mx">rcampos@oxxo.com.mx</a><br>
+      <a href="tel:+528112345678">+52 81 1234 5678</a>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions-group">
+    <button class="btn btn-primary">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit Organization
+    </button>
+    <div class="btn-row">
+      <button class="btn btn-danger">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+        Suspend
+      </button>
+      <button class="btn btn-ghost">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8V5a2 2 0 00-2-2H5a2 2 0 00-2 2v3"/><path d="M3 16v3a2 2 0 002 2h14a2 2 0 002-2v-3"/><path d="M12 12v9"/><path d="M12 3v3"/></svg>
+        Archive
+      </button>
+      <button class="btn btn-secondary">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ─── Right Panel ─── -->
+<main class="right-panel">
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip">
+    <div class="kpi-card kpi-sites">
+      <div class="kpi-number">12</div>
+      <div class="kpi-label">Sites</div>
+    </div>
+    <div class="kpi-card kpi-devices">
+      <div class="kpi-number">87</div>
+      <div class="kpi-label">Devices</div>
+    </div>
+    <div class="kpi-card kpi-alerts">
+      <div class="kpi-number">4</div>
+      <div class="kpi-label">Alerts</div>
+    </div>
+    <div class="kpi-card kpi-work-orders">
+      <div class="kpi-number">2</div>
+      <div class="kpi-label">Work Orders</div>
+    </div>
+    <div class="kpi-card kpi-users">
+      <div class="kpi-number">24</div>
+      <div class="kpi-label">Users</div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <!-- Chart 1: Sites by Status + User Roles -->
+    <div class="chart-card">
+      <div class="chart-title">Sites by Status</div>
+      <div class="h-bar-group">
+        <div class="h-bar-item">
+          <span class="h-bar-label">Active</span>
+          <div class="h-bar-track">
+            <div class="h-bar-fill" style="width:75%; background:var(--emerald); animation: growWidth 0.8s 0.6s backwards;"></div>
+          </div>
+          <span class="h-bar-value">9</span>
+        </div>
+        <div class="h-bar-item">
+          <span class="h-bar-label">Onboarding</span>
+          <div class="h-bar-track">
+            <div class="h-bar-fill" style="width:16.7%; background:var(--blue); animation: growWidth 0.8s 0.7s backwards;"></div>
+          </div>
+          <span class="h-bar-value">2</span>
+        </div>
+        <div class="h-bar-item">
+          <span class="h-bar-label">Draft</span>
+          <div class="h-bar-track">
+            <div class="h-bar-fill" style="width:8.3%; background:var(--light-muted); animation: growWidth 0.8s 0.8s backwards;"></div>
+          </div>
+          <span class="h-bar-value">1</span>
+        </div>
+      </div>
+      <div style="height:20px;"></div>
+      <div class="chart-title">User Roles</div>
+      <div class="h-bar-group">
+        <div class="h-bar-item">
+          <span class="h-bar-label">Org Admin</span>
+          <div class="h-bar-track">
+            <div class="h-bar-fill" style="width:12.5%; background:var(--violet); animation: growWidth 0.8s 0.85s backwards;"></div>
+          </div>
+          <span class="h-bar-value">3</span>
+        </div>
+        <div class="h-bar-item">
+          <span class="h-bar-label">Site Manager</span>
+          <div class="h-bar-track">
+            <div class="h-bar-fill" style="width:33.3%; background:var(--blue); animation: growWidth 0.8s 0.9s backwards;"></div>
+          </div>
+          <span class="h-bar-value">8</span>
+        </div>
+        <div class="h-bar-item">
+          <span class="h-bar-label">Site Viewer</span>
+          <div class="h-bar-track">
+            <div class="h-bar-fill" style="width:54.2%; background:var(--emerald); animation: growWidth 0.8s 0.95s backwards;"></div>
+          </div>
+          <span class="h-bar-value">13</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 2: Devices per Site -->
+    <div class="chart-card">
+      <div class="chart-title">Devices per Site</div>
+      <div class="v-bar-chart">
+        <div class="v-bar-col">
+          <div class="v-bar-count">14</div>
+          <div class="v-bar" style="height:90px; background:var(--blue); animation: growHeight 0.6s 0.7s backwards;"></div>
+          <div class="v-bar-name">Centro</div>
+        </div>
+        <div class="v-bar-col">
+          <div class="v-bar-count">12</div>
+          <div class="v-bar" style="height:77px; background:var(--blue); opacity:0.85; animation: growHeight 0.6s 0.78s backwards;"></div>
+          <div class="v-bar-name">Valle</div>
+        </div>
+        <div class="v-bar-col">
+          <div class="v-bar-count">11</div>
+          <div class="v-bar" style="height:71px; background:var(--blue); opacity:0.7; animation: growHeight 0.6s 0.86s backwards;"></div>
+          <div class="v-bar-name">Cumbres</div>
+        </div>
+        <div class="v-bar-col">
+          <div class="v-bar-count">9</div>
+          <div class="v-bar" style="height:58px; background:var(--blue); opacity:0.6; animation: growHeight 0.6s 0.94s backwards;"></div>
+          <div class="v-bar-name">San Pedro</div>
+        </div>
+        <div class="v-bar-col">
+          <div class="v-bar-count">7</div>
+          <div class="v-bar" style="height:45px; background:var(--blue); opacity:0.5; animation: growHeight 0.6s 1.02s backwards;"></div>
+          <div class="v-bar-name">Apodaca</div>
+        </div>
+        <div class="v-bar-col">
+          <div class="v-bar-count">6</div>
+          <div class="v-bar" style="height:39px; background:var(--blue); opacity:0.4; animation: growHeight 0.6s 1.1s backwards;"></div>
+          <div class="v-bar-name">Escobedo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item active">Sites<span class="tab-count">12</span></div>
+    <div class="tab-item">Users<span class="tab-count">24</span></div>
+    <div class="tab-item">Alerts<span class="tab-count">4</span></div>
+    <div class="tab-item">Activity</div>
+    <div class="tab-item">Notes<span class="tab-count">2</span></div>
+  </div>
+
+  <!-- Sites Table -->
+  <div class="content-table-wrapper">
+    <table class="content-table">
+      <thead>
+        <tr>
+          <th>Site</th>
+          <th>Devices</th>
+          <th>Online</th>
+          <th>Alerts</th>
+          <th>Work Orders</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="site-name">OXXO Centro Monterrey</span></td>
+          <td><span class="data-cell">14</span></td>
+          <td><span class="online-pct high">98%</span></td>
+          <td><span class="data-cell">0</span></td>
+          <td><span class="data-cell">0</span></td>
+          <td><span class="mini-status"><span class="mini-dot" style="background:var(--emerald);"></span>Active</span></td>
+        </tr>
+        <tr>
+          <td><span class="site-name">OXXO Valle Oriente</span></td>
+          <td><span class="data-cell">12</span></td>
+          <td><span class="online-pct high">96%</span></td>
+          <td><span class="data-cell">1</span></td>
+          <td><span class="data-cell">0</span></td>
+          <td><span class="mini-status"><span class="mini-dot" style="background:var(--emerald);"></span>Active</span></td>
+        </tr>
+        <tr>
+          <td><span class="site-name">OXXO Cumbres Elite</span></td>
+          <td><span class="data-cell">11</span></td>
+          <td><span class="online-pct high">94%</span></td>
+          <td><span class="data-cell">1</span></td>
+          <td><span class="data-cell">1</span></td>
+          <td><span class="mini-status"><span class="mini-dot" style="background:var(--emerald);"></span>Active</span></td>
+        </tr>
+        <tr>
+          <td><span class="site-name">OXXO San Pedro Sur</span></td>
+          <td><span class="data-cell">9</span></td>
+          <td><span class="online-pct mid">82%</span></td>
+          <td><span class="data-cell">2</span></td>
+          <td><span class="data-cell">1</span></td>
+          <td><span class="mini-status"><span class="mini-dot" style="background:var(--emerald);"></span>Active</span></td>
+        </tr>
+        <tr>
+          <td><span class="site-name">OXXO Apodaca Industrial</span></td>
+          <td><span class="data-cell">7</span></td>
+          <td><span class="online-pct low">67%</span></td>
+          <td><span class="data-cell">0</span></td>
+          <td><span class="data-cell">0</span></td>
+          <td><span class="mini-status"><span class="mini-dot" style="background:var(--blue);"></span>Onboarding</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Notes Section -->
+  <div class="notes-section">
+    <div class="notes-heading">Notes</div>
+
+    <div class="note-compose">
+      <textarea class="note-textarea" placeholder="Add a note about this organization..."></textarea>
+      <div class="note-compose-footer">
+        <button class="note-submit">Post Note</button>
+      </div>
+    </div>
+
+    <div class="note-card">
+      <div class="note-meta">
+        <div class="note-avatar" style="background:linear-gradient(135deg,#2563eb,#3b82f6);">AT</div>
+        <span class="note-author">Ana Torres</span>
+        <span class="note-time">2h ago</span>
+      </div>
+      <div class="note-body">
+        Completed onsite audit at Centro Monterrey. All 14 devices calibrated and firmware updated to v3.2.1. Temperature variance within acceptable range (&plusmn;0.3&deg;C). Next audit scheduled for Q2.
+      </div>
+    </div>
+
+    <div class="note-card">
+      <div class="note-meta">
+        <div class="note-avatar" style="background:linear-gradient(135deg,#059669,#10b981);">DS</div>
+        <span class="note-author">Diego Salinas</span>
+        <span class="note-time">1d ago</span>
+      </div>
+      <div class="note-body">
+        Client requested evaluation for 3 additional sites in Guadalajara metro area. Sent proposal with Enterprise tier pricing. Follow-up call scheduled for April 2nd with Roberto.
+      </div>
+    </div>
+  </div>
+
+</main>
+
+</body>
+</html>

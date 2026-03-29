@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variation C — Show (Pipeline)</title>
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #09090b;
+    --s1: #111113;
+    --s2: #18181b;
+    --s3: #1e1e22;
+    --s4: #27272a;
+    --border: #27272a;
+    --border-light: #1e1e22;
+    --text: #fafafa;
+    --text-2: #a1a1aa;
+    --text-3: #52525b;
+    --text-4: #3f3f46;
+    --brand: #a78bfa;
+    --brand-dim: rgba(167, 139, 250, 0.1);
+    --emerald: #34d399;
+    --emerald-dim: rgba(52, 211, 153, 0.1);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.1);
+    --rose: #fb7185;
+    --rose-dim: rgba(251, 113, 133, 0.1);
+    --sky: #38bdf8;
+    --sky-dim: rgba(56, 189, 248, 0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .design-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--brand);
+    color: var(--bg);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    z-index: 100;
+  }
+
+  /* --- Top Bar --- */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .back-btn:hover { background: var(--s2); color: var(--text); }
+
+  .top-info { flex: 1; }
+
+  .top-info h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .top-info .slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-4);
+    margin-top: 2px;
+  }
+
+  .top-badges {
+    display: flex;
+    gap: 6px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .chip-active { background: var(--emerald-dim); color: var(--emerald); }
+  .chip-active::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 6px rgba(52,211,153,0.5); }
+  .chip-segment { background: var(--brand-dim); color: var(--brand); }
+  .chip-plan { background: var(--sky-dim); color: var(--sky); }
+
+  .top-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-3);
+  }
+
+  .btn:hover { background: var(--s2); color: var(--text-2); }
+  .btn.primary { background: var(--brand); color: var(--bg); border-color: var(--brand); }
+  .btn.primary:hover { filter: brightness(1.15); box-shadow: 0 4px 12px rgba(167,139,250,0.2); }
+  .btn.warn { color: var(--amber); }
+  .btn.danger { color: var(--rose); }
+
+  /* --- KPI Row --- */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border-light);
+    margin: 0;
+  }
+
+  .kpi-cell {
+    background: var(--s1);
+    padding: 20px 28px;
+    position: relative;
+  }
+
+  .kpi-cell::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 28px;
+    right: 28px;
+    height: 2px;
+    border-radius: 1px;
+    opacity: 0.6;
+  }
+
+  .kpi-cell.cyan::after { background: var(--sky); }
+  .kpi-cell.emerald::after { background: var(--emerald); }
+  .kpi-cell.rose::after { background: var(--rose); }
+  .kpi-cell.brand::after { background: var(--brand); }
+
+  .kpi-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-4);
+  }
+
+  .kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--text-4);
+    margin-top: 2px;
+  }
+
+  /* --- Main Layout --- */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0;
+    min-height: calc(100vh - 180px);
+  }
+
+  .left-col {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .right-col {
+    border-left: 1px solid var(--border-light);
+    padding: 28px 24px;
+    background: var(--s1);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* --- Charts --- */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .chart-panel {
+    background: var(--s1);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .chart-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-4);
+    margin-bottom: 16px;
+  }
+
+  /* Inline bar */
+  .bars { display: flex; flex-direction: column; gap: 10px; }
+
+  .bar-item {
+    display: grid;
+    grid-template-columns: 80px 1fr 28px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bar-item-label { font-size: 11px; color: var(--text-3); text-align: right; }
+  .bar-track { height: 14px; background: var(--s3); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+  .bar-item-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; }
+
+  /* Vertical bars */
+  .v-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 110px;
+  }
+
+  .v-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .v-val { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-3); font-weight: 600; }
+  .v-bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 4px; }
+  .v-name { font-size: 8px; color: var(--text-4); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+  /* --- Tabs --- */
+  .tabs-row {
+    display: flex;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .tab {
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-4);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab:hover { color: var(--text-3); }
+  .tab.active { color: var(--text); border-bottom-color: var(--brand); }
+
+  .tab-n {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--s3);
+    color: var(--text-4);
+  }
+
+  .tab.active .tab-n { background: var(--brand-dim); color: var(--brand); }
+  .tab-n.alert { background: var(--rose-dim); color: var(--rose); }
+
+  /* --- Sites as pipeline rows --- */
+  .site-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .site-row {
+    display: grid;
+    grid-template-columns: 1.2fr 0.6fr 0.5fr 0.5fr 0.5fr 0.5fr;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--s1);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .site-row:hover {
+    background: var(--s2);
+    border-color: var(--border);
+    transform: translateX(3px);
+  }
+
+  .site-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .site-row:hover::before { opacity: 1; }
+  .site-row.ok::before { background: var(--emerald); }
+  .site-row.warn::before { background: var(--amber); }
+  .site-row.bad::before { background: var(--rose); }
+
+  .site-name { font-weight: 600; font-size: 13px; }
+  .site-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-4); margin-top: 1px; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: center; }
+  .dim { color: var(--text-4); }
+  .green { color: var(--emerald); }
+  .yellow { color: var(--amber); }
+  .pink { color: var(--rose); }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  .status-chip.active { background: var(--emerald-dim); color: var(--emerald); }
+  .status-chip.onboarding { background: var(--sky-dim); color: var(--sky); }
+  .status-chip.draft { background: var(--s3); color: var(--text-4); }
+
+  /* Online ring */
+  .ring-mini {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .ring-mini svg { width: 28px; height: 28px; transform: rotate(-90deg); }
+  .ring-mini .ring-bg { fill: none; stroke: var(--s3); stroke-width: 3; }
+  .ring-mini .ring-fill { fill: none; stroke-width: 3; stroke-linecap: round; }
+  .ring-mini .ring-pct {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px;
+    font-weight: 700;
+  }
+
+  /* --- Sidebar sections --- */
+  .sidebar-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .sidebar-label::after { content: ''; flex: 1; height: 1px; background: var(--border-light); }
+
+  .info-card {
+    background: var(--s2);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .info-row:last-child { border-bottom: none; }
+  .info-key { font-size: 11px; color: var(--text-4); }
+  .info-val { font-size: 11px; color: var(--text-2); font-weight: 500; }
+  .info-val code { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-3); }
+
+  .contact-block {
+    background: var(--s2);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .contact-av {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--brand-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--brand);
+  }
+
+  .contact-name { font-weight: 600; font-size: 12px; }
+  .contact-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-4); margin-top: 1px; }
+
+  /* Swatches */
+  .swatches { display: flex; gap: 5px; }
+  .swatch { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border); }
+
+  /* Notes */
+  .notes-block {
+    background: var(--s2);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .notes-compose {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .notes-compose textarea {
+    width: 100%;
+    background: var(--s3);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    resize: none;
+    outline: none;
+  }
+
+  .notes-compose textarea::placeholder { color: var(--text-4); }
+
+  .note-entry {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .note-entry:last-child { border-bottom: none; }
+
+  .note-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .note-who { font-weight: 600; }
+  .note-when { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-4); }
+  .note-body { font-size: 12px; color: var(--text-3); margin-top: 4px; line-height: 1.5; }
+
+  /* Alerts feed (inline) */
+  .alert-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 10px;
+  }
+
+  .alert-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 0;
+  }
+
+  .alert-row:first-child { border-radius: 10px 10px 0 0; }
+  .alert-row:last-child { border-radius: 0 0 10px 10px; border-bottom: none; }
+
+  .alert-row:hover { background: var(--s2); }
+
+  .alert-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .alert-dot.critical { background: var(--rose); box-shadow: 0 0 6px rgba(251,113,133,0.5); }
+  .alert-dot.high { background: #fb923c; }
+  .alert-dot.medium { background: var(--amber); }
+
+  .alert-info { flex: 1; min-width: 0; }
+  .alert-title { font-size: 12px; font-weight: 500; }
+  .alert-meta { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-4); margin-top: 1px; }
+  .alert-time { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-4); flex-shrink: 0; }
+
+  /* Animations */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .animate-in {
+    animation: slideIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) both;
+  }
+
+  @media (max-width: 1024px) {
+    .main { grid-template-columns: 1fr; }
+    .right-col { border-left: none; border-top: 1px solid var(--border-light); }
+    .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .top-bar { padding: 16px 20px; flex-wrap: wrap; }
+    .left-col { padding: 20px; }
+    .right-col { padding: 20px; }
+    .charts-row { grid-template-columns: 1fr; }
+    .site-row { grid-template-columns: 1fr 0.5fr 0.5fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="design-label">Variation C — Show</div>
+
+<!-- Top Bar -->
+<div class="top-bar animate-in">
+  <button class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </button>
+  <div class="top-info">
+    <h1>OXXO Corporativo</h1>
+    <div class="slug">oxxo-corporativo</div>
+  </div>
+  <div class="top-badges">
+    <span class="chip chip-active">Active</span>
+    <span class="chip chip-segment">Retail</span>
+    <span class="chip chip-plan">Enterprise</span>
+  </div>
+  <div class="top-actions">
+    <button class="btn warn">Suspend</button>
+    <button class="btn danger">Archive</button>
+    <button class="btn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+    <button class="btn primary">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit
+    </button>
+  </div>
+</div>
+
+<!-- KPI Row (full-width band) -->
+<div class="kpi-row">
+  <div class="kpi-cell cyan">
+    <div class="kpi-label">Sites</div>
+    <div class="kpi-value">12</div>
+    <div class="kpi-sub">9 active</div>
+  </div>
+  <div class="kpi-cell">
+    <div class="kpi-label">Devices</div>
+    <div class="kpi-value">87</div>
+    <div class="kpi-sub">72 online</div>
+  </div>
+  <div class="kpi-cell rose">
+    <div class="kpi-label">Active Alerts</div>
+    <div class="kpi-value">04</div>
+    <div class="kpi-sub">1 critical</div>
+  </div>
+  <div class="kpi-cell">
+    <div class="kpi-label">Work Orders</div>
+    <div class="kpi-value">02</div>
+    <div class="kpi-sub">open</div>
+  </div>
+  <div class="kpi-cell emerald">
+    <div class="kpi-label">Users</div>
+    <div class="kpi-value">24</div>
+    <div class="kpi-sub">3 roles</div>
+  </div>
+</div>
+
+<!-- Main Layout -->
+<div class="main">
+
+  <!-- Left -->
+  <div class="left-col">
+
+    <div class="charts-row animate-in" style="animation-delay:80ms">
+      <div class="chart-panel">
+        <div class="chart-label">Sites by Status</div>
+        <div class="bars">
+          <div class="bar-item">
+            <span class="bar-item-label">Active</span>
+            <div class="bar-track"><div class="bar-fill" style="width:75%;background:var(--emerald)"></div></div>
+            <span class="bar-item-val">9</span>
+          </div>
+          <div class="bar-item">
+            <span class="bar-item-label">Onboarding</span>
+            <div class="bar-track"><div class="bar-fill" style="width:17%;background:var(--sky)"></div></div>
+            <span class="bar-item-val">2</span>
+          </div>
+          <div class="bar-item">
+            <span class="bar-item-label">Draft</span>
+            <div class="bar-track"><div class="bar-fill" style="width:8%;background:var(--text-4)"></div></div>
+            <span class="bar-item-val">1</span>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border-light)">
+          <div class="chart-label">User Roles</div>
+          <div class="bars">
+            <div class="bar-item">
+              <span class="bar-item-label">Org Admin</span>
+              <div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--brand)"></div></div>
+              <span class="bar-item-val">3</span>
+            </div>
+            <div class="bar-item">
+              <span class="bar-item-label">Site Manager</span>
+              <div class="bar-track"><div class="bar-fill" style="width:33%;background:var(--sky)"></div></div>
+              <span class="bar-item-val">8</span>
+            </div>
+            <div class="bar-item">
+              <span class="bar-item-label">Site Viewer</span>
+              <div class="bar-track"><div class="bar-fill" style="width:54%;background:var(--emerald)"></div></div>
+              <span class="bar-item-val">13</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-label">Devices per Site</div>
+        <div class="v-bars">
+          <div class="v-col"><div class="v-val">14</div><div class="v-bar" style="height:90px;background:var(--brand)"></div><div class="v-name">Sucursal A</div></div>
+          <div class="v-col"><div class="v-val">12</div><div class="v-bar" style="height:76px;background:var(--brand)"></div><div class="v-name">CEDIS Mty</div></div>
+          <div class="v-col"><div class="v-val">8</div><div class="v-bar" style="height:51px;background:var(--brand)"></div><div class="v-name">Plaza Nte</div></div>
+          <div class="v-col"><div class="v-val">9</div><div class="v-bar" style="height:57px;background:var(--brand)"></div><div class="v-name">Bodega Sur</div></div>
+          <div class="v-col"><div class="v-val">6</div><div class="v-bar" style="height:38px;background:var(--brand)"></div><div class="v-name">Exp GDL</div></div>
+          <div class="v-col"><div class="v-val">10</div><div class="v-bar" style="height:64px;background:var(--brand)"></div><div class="v-name">Depot CDM</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="animate-in" style="animation-delay:120ms">
+      <div class="tabs-row">
+        <button class="tab active">Sites <span class="tab-n">12</span></button>
+        <button class="tab">Users <span class="tab-n">24</span></button>
+        <button class="tab">Alerts <span class="tab-n alert">4</span></button>
+        <button class="tab">Activity</button>
+        <button class="tab">Notes <span class="tab-n">3</span></button>
+      </div>
+
+      <!-- Sites as pipeline rows -->
+      <div class="site-list">
+        <div class="site-row ok">
+          <div><div class="site-name">Sucursal Apodaca</div><div class="site-sub">8/10 online</div></div>
+          <div class="mono">10</div>
+          <div>
+            <div class="ring-mini">
+              <svg viewBox="0 0 28 28"><circle class="ring-bg" cx="14" cy="14" r="11"/><circle class="ring-fill" cx="14" cy="14" r="11" stroke="var(--emerald)" stroke-dasharray="69.1" stroke-dashoffset="13.8"/></svg>
+              <span class="ring-pct green">80%</span>
+            </div>
+          </div>
+          <div class="mono pink">2</div>
+          <div class="mono dim">0</div>
+          <div><span class="status-chip active">Active</span></div>
+        </div>
+        <div class="site-row ok">
+          <div><div class="site-name">CEDIS Monterrey</div><div class="site-sub">12/12 online</div></div>
+          <div class="mono">12</div>
+          <div>
+            <div class="ring-mini">
+              <svg viewBox="0 0 28 28"><circle class="ring-bg" cx="14" cy="14" r="11"/><circle class="ring-fill" cx="14" cy="14" r="11" stroke="var(--emerald)" stroke-dasharray="69.1" stroke-dashoffset="0"/></svg>
+              <span class="ring-pct green">100%</span>
+            </div>
+          </div>
+          <div class="mono dim">0</div>
+          <div class="mono dim">0</div>
+          <div><span class="status-chip active">Active</span></div>
+        </div>
+        <div class="site-row warn">
+          <div><div class="site-name">Plaza Norte Saltillo</div><div class="site-sub">5/8 online</div></div>
+          <div class="mono">8</div>
+          <div>
+            <div class="ring-mini">
+              <svg viewBox="0 0 28 28"><circle class="ring-bg" cx="14" cy="14" r="11"/><circle class="ring-fill" cx="14" cy="14" r="11" stroke="var(--amber)" stroke-dasharray="69.1" stroke-dashoffset="26.3"/></svg>
+              <span class="ring-pct yellow">62%</span>
+            </div>
+          </div>
+          <div class="mono pink">1</div>
+          <div class="mono yellow">1</div>
+          <div><span class="status-chip active">Active</span></div>
+        </div>
+        <div class="site-row ok">
+          <div><div class="site-name">Bodega Sur Reynosa</div><div class="site-sub">9/9 online</div></div>
+          <div class="mono">9</div>
+          <div>
+            <div class="ring-mini">
+              <svg viewBox="0 0 28 28"><circle class="ring-bg" cx="14" cy="14" r="11"/><circle class="ring-fill" cx="14" cy="14" r="11" stroke="var(--emerald)" stroke-dasharray="69.1" stroke-dashoffset="0"/></svg>
+              <span class="ring-pct green">100%</span>
+            </div>
+          </div>
+          <div class="mono dim">0</div>
+          <div class="mono dim">0</div>
+          <div><span class="status-chip active">Active</span></div>
+        </div>
+        <div class="site-row bad">
+          <div><div class="site-name">Express Guadalajara</div><div class="site-sub">0/6 online</div></div>
+          <div class="mono">6</div>
+          <div>
+            <div class="ring-mini">
+              <svg viewBox="0 0 28 28"><circle class="ring-bg" cx="14" cy="14" r="11"/><circle class="ring-fill" cx="14" cy="14" r="11" stroke="var(--rose)" stroke-dasharray="69.1" stroke-dashoffset="69.1"/></svg>
+              <span class="ring-pct pink">0%</span>
+            </div>
+          </div>
+          <div class="mono pink">1</div>
+          <div class="mono yellow">1</div>
+          <div><span class="status-chip onboarding">Onboarding</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inline Alert Feed -->
+    <div class="animate-in" style="animation-delay:160ms">
+      <div class="sidebar-label">Recent Alerts</div>
+      <div class="alert-feed" style="background:var(--s1);border:1px solid var(--border-light);border-radius:10px">
+        <div class="alert-row">
+          <div class="alert-dot critical"></div>
+          <div class="alert-info">
+            <div class="alert-title">High Temperature Alert</div>
+            <div class="alert-meta">Sensor T-042 @ Plaza Norte — temp: 8.2C (threshold: 5C)</div>
+          </div>
+          <div class="alert-time">12m ago</div>
+        </div>
+        <div class="alert-row">
+          <div class="alert-dot high"></div>
+          <div class="alert-info">
+            <div class="alert-title">Gateway Offline</div>
+            <div class="alert-meta">GW-007 @ Express Guadalajara</div>
+          </div>
+          <div class="alert-time">3h ago</div>
+        </div>
+        <div class="alert-row">
+          <div class="alert-dot medium"></div>
+          <div class="alert-info">
+            <div class="alert-title">Battery Low</div>
+            <div class="alert-meta">Sensor H-019 @ Sucursal Apodaca — battery: 12%</div>
+          </div>
+          <div class="alert-time">6h ago</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Sidebar -->
+  <div class="right-col">
+
+    <div class="animate-in" style="animation-delay:60ms">
+      <div class="sidebar-label">Organization Details</div>
+      <div class="info-card">
+        <div class="info-row"><span class="info-key">Slug</span><span class="info-val"><code>oxxo-corporativo</code></span></div>
+        <div class="info-row"><span class="info-key">Segment</span><span class="info-val"><span class="chip chip-segment" style="padding:2px 8px;font-size:9px">Retail</span></span></div>
+        <div class="info-row"><span class="info-key">Plan</span><span class="info-val"><span class="chip chip-plan" style="padding:2px 8px;font-size:9px">Enterprise</span></span></div>
+        <div class="info-row"><span class="info-key">Timezone</span><span class="info-val"><code>America/Monterrey</code></span></div>
+        <div class="info-row"><span class="info-key">Opening</span><span class="info-val"><code>07:00</code></span></div>
+        <div class="info-row"><span class="info-key">Created</span><span class="info-val"><code>Mar 2024</code></span></div>
+        <div class="info-row"><span class="info-key">Last Active</span><span class="info-val"><code>2h ago</code></span></div>
+        <div class="info-row">
+          <span class="info-key">Branding</span>
+          <span class="info-val">
+            <div class="swatches">
+              <div class="swatch" style="background:#cc0000"></div>
+              <div class="swatch" style="background:#fff"></div>
+              <div class="swatch" style="background:#ffd700"></div>
+            </div>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="animate-in" style="animation-delay:100ms">
+      <div class="sidebar-label">Primary Contact</div>
+      <div class="contact-block">
+        <div class="contact-av">RC</div>
+        <div>
+          <div class="contact-name">Roberto Campos</div>
+          <div class="contact-sub">rcampos@oxxo.com.mx</div>
+          <div class="contact-sub">+52 81 1234 5678</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="animate-in" style="animation-delay:140ms">
+      <div class="sidebar-label">Notes</div>
+      <div class="notes-block">
+        <div class="notes-compose">
+          <textarea placeholder="Add a note..." rows="2"></textarea>
+        </div>
+        <div class="note-entry">
+          <div class="note-head">
+            <span class="note-who">Ana Torres</span>
+            <span class="note-when">2 days ago</span>
+          </div>
+          <p class="note-body">Requested firmware update for CEDIS Monterrey sensors. Scheduling for next maintenance window.</p>
+        </div>
+        <div class="note-entry">
+          <div class="note-head">
+            <span class="note-who">Diego Salinas</span>
+            <span class="note-when">1 week ago</span>
+          </div>
+          <p class="note-body">Onboarding call completed. They want to add 3 more sites in Q2.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

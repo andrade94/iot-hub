@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variation A — Command Grid</title>
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700" rel="stylesheet" />
+<style>
+  :root {
+    --ob-base: #0e0e0e;
+    --ob-low: #131313;
+    --ob-mid: #191a1a;
+    --ob-high: #1f2020;
+    --ob-highest: #252626;
+    --ob-bright: #2c2c2c;
+    --ob-text: #e7e5e4;
+    --ob-muted: #acabaa;
+    --ob-dim: #484848;
+    --ob-outline: #767575;
+    --ob-steel: #b9c7df;
+    --ob-cyan: #17a8ec;
+    --ob-coral: #ee7d77;
+    --ob-ember: #ff716a;
+    --ob-emerald: #10b981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ob-base);
+    color: var(--ob-text);
+    -webkit-font-smoothing: antialiased;
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  /* --- Header --- */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+  }
+
+  .header-left .eyebrow {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ob-muted);
+  }
+
+  .header-left h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-top: 6px;
+  }
+
+  .header-left .subtitle {
+    color: var(--ob-muted);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+
+  .btn-create {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--ob-steel);
+    color: var(--ob-low);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-create:hover {
+    background: var(--ob-text);
+    transform: translateY(-1px);
+  }
+
+  /* --- KPI Strip --- */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .kpi-card {
+    background: var(--ob-low);
+    border-radius: 12px;
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid transparent;
+    transition: border-color 0.3s ease;
+  }
+
+  .kpi-card:hover {
+    border-color: var(--ob-dim);
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+  }
+
+  .kpi-card.accent-steel::before { background: var(--ob-steel); }
+  .kpi-card.accent-emerald::before { background: var(--ob-emerald); }
+  .kpi-card.accent-coral::before { background: var(--ob-coral); }
+  .kpi-card.accent-cyan::before { background: var(--ob-cyan); }
+  .kpi-card.accent-ember::before { background: var(--ob-ember); }
+
+  .kpi-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ob-muted);
+  }
+
+  .kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 4px;
+    letter-spacing: -0.02em;
+  }
+
+  .kpi-delta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ob-emerald);
+    margin-top: 4px;
+  }
+
+  /* --- Toolbar --- */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .search-box {
+    position: relative;
+    flex: 1;
+    max-width: 360px;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: var(--ob-low);
+    border: 1px solid var(--ob-high);
+    border-radius: 8px;
+    padding: 10px 14px 10px 38px;
+    color: var(--ob-text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box input:focus {
+    border-color: var(--ob-steel);
+  }
+
+  .search-box input::placeholder {
+    color: var(--ob-dim);
+  }
+
+  .search-box svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ob-dim);
+  }
+
+  .filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ob-high);
+    border: 1px solid var(--ob-dim);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ob-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-chip:hover {
+    background: var(--ob-highest);
+    color: var(--ob-text);
+  }
+
+  .filter-chip.active {
+    background: rgba(185, 199, 223, 0.1);
+    border-color: var(--ob-steel);
+    color: var(--ob-steel);
+  }
+
+  .view-toggle {
+    display: flex;
+    background: var(--ob-low);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-left: auto;
+    border: 1px solid var(--ob-high);
+  }
+
+  .view-toggle button {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    color: var(--ob-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .view-toggle button.active {
+    background: var(--ob-high);
+    color: var(--ob-text);
+  }
+
+  /* --- Card Grid --- */
+  .org-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+
+  .org-card {
+    background: var(--ob-low);
+    border-radius: 14px;
+    border: 1px solid var(--ob-high);
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .org-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .org-card.status-active::after { background: var(--ob-emerald); }
+  .org-card.status-onboarding::after { background: var(--ob-cyan); }
+  .org-card.status-suspended::after { background: var(--ob-coral); }
+
+  .org-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--ob-dim);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .org-card:hover::after {
+    opacity: 1;
+  }
+
+  .org-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .org-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--ob-high);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--ob-steel);
+    flex-shrink: 0;
+  }
+
+  .org-card-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .org-card-name {
+    font-weight: 600;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .org-card-slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ob-dim);
+    margin-top: 2px;
+  }
+
+  .org-card-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .badge-segment {
+    background: rgba(185, 199, 223, 0.08);
+    color: var(--ob-steel);
+  }
+
+  .badge-plan {
+    background: rgba(23, 168, 236, 0.08);
+    color: var(--ob-cyan);
+  }
+
+  .status-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .status-dot::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  .status-dot.active { color: var(--ob-emerald); }
+  .status-dot.active::before { background: var(--ob-emerald); box-shadow: 0 0 6px rgba(16, 185, 129, 0.5); }
+  .status-dot.onboarding { color: var(--ob-cyan); }
+  .status-dot.onboarding::before { background: var(--ob-cyan); box-shadow: 0 0 6px rgba(23, 168, 236, 0.5); }
+  .status-dot.suspended { color: var(--ob-coral); }
+  .status-dot.suspended::before { background: var(--ob-coral); box-shadow: 0 0 6px rgba(238, 125, 119, 0.5); }
+
+  /* Stats row */
+  .org-card-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--ob-high);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .stat-cell {
+    background: var(--ob-mid);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-cell-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .stat-cell-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--ob-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+
+  /* --- Footer bar in card --- */
+  .org-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--ob-high);
+  }
+
+  .org-card-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ob-dim);
+  }
+
+  .org-card-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .org-card:hover .org-card-actions {
+    opacity: 1;
+  }
+
+  .action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: var(--ob-high);
+    color: var(--ob-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .action-btn:hover {
+    background: var(--ob-highest);
+    color: var(--ob-text);
+  }
+
+  /* --- Mini health bar --- */
+  .health-bar {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--ob-high);
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .health-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .health-bar-fill.good { background: var(--ob-emerald); }
+  .health-bar-fill.warn { background: var(--ob-ember); }
+  .health-bar-fill.critical { background: var(--ob-coral); }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .org-card {
+    animation: fadeUp 0.5s cubic-bezier(0.19, 1, 0.22, 1) both;
+  }
+
+  .org-card:nth-child(1) { animation-delay: 0ms; }
+  .org-card:nth-child(2) { animation-delay: 50ms; }
+  .org-card:nth-child(3) { animation-delay: 100ms; }
+  .org-card:nth-child(4) { animation-delay: 150ms; }
+  .org-card:nth-child(5) { animation-delay: 200ms; }
+  .org-card:nth-child(6) { animation-delay: 250ms; }
+  .org-card:nth-child(7) { animation-delay: 300ms; }
+  .org-card:nth-child(8) { animation-delay: 350ms; }
+
+  .kpi-card {
+    animation: fadeUp 0.4s cubic-bezier(0.19, 1, 0.22, 1) both;
+  }
+  .kpi-card:nth-child(1) { animation-delay: 0ms; }
+  .kpi-card:nth-child(2) { animation-delay: 40ms; }
+  .kpi-card:nth-child(3) { animation-delay: 80ms; }
+  .kpi-card:nth-child(4) { animation-delay: 120ms; }
+  .kpi-card:nth-child(5) { animation-delay: 160ms; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    body { padding: 20px; }
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .org-grid { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 16px; }
+  }
+
+  /* Label tag */
+  .design-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--ob-steel);
+    color: var(--ob-low);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div class="design-label">Variation A — Command Grid</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <p class="eyebrow">Platform Administration</p>
+    <h1>Organizations</h1>
+    <p class="subtitle">Manage client entities, subscriptions, and lifecycle status.</p>
+  </div>
+  <button class="btn-create">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Create Organization
+  </button>
+</div>
+
+<!-- KPI Strip -->
+<div class="kpi-strip">
+  <div class="kpi-card accent-steel">
+    <p class="kpi-label">Total Orgs</p>
+    <p class="kpi-value">08</p>
+    <p class="kpi-delta">+2 this quarter</p>
+  </div>
+  <div class="kpi-card accent-emerald">
+    <p class="kpi-label">Active</p>
+    <p class="kpi-value">05</p>
+  </div>
+  <div class="kpi-card accent-coral">
+    <p class="kpi-label">Suspended</p>
+    <p class="kpi-value">01</p>
+  </div>
+  <div class="kpi-card accent-cyan">
+    <p class="kpi-label">Total Sites</p>
+    <p class="kpi-value">34</p>
+  </div>
+  <div class="kpi-card accent-ember">
+    <p class="kpi-label">Total Devices</p>
+    <p class="kpi-value">247</p>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="search-box">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search by name or slug..." />
+  </div>
+  <div class="filter-chip active">All</div>
+  <div class="filter-chip">Active</div>
+  <div class="filter-chip">Onboarding</div>
+  <div class="filter-chip">Suspended</div>
+  <div class="view-toggle">
+    <button class="active">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    </button>
+    <button>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Card Grid -->
+<div class="org-grid">
+
+  <div class="org-card status-active">
+    <div class="org-card-header">
+      <div class="org-avatar">OX</div>
+      <div class="org-card-info">
+        <div class="org-card-name">OXXO Corporativo</div>
+        <div class="org-card-slug">oxxo-corporativo</div>
+        <div class="org-card-badges">
+          <span class="badge badge-segment">Retail</span>
+          <span class="badge badge-plan">Enterprise</span>
+        </div>
+      </div>
+      <span class="status-dot active">Active</span>
+    </div>
+    <div class="org-card-stats">
+      <div class="stat-cell">
+        <div class="stat-cell-value">12</div>
+        <div class="stat-cell-label">Sites</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">87</div>
+        <div class="stat-cell-label">Devices</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">24</div>
+        <div class="stat-cell-label">Users</div>
+      </div>
+    </div>
+    <div class="health-bar"><div class="health-bar-fill good" style="width: 92%"></div></div>
+    <div class="org-card-footer">
+      <span class="org-card-date">Created Mar 2024</span>
+      <div class="org-card-actions">
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="org-card status-active">
+    <div class="org-card-header">
+      <div class="org-avatar">SM</div>
+      <div class="org-card-info">
+        <div class="org-card-name">Sigma Alimentos</div>
+        <div class="org-card-slug">sigma-alimentos</div>
+        <div class="org-card-badges">
+          <span class="badge badge-segment">Cold Chain</span>
+          <span class="badge badge-plan">Enterprise</span>
+        </div>
+      </div>
+      <span class="status-dot active">Active</span>
+    </div>
+    <div class="org-card-stats">
+      <div class="stat-cell">
+        <div class="stat-cell-value">8</div>
+        <div class="stat-cell-label">Sites</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">63</div>
+        <div class="stat-cell-label">Devices</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">15</div>
+        <div class="stat-cell-label">Users</div>
+      </div>
+    </div>
+    <div class="health-bar"><div class="health-bar-fill good" style="width: 88%"></div></div>
+    <div class="org-card-footer">
+      <span class="org-card-date">Created Jan 2024</span>
+      <div class="org-card-actions">
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="org-card status-onboarding">
+    <div class="org-card-header">
+      <div class="org-avatar">BK</div>
+      <div class="org-card-info">
+        <div class="org-card-name">Burger King MX</div>
+        <div class="org-card-slug">burger-king-mx</div>
+        <div class="org-card-badges">
+          <span class="badge badge-segment">Foodservice</span>
+          <span class="badge badge-plan">Standard</span>
+        </div>
+      </div>
+      <span class="status-dot onboarding">Onboarding</span>
+    </div>
+    <div class="org-card-stats">
+      <div class="stat-cell">
+        <div class="stat-cell-value">3</div>
+        <div class="stat-cell-label">Sites</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">18</div>
+        <div class="stat-cell-label">Devices</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">5</div>
+        <div class="stat-cell-label">Users</div>
+      </div>
+    </div>
+    <div class="health-bar"><div class="health-bar-fill warn" style="width: 45%"></div></div>
+    <div class="org-card-footer">
+      <span class="org-card-date">Created Mar 2026</span>
+      <div class="org-card-actions">
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="org-card status-active">
+    <div class="org-card-header">
+      <div class="org-avatar">CF</div>
+      <div class="org-card-info">
+        <div class="org-card-name">Coppel Farmacias</div>
+        <div class="org-card-slug">coppel-farmacias</div>
+        <div class="org-card-badges">
+          <span class="badge badge-segment">Retail</span>
+          <span class="badge badge-plan">Standard</span>
+        </div>
+      </div>
+      <span class="status-dot active">Active</span>
+    </div>
+    <div class="org-card-stats">
+      <div class="stat-cell">
+        <div class="stat-cell-value">5</div>
+        <div class="stat-cell-label">Sites</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">32</div>
+        <div class="stat-cell-label">Devices</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">9</div>
+        <div class="stat-cell-label">Users</div>
+      </div>
+    </div>
+    <div class="health-bar"><div class="health-bar-fill good" style="width: 97%"></div></div>
+    <div class="org-card-footer">
+      <span class="org-card-date">Created Aug 2024</span>
+      <div class="org-card-actions">
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="org-card status-suspended">
+    <div class="org-card-header">
+      <div class="org-avatar">AT</div>
+      <div class="org-card-info">
+        <div class="org-card-name">Alimentos del Tropico</div>
+        <div class="org-card-slug">alimentos-tropico</div>
+        <div class="org-card-badges">
+          <span class="badge badge-segment">Industrial</span>
+          <span class="badge badge-plan">Starter</span>
+        </div>
+      </div>
+      <span class="status-dot suspended">Suspended</span>
+    </div>
+    <div class="org-card-stats">
+      <div class="stat-cell">
+        <div class="stat-cell-value">2</div>
+        <div class="stat-cell-label">Sites</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">14</div>
+        <div class="stat-cell-label">Devices</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">3</div>
+        <div class="stat-cell-label">Users</div>
+      </div>
+    </div>
+    <div class="health-bar"><div class="health-bar-fill critical" style="width: 12%"></div></div>
+    <div class="org-card-footer">
+      <span class="org-card-date">Created Feb 2025</span>
+      <div class="org-card-actions">
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="org-card status-active">
+    <div class="org-card-header">
+      <div class="org-avatar">GN</div>
+      <div class="org-card-info">
+        <div class="org-card-name">Grupo Nacional</div>
+        <div class="org-card-slug">grupo-nacional</div>
+        <div class="org-card-badges">
+          <span class="badge badge-segment">Commercial</span>
+          <span class="badge badge-plan">Enterprise</span>
+        </div>
+      </div>
+      <span class="status-dot active">Active</span>
+    </div>
+    <div class="org-card-stats">
+      <div class="stat-cell">
+        <div class="stat-cell-value">4</div>
+        <div class="stat-cell-label">Sites</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">33</div>
+        <div class="stat-cell-label">Devices</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-value">11</div>
+        <div class="stat-cell-label">Users</div>
+      </div>
+    </div>
+    <div class="health-bar"><div class="health-bar-fill good" style="width: 85%"></div></div>
+    <div class="org-card-footer">
+      <span class="org-card-date">Created Nov 2024</span>
+      <div class="org-card-actions">
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

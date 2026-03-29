@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variation E — Kanban Columns Index</title>
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700&family=inter:400,500,600,700" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f8f8f7;
+    --surface: #ffffff;
+    --surface-2: #f1f0ee;
+    --border: #e3e2de;
+    --border-light: #edece9;
+    --text: #1a1a19;
+    --text-2: #6b6b69;
+    --text-3: #a3a3a0;
+    --green: #16a34a;
+    --green-bg: #dcfce7;
+    --green-border: #bbf7d0;
+    --blue: #2563eb;
+    --blue-bg: #dbeafe;
+    --blue-border: #bfdbfe;
+    --red: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fecaca;
+    --gray: #737373;
+    --gray-bg: #f3f3f2;
+    --gray-border: #e5e5e3;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .label { position: fixed; top: 16px; right: 16px; background: var(--text); color: white; padding: 6px 12px; border-radius: 6px; font-family: 'Space Grotesk'; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; z-index: 100; }
+
+  /* --- Top Bar --- */
+  .topbar {
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .topbar h1 {
+    font-family: 'Syne';
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .topbar .org-count {
+    font-family: 'JetBrains Mono';
+    font-size: 11px;
+    color: var(--text-3);
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+  .search-input {
+    width: 220px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-radius: 7px;
+    padding: 7px 12px 7px 32px;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: 'Inter';
+  }
+
+  .search-input:focus { border-color: var(--text-3); }
+  .search-input::placeholder { color: var(--text-3); }
+
+  .search-wrap { position: relative; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-3); }
+
+  .btn {
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-2);
+    transition: all 0.15s;
+  }
+
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--text); color: white; border-color: var(--text); }
+  .btn.primary:hover { opacity: 0.9; }
+
+  /* --- Kanban Container --- */
+  .kanban {
+    display: flex;
+    gap: 16px;
+    padding: 24px 32px;
+    overflow-x: auto;
+    min-height: calc(100vh - 80px);
+    align-items: flex-start;
+  }
+
+  /* --- Column --- */
+  .column {
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 200px;
+  }
+
+  .column-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px;
+    position: sticky;
+    top: 0;
+  }
+
+  .col-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .col-dot.green { background: var(--green); }
+  .col-dot.blue { background: var(--blue); }
+  .col-dot.red { background: var(--red); }
+  .col-dot.gray { background: var(--gray); }
+
+  .col-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .col-count {
+    font-family: 'JetBrains Mono';
+    font-size: 11px;
+    color: var(--text-3);
+    margin-left: auto;
+    background: var(--surface-2);
+    padding: 1px 7px;
+    border-radius: 10px;
+  }
+
+  /* --- Org Card --- */
+  .org-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .org-card:hover {
+    border-color: var(--border);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .card-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne';
+    font-weight: 800;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .card-avatar.green { background: var(--green-bg); color: var(--green); }
+  .card-avatar.blue { background: var(--blue-bg); color: var(--blue); }
+  .card-avatar.red { background: var(--red-bg); color: var(--red); }
+  .card-avatar.gray { background: var(--gray-bg); color: var(--gray); }
+
+  .card-name { font-weight: 600; font-size: 14px; }
+  .card-slug { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--text-3); margin-top: 1px; }
+
+  .card-badges {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .card-badge {
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--surface-2);
+    color: var(--text-2);
+  }
+
+  .card-badge.enterprise { background: #f5f3ff; color: #7c3aed; }
+
+  /* Stats row */
+  .card-stats {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .card-stat {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    border-right: 1px solid var(--border-light);
+  }
+
+  .card-stat:last-child { border-right: none; }
+
+  .card-stat-val {
+    font-family: 'JetBrains Mono';
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .card-stat-lbl {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    margin-top: 1px;
+  }
+
+  /* Card footer */
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .card-date {
+    font-family: 'JetBrains Mono';
+    font-size: 10px;
+    color: var(--text-3);
+  }
+
+  .card-arrow {
+    color: var(--text-3);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .org-card:hover .card-arrow { opacity: 1; }
+
+  /* Suspended card dimming */
+  .column.suspended .org-card {
+    opacity: 0.7;
+  }
+  .column.suspended .org-card:hover { opacity: 1; }
+
+  /* Animations */
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .org-card { animation: cardIn 0.35s cubic-bezier(0.19,1,0.22,1) both; }
+  .column:nth-child(1) .org-card:nth-child(2) { animation-delay: 50ms; }
+  .column:nth-child(1) .org-card:nth-child(3) { animation-delay: 100ms; }
+  .column:nth-child(1) .org-card:nth-child(4) { animation-delay: 150ms; }
+  .column:nth-child(1) .org-card:nth-child(5) { animation-delay: 200ms; }
+  .column:nth-child(1) .org-card:nth-child(6) { animation-delay: 250ms; }
+  .column:nth-child(2) .org-card:nth-child(2) { animation-delay: 100ms; }
+  .column:nth-child(2) .org-card:nth-child(3) { animation-delay: 150ms; }
+  .column:nth-child(3) .org-card:nth-child(2) { animation-delay: 150ms; }
+
+  @media (max-width: 768px) {
+    .kanban { padding: 16px; gap: 12px; }
+    .column { flex: 0 0 280px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="label">Variation E — Kanban Columns</div>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <h1>Organizations</h1>
+  <span class="org-count">8 total</span>
+  <div class="topbar-right">
+    <div class="search-wrap">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" type="text" placeholder="Search..." />
+    </div>
+    <button class="btn primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New
+    </button>
+  </div>
+</div>
+
+<!-- Kanban -->
+<div class="kanban">
+
+  <!-- Active Column -->
+  <div class="column">
+    <div class="column-header">
+      <div class="col-dot green"></div>
+      <span class="col-title">Active</span>
+      <span class="col-count">5</span>
+    </div>
+
+    <div class="org-card">
+      <div class="card-top">
+        <div class="card-avatar green">OX</div>
+        <div><div class="card-name">OXXO Corporativo</div><div class="card-slug">oxxo-corporativo</div></div>
+      </div>
+      <div class="card-badges"><span class="card-badge">Retail</span><span class="card-badge enterprise">Enterprise</span></div>
+      <div class="card-stats">
+        <div class="card-stat"><div class="card-stat-val">12</div><div class="card-stat-lbl">Sites</div></div>
+        <div class="card-stat"><div class="card-stat-val">87</div><div class="card-stat-lbl">Devices</div></div>
+        <div class="card-stat"><div class="card-stat-val">24</div><div class="card-stat-lbl">Users</div></div>
+      </div>
+      <div class="card-footer"><span class="card-date">Mar 2024</span><svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+    </div>
+
+    <div class="org-card">
+      <div class="card-top">
+        <div class="card-avatar green">SM</div>
+        <div><div class="card-name">Sigma Alimentos</div><div class="card-slug">sigma-alimentos</div></div>
+      </div>
+      <div class="card-badges"><span class="card-badge">Cold Chain</span><span class="card-badge enterprise">Enterprise</span></div>
+      <div class="card-stats">
+        <div class="card-stat"><div class="card-stat-val">8</div><div class="card-stat-lbl">Sites</div></div>
+        <div class="card-stat"><div class="card-stat-val">63</div><div class="card-stat-lbl">Devices</div></div>
+        <div class="card-stat"><div class="card-stat-val">15</div><div class="card-stat-lbl">Users</div></div>
+      </div>
+      <div class="card-footer"><span class="card-date">Jan 2024</span><svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+    </div>
+
+    <div class="org-card">
+      <div class="card-top">
+        <div class="card-avatar green">CF</div>
+        <div><div class="card-name">Coppel Farmacias</div><div class="card-slug">coppel-farmacias</div></div>
+      </div>
+      <div class="card-badges"><span class="card-badge">Retail</span></div>
+      <div class="card-stats">
+        <div class="card-stat"><div class="card-stat-val">5</div><div class="card-stat-lbl">Sites</div></div>
+        <div class="card-stat"><div class="card-stat-val">32</div><div class="card-stat-lbl">Devices</div></div>
+        <div class="card-stat"><div class="card-stat-val">9</div><div class="card-stat-lbl">Users</div></div>
+      </div>
+      <div class="card-footer"><span class="card-date">Aug 2024</span><svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+    </div>
+
+    <div class="org-card">
+      <div class="card-top">
+        <div class="card-avatar green">GN</div>
+        <div><div class="card-name">Grupo Nacional</div><div class="card-slug">grupo-nacional</div></div>
+      </div>
+      <div class="card-badges"><span class="card-badge">Commercial</span><span class="card-badge enterprise">Enterprise</span></div>
+      <div class="card-stats">
+        <div class="card-stat"><div class="card-stat-val">4</div><div class="card-stat-lbl">Sites</div></div>
+        <div class="card-stat"><div class="card-stat-val">33</div><div class="card-stat-lbl">Devices</div></div>
+        <div class="card-stat"><div class="card-stat-val">11</div><div class="card-stat-lbl">Users</div></div>
+      </div>
+      <div class="card-footer"><span class="card-date">Nov 2024</span><svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+    </div>
+
+    <div class="org-card">
+      <div class="card-top">
+        <div class="card-avatar green">LA</div>
+        <div><div class="card-name">La Anita Foods</div><div class="card-slug">la-anita-foods</div></div>
+      </div>
+      <div class="card-badges"><span class="card-badge">Cold Chain</span></div>
+      <div class="card-stats">
+        <div class="card-stat"><div class="card-stat-val">2</div><div class="card-stat-lbl">Sites</div></div>
+        <div class="card-stat"><div class="card-stat-val">11</div><div class="card-stat-lbl">Devices</div></div>
+        <div class="card-stat"><div class="card-stat-val">4</div><div class="card-stat-lbl">Users</div></div>
+      </div>
+      <div class="card-footer"><span class="card-date">Dec 2025</span><svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+    </div>
+  </div>
+
+  <!-- Onboarding Column -->
+  <div class="column">
+    <div class="column-header">
+      <div class="col-dot blue"></div>
+      <span class="col-title">Onboarding</span>
+      <span class="col-count">2</span>
+    </div>
+
+    <div class="org-card">
+      <div class="card-top">
+        <div class="card-avatar blue">BK</div>
+        <div><div class="card-name">Burger King MX</div><div class="card-slug">burger-king-mx</div></div>
+      </div>
+      <div class="card-badges"><span class="card-badge">Foodservice</span></div>
+      <div class="card-stats">
+        <div class="card-stat"><div class="card-stat-val">3</div><div class="card-stat-lbl">Sites</div></div>
+        <div class="card-stat"><div class="card-stat-val">18</div><div class="card-stat-lbl">Devices</div></div>
+        <div class="card-stat"><div class="card-stat-val">5</div><div class="card-stat-lbl">Users</div></div>
+      </div>
+      <div class="card-footer"><span class="card-date">Mar 2026</span><svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+    </div>
+  </div>
+
+  <!-- Suspended Column -->
+  <div class="column suspended">
+    <div class="column-header">
+      <div class="col-dot red"></div>
+      <span class="col-title">Suspended</span>
+      <span class="col-count">1</span>
+    </div>
+
+    <div class="org-card">
+      <div class="card-top">
+        <div class="card-avatar red">AT</div>
+        <div><div class="card-name">Alimentos del Tropico</div><div class="card-slug">alimentos-tropico</div></div>
+      </div>
+      <div class="card-badges"><span class="card-badge">Industrial</span></div>
+      <div class="card-stats">
+        <div class="card-stat"><div class="card-stat-val">2</div><div class="card-stat-lbl">Sites</div></div>
+        <div class="card-stat"><div class="card-stat-val">14</div><div class="card-stat-lbl">Devices</div></div>
+        <div class="card-stat"><div class="card-stat-val">3</div><div class="card-stat-lbl">Users</div></div>
+      </div>
+      <div class="card-footer"><span class="card-date">Feb 2025</span><svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+    </div>
+  </div>
+
+  <!-- Archived Column (empty placeholder) -->
+  <div class="column">
+    <div class="column-header">
+      <div class="col-dot gray"></div>
+      <span class="col-title">Archived</span>
+      <span class="col-count">0</span>
+    </div>
+    <div style="border:2px dashed var(--border-light);border-radius:12px;padding:40px;text-align:center;color:var(--text-3);font-size:13px">
+      No archived organizations
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

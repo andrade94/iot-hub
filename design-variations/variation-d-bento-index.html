@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variation D — Bento Grid Index</title>
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700&family=outfit:300,400,500,600,700,800" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --tile: #111113;
+    --tile-hover: #161618;
+    --tile-border: rgba(255,255,255,0.04);
+    --tile-glow: rgba(255,255,255,0.02);
+    --text: #f0f0ee;
+    --text-2: #9d9d9b;
+    --text-3: #4a4a48;
+    --mint: #5eead4;
+    --mint-dim: rgba(94,234,212,0.08);
+    --rose: #fb7185;
+    --rose-dim: rgba(251,113,133,0.08);
+    --sky: #7dd3fc;
+    --sky-dim: rgba(125,211,252,0.08);
+    --peach: #fdba74;
+    --peach-dim: rgba(253,186,116,0.08);
+    --lavender: #c4b5fd;
+    --lavender-dim: rgba(196,181,253,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    padding: 32px;
+    min-height: 100vh;
+  }
+
+  .label { position: fixed; top: 16px; right: 16px; background: var(--mint); color: var(--bg); padding: 6px 12px; border-radius: 6px; font-family: 'Space Grotesk'; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; z-index: 100; }
+
+  /* --- Bento Grid --- */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(80px, auto);
+    gap: 10px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .tile {
+    background: var(--tile);
+    border: 1px solid var(--tile-border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .tile:hover {
+    background: var(--tile-hover);
+    border-color: rgba(255,255,255,0.06);
+  }
+
+  /* Tile sizing */
+  .tile-hero { grid-column: span 5; grid-row: span 2; }
+  .tile-stat { grid-column: span 2; grid-row: span 1; }
+  .tile-stat-wide { grid-column: span 3; grid-row: span 1; }
+  .tile-search { grid-column: span 4; grid-row: span 1; }
+  .tile-org { grid-column: span 4; grid-row: span 2; cursor: pointer; }
+  .tile-org-wide { grid-column: span 6; grid-row: span 2; cursor: pointer; }
+  .tile-org-sm { grid-column: span 3; grid-row: span 2; cursor: pointer; }
+
+  .tile-org:hover, .tile-org-wide:hover, .tile-org-sm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+  }
+
+  /* --- Hero Tile --- */
+  .hero-tile .eyebrow {
+    font-family: 'Space Grotesk';
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-3);
+    margin-bottom: 16px;
+  }
+
+  .hero-tile h1 {
+    font-family: 'Syne';
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--text) 0%, var(--text-2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-tile .deck {
+    font-size: 15px;
+    color: var(--text-2);
+    margin-top: 12px;
+    line-height: 1.6;
+    max-width: 380px;
+  }
+
+  .hero-tile .btn-create {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--mint);
+    color: var(--bg);
+    border: none;
+    padding: 11px 22px;
+    border-radius: 10px;
+    font-family: 'Outfit';
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: all 0.2s;
+  }
+
+  .hero-tile .btn-create:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(94,234,212,0.2);
+  }
+
+  /* Ambient glow on hero */
+  .hero-tile::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(94,234,212,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* --- Stat Tile --- */
+  .stat-label {
+    font-family: 'Space Grotesk';
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-3);
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono';
+    font-size: 36px;
+    font-weight: 700;
+    margin-top: 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-context {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  /* Accent dot */
+  .stat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    position: absolute;
+    top: 24px;
+    right: 24px;
+  }
+
+  .stat-dot.mint { background: var(--mint); box-shadow: 0 0 10px rgba(94,234,212,0.4); }
+  .stat-dot.rose { background: var(--rose); box-shadow: 0 0 10px rgba(251,113,133,0.4); }
+  .stat-dot.sky { background: var(--sky); box-shadow: 0 0 10px rgba(125,211,252,0.4); }
+  .stat-dot.peach { background: var(--peach); box-shadow: 0 0 10px rgba(253,186,116,0.4); }
+
+  /* --- Search Tile --- */
+  .search-tile input {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--tile-border);
+    border-radius: 10px;
+    padding: 12px 14px 12px 40px;
+    color: var(--text);
+    font-family: 'JetBrains Mono';
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-tile input:focus { border-color: var(--mint); }
+  .search-tile input::placeholder { color: var(--text-3); }
+
+  .search-tile .icon {
+    position: absolute;
+    top: 36px;
+    left: 38px;
+    color: var(--text-3);
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .filter-tag {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.03);
+    color: var(--text-3);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-tag:hover { color: var(--text-2); background: rgba(255,255,255,0.05); }
+  .filter-tag.active { background: var(--mint-dim); color: var(--mint); border-color: rgba(94,234,212,0.2); }
+
+  /* --- Org Tile --- */
+  .org-tile-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .org-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne';
+    font-weight: 800;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .org-avatar.mint { background: var(--mint-dim); color: var(--mint); }
+  .org-avatar.sky { background: var(--sky-dim); color: var(--sky); }
+  .org-avatar.rose { background: var(--rose-dim); color: var(--rose); }
+  .org-avatar.peach { background: var(--peach-dim); color: var(--peach); }
+  .org-avatar.lavender { background: var(--lavender-dim); color: var(--lavender); }
+
+  .org-info { flex: 1; min-width: 0; }
+  .org-name { font-weight: 600; font-size: 16px; letter-spacing: -0.01em; }
+  .org-slug { font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+  .org-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .org-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+  .org-status.active { color: var(--mint); }
+  .org-status.active::before { background: var(--mint); box-shadow: 0 0 6px rgba(94,234,212,0.5); }
+  .org-status.onboarding { color: var(--sky); }
+  .org-status.onboarding::before { background: var(--sky); }
+  .org-status.suspended { color: var(--rose); }
+  .org-status.suspended::before { background: var(--rose); }
+
+  .org-badges {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .badge {
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-segment { background: rgba(255,255,255,0.04); color: var(--text-2); }
+  .badge-plan { background: var(--lavender-dim); color: var(--lavender); }
+
+  /* Stats grid inside org tile */
+  .org-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--tile-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .org-stat {
+    background: var(--bg);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .org-stat-val {
+    font-family: 'JetBrains Mono';
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .org-stat-lbl {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  /* Gradient bar at bottom of org tiles */
+  .org-bar {
+    height: 3px;
+    border-radius: 2px;
+    margin-top: 14px;
+    background: var(--tile-border);
+    overflow: hidden;
+  }
+
+  .org-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+  }
+
+  /* Animations */
+  @keyframes tileIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .tile { animation: tileIn 0.5s cubic-bezier(0.19,1,0.22,1) both; }
+  .tile:nth-child(1) { animation-delay: 0ms; }
+  .tile:nth-child(2) { animation-delay: 40ms; }
+  .tile:nth-child(3) { animation-delay: 80ms; }
+  .tile:nth-child(4) { animation-delay: 120ms; }
+  .tile:nth-child(5) { animation-delay: 160ms; }
+  .tile:nth-child(6) { animation-delay: 200ms; }
+  .tile:nth-child(7) { animation-delay: 220ms; }
+  .tile:nth-child(8) { animation-delay: 240ms; }
+  .tile:nth-child(9) { animation-delay: 260ms; }
+  .tile:nth-child(10) { animation-delay: 280ms; }
+  .tile:nth-child(11) { animation-delay: 300ms; }
+
+  @media (max-width: 1024px) {
+    .bento { grid-template-columns: repeat(6, 1fr); }
+    .tile-hero { grid-column: span 6; }
+    .tile-stat { grid-column: span 3; }
+    .tile-stat-wide { grid-column: span 3; }
+    .tile-search { grid-column: span 6; }
+    .tile-org, .tile-org-wide, .tile-org-sm { grid-column: span 3; }
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 16px; }
+    .bento { grid-template-columns: 1fr; }
+    .tile-hero, .tile-stat, .tile-stat-wide, .tile-search, .tile-org, .tile-org-wide, .tile-org-sm { grid-column: span 1; grid-row: span 1; }
+    .hero-tile h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="label">Variation D — Bento Grid</div>
+
+<div class="bento">
+
+  <!-- Hero -->
+  <div class="tile tile-hero hero-tile">
+    <p class="eyebrow">Platform Administration</p>
+    <h1>Organizations</h1>
+    <p class="deck">Manage client entities, subscriptions, and lifecycle across your IoT fleet.</p>
+    <button class="btn-create">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Organization
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="tile tile-stat">
+    <div class="stat-dot mint"></div>
+    <div class="stat-label">Active</div>
+    <div class="stat-value" style="color:var(--mint)">05</div>
+  </div>
+
+  <div class="tile tile-stat">
+    <div class="stat-dot rose"></div>
+    <div class="stat-label">Suspended</div>
+    <div class="stat-value" style="color:var(--rose)">01</div>
+  </div>
+
+  <div class="tile tile-stat-wide">
+    <div class="stat-dot sky"></div>
+    <div class="stat-label">Total Sites</div>
+    <div class="stat-value">34</div>
+    <div class="stat-context">across 8 organizations</div>
+  </div>
+
+  <div class="tile tile-stat">
+    <div class="stat-dot peach"></div>
+    <div class="stat-label">Devices</div>
+    <div class="stat-value">247</div>
+  </div>
+
+  <!-- Search + Filters -->
+  <div class="tile tile-search search-tile">
+    <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search by name or slug..." />
+    <div class="filter-row">
+      <span class="filter-tag active">All</span>
+      <span class="filter-tag">Retail</span>
+      <span class="filter-tag">Cold Chain</span>
+      <span class="filter-tag">Industrial</span>
+      <span class="filter-tag">Foodservice</span>
+      <span class="filter-tag">Commercial</span>
+    </div>
+  </div>
+
+  <!-- Org Cards (varied sizes) -->
+  <div class="tile tile-org-wide">
+    <div class="org-tile-head">
+      <div class="org-avatar peach">OX</div>
+      <div class="org-info">
+        <div class="org-name">OXXO Corporativo</div>
+        <div class="org-slug">oxxo-corporativo</div>
+      </div>
+      <span class="org-status active">Active</span>
+    </div>
+    <div class="org-badges">
+      <span class="badge badge-segment">Retail</span>
+      <span class="badge badge-plan">Enterprise</span>
+    </div>
+    <div class="org-stats">
+      <div class="org-stat"><div class="org-stat-val">12</div><div class="org-stat-lbl">Sites</div></div>
+      <div class="org-stat"><div class="org-stat-val">87</div><div class="org-stat-lbl">Devices</div></div>
+      <div class="org-stat"><div class="org-stat-val">24</div><div class="org-stat-lbl">Users</div></div>
+    </div>
+    <div class="org-bar"><div class="org-bar-fill" style="width:92%;background:var(--mint)"></div></div>
+  </div>
+
+  <div class="tile tile-org">
+    <div class="org-tile-head">
+      <div class="org-avatar sky">SM</div>
+      <div class="org-info">
+        <div class="org-name">Sigma Alimentos</div>
+        <div class="org-slug">sigma-alimentos</div>
+      </div>
+      <span class="org-status active">Active</span>
+    </div>
+    <div class="org-badges">
+      <span class="badge badge-segment">Cold Chain</span>
+      <span class="badge badge-plan">Enterprise</span>
+    </div>
+    <div class="org-stats">
+      <div class="org-stat"><div class="org-stat-val">8</div><div class="org-stat-lbl">Sites</div></div>
+      <div class="org-stat"><div class="org-stat-val">63</div><div class="org-stat-lbl">Devices</div></div>
+      <div class="org-stat"><div class="org-stat-val">15</div><div class="org-stat-lbl">Users</div></div>
+    </div>
+    <div class="org-bar"><div class="org-bar-fill" style="width:88%;background:var(--mint)"></div></div>
+  </div>
+
+  <div class="tile tile-org-sm">
+    <div class="org-tile-head">
+      <div class="org-avatar rose">BK</div>
+      <div class="org-info">
+        <div class="org-name">Burger King MX</div>
+        <div class="org-slug">burger-king-mx</div>
+      </div>
+    </div>
+    <span class="org-status onboarding" style="margin-bottom:12px">Onboarding</span>
+    <div class="org-badges">
+      <span class="badge badge-segment">Foodservice</span>
+    </div>
+    <div class="org-stats">
+      <div class="org-stat"><div class="org-stat-val">3</div><div class="org-stat-lbl">Sites</div></div>
+      <div class="org-stat"><div class="org-stat-val">18</div><div class="org-stat-lbl">Devices</div></div>
+      <div class="org-stat"><div class="org-stat-val">5</div><div class="org-stat-lbl">Users</div></div>
+    </div>
+    <div class="org-bar"><div class="org-bar-fill" style="width:45%;background:var(--sky)"></div></div>
+  </div>
+
+  <div class="tile tile-org-sm">
+    <div class="org-tile-head">
+      <div class="org-avatar mint">CF</div>
+      <div class="org-info">
+        <div class="org-name">Coppel Farmacias</div>
+        <div class="org-slug">coppel-farmacias</div>
+      </div>
+    </div>
+    <span class="org-status active" style="margin-bottom:12px">Active</span>
+    <div class="org-badges">
+      <span class="badge badge-segment">Retail</span>
+    </div>
+    <div class="org-stats">
+      <div class="org-stat"><div class="org-stat-val">5</div><div class="org-stat-lbl">Sites</div></div>
+      <div class="org-stat"><div class="org-stat-val">32</div><div class="org-stat-lbl">Devices</div></div>
+      <div class="org-stat"><div class="org-stat-val">9</div><div class="org-stat-lbl">Users</div></div>
+    </div>
+    <div class="org-bar"><div class="org-bar-fill" style="width:97%;background:var(--mint)"></div></div>
+  </div>
+
+  <div class="tile tile-org">
+    <div class="org-tile-head">
+      <div class="org-avatar lavender">AT</div>
+      <div class="org-info">
+        <div class="org-name">Alimentos del Tropico</div>
+        <div class="org-slug">alimentos-tropico</div>
+      </div>
+      <span class="org-status suspended">Suspended</span>
+    </div>
+    <div class="org-badges">
+      <span class="badge badge-segment">Industrial</span>
+      <span class="badge" style="background:var(--rose-dim);color:var(--rose)">Starter</span>
+    </div>
+    <div class="org-stats">
+      <div class="org-stat"><div class="org-stat-val" style="color:var(--text-3)">2</div><div class="org-stat-lbl">Sites</div></div>
+      <div class="org-stat"><div class="org-stat-val" style="color:var(--text-3)">14</div><div class="org-stat-lbl">Devices</div></div>
+      <div class="org-stat"><div class="org-stat-val" style="color:var(--text-3)">3</div><div class="org-stat-lbl">Users</div></div>
+    </div>
+    <div class="org-bar"><div class="org-bar-fill" style="width:12%;background:var(--rose)"></div></div>
+  </div>
+
+  <div class="tile tile-org-wide">
+    <div class="org-tile-head">
+      <div class="org-avatar mint">GN</div>
+      <div class="org-info">
+        <div class="org-name">Grupo Nacional</div>
+        <div class="org-slug">grupo-nacional</div>
+      </div>
+      <span class="org-status active">Active</span>
+    </div>
+    <div class="org-badges">
+      <span class="badge badge-segment">Commercial</span>
+      <span class="badge badge-plan">Enterprise</span>
+    </div>
+    <div class="org-stats">
+      <div class="org-stat"><div class="org-stat-val">4</div><div class="org-stat-lbl">Sites</div></div>
+      <div class="org-stat"><div class="org-stat-val">33</div><div class="org-stat-lbl">Devices</div></div>
+      <div class="org-stat"><div class="org-stat-val">11</div><div class="org-stat-lbl">Users</div></div>
+    </div>
+    <div class="org-bar"><div class="org-bar-fill" style="width:85%;background:var(--mint)"></div></div>
+  </div>
+
+</div>
+
+</body>
+</html>

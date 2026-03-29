@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variation B — Show (Editorial)</title>
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700&family=playfair-display:400,500,600,700,800,900" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --surface-dim: #f5f5f4;
+    --border: #e7e5e4;
+    --border-light: #f0eeec;
+    --text: #1c1917;
+    --text-2: #78716c;
+    --text-3: #a8a29e;
+    --accent: #292524;
+    --emerald: #059669;
+    --emerald-bg: #ecfdf5;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .design-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--accent);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    z-index: 100;
+  }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px 48px 60px; }
+
+  /* --- Back + Title --- */
+  .back-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .back-link {
+    font-size: 12px;
+    color: var(--text-3);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s;
+  }
+
+  .back-link:hover { color: var(--text); }
+
+  .hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  .hero-left {}
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .hero-slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .pill-active { background: var(--emerald-bg); color: var(--emerald); }
+  .pill-active::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); }
+  .pill-segment { background: var(--blue-bg); color: var(--blue); }
+  .pill-plan { background: #faf5ff; color: #7c3aed; }
+
+  .hero-actions {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .btn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-2);
+  }
+
+  .btn:hover { background: var(--surface-dim); color: var(--text); }
+  .btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn.primary:hover { background: #44403c; }
+  .btn.warn { color: var(--amber); }
+  .btn.danger { color: var(--red); }
+
+  /* --- Summary Cards --- */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    margin-bottom: 36px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .summary-cell {
+    padding: 20px 24px;
+    border-right: 1px solid var(--border-light);
+    position: relative;
+  }
+
+  .summary-cell:last-child { border-right: none; }
+
+  .summary-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-3);
+  }
+
+  .summary-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 800;
+    margin-top: 2px;
+  }
+
+  .summary-sub {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  .summary-cell.has-accent::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 24px;
+    right: 24px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  .summary-cell.cyan::after { background: var(--blue); }
+  .summary-cell.emerald::after { background: var(--emerald); }
+  .summary-cell.red::after { background: var(--red); }
+
+  /* --- Two Column Layout --- */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 32px;
+  }
+
+  .left-col { display: flex; flex-direction: column; gap: 28px; }
+  .right-col { display: flex; flex-direction: column; gap: 24px; }
+
+  /* --- Charts --- */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .chart-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    margin-bottom: 18px;
+  }
+
+  .h-bar-chart { display: flex; flex-direction: column; gap: 10px; }
+
+  .h-bar-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 32px;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .h-bar-label {
+    font-size: 12px;
+    color: var(--text-2);
+    text-align: right;
+  }
+
+  .h-bar-track {
+    height: 20px;
+    background: var(--surface-dim);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .h-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .h-bar-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Vertical bars */
+  .v-bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 120px;
+  }
+
+  .v-bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .v-bar {
+    width: 100%;
+    border-radius: 5px 5px 0 0;
+    min-height: 4px;
+  }
+
+  .v-bar-label {
+    font-size: 9px;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .v-bar-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+
+  /* --- Tabs --- */
+  .tabs-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-item {
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-3);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab-item:hover { color: var(--text-2); }
+  .tab-item.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .tab-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--surface-dim);
+    color: var(--text-3);
+  }
+
+  .tab-item.active .tab-badge { background: var(--accent); color: white; }
+  .tab-badge.alert { background: var(--red-bg); color: var(--red); }
+
+  /* --- Sites Table --- */
+  .data-table {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    border-spacing: 0;
+    margin-top: 16px;
+  }
+
+  .data-table th {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-3);
+    padding: 14px 16px;
+    text-align: left;
+    background: var(--surface-dim);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td {
+    padding: 14px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tbody tr { cursor: pointer; transition: background 0.15s; }
+  .data-table tbody tr:hover { background: var(--surface-dim); }
+
+  .site-name { font-weight: 600; }
+  .site-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-3); margin-top: 1px; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .muted { color: var(--text-3); }
+  .emerald { color: var(--emerald); }
+  .amber { color: var(--amber); }
+  .red { color: var(--red); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  .status-badge.active { background: var(--emerald-bg); color: var(--emerald); }
+  .status-badge.active::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--emerald); }
+  .status-badge.onboarding { background: var(--blue-bg); color: var(--blue); }
+  .status-badge.draft { background: var(--surface-dim); color: var(--text-3); }
+
+  /* Online % bar */
+  .pct-bar {
+    width: 60px;
+    height: 4px;
+    background: var(--surface-dim);
+    border-radius: 2px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+
+  .pct-fill { height: 100%; border-radius: 2px; }
+
+  /* --- Sidebar --- */
+  .section-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-3);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+  }
+
+  .detail-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { font-size: 12px; color: var(--text-3); }
+  .detail-val { font-size: 12px; font-weight: 500; color: var(--text); }
+  .detail-val code { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-2); }
+
+  .swatches { display: flex; gap: 6px; }
+  .swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-light); }
+
+  /* Contact */
+  .contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .contact-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--blue-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--blue);
+  }
+
+  .contact-name { font-weight: 600; font-size: 13px; }
+  .contact-detail { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+  /* Notes */
+  .notes-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .note-compose {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .note-compose textarea {
+    width: 100%;
+    background: var(--surface-dim);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    resize: none;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .note-compose textarea:focus { border-color: var(--accent); }
+  .note-compose textarea::placeholder { color: var(--text-3); }
+
+  .note-item {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .note-item:last-child { border-bottom: none; }
+
+  .note-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+  }
+
+  .note-author { font-weight: 600; color: var(--text); }
+  .note-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-3); }
+  .note-body { font-size: 13px; color: var(--text-2); margin-top: 6px; line-height: 1.6; }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in {
+    animation: fadeIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) both;
+  }
+
+  @media (max-width: 1024px) {
+    .content-grid { grid-template-columns: 1fr; }
+    .summary-row { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .page { padding: 24px; }
+    .hero h1 { font-size: 32px; }
+    .hero { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .summary-row { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="design-label">Variation B — Show</div>
+
+<div class="page">
+
+  <!-- Back -->
+  <div class="back-row animate-in">
+    <a href="#" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Organizations
+    </a>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero animate-in" style="animation-delay:40ms">
+    <div class="hero-left">
+      <h1>OXXO Corporativo</h1>
+      <div class="hero-meta">
+        <span class="hero-slug">oxxo-corporativo</span>
+        <span class="pill pill-active">Active</span>
+        <span class="pill pill-segment">Retail</span>
+        <span class="pill pill-plan">Enterprise</span>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn warn">Suspend</button>
+      <button class="btn danger">Archive</button>
+      <button class="btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button class="btn primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-row animate-in" style="animation-delay:80ms">
+    <div class="summary-cell has-accent cyan">
+      <div class="summary-label">Sites</div>
+      <div class="summary-value">12</div>
+      <div class="summary-sub">9 active, 2 onboarding</div>
+    </div>
+    <div class="summary-cell">
+      <div class="summary-label">Devices</div>
+      <div class="summary-value">87</div>
+      <div class="summary-sub">72 online (83%)</div>
+    </div>
+    <div class="summary-cell has-accent red">
+      <div class="summary-label">Active Alerts</div>
+      <div class="summary-value">4</div>
+      <div class="summary-sub">1 critical</div>
+    </div>
+    <div class="summary-cell">
+      <div class="summary-label">Work Orders</div>
+      <div class="summary-value">2</div>
+      <div class="summary-sub">open</div>
+    </div>
+    <div class="summary-cell has-accent emerald">
+      <div class="summary-label">Users</div>
+      <div class="summary-value">24</div>
+      <div class="summary-sub">3 roles</div>
+    </div>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="content-grid">
+
+    <!-- Left -->
+    <div class="left-col">
+
+      <!-- Charts -->
+      <div class="charts-grid animate-in" style="animation-delay:120ms">
+        <div class="chart-card">
+          <div class="chart-title">Sites by Status / User Roles</div>
+          <div class="h-bar-chart">
+            <div class="h-bar-row">
+              <span class="h-bar-label">Active</span>
+              <div class="h-bar-track"><div class="h-bar-fill" style="width:75%;background:var(--emerald)"></div></div>
+              <span class="h-bar-value">9</span>
+            </div>
+            <div class="h-bar-row">
+              <span class="h-bar-label">Onboarding</span>
+              <div class="h-bar-track"><div class="h-bar-fill" style="width:17%;background:var(--blue)"></div></div>
+              <span class="h-bar-value">2</span>
+            </div>
+            <div class="h-bar-row">
+              <span class="h-bar-label">Draft</span>
+              <div class="h-bar-track"><div class="h-bar-fill" style="width:8%;background:var(--text-3)"></div></div>
+              <span class="h-bar-value">1</span>
+            </div>
+          </div>
+          <div style="margin-top:20px;border-top:1px solid var(--border-light);padding-top:16px">
+            <div class="h-bar-chart">
+              <div class="h-bar-row">
+                <span class="h-bar-label">Org Admin</span>
+                <div class="h-bar-track"><div class="h-bar-fill" style="width:12%;background:#7c3aed"></div></div>
+                <span class="h-bar-value">3</span>
+              </div>
+              <div class="h-bar-row">
+                <span class="h-bar-label">Site Manager</span>
+                <div class="h-bar-track"><div class="h-bar-fill" style="width:33%;background:var(--blue)"></div></div>
+                <span class="h-bar-value">8</span>
+              </div>
+              <div class="h-bar-row">
+                <span class="h-bar-label">Site Viewer</span>
+                <div class="h-bar-track"><div class="h-bar-fill" style="width:54%;background:var(--emerald)"></div></div>
+                <span class="h-bar-value">13</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Devices per Site</div>
+          <div class="v-bar-chart">
+            <div class="v-bar-col"><div class="v-bar-count">14</div><div class="v-bar" style="height:95px;background:var(--blue)"></div><div class="v-bar-label">Sucursal A</div></div>
+            <div class="v-bar-col"><div class="v-bar-count">12</div><div class="v-bar" style="height:80px;background:var(--blue)"></div><div class="v-bar-label">CEDIS Mty</div></div>
+            <div class="v-bar-col"><div class="v-bar-count">8</div><div class="v-bar" style="height:54px;background:var(--blue)"></div><div class="v-bar-label">Plaza Norte</div></div>
+            <div class="v-bar-col"><div class="v-bar-count">9</div><div class="v-bar" style="height:60px;background:var(--blue)"></div><div class="v-bar-label">Bodega Sur</div></div>
+            <div class="v-bar-col"><div class="v-bar-count">6</div><div class="v-bar" style="height:40px;background:var(--blue)"></div><div class="v-bar-label">Express GDL</div></div>
+            <div class="v-bar-col"><div class="v-bar-count">10</div><div class="v-bar" style="height:67px;background:var(--blue)"></div><div class="v-bar-label">Depot CDMX</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs + Sites Table -->
+      <div class="animate-in" style="animation-delay:160ms">
+        <div class="tabs-bar">
+          <button class="tab-item active">Sites <span class="tab-badge">12</span></button>
+          <button class="tab-item">Users <span class="tab-badge">24</span></button>
+          <button class="tab-item">Alerts <span class="tab-badge alert">4</span></button>
+          <button class="tab-item">Activity</button>
+          <button class="tab-item">Notes <span class="tab-badge">3</span></button>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Site</th>
+              <th>Devices</th>
+              <th>Online</th>
+              <th>Alerts</th>
+              <th>Work Orders</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="site-name">Sucursal Apodaca</div><div class="site-sub">8/10 online</div></td>
+              <td class="mono">10</td>
+              <td><span class="mono emerald">80%</span><span class="pct-bar"><span class="pct-fill" style="width:80%;background:var(--emerald)"></span></span></td>
+              <td class="mono red">2</td>
+              <td class="mono muted">0</td>
+              <td><span class="status-badge active">Active</span></td>
+            </tr>
+            <tr>
+              <td><div class="site-name">CEDIS Monterrey</div><div class="site-sub">12/12 online</div></td>
+              <td class="mono">12</td>
+              <td><span class="mono emerald">100%</span><span class="pct-bar"><span class="pct-fill" style="width:100%;background:var(--emerald)"></span></span></td>
+              <td class="mono muted">0</td>
+              <td class="mono muted">0</td>
+              <td><span class="status-badge active">Active</span></td>
+            </tr>
+            <tr>
+              <td><div class="site-name">Plaza Norte Saltillo</div><div class="site-sub">5/8 online</div></td>
+              <td class="mono">8</td>
+              <td><span class="mono amber">62%</span><span class="pct-bar"><span class="pct-fill" style="width:62%;background:var(--amber)"></span></span></td>
+              <td class="mono red">1</td>
+              <td class="mono amber">1</td>
+              <td><span class="status-badge active">Active</span></td>
+            </tr>
+            <tr>
+              <td><div class="site-name">Bodega Sur Reynosa</div><div class="site-sub">9/9 online</div></td>
+              <td class="mono">9</td>
+              <td><span class="mono emerald">100%</span><span class="pct-bar"><span class="pct-fill" style="width:100%;background:var(--emerald)"></span></span></td>
+              <td class="mono muted">0</td>
+              <td class="mono muted">0</td>
+              <td><span class="status-badge active">Active</span></td>
+            </tr>
+            <tr>
+              <td><div class="site-name">Express Guadalajara</div><div class="site-sub">0/6 online</div></td>
+              <td class="mono">6</td>
+              <td><span class="mono red">0%</span><span class="pct-bar"><span class="pct-fill" style="width:0%;background:var(--red)"></span></span></td>
+              <td class="mono red">1</td>
+              <td class="mono amber">1</td>
+              <td><span class="status-badge onboarding">Onboarding</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="right-col">
+
+      <div class="animate-in" style="animation-delay:100ms">
+        <div class="section-label">Organization Details</div>
+        <div class="detail-card">
+          <div class="detail-row"><span class="detail-key">Slug</span><span class="detail-val"><code>oxxo-corporativo</code></span></div>
+          <div class="detail-row"><span class="detail-key">Segment</span><span class="detail-val"><span class="pill pill-segment" style="padding:2px 8px;font-size:10px">Retail</span></span></div>
+          <div class="detail-row"><span class="detail-key">Plan</span><span class="detail-val"><span class="pill pill-plan" style="padding:2px 8px;font-size:10px">Enterprise</span></span></div>
+          <div class="detail-row"><span class="detail-key">Timezone</span><span class="detail-val"><code>America/Monterrey</code></span></div>
+          <div class="detail-row"><span class="detail-key">Opening Hour</span><span class="detail-val"><code>07:00</code></span></div>
+          <div class="detail-row"><span class="detail-key">Created</span><span class="detail-val"><code>March 2024</code></span></div>
+          <div class="detail-row"><span class="detail-key">Last Active</span><span class="detail-val"><code>2 hours ago</code></span></div>
+          <div class="detail-row">
+            <span class="detail-key">Branding</span>
+            <span class="detail-val">
+              <div class="swatches">
+                <div class="swatch" style="background:#cc0000"></div>
+                <div class="swatch" style="background:#ffffff"></div>
+                <div class="swatch" style="background:#ffd700"></div>
+              </div>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="animate-in" style="animation-delay:140ms">
+        <div class="section-label">Primary Contact</div>
+        <div class="contact-card">
+          <div class="contact-avatar">RC</div>
+          <div>
+            <div class="contact-name">Roberto Campos</div>
+            <div class="contact-detail">rcampos@oxxo.com.mx</div>
+            <div class="contact-detail">+52 81 1234 5678</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="animate-in" style="animation-delay:180ms">
+        <div class="section-label">Recent Notes</div>
+        <div class="notes-card">
+          <div class="note-compose">
+            <textarea placeholder="Add an internal note..." rows="2"></textarea>
+          </div>
+          <div class="note-item">
+            <div class="note-meta">
+              <span class="note-author">Ana Torres</span>
+              <span class="note-time">2 days ago</span>
+            </div>
+            <p class="note-body">Requested firmware update for CEDIS Monterrey sensors. Scheduling for next maintenance window.</p>
+          </div>
+          <div class="note-item">
+            <div class="note-meta">
+              <span class="note-author">Diego Salinas</span>
+              <span class="note-time">1 week ago</span>
+            </div>
+            <p class="note-body">Onboarding call completed. They want to add 3 more sites in Q2.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

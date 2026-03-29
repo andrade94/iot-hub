@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organizations — Newspaper / Swiss Grid</title>
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700&family=playfair-display:400,500,600,700,800,900&family=source-serif-4:400,600,700,800,900" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #1a1917;
+    --border-light: #d6d3cd;
+    --text: #1a1917;
+    --text-2: #5c5a56;
+    --text-3: #9a9793;
+    --accent: #1e40af;
+    --accent-light: #dbeafe;
+    --emerald: #059669;
+    --red: #dc2626;
+    --amber: #b45309;
+  }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ── Variation label ── */
+  .variation-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 0;
+  }
+
+  /* ── Container ── */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+  }
+
+  /* ── Rules ── */
+  .rule-thick { border: none; border-top: 3px solid var(--border); margin: 0; }
+  .rule-thin  { border: none; border-top: 1px solid var(--border); margin: 0; }
+  .rule-light { border: none; border-top: 1px solid var(--border-light); margin: 0; }
+
+  /* ── Masthead ── */
+  .masthead { padding-top: 24px; }
+
+  .masthead-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    line-height: 1;
+    padding: 20px 0 16px;
+  }
+
+  .masthead-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+
+  /* ── Stats Banner ── */
+  .stats-banner {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-left: 3px solid var(--border);
+  }
+
+  .stat-cell {
+    padding: 20px 24px;
+    border-right: 3px solid var(--border);
+    text-align: center;
+  }
+
+  .stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 72px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .stat-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-top: 6px;
+  }
+
+  /* ── Content Grid ── */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 0;
+    margin-top: 0;
+  }
+
+  /* ── Sidebar / Filters ── */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 20px 20px 20px 0;
+  }
+
+  .sidebar-heading {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 8px 10px 8px 32px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    border-radius: 0;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .search-input:focus {
+    border-color: var(--accent);
+  }
+
+  .search-wrapper {
+    position: relative;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    pointer-events: none;
+  }
+
+  .filter-group {
+    margin-bottom: 20px;
+  }
+
+  .filter-group-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .filter-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px;
+    color: var(--text-2);
+    transition: background 0.15s;
+  }
+
+  .filter-item:hover {
+    background: var(--accent-light);
+  }
+
+  .filter-item.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .filter-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    opacity: 0.7;
+  }
+
+  /* ── Main Content ── */
+  .main-content {
+    padding: 20px 0 20px 28px;
+  }
+
+  .content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .content-subtitle {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .btn-new-org {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border: 2px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 0;
+  }
+
+  .btn-new-org:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Org Listings ── */
+  .org-listings {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .org-article {
+    padding: 18px 20px 18px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .org-article:nth-child(odd) {
+    padding-right: 20px;
+    border-right: 1px solid var(--border-light);
+  }
+
+  .org-article:nth-child(even) {
+    padding-left: 20px;
+    padding-right: 0;
+  }
+
+  .org-name {
+    font-family: 'Source Serif 4', serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .org-name:hover {
+    color: var(--accent);
+  }
+
+  .org-slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  .org-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .pill-segment { border-color: var(--accent); color: var(--accent); }
+  .pill-plan    { border-color: var(--text-3); color: var(--text-2); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status-dot.active    { background: var(--emerald); }
+  .status-dot.suspended { background: var(--amber); }
+  .status-dot.archived  { background: var(--text-3); }
+
+  .org-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+  }
+
+  .org-stats {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    margin-top: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Pagination ── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 3px solid var(--border);
+  }
+
+  .page-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-light);
+    background: transparent;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    cursor: pointer;
+    border-radius: 0;
+    transition: all 0.15s;
+  }
+
+  .page-btn:hover { border-color: var(--border); color: var(--text); }
+  .page-btn.active {
+    background: var(--border);
+    color: var(--bg);
+    border-color: var(--border);
+    font-weight: 700;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+</style>
+</head>
+<body>
+
+<div class="variation-label">Variation B3 — Newspaper</div>
+
+<div class="page">
+
+  <!-- ── MASTHEAD ── -->
+  <div class="masthead">
+    <hr class="rule-thick">
+    <h1 class="masthead-title">Organizations</h1>
+    <hr class="rule-thin">
+    <div class="masthead-meta">
+      <span>Platform Administration / Astrea IoT</span>
+      <span>March 2026</span>
+    </div>
+    <hr class="rule-thin">
+  </div>
+
+  <!-- ── STATS BANNER ── -->
+  <div class="stats-banner">
+    <div class="stat-cell">
+      <div class="stat-number">08</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-number">05</div>
+      <div class="stat-label">Active</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-number">01</div>
+      <div class="stat-label">Suspended</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-number">247</div>
+      <div class="stat-label">Devices</div>
+    </div>
+  </div>
+  <hr class="rule-thick">
+
+  <!-- ── CONTENT GRID ── -->
+  <div class="content-grid">
+
+    <!-- Sidebar / Filters -->
+    <aside class="sidebar">
+      <div class="search-wrapper">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" placeholder="Search...">
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Segment</div>
+        <div class="filter-item active">
+          <span>All Segments</span>
+          <span class="filter-count">8</span>
+        </div>
+        <div class="filter-item">
+          <span>Retail</span>
+          <span class="filter-count">3</span>
+        </div>
+        <div class="filter-item">
+          <span>Industrial</span>
+          <span class="filter-count">2</span>
+        </div>
+        <div class="filter-item">
+          <span>Commercial</span>
+          <span class="filter-count">2</span>
+        </div>
+        <div class="filter-item">
+          <span>Government</span>
+          <span class="filter-count">1</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Status</div>
+        <div class="filter-item">
+          <span>Active</span>
+          <span class="filter-count">5</span>
+        </div>
+        <div class="filter-item">
+          <span>Suspended</span>
+          <span class="filter-count">1</span>
+        </div>
+        <div class="filter-item">
+          <span>Onboarding</span>
+          <span class="filter-count">1</span>
+        </div>
+        <div class="filter-item">
+          <span>Archived</span>
+          <span class="filter-count">1</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Plan</div>
+        <div class="filter-item">
+          <span>Enterprise</span>
+          <span class="filter-count">3</span>
+        </div>
+        <div class="filter-item">
+          <span>Professional</span>
+          <span class="filter-count">3</span>
+        </div>
+        <div class="filter-item">
+          <span>Starter</span>
+          <span class="filter-count">2</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Listings -->
+    <div class="main-content">
+      <div class="content-header">
+        <span class="content-subtitle">8 Organizations &middot; All Segments</span>
+        <button class="btn-new-org">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          New Organization
+        </button>
+      </div>
+      <hr class="rule-thin" style="margin-bottom: 0;">
+
+      <div class="org-listings">
+
+        <!-- Org 1 -->
+        <div class="org-article">
+          <a class="org-name" href="#">OXXO Corporativo</a>
+          <div class="org-slug">/oxxo-corporativo</div>
+          <div class="org-meta">
+            <span class="pill pill-segment">Retail</span>
+            <span class="pill pill-plan">Enterprise</span>
+            <span class="status-badge"><span class="status-dot active"></span> Active</span>
+            <span class="org-date">Jan 2024</span>
+          </div>
+          <div class="org-stats">12 sites &middot; 87 devices &middot; 24 users</div>
+        </div>
+
+        <!-- Org 2 -->
+        <div class="org-article">
+          <a class="org-name" href="#">Pemex Refinacion</a>
+          <div class="org-slug">/pemex-refinacion</div>
+          <div class="org-meta">
+            <span class="pill pill-segment">Industrial</span>
+            <span class="pill pill-plan">Enterprise</span>
+            <span class="status-badge"><span class="status-dot active"></span> Active</span>
+            <span class="org-date">Feb 2024</span>
+          </div>
+          <div class="org-stats">8 sites &middot; 64 devices &middot; 18 users</div>
+        </div>
+
+        <!-- Org 3 -->
+        <div class="org-article">
+          <a class="org-name" href="#">Grupo Bimbo</a>
+          <div class="org-slug">/grupo-bimbo</div>
+          <div class="org-meta">
+            <span class="pill pill-segment">Industrial</span>
+            <span class="pill pill-plan">Professional</span>
+            <span class="status-badge"><span class="status-dot active"></span> Active</span>
+            <span class="org-date">Mar 2024</span>
+          </div>
+          <div class="org-stats">6 sites &middot; 38 devices &middot; 12 users</div>
+        </div>
+
+        <!-- Org 4 -->
+        <div class="org-article">
+          <a class="org-name" href="#">CFE Distribucion</a>
+          <div class="org-slug">/cfe-distribucion</div>
+          <div class="org-meta">
+            <span class="pill pill-segment">Government</span>
+            <span class="pill pill-plan">Enterprise</span>
+            <span class="status-badge"><span class="status-dot active"></span> Active</span>
+            <span class="org-date">Apr 2024</span>
+          </div>
+          <div class="org-stats">15 sites &middot; 32 devices &middot; 9 users</div>
+        </div>
+
+        <!-- Org 5 -->
+        <div class="org-article">
+          <a class="org-name" href="#">Soriana Comercial</a>
+          <div class="org-slug">/soriana-comercial</div>
+          <div class="org-meta">
+            <span class="pill pill-segment">Retail</span>
+            <span class="pill pill-plan">Professional</span>
+            <span class="status-badge"><span class="status-dot active"></span> Active</span>
+            <span class="org-date">Jun 2024</span>
+          </div>
+          <div class="org-stats">4 sites &middot; 14 devices &middot; 6 users</div>
+        </div>
+
+        <!-- Org 6 -->
+        <div class="org-article">
+          <a class="org-name" href="#">Chedraui Alimentos</a>
+          <div class="org-slug">/chedraui-alimentos</div>
+          <div class="org-meta">
+            <span class="pill pill-segment">Retail</span>
+            <span class="pill pill-plan">Starter</span>
+            <span class="status-badge"><span class="status-dot suspended"></span> Suspended</span>
+            <span class="org-date">Aug 2024</span>
+          </div>
+          <div class="org-stats">2 sites &middot; 6 devices &middot; 3 users</div>
+        </div>
+
+        <!-- Org 7 -->
+        <div class="org-article">
+          <a class="org-name" href="#">Sigma Alimentos</a>
+          <div class="org-slug">/sigma-alimentos</div>
+          <div class="org-meta">
+            <span class="pill pill-segment">Commercial</span>
+            <span class="pill pill-plan">Professional</span>
+            <span class="status-badge"><span class="status-dot active"></span> Onboarding</span>
+            <span class="org-date">Oct 2025</span>
+          </div>
+          <div class="org-stats">1 site &middot; 4 devices &middot; 2 users</div>
+        </div>
+
+        <!-- Org 8 -->
+        <div class="org-article">
+          <a class="org-name" href="#">Alsea Group</a>
+          <div class="org-slug">/alsea-group</div>
+          <div class="org-meta">
+            <span class="pill pill-segment">Commercial</span>
+            <span class="pill pill-plan">Starter</span>
+            <span class="status-badge"><span class="status-dot archived"></span> Archived</span>
+            <span class="org-date">May 2025</span>
+          </div>
+          <div class="org-stats">0 sites &middot; 2 devices &middot; 1 user</div>
+        </div>
+
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="page-btn">&laquo;</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn">&raquo;</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <span>Astrea IoT Hub &mdash; Platform Administration</span>
+    <span>Page 1 of 3 &middot; 8 records</span>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+[  239840ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5175/resources/js/routes/index.ts?t=1774649444070:0
+[  239840ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  239842ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5175/resources/js/routes/profile/index.ts?t=1774649444060:0
+[  239844ms] [ERROR] [vite] Failed to reload /resources/js/components/app-sidebar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  239845ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  240034ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  240037ms] [ERROR] [vite] Failed to reload /resources/js/components/app-sidebar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808

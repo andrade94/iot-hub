@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variation B2 — Split Panel Editorial — Organizations Index</title>
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700&family=playfair-display:400,500,600,700,800,900" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Dark panel */
+    --dark-bg: #111111;
+    --dark-surface: #181818;
+    --dark-text: #f5f4f0;
+    --dark-muted: #8a8987;
+    --dark-border: #2a2a28;
+    /* Light panel */
+    --light-bg: #fafaf8;
+    --light-surface: #ffffff;
+    --light-text: #1a1917;
+    --light-muted: #9a9895;
+    --light-border: #e8e6e2;
+    /* Accents */
+    --emerald: #059669;
+    --emerald-light: #06b57d;
+    --blue: #2563eb;
+    --red: #dc2626;
+    --amber: #d97706;
+    --violet: #7c3aed;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--light-bg);
+    color: var(--light-text);
+    display: flex;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ─── Variation Label ─── */
+  .variation-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    background: var(--dark-bg);
+    color: var(--dark-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    opacity: 0;
+    animation: fadeSlideIn 0.6s 1.2s forwards;
+  }
+
+  /* ─── Left Panel ─── */
+  .left-panel {
+    width: 320px;
+    min-width: 320px;
+    height: 100vh;
+    background: var(--dark-bg);
+    color: var(--dark-text);
+    display: flex;
+    flex-direction: column;
+    padding: 32px 28px 24px;
+    overflow-y: auto;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 10;
+  }
+
+  .left-panel::-webkit-scrollbar { width: 4px; }
+  .left-panel::-webkit-scrollbar-track { background: transparent; }
+  .left-panel::-webkit-scrollbar-thumb { background: var(--dark-border); border-radius: 2px; }
+
+  .panel-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark-text);
+    line-height: 1.15;
+    margin-bottom: 6px;
+    opacity: 0;
+    animation: fadeSlideIn 0.5s 0.1s forwards;
+  }
+
+  .panel-subtitle {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dark-muted);
+    letter-spacing: 0.3px;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeSlideIn 0.5s 0.2s forwards;
+  }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-block {
+    background: var(--dark-surface);
+    border-radius: 10px;
+    padding: 16px 14px;
+    border: 1px solid var(--dark-border);
+    opacity: 0;
+    animation: fadeScaleIn 0.4s forwards;
+    transition: border-color 0.2s;
+  }
+  .stat-block:hover { border-color: #3a3a38; }
+  .stat-block:nth-child(1) { animation-delay: 0.2s; }
+  .stat-block:nth-child(2) { animation-delay: 0.28s; }
+  .stat-block:nth-child(3) { animation-delay: 0.36s; }
+  .stat-block:nth-child(4) { animation-delay: 0.44s; }
+
+  .stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--dark-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .stat-block.total .stat-number { color: var(--dark-text); }
+  .stat-block.active .stat-number { color: var(--emerald); }
+  .stat-block.suspended .stat-number { color: var(--amber); }
+  .stat-block.devices .stat-number { color: var(--blue); }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--dark-border);
+    margin: 4px 0 20px;
+    opacity: 0;
+    animation: fadeIn 0.4s 0.5s forwards;
+  }
+
+  /* Filter sections */
+  .filter-section-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--dark-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    opacity: 0;
+    animation: fadeSlideIn 0.4s 0.55s forwards;
+  }
+
+  .filter-list {
+    list-style: none;
+    margin-bottom: 20px;
+  }
+
+  .filter-item {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--dark-muted);
+    padding: 7px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s;
+    opacity: 0;
+    animation: fadeSlideIn 0.35s forwards;
+  }
+  .filter-item:nth-child(1) { animation-delay: 0.6s; }
+  .filter-item:nth-child(2) { animation-delay: 0.65s; }
+  .filter-item:nth-child(3) { animation-delay: 0.7s; }
+  .filter-item:nth-child(4) { animation-delay: 0.75s; }
+  .filter-item:nth-child(5) { animation-delay: 0.8s; }
+  .filter-item:nth-child(6) { animation-delay: 0.85s; }
+
+  .filter-item:hover { color: var(--dark-text); background: var(--dark-surface); }
+  .filter-item.active { color: var(--dark-text); background: var(--dark-surface); }
+
+  .filter-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  .filter-item-left {
+    display: flex;
+    align-items: center;
+  }
+
+  .filter-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--dark-muted);
+    opacity: 0.7;
+  }
+
+  /* Search */
+  .search-wrapper {
+    margin-bottom: 16px;
+    opacity: 0;
+    animation: fadeSlideIn 0.4s 0.9s forwards;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    background: var(--dark-surface);
+    border: 1px solid var(--dark-border);
+    border-radius: 8px;
+    color: var(--dark-text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input::placeholder { color: var(--dark-muted); opacity: 0.6; }
+  .search-input:focus { border-color: #444; }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dark-muted);
+    opacity: 0.5;
+  }
+
+  /* CTA button */
+  .cta-button {
+    width: 100%;
+    padding: 12px 0;
+    background: var(--emerald);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: auto;
+    opacity: 0;
+    animation: fadeSlideIn 0.4s 1s forwards;
+  }
+  .cta-button:hover { background: var(--emerald-light); transform: translateY(-1px); }
+  .cta-button:active { transform: translateY(0); }
+
+  /* ─── Right Panel ─── */
+  .right-panel {
+    flex: 1;
+    margin-left: 320px;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 28px 36px 40px;
+  }
+
+  .right-panel::-webkit-scrollbar { width: 6px; }
+  .right-panel::-webkit-scrollbar-track { background: transparent; }
+  .right-panel::-webkit-scrollbar-thumb { background: var(--light-border); border-radius: 3px; }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    color: var(--light-muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    animation: fadeSlideIn 0.4s 0.3s forwards;
+  }
+  .breadcrumb a {
+    color: var(--light-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .breadcrumb a:hover { color: var(--light-text); }
+  .breadcrumb .sep { opacity: 0.4; }
+  .breadcrumb .current { color: var(--light-text); font-weight: 600; }
+
+  /* Table */
+  .table-wrapper {
+    background: var(--light-surface);
+    border-radius: 12px;
+    border: 1px solid var(--light-border);
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.4s forwards;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--light-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--light-border);
+    background: #fdfdfb;
+    position: sticky;
+    top: 0;
+  }
+  thead th:first-child { padding-left: 20px; }
+  thead th:last-child { padding-right: 20px; text-align: right; }
+
+  tbody tr {
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  tbody tr:hover { background: #f7f6f3; }
+  tbody tr:not(:last-child) td { border-bottom: 1px solid var(--light-border); }
+
+  tbody td {
+    padding: 14px 16px;
+    font-size: 13.5px;
+    vertical-align: middle;
+    color: var(--light-text);
+  }
+  tbody td:first-child { padding-left: 20px; }
+  tbody td:last-child { padding-right: 20px; text-align: right; }
+
+  /* Org cell */
+  .org-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .org-monogram {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .org-info .org-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--light-text);
+    line-height: 1.2;
+  }
+
+  .org-info .org-slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--light-muted);
+    margin-top: 1px;
+  }
+
+  /* Badges / Pills */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .pill-retail { background: #ede9fe; color: #6d28d9; }
+  .pill-cold-chain { background: #dbeafe; color: #1d4ed8; }
+  .pill-industrial { background: #fef3c7; color: #b45309; }
+  .pill-smart-building { background: #d1fae5; color: #047857; }
+  .pill-agriculture { background: #fce7f3; color: #be185d; }
+  .pill-logistics { background: #f3e8ff; color: #7c3aed; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-enterprise { background: #111; color: #f5f4f0; }
+  .badge-professional { background: #f3f4f6; color: #4b5563; }
+  .badge-starter { background: #fef9ee; color: #b45309; }
+
+  /* Status */
+  .status-cell {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-dot.active { background: var(--emerald); box-shadow: 0 0 6px rgba(5, 150, 105, 0.4); }
+  .status-dot.onboarding { background: var(--blue); box-shadow: 0 0 6px rgba(37, 99, 235, 0.3); }
+  .status-dot.suspended { background: var(--amber); box-shadow: 0 0 6px rgba(217, 119, 6, 0.3); }
+  .status-dot.draft { background: var(--light-muted); }
+
+  .status-label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Data cells */
+  .data-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .date-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--light-muted);
+  }
+
+  /* Sparkline */
+  .sparkline {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 20px;
+  }
+  .sparkline .bar {
+    width: 3px;
+    border-radius: 1px;
+    background: var(--emerald);
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  tbody tr:hover .sparkline .bar { opacity: 0.85; }
+
+  /* Row arrow */
+  .row-arrow {
+    color: var(--light-muted);
+    opacity: 0.3;
+    transition: opacity 0.2s, transform 0.2s;
+    font-size: 16px;
+  }
+  tbody tr:hover .row-arrow { opacity: 0.8; transform: translateX(2px); }
+
+  /* Pagination */
+  .pagination-hint {
+    margin-top: 16px;
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--light-muted);
+    opacity: 0;
+    animation: fadeIn 0.4s 0.8s forwards;
+  }
+
+  /* ─── Animations ─── */
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeScaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Variation Label -->
+<div class="variation-label">Variation B2 — Split Panel</div>
+
+<!-- ─── Left Panel ─── -->
+<aside class="left-panel">
+  <h1 class="panel-heading">Organizations</h1>
+  <p class="panel-subtitle">Manage client organizations and accounts</p>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-block total">
+      <div class="stat-number">8</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-block active">
+      <div class="stat-number">5</div>
+      <div class="stat-label">Active</div>
+    </div>
+    <div class="stat-block suspended">
+      <div class="stat-number">1</div>
+      <div class="stat-label">Suspended</div>
+    </div>
+    <div class="stat-block devices">
+      <div class="stat-number">247</div>
+      <div class="stat-label">Devices</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Segment Filter -->
+  <div class="filter-section-label">Segment</div>
+  <ul class="filter-list">
+    <li class="filter-item active">
+      <span class="filter-item-left">All Segments</span>
+      <span class="filter-count">8</span>
+    </li>
+    <li class="filter-item">
+      <span class="filter-item-left"><span class="filter-dot" style="background:#7c3aed"></span>Retail</span>
+      <span class="filter-count">3</span>
+    </li>
+    <li class="filter-item">
+      <span class="filter-item-left"><span class="filter-dot" style="background:#2563eb"></span>Cold Chain</span>
+      <span class="filter-count">2</span>
+    </li>
+    <li class="filter-item">
+      <span class="filter-item-left"><span class="filter-dot" style="background:#d97706"></span>Industrial</span>
+      <span class="filter-count">1</span>
+    </li>
+    <li class="filter-item">
+      <span class="filter-item-left"><span class="filter-dot" style="background:#059669"></span>Smart Building</span>
+      <span class="filter-count">1</span>
+    </li>
+    <li class="filter-item">
+      <span class="filter-item-left"><span class="filter-dot" style="background:#dc2626"></span>Agriculture</span>
+      <span class="filter-count">1</span>
+    </li>
+  </ul>
+
+  <!-- Status Filter -->
+  <div class="filter-section-label">Status</div>
+  <ul class="filter-list">
+    <li class="filter-item active">
+      <span class="filter-item-left">All Statuses</span>
+      <span class="filter-count">8</span>
+    </li>
+    <li class="filter-item">
+      <span class="filter-item-left"><span class="filter-dot" style="background:#059669"></span>Active</span>
+      <span class="filter-count">5</span>
+    </li>
+    <li class="filter-item">
+      <span class="filter-item-left"><span class="filter-dot" style="background:#2563eb"></span>Onboarding</span>
+      <span class="filter-count">1</span>
+    </li>
+    <li class="filter-item">
+      <span class="filter-item-left"><span class="filter-dot" style="background:#d97706"></span>Suspended</span>
+      <span class="filter-count">1</span>
+    </li>
+    <li class="filter-item">
+      <span class="filter-item-left"><span class="filter-dot" style="background:#9a9895"></span>Draft</span>
+      <span class="filter-count">1</span>
+    </li>
+  </ul>
+
+  <!-- Search -->
+  <div class="search-wrapper" style="position:relative;">
+    <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="search-input" type="text" placeholder="Search organizations...">
+  </div>
+
+  <!-- CTA -->
+  <button class="cta-button">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    New Organization
+  </button>
+</aside>
+
+<!-- ─── Right Panel ─── -->
+<main class="right-panel">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="#">Settings</a>
+    <span class="sep">/</span>
+    <span class="current">Organizations</span>
+  </nav>
+
+  <!-- Table -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Organization</th>
+          <th>Segment</th>
+          <th>Plan</th>
+          <th>Status</th>
+          <th>Sites</th>
+          <th>Devices</th>
+          <th>Users</th>
+          <th>Trend</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="org-cell">
+              <div class="org-monogram" style="background:linear-gradient(135deg,#dc2626,#ef4444);">OX</div>
+              <div class="org-info">
+                <div class="org-name">OXXO Corporativo</div>
+                <div class="org-slug">oxxo-corporativo</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="pill pill-retail">Retail</span></td>
+          <td><span class="badge badge-enterprise">Enterprise</span></td>
+          <td><div class="status-cell"><span class="status-dot active"></span><span class="status-label">Active</span></div></td>
+          <td><span class="data-val">12</span></td>
+          <td><span class="data-val">87</span></td>
+          <td><span class="data-val">24</span></td>
+          <td>
+            <div class="sparkline">
+              <div class="bar" style="height:8px"></div>
+              <div class="bar" style="height:12px"></div>
+              <div class="bar" style="height:10px"></div>
+              <div class="bar" style="height:16px"></div>
+              <div class="bar" style="height:14px"></div>
+              <div class="bar" style="height:18px"></div>
+              <div class="bar" style="height:20px"></div>
+            </div>
+          </td>
+          <td><span class="date-val">Mar 2024</span></td>
+          <td><span class="row-arrow">&rsaquo;</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="org-cell">
+              <div class="org-monogram" style="background:linear-gradient(135deg,#2563eb,#3b82f6);">BM</div>
+              <div class="org-info">
+                <div class="org-name">Bimbo Fresh Logistics</div>
+                <div class="org-slug">bimbo-fresh</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="pill pill-cold-chain">Cold Chain</span></td>
+          <td><span class="badge badge-enterprise">Enterprise</span></td>
+          <td><div class="status-cell"><span class="status-dot active"></span><span class="status-label">Active</span></div></td>
+          <td><span class="data-val">8</span></td>
+          <td><span class="data-val">54</span></td>
+          <td><span class="data-val">16</span></td>
+          <td>
+            <div class="sparkline">
+              <div class="bar" style="height:10px"></div>
+              <div class="bar" style="height:14px"></div>
+              <div class="bar" style="height:12px"></div>
+              <div class="bar" style="height:13px"></div>
+              <div class="bar" style="height:17px"></div>
+              <div class="bar" style="height:15px"></div>
+              <div class="bar" style="height:18px"></div>
+            </div>
+          </td>
+          <td><span class="date-val">Jan 2024</span></td>
+          <td><span class="row-arrow">&rsaquo;</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="org-cell">
+              <div class="org-monogram" style="background:linear-gradient(135deg,#d97706,#f59e0b);">CM</div>
+              <div class="org-info">
+                <div class="org-name">CEMEX Industrial</div>
+                <div class="org-slug">cemex-industrial</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="pill pill-industrial">Industrial</span></td>
+          <td><span class="badge badge-professional">Professional</span></td>
+          <td><div class="status-cell"><span class="status-dot active"></span><span class="status-label">Active</span></div></td>
+          <td><span class="data-val">5</span></td>
+          <td><span class="data-val">38</span></td>
+          <td><span class="data-val">9</span></td>
+          <td>
+            <div class="sparkline">
+              <div class="bar" style="height:6px"></div>
+              <div class="bar" style="height:8px"></div>
+              <div class="bar" style="height:12px"></div>
+              <div class="bar" style="height:10px"></div>
+              <div class="bar" style="height:14px"></div>
+              <div class="bar" style="height:16px"></div>
+              <div class="bar" style="height:14px"></div>
+            </div>
+          </td>
+          <td><span class="date-val">Nov 2023</span></td>
+          <td><span class="row-arrow">&rsaquo;</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="org-cell">
+              <div class="org-monogram" style="background:linear-gradient(135deg,#059669,#10b981);">LV</div>
+              <div class="org-info">
+                <div class="org-name">Liverpool Smart Stores</div>
+                <div class="org-slug">liverpool-smart</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="pill pill-smart-building">Smart Building</span></td>
+          <td><span class="badge badge-professional">Professional</span></td>
+          <td><div class="status-cell"><span class="status-dot active"></span><span class="status-label">Active</span></div></td>
+          <td><span class="data-val">4</span></td>
+          <td><span class="data-val">31</span></td>
+          <td><span class="data-val">11</span></td>
+          <td>
+            <div class="sparkline">
+              <div class="bar" style="height:12px"></div>
+              <div class="bar" style="height:10px"></div>
+              <div class="bar" style="height:14px"></div>
+              <div class="bar" style="height:16px"></div>
+              <div class="bar" style="height:13px"></div>
+              <div class="bar" style="height:15px"></div>
+              <div class="bar" style="height:17px"></div>
+            </div>
+          </td>
+          <td><span class="date-val">Jun 2024</span></td>
+          <td><span class="row-arrow">&rsaquo;</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="org-cell">
+              <div class="org-monogram" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);">SM</div>
+              <div class="org-info">
+                <div class="org-name">Soriana Markets</div>
+                <div class="org-slug">soriana-markets</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="pill pill-retail">Retail</span></td>
+          <td><span class="badge badge-starter">Starter</span></td>
+          <td><div class="status-cell"><span class="status-dot active"></span><span class="status-label">Active</span></div></td>
+          <td><span class="data-val">3</span></td>
+          <td><span class="data-val">19</span></td>
+          <td><span class="data-val">7</span></td>
+          <td>
+            <div class="sparkline">
+              <div class="bar" style="height:4px"></div>
+              <div class="bar" style="height:6px"></div>
+              <div class="bar" style="height:8px"></div>
+              <div class="bar" style="height:10px"></div>
+              <div class="bar" style="height:9px"></div>
+              <div class="bar" style="height:12px"></div>
+              <div class="bar" style="height:14px"></div>
+            </div>
+          </td>
+          <td><span class="date-val">Sep 2024</span></td>
+          <td><span class="row-arrow">&rsaquo;</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="org-cell">
+              <div class="org-monogram" style="background:linear-gradient(135deg,#be185d,#ec4899);">AG</div>
+              <div class="org-info">
+                <div class="org-name">AgroTech Norte</div>
+                <div class="org-slug">agrotech-norte</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="pill pill-agriculture">Agriculture</span></td>
+          <td><span class="badge badge-starter">Starter</span></td>
+          <td><div class="status-cell"><span class="status-dot onboarding"></span><span class="status-label">Onboarding</span></div></td>
+          <td><span class="data-val">2</span></td>
+          <td><span class="data-val">11</span></td>
+          <td><span class="data-val">4</span></td>
+          <td>
+            <div class="sparkline">
+              <div class="bar" style="height:2px"></div>
+              <div class="bar" style="height:4px"></div>
+              <div class="bar" style="height:6px"></div>
+              <div class="bar" style="height:5px"></div>
+              <div class="bar" style="height:8px"></div>
+              <div class="bar" style="height:10px"></div>
+              <div class="bar" style="height:12px"></div>
+            </div>
+          </td>
+          <td><span class="date-val">Feb 2025</span></td>
+          <td><span class="row-arrow">&rsaquo;</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="org-cell">
+              <div class="org-monogram" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);">FL</div>
+              <div class="org-info">
+                <div class="org-name">FedEx Logistics MX</div>
+                <div class="org-slug">fedex-logistics-mx</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="pill pill-logistics">Logistics</span></td>
+          <td><span class="badge badge-professional">Professional</span></td>
+          <td><div class="status-cell"><span class="status-dot suspended"></span><span class="status-label">Suspended</span></div></td>
+          <td><span class="data-val">1</span></td>
+          <td><span class="data-val">5</span></td>
+          <td><span class="data-val">3</span></td>
+          <td>
+            <div class="sparkline">
+              <div class="bar" style="height:14px;background:#d97706;"></div>
+              <div class="bar" style="height:10px;background:#d97706;"></div>
+              <div class="bar" style="height:8px;background:#d97706;"></div>
+              <div class="bar" style="height:6px;background:#d97706;"></div>
+              <div class="bar" style="height:4px;background:#d97706;"></div>
+              <div class="bar" style="height:3px;background:#d97706;"></div>
+              <div class="bar" style="height:2px;background:#d97706;"></div>
+            </div>
+          </td>
+          <td><span class="date-val">Aug 2024</span></td>
+          <td><span class="row-arrow">&rsaquo;</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="org-cell">
+              <div class="org-monogram" style="background:linear-gradient(135deg,#6b7280,#9ca3af);">CT</div>
+              <div class="org-info">
+                <div class="org-name">Chedraui Test</div>
+                <div class="org-slug">chedraui-test</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="pill pill-retail">Retail</span></td>
+          <td><span class="badge badge-starter">Starter</span></td>
+          <td><div class="status-cell"><span class="status-dot draft"></span><span class="status-label">Draft</span></div></td>
+          <td><span class="data-val">0</span></td>
+          <td><span class="data-val">2</span></td>
+          <td><span class="data-val">1</span></td>
+          <td>
+            <div class="sparkline">
+              <div class="bar" style="height:2px;background:#9a9895;"></div>
+              <div class="bar" style="height:2px;background:#9a9895;"></div>
+              <div class="bar" style="height:2px;background:#9a9895;"></div>
+              <div class="bar" style="height:2px;background:#9a9895;"></div>
+              <div class="bar" style="height:2px;background:#9a9895;"></div>
+              <div class="bar" style="height:2px;background:#9a9895;"></div>
+              <div class="bar" style="height:2px;background:#9a9895;"></div>
+            </div>
+          </td>
+          <td><span class="date-val">Mar 2025</span></td>
+          <td><span class="row-arrow">&rsaquo;</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-hint">Showing 8 of 8 organizations</div>
+</main>
+
+</body>
+</html>

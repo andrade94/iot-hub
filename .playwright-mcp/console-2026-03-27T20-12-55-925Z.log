@@ -1,0 +1,9 @@
+[   59545ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ http://[::1]:5175/node_modules/.vite/deps/chunk-YE3HLNIN.js?v=d034656e:335
+[   59547ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ http://[::1]:5175/node_modules/.vite/deps/chunk-YE3HLNIN.js?v=d034656e:335
+[  439691ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5175/resources/js/routes/index.ts?t=1774642815651:0
+[  439691ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5175/resources/js/routes/profile/index.ts?t=1774642815642:0
+[  439691ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  439694ms] [ERROR] [vite] Failed to reload /resources/js/components/app-sidebar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  439696ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  439886ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  439887ms] [ERROR] [vite] Failed to reload /resources/js/components/app-sidebar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808

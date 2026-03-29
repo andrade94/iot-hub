@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variation B4 — Warm Luxe | OXXO Corporativo</title>
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=space-grotesk:500,700&family=jetbrains-mono:400,500,700&family=playfair-display:400,500,600,700,800,900&family=cormorant-garamond:400,500,600,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #100f0d;
+    --surface: #181614;
+    --surface-2: #1f1d1a;
+    --surface-3: #272420;
+    --border: #2a2723;
+    --border-light: #201e1b;
+    --text: #e8dcc8;
+    --text-2: #a69c8b;
+    --text-3: #5c564b;
+    --gold: #c8a45c;
+    --gold-dim: rgba(200,164,92,0.1);
+    --emerald: #6ee7b7;
+    --emerald-dim: rgba(110,231,183,0.08);
+    --rose: #fda4af;
+    --rose-dim: rgba(253,164,175,0.08);
+    --sky: #93c5fd;
+    --sky-dim: rgba(147,197,253,0.08);
+    --radius: 8px;
+    --shadow: 0 2px 16px rgba(40,30,10,0.25);
+    --shadow-lg: 0 8px 32px rgba(40,30,10,0.3);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image:
+      repeating-conic-gradient(var(--text-3) 0% 25%, transparent 0% 50%) 0 0 / 2px 2px,
+      repeating-conic-gradient(var(--text-3) 0% 25%, transparent 0% 50%) 1px 1px / 2px 2px;
+  }
+
+  /* Variation label */
+  .variation-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10000;
+    background: var(--gold);
+    color: var(--bg);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+  }
+
+  .container {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  /* Back link */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text-3);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover { color: var(--text-2); }
+
+  /* Header */
+  .page-header {
+    padding-top: 28px;
+    padding-bottom: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .header-left h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 40px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+
+  .header-slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 6px;
+    margin-bottom: 16px;
+  }
+
+  .header-badges {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 5px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: var(--text-2);
+  }
+
+  .badge.active {
+    border-color: rgba(110,231,183,0.3);
+    color: var(--emerald);
+  }
+
+  .badge.retail {
+    border-color: rgba(200,164,92,0.2);
+    color: var(--gold);
+  }
+
+  .badge.enterprise {
+    border-color: rgba(147,197,253,0.3);
+    color: var(--sky);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 8px;
+  }
+
+  .btn-outlined {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    background: transparent;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outlined:hover {
+    border-color: var(--text-3);
+    color: var(--text);
+  }
+
+  .btn-outlined.gold {
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+
+  .btn-outlined.gold:hover {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  .btn-outlined.danger {
+    color: var(--rose);
+    border-color: rgba(253,164,175,0.3);
+  }
+
+  .btn-outlined.danger:hover {
+    background: var(--rose-dim);
+    border-color: var(--rose);
+  }
+
+  /* KPI Row */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 20px 20px;
+    position: relative;
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.5s ease both;
+  }
+
+  .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+  .kpi-card:nth-child(2) { animation-delay: 0.1s; }
+  .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+  .kpi-card:nth-child(4) { animation-delay: 0.2s; }
+  .kpi-card:nth-child(5) { animation-delay: 0.25s; }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 14px;
+    right: 14px;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+  }
+
+  .kpi-card.gold::before { background: var(--gold); }
+  .kpi-card.emerald::before { background: var(--emerald); }
+  .kpi-card.rose::before { background: var(--rose); }
+  .kpi-card.sky::before { background: var(--sky); }
+
+  .kpi-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .kpi-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-3);
+  }
+
+  /* Two-column layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 28px;
+    padding-bottom: 80px;
+  }
+
+  .main-col {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .side-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 32px;
+    align-self: start;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.5s ease both;
+  }
+
+  .card-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .card-body {
+    padding: 24px;
+  }
+
+  /* Charts */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .chart-card {
+    animation-delay: 0.15s;
+  }
+
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 140px;
+    padding-top: 8px;
+  }
+
+  .chart-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .chart-bar {
+    width: 100%;
+    max-width: 28px;
+    border-radius: 3px 3px 0 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .chart-bar:hover { opacity: 0.8; }
+
+  .chart-bar.gold { background: var(--gold); }
+  .chart-bar.emerald { background: var(--emerald); }
+  .chart-bar.sky { background: var(--sky); }
+  .chart-bar.rose { background: var(--rose); }
+  .chart-bar.gold-dim { background: rgba(200,164,92,0.25); }
+  .chart-bar.emerald-dim { background: rgba(110,231,183,0.2); }
+
+  .chart-bar-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+    margin-top: 16px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  /* Tab bar */
+  .tab-bar {
+    display: flex;
+    gap: 32px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 0;
+    padding: 0 24px;
+  }
+
+  .tab-item {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-3);
+    padding: 14px 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+  }
+
+  .tab-item:hover { color: var(--text-2); }
+
+  .tab-item.active {
+    color: var(--text);
+  }
+
+  .tab-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  /* Sites table inside card */
+  .sites-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .sites-table th {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .sites-table th.center { text-align: center; }
+
+  .sites-table td {
+    padding: 16px 20px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .sites-table td.center { text-align: center; }
+
+  .sites-table tr:last-child td { border-bottom: none; }
+
+  .sites-table tr {
+    transition: background 0.2s ease;
+  }
+
+  .sites-table tr:hover { background: var(--surface-2); }
+
+  .site-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .site-location {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  .site-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .online-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .online-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .online-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+  }
+
+  .online-bar-fill.high { background: var(--emerald); }
+  .online-bar-fill.mid { background: var(--gold); }
+  .online-bar-fill.low { background: var(--rose); }
+
+  .online-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    min-width: 36px;
+  }
+
+  /* Side details */
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .detail-row:last-child { border-bottom: none; }
+
+  .detail-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    color: var(--text-3);
+  }
+
+  .detail-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    text-align: right;
+  }
+
+  .detail-value a {
+    color: var(--gold);
+    text-decoration: none;
+  }
+
+  .detail-value a:hover { text-decoration: underline; }
+
+  /* Branding swatches */
+  .swatches {
+    display: flex;
+    gap: 10px;
+    padding: 4px 0;
+  }
+
+  .swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  /* Contact card */
+  .contact-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 4px 0;
+  }
+
+  .contact-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--gold-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .contact-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .contact-role {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .contact-email {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    text-decoration: none;
+  }
+
+  .contact-email:hover { text-decoration: underline; }
+
+  /* Notes */
+  .notes-textarea {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    resize: vertical;
+    min-height: 72px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .notes-textarea::placeholder { color: var(--text-3); }
+
+  .notes-textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px var(--gold-dim);
+  }
+
+  .note-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .note-item:last-child { border-bottom: none; }
+
+  .note-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .note-author {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+
+  .note-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+  }
+
+  .note-text {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+
+  .add-note-btn {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    background: transparent;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 12px;
+  }
+
+  .add-note-btn:hover {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  /* Status dot */
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status-dot.online { background: var(--emerald); }
+  .status-dot.offline { background: var(--rose); }
+  .status-dot.warning { background: var(--gold); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="variation-label">Variation B4 — Warm Luxe</div>
+
+<div class="container">
+
+  <!-- Back link -->
+  <a href="#" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Organizations
+  </a>
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <h1>OXXO Corporativo</h1>
+      <div class="header-slug">oxxo-corp</div>
+      <div class="header-badges">
+        <span class="badge active">Active</span>
+        <span class="badge retail">Retail</span>
+        <span class="badge enterprise">Enterprise</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-outlined">Edit</button>
+      <button class="btn-outlined gold">Manage Billing</button>
+      <button class="btn-outlined danger">Suspend</button>
+    </div>
+  </header>
+
+  <!-- KPI Row -->
+  <div class="kpi-row">
+    <div class="kpi-card gold">
+      <div class="kpi-value">12</div>
+      <div class="kpi-label">Sites</div>
+    </div>
+    <div class="kpi-card emerald">
+      <div class="kpi-value">89</div>
+      <div class="kpi-label">Devices</div>
+    </div>
+    <div class="kpi-card sky">
+      <div class="kpi-value">24</div>
+      <div class="kpi-label">Users</div>
+    </div>
+    <div class="kpi-card rose">
+      <div class="kpi-value">3</div>
+      <div class="kpi-label">Open Alerts</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-value">97<span style="font-size: 18px; font-weight: 400;">%</span></div>
+      <div class="kpi-label">Uptime (30d)</div>
+    </div>
+  </div>
+
+  <!-- Two column layout -->
+  <div class="two-col">
+
+    <!-- Main column -->
+    <div class="main-col">
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="card chart-card">
+          <div class="card-header">
+            <span class="card-title">Device Activity</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-3);">Last 7 days</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-bars">
+              <div class="chart-bar-group">
+                <div class="chart-bar gold" style="height: 65%;"></div>
+                <span class="chart-bar-label">Mon</span>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar gold" style="height: 80%;"></div>
+                <span class="chart-bar-label">Tue</span>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar gold" style="height: 55%;"></div>
+                <span class="chart-bar-label">Wed</span>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar gold" style="height: 90%;"></div>
+                <span class="chart-bar-label">Thu</span>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar gold" style="height: 72%;"></div>
+                <span class="chart-bar-label">Fri</span>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar gold-dim" style="height: 40%;"></div>
+                <span class="chart-bar-label">Sat</span>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar gold-dim" style="height: 35%;"></div>
+                <span class="chart-bar-label">Sun</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot" style="background: var(--gold);"></div> Weekday</div>
+              <div class="legend-item"><div class="legend-dot" style="background: rgba(200,164,92,0.25);"></div> Weekend</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card chart-card" style="animation-delay: 0.2s;">
+          <div class="card-header">
+            <span class="card-title">Alert Breakdown</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-3);">This month</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-bars">
+              <div class="chart-bar-group">
+                <div class="chart-bar emerald" style="height: 30%;"></div>
+                <div class="chart-bar sky" style="height: 15%; margin-top: 3px;"></div>
+                <span class="chart-bar-label">W1</span>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar emerald" style="height: 45%;"></div>
+                <div class="chart-bar rose" style="height: 20%; margin-top: 3px;"></div>
+                <span class="chart-bar-label">W2</span>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar emerald" style="height: 25%;"></div>
+                <div class="chart-bar sky" style="height: 10%; margin-top: 3px;"></div>
+                <span class="chart-bar-label">W3</span>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar emerald" style="height: 55%;"></div>
+                <div class="chart-bar rose" style="height: 8%; margin-top: 3px;"></div>
+                <span class="chart-bar-label">W4</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot" style="background: var(--emerald);"></div> Resolved</div>
+              <div class="legend-item"><div class="legend-dot" style="background: var(--sky);"></div> Info</div>
+              <div class="legend-item"><div class="legend-dot" style="background: var(--rose);"></div> Critical</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab section -->
+      <div class="card" style="animation-delay: 0.25s;">
+        <div class="tab-bar">
+          <button class="tab-item active">Sites</button>
+          <button class="tab-item">Users</button>
+          <button class="tab-item">Alerts</button>
+          <button class="tab-item">Activity</button>
+          <button class="tab-item">Notes</button>
+        </div>
+        <table class="sites-table">
+          <thead>
+            <tr>
+              <th style="width: 30%;">Site</th>
+              <th>Status</th>
+              <th class="center">Devices</th>
+              <th class="center">Gateways</th>
+              <th>Online</th>
+              <th>Last Reading</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="site-name">OXXO Monterrey Centro</div>
+                <div class="site-location">Monterrey, NL</div>
+              </td>
+              <td><span class="status-dot online"></span>&ensp;<span style="font-size: 13px; color: var(--text-2);">Online</span></td>
+              <td class="center"><span class="site-num">14</span></td>
+              <td class="center"><span class="site-num">2</span></td>
+              <td>
+                <div class="online-bar-wrap">
+                  <div class="online-bar"><div class="online-bar-fill high" style="width: 98%;"></div></div>
+                  <span class="online-pct">98%</span>
+                </div>
+              </td>
+              <td><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-3);">2m ago</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="site-name">OXXO CDMX Reforma</div>
+                <div class="site-location">Mexico City, CDMX</div>
+              </td>
+              <td><span class="status-dot online"></span>&ensp;<span style="font-size: 13px; color: var(--text-2);">Online</span></td>
+              <td class="center"><span class="site-num">11</span></td>
+              <td class="center"><span class="site-num">2</span></td>
+              <td>
+                <div class="online-bar-wrap">
+                  <div class="online-bar"><div class="online-bar-fill high" style="width: 95%;"></div></div>
+                  <span class="online-pct">95%</span>
+                </div>
+              </td>
+              <td><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-3);">5m ago</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="site-name">OXXO Guadalajara Sur</div>
+                <div class="site-location">Guadalajara, JAL</div>
+              </td>
+              <td><span class="status-dot warning"></span>&ensp;<span style="font-size: 13px; color: var(--text-2);">Degraded</span></td>
+              <td class="center"><span class="site-num">9</span></td>
+              <td class="center"><span class="site-num">1</span></td>
+              <td>
+                <div class="online-bar-wrap">
+                  <div class="online-bar"><div class="online-bar-fill mid" style="width: 78%;"></div></div>
+                  <span class="online-pct">78%</span>
+                </div>
+              </td>
+              <td><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-3);">12m ago</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="site-name">OXXO Tijuana Norte</div>
+                <div class="site-location">Tijuana, BC</div>
+              </td>
+              <td><span class="status-dot online"></span>&ensp;<span style="font-size: 13px; color: var(--text-2);">Online</span></td>
+              <td class="center"><span class="site-num">8</span></td>
+              <td class="center"><span class="site-num">1</span></td>
+              <td>
+                <div class="online-bar-wrap">
+                  <div class="online-bar"><div class="online-bar-fill high" style="width: 100%;"></div></div>
+                  <span class="online-pct">100%</span>
+                </div>
+              </td>
+              <td><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-3);">1m ago</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="site-name">OXXO Cancun Hotelera</div>
+                <div class="site-location">Cancun, QR</div>
+              </td>
+              <td><span class="status-dot offline"></span>&ensp;<span style="font-size: 13px; color: var(--text-2);">Offline</span></td>
+              <td class="center"><span class="site-num">6</span></td>
+              <td class="center"><span class="site-num">1</span></td>
+              <td>
+                <div class="online-bar-wrap">
+                  <div class="online-bar"><div class="online-bar-fill low" style="width: 12%;"></div></div>
+                  <span class="online-pct">12%</span>
+                </div>
+              </td>
+              <td><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-3);">4h ago</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- Side column -->
+    <div class="side-col">
+
+      <!-- Details -->
+      <div class="card" style="animation-delay: 0.1s;">
+        <div class="card-header">
+          <span class="card-title">Details</span>
+        </div>
+        <div class="card-body" style="padding: 12px 24px 20px;">
+          <div class="detail-row">
+            <span class="detail-label">Legal Name</span>
+            <span class="detail-value">OXXO Corporativo S.A. de C.V.</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Tax ID</span>
+            <span class="detail-value">OXX-920101-ABC</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Segment</span>
+            <span class="detail-value">Retail</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Plan</span>
+            <span class="detail-value">Enterprise</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Timezone</span>
+            <span class="detail-value">America/Monterrey</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Created</span>
+            <span class="detail-value">2024-01-15</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Account Manager</span>
+            <span class="detail-value"><a href="#">R. Gonzalez</a></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Branding -->
+      <div class="card" style="animation-delay: 0.15s;">
+        <div class="card-header">
+          <span class="card-title">Branding</span>
+        </div>
+        <div class="card-body">
+          <div class="swatches">
+            <div class="swatch" style="background: #d4213d;"></div>
+            <div class="swatch" style="background: #ffd100;"></div>
+            <div class="swatch" style="background: #1a1a1a;"></div>
+            <div class="swatch" style="background: #ffffff;"></div>
+          </div>
+          <div style="margin-top: 12px;">
+            <div class="detail-row">
+              <span class="detail-label">Logo</span>
+              <span class="detail-value" style="color: var(--text-3);">oxxo-logo.svg</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Theme</span>
+              <span class="detail-value">Custom</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Primary Contact -->
+      <div class="card" style="animation-delay: 0.2s;">
+        <div class="card-header">
+          <span class="card-title">Primary Contact</span>
+        </div>
+        <div class="card-body">
+          <div class="contact-card">
+            <div class="contact-avatar">MR</div>
+            <div>
+              <div class="contact-name">Maria Rodriguez</div>
+              <div class="contact-role">Org Admin</div>
+              <a href="mailto:m.rodriguez@oxxo.com" class="contact-email">m.rodriguez@oxxo.com</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="card" style="animation-delay: 0.25s;">
+        <div class="card-header">
+          <span class="card-title">Notes</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-3);">2 notes</span>
+        </div>
+        <div class="card-body">
+          <textarea class="notes-textarea" placeholder="Add a note..."></textarea>
+          <button class="add-note-btn">Add Note</button>
+
+          <div style="margin-top: 16px;">
+            <div class="note-item">
+              <div class="note-meta">
+                <span class="note-author">R. Gonzalez</span>
+                <span class="note-date">2026-03-28</span>
+              </div>
+              <div class="note-text">Onboarding call completed. Client requested custom alert thresholds for refrigeration units across all sites. Follow up next week.</div>
+            </div>
+            <div class="note-item">
+              <div class="note-meta">
+                <span class="note-author">A. Martinez</span>
+                <span class="note-date">2026-03-15</span>
+              </div>
+              <div class="note-text">Enterprise contract signed. 12-month term. Includes 24/7 support SLA and priority gateway provisioning.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

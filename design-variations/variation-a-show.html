@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variation A — Show (Command Grid)</title>
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700" rel="stylesheet" />
+<style>
+  :root {
+    --ob-base: #0e0e0e;
+    --ob-low: #131313;
+    --ob-mid: #191a1a;
+    --ob-high: #1f2020;
+    --ob-highest: #252626;
+    --ob-bright: #2c2c2c;
+    --ob-text: #e7e5e4;
+    --ob-muted: #acabaa;
+    --ob-dim: #484848;
+    --ob-outline: #767575;
+    --ob-steel: #b9c7df;
+    --ob-cyan: #17a8ec;
+    --ob-coral: #ee7d77;
+    --ob-ember: #ff716a;
+    --ob-emerald: #10b981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ob-base);
+    color: var(--ob-text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .design-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--ob-steel);
+    color: var(--ob-low);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    z-index: 100;
+  }
+
+  /* --- Header Bar --- */
+  .header-bar {
+    background: var(--ob-low);
+    border-bottom: 1px solid var(--ob-high);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--ob-high);
+    background: transparent;
+    color: var(--ob-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .back-btn:hover {
+    background: var(--ob-high);
+    color: var(--ob-text);
+  }
+
+  .header-info { flex: 1; }
+
+  .header-info h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .header-info .slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ob-dim);
+    margin-top: 2px;
+  }
+
+  .header-badges {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  .badge-active { background: rgba(16, 185, 129, 0.12); color: var(--ob-emerald); }
+  .badge-segment { background: rgba(185, 199, 223, 0.1); color: var(--ob-steel); }
+  .badge-plan { background: rgba(23, 168, 236, 0.1); color: var(--ob-cyan); }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-sm {
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--ob-high);
+    background: transparent;
+    color: var(--ob-muted);
+  }
+
+  .btn-sm:hover { background: var(--ob-high); color: var(--ob-text); }
+  .btn-sm.primary { background: var(--ob-steel); color: var(--ob-low); border-color: var(--ob-steel); }
+  .btn-sm.primary:hover { filter: brightness(1.1); }
+  .btn-sm.warn { color: var(--ob-ember); }
+  .btn-sm.danger { color: var(--ob-coral); }
+
+  /* --- KPI Strip --- */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    padding: 20px 40px;
+  }
+
+  .kpi-card {
+    background: var(--ob-low);
+    border-radius: 10px;
+    padding: 14px 18px;
+    position: relative;
+    border: 1px solid var(--ob-high);
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .kpi-card.cyan::before { background: var(--ob-cyan); }
+  .kpi-card.steel::before { background: var(--ob-steel); }
+  .kpi-card.coral::before { background: var(--ob-coral); }
+  .kpi-card.emerald::before { background: var(--ob-emerald); }
+
+  .kpi-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ob-dim);
+  }
+
+  .kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* --- Main Grid --- */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    padding: 0 40px 40px;
+  }
+
+  .left-col { display: flex; flex-direction: column; gap: 20px; }
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* --- Charts Row --- */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .chart-card {
+    background: var(--ob-low);
+    border: 1px solid var(--ob-high);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .chart-card .chart-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ob-dim);
+    margin-bottom: 16px;
+  }
+
+  /* Simple bar chart via CSS */
+  .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 30px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bar-row .bar-label {
+    font-size: 11px;
+    color: var(--ob-muted);
+    text-align: right;
+  }
+
+  .bar-track {
+    height: 16px;
+    background: var(--ob-mid);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .bar-row .bar-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ob-text);
+    font-weight: 600;
+  }
+
+  /* Stacked device bars */
+  .device-bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 100px; padding-top: 8px; }
+
+  .device-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .device-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    transition: height 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .device-col-label {
+    font-size: 9px;
+    color: var(--ob-dim);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* --- Tabs --- */
+  .tabs-container {}
+
+  .tabs-nav {
+    display: flex;
+    border-bottom: 1px solid var(--ob-high);
+    gap: 0;
+  }
+
+  .tab-btn {
+    padding: 10px 20px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ob-dim);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab-btn:hover { color: var(--ob-muted); }
+  .tab-btn.active { color: var(--ob-text); border-bottom-color: var(--ob-cyan); }
+
+  .tab-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--ob-high);
+    color: var(--ob-dim);
+  }
+
+  .tab-btn.active .tab-count { background: rgba(23, 168, 236, 0.15); color: var(--ob-cyan); }
+
+  .tab-count.alert { background: rgba(238, 125, 119, 0.15); color: var(--ob-coral); }
+
+  /* --- Sites table --- */
+  .sites-table {
+    width: 100%;
+    background: var(--ob-low);
+    border: 1px solid var(--ob-high);
+    border-radius: 12px;
+    overflow: hidden;
+    border-spacing: 0;
+  }
+
+  .sites-table th {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ob-dim);
+    padding: 12px 16px;
+    text-align: left;
+    background: var(--ob-mid);
+    border-bottom: 1px solid var(--ob-high);
+  }
+
+  .sites-table td {
+    padding: 14px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--ob-high);
+    vertical-align: middle;
+  }
+
+  .sites-table tr:last-child td { border-bottom: none; }
+
+  .sites-table tbody tr {
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .sites-table tbody tr:hover { background: var(--ob-mid); }
+
+  .site-name { font-weight: 600; font-size: 13px; }
+
+  .site-online {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ob-dim);
+    margin-top: 1px;
+  }
+
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .muted { color: var(--ob-dim); }
+  .emerald { color: var(--ob-emerald); }
+  .amber { color: var(--ob-ember); }
+  .coral { color: var(--ob-coral); }
+
+  .badge-sm {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  .badge-sm.active { background: rgba(16, 185, 129, 0.12); color: var(--ob-emerald); }
+  .badge-sm.onboarding { background: rgba(23, 168, 236, 0.12); color: var(--ob-cyan); }
+  .badge-sm.draft { background: rgba(72, 72, 72, 0.2); color: var(--ob-dim); }
+
+  /* Mini bar for online % */
+  .online-bar {
+    width: 50px;
+    height: 3px;
+    background: var(--ob-mid);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 3px;
+  }
+
+  .online-bar-fill { height: 100%; border-radius: 2px; }
+
+  /* --- Detail Sidebar --- */
+  .detail-sidebar {}
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .section-header .label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ob-dim);
+    white-space: nowrap;
+  }
+
+  .section-header .line { flex: 1; height: 1px; background: var(--ob-high); }
+
+  .detail-card {
+    background: var(--ob-low);
+    border: 1px solid var(--ob-high);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--ob-high);
+  }
+
+  .detail-row:last-child { border-bottom: none; }
+
+  .detail-row .dt {
+    font-size: 12px;
+    color: var(--ob-dim);
+  }
+
+  .detail-row .dd {
+    font-size: 12px;
+    color: var(--ob-text);
+    font-weight: 500;
+  }
+
+  .detail-row .dd code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ob-muted);
+  }
+
+  /* Contact card */
+  .contact-card {
+    background: var(--ob-low);
+    border: 1px solid var(--ob-high);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .contact-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--ob-mid);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--ob-steel);
+  }
+
+  .contact-name { font-weight: 600; font-size: 13px; }
+  .contact-detail {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ob-dim);
+    margin-top: 1px;
+  }
+
+  /* Branding swatches */
+  .swatches {
+    display: flex;
+    gap: 6px;
+  }
+
+  .swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--ob-high);
+  }
+
+  /* Notes */
+  .notes-section { margin-top: 4px; }
+
+  .note-compose {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--ob-high);
+  }
+
+  .note-compose textarea {
+    width: 100%;
+    background: var(--ob-mid);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--ob-text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    resize: none;
+    outline: none;
+  }
+
+  .note-compose textarea::placeholder { color: var(--ob-dim); }
+
+  .note-item {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--ob-high);
+  }
+
+  .note-item:last-child { border-bottom: none; }
+
+  .note-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+  }
+
+  .note-author { font-weight: 600; }
+  .note-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ob-dim); }
+  .note-text { font-size: 13px; color: var(--ob-muted); margin-top: 6px; line-height: 1.6; }
+
+  /* Alerts feed */
+  .alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--ob-high);
+  }
+
+  .alert-item:last-child { border-bottom: none; }
+
+  .alert-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .alert-dot.critical { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+  .alert-dot.high { background: #f97316; }
+  .alert-dot.medium { background: #eab308; }
+  .alert-dot.low { background: var(--ob-steel); }
+
+  .alert-info { flex: 1; min-width: 0; }
+  .alert-title { font-size: 13px; font-weight: 500; }
+  .alert-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ob-dim); margin-top: 2px; }
+  .alert-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ob-dim); flex-shrink: 0; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in {
+    animation: fadeUp 0.4s cubic-bezier(0.19, 1, 0.22, 1) both;
+  }
+
+  @media (max-width: 1024px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .kpi-strip { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .header-bar { padding: 16px 20px; flex-wrap: wrap; }
+    .kpi-strip { padding: 16px 20px; grid-template-columns: repeat(2, 1fr); }
+    .main-grid { padding: 0 20px 20px; }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="design-label">Variation A — Show</div>
+
+<!-- Header Bar -->
+<div class="header-bar animate-in">
+  <button class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </button>
+  <div class="header-info">
+    <h1>OXXO Corporativo</h1>
+    <div class="slug">oxxo-corporativo</div>
+  </div>
+  <div class="header-badges">
+    <span class="badge badge-active">Active</span>
+    <span class="badge badge-segment">Retail</span>
+    <span class="badge badge-plan">Enterprise</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn-sm warn">Suspend</button>
+    <button class="btn-sm danger">Archive</button>
+    <button class="btn-sm">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+    <button class="btn-sm primary">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit
+    </button>
+  </div>
+</div>
+
+<!-- KPI Strip -->
+<div class="kpi-strip">
+  <div class="kpi-card cyan animate-in" style="animation-delay:40ms">
+    <div class="kpi-label">Sites</div>
+    <div class="kpi-value">12</div>
+  </div>
+  <div class="kpi-card steel animate-in" style="animation-delay:80ms">
+    <div class="kpi-label">Devices</div>
+    <div class="kpi-value">87</div>
+  </div>
+  <div class="kpi-card coral animate-in" style="animation-delay:120ms">
+    <div class="kpi-label">Active Alerts</div>
+    <div class="kpi-value">04</div>
+  </div>
+  <div class="kpi-card animate-in" style="animation-delay:160ms">
+    <div class="kpi-label">Work Orders</div>
+    <div class="kpi-value">02</div>
+  </div>
+  <div class="kpi-card emerald animate-in" style="animation-delay:200ms">
+    <div class="kpi-label">Users</div>
+    <div class="kpi-value">24</div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-grid">
+
+  <!-- Left Column -->
+  <div class="left-col">
+
+    <!-- Charts -->
+    <div class="charts-row animate-in" style="animation-delay:150ms">
+      <div class="chart-card">
+        <div class="chart-title">Sites by Status / User Roles</div>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-label">Active</span>
+            <div class="bar-track"><div class="bar-fill" style="width:80%;background:var(--ob-emerald)"></div></div>
+            <span class="bar-value">9</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Onboarding</span>
+            <div class="bar-track"><div class="bar-fill" style="width:20%;background:var(--ob-cyan)"></div></div>
+            <span class="bar-value">2</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Draft</span>
+            <div class="bar-track"><div class="bar-fill" style="width:10%;background:var(--ob-dim)"></div></div>
+            <span class="bar-value">1</span>
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <div class="bar-chart">
+            <div class="bar-row">
+              <span class="bar-label">Org Admin</span>
+              <div class="bar-track"><div class="bar-fill" style="width:30%;background:var(--ob-steel)"></div></div>
+              <span class="bar-value">3</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Site Manager</span>
+              <div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--ob-cyan)"></div></div>
+              <span class="bar-value">8</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Site Viewer</span>
+              <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ob-emerald)"></div></div>
+              <span class="bar-value">13</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Devices per Site</div>
+        <div class="device-bar-chart">
+          <div class="device-col">
+            <div class="device-bar" style="height:85px;background:var(--ob-cyan)"></div>
+            <div class="device-col-label">Sucursal A</div>
+          </div>
+          <div class="device-col">
+            <div class="device-bar" style="height:60px;background:var(--ob-cyan)"></div>
+            <div class="device-col-label">CEDIS Mty</div>
+          </div>
+          <div class="device-col">
+            <div class="device-bar" style="height:45px;background:var(--ob-cyan)"></div>
+            <div class="device-col-label">Plaza Norte</div>
+          </div>
+          <div class="device-col">
+            <div class="device-bar" style="height:70px;background:var(--ob-cyan)"></div>
+            <div class="device-col-label">Bodega Sur</div>
+          </div>
+          <div class="device-col">
+            <div class="device-bar" style="height:35px;background:var(--ob-cyan)"></div>
+            <div class="device-col-label">Express GDL</div>
+          </div>
+          <div class="device-col">
+            <div class="device-bar" style="height:50px;background:var(--ob-cyan)"></div>
+            <div class="device-col-label">Depot CDMX</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container animate-in" style="animation-delay:200ms">
+      <div class="tabs-nav">
+        <button class="tab-btn active">Sites <span class="tab-count">12</span></button>
+        <button class="tab-btn">Users <span class="tab-count">24</span></button>
+        <button class="tab-btn">Alerts <span class="tab-count alert">4</span></button>
+        <button class="tab-btn">Activity</button>
+        <button class="tab-btn">Notes <span class="tab-count">3</span></button>
+      </div>
+
+      <!-- Sites Table -->
+      <table class="sites-table">
+        <thead>
+          <tr>
+            <th>Site</th>
+            <th>Devices</th>
+            <th>Online</th>
+            <th>Alerts</th>
+            <th>Work Orders</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="site-name">Sucursal Apodaca</div>
+              <div class="site-online">8/10 online</div>
+            </td>
+            <td class="mono">10</td>
+            <td>
+              <span class="mono emerald">80%</span>
+              <div class="online-bar"><div class="online-bar-fill" style="width:80%;background:var(--ob-emerald)"></div></div>
+            </td>
+            <td class="mono coral">2</td>
+            <td class="mono muted">0</td>
+            <td><span class="badge-sm active">Active</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="site-name">CEDIS Monterrey</div>
+              <div class="site-online">12/12 online</div>
+            </td>
+            <td class="mono">12</td>
+            <td>
+              <span class="mono emerald">100%</span>
+              <div class="online-bar"><div class="online-bar-fill" style="width:100%;background:var(--ob-emerald)"></div></div>
+            </td>
+            <td class="mono muted">0</td>
+            <td class="mono muted">0</td>
+            <td><span class="badge-sm active">Active</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="site-name">Plaza Norte Saltillo</div>
+              <div class="site-online">5/8 online</div>
+            </td>
+            <td class="mono">8</td>
+            <td>
+              <span class="mono amber">62%</span>
+              <div class="online-bar"><div class="online-bar-fill" style="width:62%;background:var(--ob-ember)"></div></div>
+            </td>
+            <td class="mono coral">1</td>
+            <td class="mono amber">1</td>
+            <td><span class="badge-sm active">Active</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="site-name">Bodega Sur Reynosa</div>
+              <div class="site-online">9/9 online</div>
+            </td>
+            <td class="mono">9</td>
+            <td>
+              <span class="mono emerald">100%</span>
+              <div class="online-bar"><div class="online-bar-fill" style="width:100%;background:var(--ob-emerald)"></div></div>
+            </td>
+            <td class="mono muted">0</td>
+            <td class="mono muted">0</td>
+            <td><span class="badge-sm active">Active</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="site-name">Express Guadalajara</div>
+              <div class="site-online">0/6 online</div>
+            </td>
+            <td class="mono">6</td>
+            <td>
+              <span class="mono coral">0%</span>
+              <div class="online-bar"><div class="online-bar-fill" style="width:0%;background:var(--ob-coral)"></div></div>
+            </td>
+            <td class="mono coral">1</td>
+            <td class="mono amber">1</td>
+            <td><span class="badge-sm onboarding">Onboarding</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Right Sidebar -->
+  <div class="right-col animate-in" style="animation-delay:120ms">
+
+    <div class="section-header">
+      <span class="label">Organization Details</span>
+      <div class="line"></div>
+    </div>
+
+    <div class="detail-card">
+      <div class="detail-row"><span class="dt">Slug</span><span class="dd"><code>oxxo-corporativo</code></span></div>
+      <div class="detail-row"><span class="dt">Segment</span><span class="dd"><span class="badge badge-segment" style="padding:2px 8px;font-size:10px">Retail</span></span></div>
+      <div class="detail-row"><span class="dt">Plan</span><span class="dd"><span class="badge badge-plan" style="padding:2px 8px;font-size:10px">Enterprise</span></span></div>
+      <div class="detail-row"><span class="dt">Timezone</span><span class="dd"><code>America/Monterrey</code></span></div>
+      <div class="detail-row"><span class="dt">Opening Hour</span><span class="dd"><code>07:00</code></span></div>
+      <div class="detail-row"><span class="dt">Created</span><span class="dd"><code>Mar 2024</code></span></div>
+      <div class="detail-row"><span class="dt">Last Active</span><span class="dd"><code>2 hours ago</code></span></div>
+      <div class="detail-row">
+        <span class="dt">Branding</span>
+        <span class="dd">
+          <div class="swatches">
+            <div class="swatch" style="background:#cc0000"></div>
+            <div class="swatch" style="background:#ffffff"></div>
+            <div class="swatch" style="background:#ffd700"></div>
+          </div>
+        </span>
+      </div>
+    </div>
+
+    <div class="section-header" style="margin-top:8px">
+      <span class="label">Primary Contact</span>
+      <div class="line"></div>
+    </div>
+
+    <div class="contact-card">
+      <div class="contact-avatar">RC</div>
+      <div>
+        <div class="contact-name">Roberto Campos</div>
+        <div class="contact-detail">rcampos@oxxo.com.mx</div>
+        <div class="contact-detail">+52 81 1234 5678</div>
+      </div>
+    </div>
+
+    <div class="section-header" style="margin-top:8px">
+      <span class="label">Recent Notes</span>
+      <div class="line"></div>
+    </div>
+
+    <div class="detail-card notes-section">
+      <div class="note-compose">
+        <textarea placeholder="Add an internal note..." rows="2"></textarea>
+      </div>
+      <div class="note-item">
+        <div class="note-meta">
+          <span class="note-author">Ana Torres</span>
+          <span class="note-time">2 days ago</span>
+        </div>
+        <p class="note-text">Requested firmware update for CEDIS Monterrey sensors. Scheduling for next maintenance window.</p>
+      </div>
+      <div class="note-item">
+        <div class="note-meta">
+          <span class="note-author">Diego Salinas</span>
+          <span class="note-time">1 week ago</span>
+        </div>
+        <p class="note-text">Onboarding call completed. They want to add 3 more sites in Q2.</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

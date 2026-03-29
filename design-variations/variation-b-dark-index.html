@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variation B Dark — Editorial Table</title>
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700&family=playfair-display:400,500,600,700,800,900" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0c0c0c;
+    --surface: #141414;
+    --surface-dim: #1a1a1a;
+    --surface-hover: #1f1f1f;
+    --border: #232323;
+    --border-light: #1c1c1c;
+    --text: #ededec;
+    --text-secondary: #8a8a88;
+    --text-tertiary: #5a5a58;
+    --accent: #ededec;
+    --emerald: #34d399;
+    --emerald-bg: rgba(52, 211, 153, 0.08);
+    --amber: #fbbf24;
+    --amber-bg: rgba(251, 191, 36, 0.08);
+    --red: #f87171;
+    --red-bg: rgba(248, 113, 113, 0.08);
+    --blue: #60a5fa;
+    --blue-bg: rgba(96, 165, 250, 0.08);
+    --violet: #a78bfa;
+    --violet-bg: rgba(167, 139, 250, 0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 48px;
+  }
+
+  /* --- Header --- */
+  .header {
+    margin-bottom: 56px;
+    position: relative;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -28px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .header .issue {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-tertiary);
+    margin-bottom: 12px;
+  }
+
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .header .deck {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-top: 12px;
+    max-width: 500px;
+    line-height: 1.6;
+  }
+
+  .btn-create {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-create:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(237, 237, 236, 0.08);
+  }
+
+  /* --- Summary Strip --- */
+  .summary-strip {
+    display: flex;
+    gap: 0;
+    margin-bottom: 40px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .summary-cell {
+    flex: 1;
+    padding: 24px 28px;
+    border-right: 1px solid var(--border-light);
+    position: relative;
+  }
+
+  .summary-cell:last-child { border-right: none; }
+
+  .summary-cell-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-tertiary);
+  }
+
+  .summary-cell-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 800;
+    margin-top: 4px;
+    letter-spacing: -0.02em;
+  }
+
+  .summary-cell-context {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+  }
+
+  .summary-cell.has-bar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 28px;
+    right: 28px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  .summary-cell.emerald::after { background: var(--emerald); }
+  .summary-cell.red::after { background: var(--red); }
+  .summary-cell.blue::after { background: var(--blue); }
+
+  /* --- Filter Bar --- */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .filter-bar .search {
+    position: relative;
+    max-width: 280px;
+  }
+
+  .filter-bar .search input {
+    width: 280px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px 9px 36px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .filter-bar .search input:focus { border-color: var(--text-tertiary); }
+  .filter-bar .search input::placeholder { color: var(--text-tertiary); }
+
+  .filter-bar .search svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+  }
+
+  .segment-tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-left: auto;
+  }
+
+  .segment-tab {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface);
+    color: var(--text-tertiary);
+    border: none;
+    border-right: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .segment-tab:last-child { border-right: none; }
+  .segment-tab:hover { background: var(--surface-dim); color: var(--text-secondary); }
+  .segment-tab.active { background: var(--accent); color: var(--bg); }
+
+  /* --- Table --- */
+  .org-table {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    border-spacing: 0;
+  }
+
+  .org-table thead { background: var(--surface-dim); }
+
+  .org-table th {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-tertiary);
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .org-table td {
+    padding: 18px 20px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+  }
+
+  .org-table tbody tr {
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .org-table tbody tr:hover { background: var(--surface-hover); }
+  .org-table tbody tr:last-child td { border-bottom: none; }
+
+  /* Org name */
+  .org-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .org-monogram {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  /* Dark monogram variants — desaturated, deeper */
+  .org-monogram.retail { background: rgba(251, 191, 36, 0.1); color: var(--amber); }
+  .org-monogram.cold_chain { background: rgba(96, 165, 250, 0.1); color: var(--blue); }
+  .org-monogram.foodservice { background: rgba(248, 113, 113, 0.1); color: var(--red); }
+  .org-monogram.industrial { background: var(--violet-bg); color: var(--violet); }
+  .org-monogram.commercial { background: var(--emerald-bg); color: var(--emerald); }
+
+  .org-name-text .name { font-weight: 600; font-size: 14px; }
+  .org-name-text .slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 1px;
+  }
+
+  /* Pills */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .pill.retail { background: rgba(251, 191, 36, 0.1); color: var(--amber); }
+  .pill.cold_chain { background: rgba(96, 165, 250, 0.1); color: var(--blue); }
+  .pill.foodservice { background: rgba(248, 113, 113, 0.1); color: var(--red); }
+  .pill.industrial { background: var(--violet-bg); color: var(--violet); }
+  .pill.commercial { background: var(--emerald-bg); color: var(--emerald); }
+
+  /* Plan badge */
+  .plan-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--surface-dim);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .plan-badge.enterprise {
+    background: var(--violet-bg);
+    border-color: rgba(167, 139, 250, 0.2);
+    color: var(--violet);
+  }
+
+  /* Status */
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .status-indicator::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  .status-indicator.active { color: var(--emerald); }
+  .status-indicator.active::before { background: var(--emerald); box-shadow: 0 0 6px rgba(52, 211, 153, 0.4); }
+  .status-indicator.onboarding { color: var(--blue); }
+  .status-indicator.onboarding::before { background: var(--blue); box-shadow: 0 0 6px rgba(96, 165, 250, 0.4); }
+  .status-indicator.suspended { color: var(--red); }
+  .status-indicator.suspended::before { background: var(--red); box-shadow: 0 0 6px rgba(248, 113, 113, 0.4); }
+
+  /* Numeric */
+  .num-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+  }
+
+  .num-cell.muted { color: var(--text-tertiary); }
+
+  /* Sparklines */
+  .sparkline-cell { display: flex; align-items: center; gap: 8px; }
+  .sparkline { width: 60px; height: 20px; }
+  .sparkline polyline { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .sparkline.up polyline { stroke: var(--emerald); }
+  .sparkline.down polyline { stroke: var(--red); }
+  .sparkline.flat polyline { stroke: var(--text-tertiary); }
+
+  .date-cell { font-size: 12px; color: var(--text-tertiary); }
+
+  .row-arrow {
+    color: var(--text-tertiary);
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  tr:hover .row-arrow { opacity: 1; transform: translateX(2px); }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .org-table tbody tr { animation: fadeIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) both; }
+  .org-table tbody tr:nth-child(1) { animation-delay: 50ms; }
+  .org-table tbody tr:nth-child(2) { animation-delay: 100ms; }
+  .org-table tbody tr:nth-child(3) { animation-delay: 150ms; }
+  .org-table tbody tr:nth-child(4) { animation-delay: 200ms; }
+  .org-table tbody tr:nth-child(5) { animation-delay: 250ms; }
+  .org-table tbody tr:nth-child(6) { animation-delay: 300ms; }
+
+  .summary-cell { animation: fadeIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) both; }
+  .summary-cell:nth-child(1) { animation-delay: 0ms; }
+  .summary-cell:nth-child(2) { animation-delay: 60ms; }
+  .summary-cell:nth-child(3) { animation-delay: 120ms; }
+  .summary-cell:nth-child(4) { animation-delay: 180ms; }
+
+  /* Label */
+  .design-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--accent);
+    color: var(--bg);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    z-index: 100;
+  }
+
+  @media (max-width: 768px) {
+    .page { padding: 24px; }
+    .header h1 { font-size: 36px; }
+    .summary-strip { flex-direction: column; }
+    .summary-cell { border-right: none; border-bottom: 1px solid var(--border-light); }
+  }
+</style>
+</head>
+<body>
+
+<div class="design-label">Variation B Dark — Index</div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <div>
+        <p class="issue">Settings / Platform Administration</p>
+        <h1>Organizations</h1>
+        <p class="deck">Client entities under the Astrea IoT platform. Manage subscriptions, lifecycle, and deployment health.</p>
+      </div>
+      <button class="btn-create">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Organization
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Strip -->
+  <div class="summary-strip">
+    <div class="summary-cell">
+      <p class="summary-cell-label">Total</p>
+      <p class="summary-cell-value">8</p>
+      <p class="summary-cell-context">across 5 segments</p>
+    </div>
+    <div class="summary-cell has-bar emerald">
+      <p class="summary-cell-label">Active</p>
+      <p class="summary-cell-value">5</p>
+      <p class="summary-cell-context">62.5% of total</p>
+    </div>
+    <div class="summary-cell has-bar red">
+      <p class="summary-cell-label">Suspended</p>
+      <p class="summary-cell-value">1</p>
+      <p class="summary-cell-context">payment overdue</p>
+    </div>
+    <div class="summary-cell has-bar blue">
+      <p class="summary-cell-label">Sites / Devices</p>
+      <p class="summary-cell-value">34 <span style="font-size: 18px; color: var(--text-tertiary)">/ 247</span></p>
+      <p class="summary-cell-context">deployed fleet</p>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search organizations..." />
+    </div>
+    <div class="segment-tabs">
+      <button class="segment-tab active">All</button>
+      <button class="segment-tab">Retail</button>
+      <button class="segment-tab">Cold Chain</button>
+      <button class="segment-tab">Industrial</button>
+      <button class="segment-tab">Foodservice</button>
+      <button class="segment-tab">Commercial</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <table class="org-table">
+    <thead>
+      <tr>
+        <th>Organization</th>
+        <th>Segment</th>
+        <th>Plan</th>
+        <th>Status</th>
+        <th style="text-align:center">Sites</th>
+        <th style="text-align:center">Devices</th>
+        <th style="text-align:center">Users</th>
+        <th>Trend</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="org-name-cell"><div class="org-monogram retail">OX</div><div class="org-name-text"><div class="name">OXXO Corporativo</div><div class="slug">oxxo-corporativo</div></div></div></td>
+        <td><span class="pill retail">Retail</span></td>
+        <td><span class="plan-badge enterprise">Enterprise</span></td>
+        <td><span class="status-indicator active">Active</span></td>
+        <td class="num-cell">12</td>
+        <td class="num-cell">87</td>
+        <td class="num-cell">24</td>
+        <td><div class="sparkline-cell"><svg class="sparkline up" viewBox="0 0 60 20"><polyline points="0,16 10,14 20,12 30,10 40,8 50,5 60,3"/></svg></div></td>
+        <td class="date-cell">Mar 2024</td>
+        <td><svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></td>
+      </tr>
+      <tr>
+        <td><div class="org-name-cell"><div class="org-monogram cold_chain">SM</div><div class="org-name-text"><div class="name">Sigma Alimentos</div><div class="slug">sigma-alimentos</div></div></div></td>
+        <td><span class="pill cold_chain">Cold Chain</span></td>
+        <td><span class="plan-badge enterprise">Enterprise</span></td>
+        <td><span class="status-indicator active">Active</span></td>
+        <td class="num-cell">8</td>
+        <td class="num-cell">63</td>
+        <td class="num-cell">15</td>
+        <td><div class="sparkline-cell"><svg class="sparkline up" viewBox="0 0 60 20"><polyline points="0,14 10,15 20,13 30,11 40,9 50,6 60,4"/></svg></div></td>
+        <td class="date-cell">Jan 2024</td>
+        <td><svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></td>
+      </tr>
+      <tr>
+        <td><div class="org-name-cell"><div class="org-monogram foodservice">BK</div><div class="org-name-text"><div class="name">Burger King MX</div><div class="slug">burger-king-mx</div></div></div></td>
+        <td><span class="pill foodservice">Foodservice</span></td>
+        <td><span class="plan-badge">Standard</span></td>
+        <td><span class="status-indicator onboarding">Onboarding</span></td>
+        <td class="num-cell">3</td>
+        <td class="num-cell">18</td>
+        <td class="num-cell">5</td>
+        <td><div class="sparkline-cell"><svg class="sparkline up" viewBox="0 0 60 20"><polyline points="0,18 10,17 20,16 30,15 40,14 50,12 60,10"/></svg></div></td>
+        <td class="date-cell">Mar 2026</td>
+        <td><svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></td>
+      </tr>
+      <tr>
+        <td><div class="org-name-cell"><div class="org-monogram retail">CF</div><div class="org-name-text"><div class="name">Coppel Farmacias</div><div class="slug">coppel-farmacias</div></div></div></td>
+        <td><span class="pill retail">Retail</span></td>
+        <td><span class="plan-badge">Standard</span></td>
+        <td><span class="status-indicator active">Active</span></td>
+        <td class="num-cell">5</td>
+        <td class="num-cell">32</td>
+        <td class="num-cell">9</td>
+        <td><div class="sparkline-cell"><svg class="sparkline flat" viewBox="0 0 60 20"><polyline points="0,10 10,11 20,10 30,10 40,11 50,10 60,10"/></svg></div></td>
+        <td class="date-cell">Aug 2024</td>
+        <td><svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></td>
+      </tr>
+      <tr>
+        <td><div class="org-name-cell"><div class="org-monogram industrial">AT</div><div class="org-name-text"><div class="name">Alimentos del Tropico</div><div class="slug">alimentos-tropico</div></div></div></td>
+        <td><span class="pill industrial">Industrial</span></td>
+        <td><span class="plan-badge">Starter</span></td>
+        <td><span class="status-indicator suspended">Suspended</span></td>
+        <td class="num-cell muted">2</td>
+        <td class="num-cell muted">14</td>
+        <td class="num-cell muted">3</td>
+        <td><div class="sparkline-cell"><svg class="sparkline down" viewBox="0 0 60 20"><polyline points="0,6 10,8 20,10 30,12 40,14 50,16 60,17"/></svg></div></td>
+        <td class="date-cell">Feb 2025</td>
+        <td><svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></td>
+      </tr>
+      <tr>
+        <td><div class="org-name-cell"><div class="org-monogram commercial">GN</div><div class="org-name-text"><div class="name">Grupo Nacional</div><div class="slug">grupo-nacional</div></div></div></td>
+        <td><span class="pill commercial">Commercial</span></td>
+        <td><span class="plan-badge enterprise">Enterprise</span></td>
+        <td><span class="status-indicator active">Active</span></td>
+        <td class="num-cell">4</td>
+        <td class="num-cell">33</td>
+        <td class="num-cell">11</td>
+        <td><div class="sparkline-cell"><svg class="sparkline up" viewBox="0 0 60 20"><polyline points="0,15 10,13 20,12 30,10 40,8 50,7 60,5"/></svg></div></td>
+        <td class="date-cell">Nov 2024</td>
+        <td><svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+</body>
+</html>

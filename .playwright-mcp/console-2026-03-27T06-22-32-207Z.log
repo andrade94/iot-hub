@@ -1,0 +1,8 @@
+[   14499ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ http://[::1]:5175/node_modules/.vite/deps/chunk-6OEAVOTL.js?v=babe1c03:335
+[   14501ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ http://[::1]:5175/node_modules/.vite/deps/chunk-6OEAVOTL.js?v=babe1c03:335
+[49481314ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://iot-hub.test/favicon.ico:0
+[49486310ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5175/resources/js/routes/password/index.ts?t=1774642038521:0
+[49486310ms] [ERROR] [vite] Failed to reload /resources/js/pages/auth/login.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[49486313ms] [ERROR] [vite] Failed to reload /resources/js/pages/auth/login.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[49486322ms] [ERROR] [vite] Failed to reload /resources/js/pages/auth/login.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[49486324ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5175/resources/js/routes/login/index.ts?t=1774642038587:0

@@ -1,0 +1,14 @@
+[   68997ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://iot-hub.test/favicon.ico:0
+[  213955ms] [WARNING] Tabs is changing from uncontrolled to controlled. Components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled value for the lifetime of the component. @ http://[::1]:5175/node_modules/.vite/deps/chunk-OWIBN7PR.js?v=d034656e:41
+[  379632ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5175/resources/js/routes/index.ts?t=1774655664421:0
+[  379632ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  379633ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5175/resources/js/routes/profile/index.ts?t=1774655664412:0
+[  379634ms] [ERROR] [vite] Failed to reload /resources/js/components/app-sidebar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  379635ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  379826ms] [ERROR] [vite] Failed to reload /resources/js/components/user-menu-content.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  379828ms] [ERROR] [vite] Failed to reload /resources/js/components/app-sidebar.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://[::1]:5175/@vite/client:808
+[  381800ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://iot-hub.test/settings/organizations/1:0
+[  397004ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://iot-hub.test/settings/organizations/1:0
+[  408256ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://iot-hub.test/settings/organizations/1:0
+[  416805ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://iot-hub.test/settings/organizations/1:0
+[  570132ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://[::1]:5175/resources/js/routes/index.ts?t=1774655854865:0

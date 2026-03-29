@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Font 5 — Manrope + Playfair Display</title>
+<link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&family=playfair-display:400,500,600,700,800,900&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700" rel="stylesheet" />
+<style>
+  :root {
+    /* App shell (existing dark sidebar) */
+    --shell-bg: #0f0f10;
+    --shell-sidebar: #0f0f10;
+    --shell-sidebar-w: 240px;
+    --shell-border: #1f1f22;
+    --shell-text: #a8a8a6;
+    --shell-text-dim: #5a5a58;
+    --shell-active: rgba(255,255,255,0.06);
+
+    /* Page dark hero zone */
+    --hero-bg: #111111;
+    --hero-surface: #181818;
+    --hero-border: #252525;
+    --hero-text: #f0efeb;
+    --hero-muted: #8a8987;
+    --hero-dim: #4a4a47;
+
+    /* Page light content zone */
+    --content-bg: #fafaf8;
+    --surface: #ffffff;
+    --border: #e8e6e2;
+    --border-light: #f0eee9;
+    --text: #1a1917;
+    --text-2: #6b6b69;
+    --text-3: #9a9895;
+
+    /* Accents */
+    --emerald: #059669;
+    --emerald-bg: #ecfdf5;
+    --blue: #2563eb;
+    --blue-bg: #dbeafe;
+    --red: #dc2626;
+    --red-bg: #fee2e2;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --violet: #7c3aed;
+    --violet-bg: #f5f3ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--shell-bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .label {
+    position: fixed; top: 12px; right: 12px;
+    background: var(--text); color: white;
+    padding: 5px 10px; border-radius: 5px;
+    font-family: 'Space Grotesk'; font-size: 10px;
+    font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; z-index: 200;
+  }
+
+  /* ================================================================
+     SIMULATED APP SHELL (your existing sidebar + header)
+     ================================================================ */
+  .app-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* --- Left Nav Sidebar (simulated) --- */
+  .nav-sidebar {
+    width: var(--shell-sidebar-w);
+    background: var(--shell-sidebar);
+    border-right: 1px solid var(--shell-border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    overflow-y: auto;
+  }
+
+  .nav-logo {
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--hero-text);
+    padding: 4px 8px 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-logo span { color: var(--emerald); }
+
+  .nav-section-label {
+    font-family: 'Space Grotesk';
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--shell-text-dim);
+    padding: 16px 8px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--shell-text);
+    cursor: pointer;
+    transition: all 0.1s;
+    margin-bottom: 1px;
+  }
+
+  .nav-item:hover { background: var(--shell-active); color: var(--hero-text); }
+  .nav-item.active { background: var(--shell-active); color: var(--hero-text); font-weight: 600; }
+
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.5; }
+  .nav-item.active svg { opacity: 0.8; }
+
+  .nav-divider { height: 1px; background: var(--shell-border); margin: 8px 8px; }
+
+  /* --- Main Content Area --- */
+  .main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* --- Top Header Bar (simulated breadcrumb bar) --- */
+  .top-header {
+    height: 48px;
+    background: var(--shell-sidebar);
+    border-bottom: 1px solid var(--shell-border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .breadcrumb {
+    font-size: 13px;
+    color: var(--shell-text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .breadcrumb a {
+    color: var(--shell-text);
+    text-decoration: none;
+    transition: color 0.1s;
+  }
+
+  .breadcrumb a:hover { color: var(--hero-text); }
+  .breadcrumb .sep { color: var(--shell-text-dim); }
+  .breadcrumb .current { color: var(--hero-text); font-weight: 500; }
+
+  .top-header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .avatar-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--shell-active);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--shell-text);
+  }
+
+  /* ================================================================
+     PAGE CONTENT (this is what lives inside AppLayout children)
+     ================================================================ */
+  .page-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* --- Dark Hero Zone (top of page content) --- */
+  .dark-hero {
+    background: var(--hero-bg);
+    padding: 28px 32px 24px;
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .back-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--hero-border);
+    background: transparent;
+    color: var(--hero-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .back-btn:hover { background: var(--hero-surface); color: var(--hero-text); }
+
+  .hero-info { flex: 1; }
+
+  .hero-info h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--hero-text);
+    line-height: 1.1;
+  }
+
+  .hero-slug {
+    font-family: 'JetBrains Mono';
+    font-size: 12px;
+    color: var(--hero-dim);
+    margin-top: 4px;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .h-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .h-badge.active { background: rgba(5,150,105,0.12); color: #34d399; }
+  .h-badge.active::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.5); }
+  .h-badge.segment { background: rgba(96,165,250,0.1); color: #93c5fd; }
+  .h-badge.plan { background: rgba(167,139,250,0.1); color: #c4b5fd; }
+
+  .hero-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .btn-hero {
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--hero-border);
+    background: transparent;
+    color: var(--hero-muted);
+    transition: all 0.15s;
+    font-family: 'DM Sans';
+  }
+
+  .btn-hero:hover { background: var(--hero-surface); color: var(--hero-text); }
+  .btn-hero.primary { background: var(--hero-text); color: var(--hero-bg); border-color: var(--hero-text); }
+  .btn-hero.primary:hover { opacity: 0.9; }
+  .btn-hero.warn { color: #fbbf24; }
+  .btn-hero.danger { color: #fb7185; }
+
+  /* KPI Strip (still in dark zone) */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .kpi {
+    background: var(--hero-surface);
+    border: 1px solid var(--hero-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    position: relative;
+  }
+
+  .kpi::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 16px;
+    right: 16px;
+    height: 2px;
+    border-radius: 1px;
+  }
+
+  .kpi.cyan::after { background: var(--blue); }
+  .kpi.emerald::after { background: var(--emerald); }
+  .kpi.red::after { background: var(--red); }
+  .kpi.amber::after { background: var(--amber); }
+
+  .kpi-label {
+    font-family: 'Space Grotesk';
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--hero-dim);
+  }
+
+  .kpi-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--hero-text);
+    margin-top: 2px;
+    letter-spacing: -0.02em;
+  }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--hero-dim);
+    margin-top: 1px;
+  }
+
+  /* --- Light Content Zone --- */
+  .light-content {
+    background: var(--content-bg);
+    padding: 28px 32px 40px;
+    min-height: 600px;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 28px;
+  }
+
+  .left-col { display: flex; flex-direction: column; gap: 24px; }
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Charts */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .chart-title {
+    font-family: 'Space Grotesk';
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    margin-bottom: 16px;
+  }
+
+  .h-bars { display: flex; flex-direction: column; gap: 8px; }
+
+  .h-bar-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 28px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .h-bar-lbl { font-size: 11px; color: var(--text-2); text-align: right; }
+  .h-bar-track { height: 18px; background: #f3f2ef; border-radius: 4px; overflow: hidden; }
+  .h-bar-fill { height: 100%; border-radius: 4px; }
+  .h-bar-val { font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 600; }
+
+  .v-bars { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
+  .v-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .v-bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 3px; }
+  .v-cnt { font-family: 'JetBrains Mono'; font-size: 9px; color: var(--text-2); font-weight: 600; }
+  .v-lbl { font-size: 8px; color: var(--text-3); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+  /* Tabs */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); }
+
+  .tab {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-3);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab:hover { color: var(--text-2); }
+  .tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+  .tab-n {
+    font-family: 'JetBrains Mono';
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #f0eee9;
+    color: var(--text-3);
+  }
+
+  .tab.active .tab-n { background: var(--text); color: white; }
+  .tab-n.alert { background: var(--red-bg); color: var(--red); }
+
+  /* Table */
+  .data-table {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    border-spacing: 0;
+    margin-top: 14px;
+  }
+
+  .data-table th {
+    font-family: 'Space Grotesk';
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-3);
+    padding: 12px 14px;
+    text-align: left;
+    background: #f6f5f2;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td {
+    padding: 12px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tbody tr { cursor: pointer; transition: background 0.1s; }
+  .data-table tbody tr:hover { background: #faf9f6; }
+
+  .site-name { font-weight: 600; font-size: 13px; }
+  .site-sub { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--text-3); margin-top: 1px; }
+  .mono { font-family: 'JetBrains Mono'; font-size: 13px; }
+  .muted { color: var(--text-3); }
+  .green { color: var(--emerald); }
+  .yellow { color: var(--amber); }
+  .pink { color: var(--red); }
+
+  .pct-bar { width: 50px; height: 3px; background: #eeedea; border-radius: 2px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; }
+  .pct-fill { height: 100%; border-radius: 2px; }
+
+  .status-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .status-sm.active { background: var(--emerald-bg); color: var(--emerald); }
+  .status-sm.active::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--emerald); }
+  .status-sm.onboarding { background: var(--blue-bg); color: var(--blue); }
+
+  /* Right Sidebar */
+  .section-lbl {
+    font-family: 'Space Grotesk';
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-3);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .detail-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { font-size: 12px; color: var(--text-3); }
+  .detail-val { font-size: 12px; font-weight: 500; }
+  .detail-val code { font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-2); }
+
+  .swatches { display: flex; gap: 5px; }
+  .swatch { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-light); }
+
+  .pill-sm { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 600; }
+  .pill-sm.blue { background: var(--blue-bg); color: var(--blue); }
+  .pill-sm.violet { background: var(--violet-bg); color: var(--violet); }
+
+  .contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .contact-av {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: var(--blue-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--blue);
+  }
+
+  .contact-name { font-weight: 600; font-size: 12px; }
+  .contact-sub { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--text-3); margin-top: 1px; }
+
+  .notes-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .notes-compose {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .notes-compose textarea {
+    width: 100%;
+    background: #f6f5f2;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 10px;
+    font-family: 'DM Sans';
+    font-size: 12px;
+    color: var(--text);
+    resize: none;
+    outline: none;
+  }
+
+  .notes-compose textarea::placeholder { color: var(--text-3); }
+
+  .note-item { padding: 12px 14px; border-bottom: 1px solid var(--border-light); }
+  .note-item:last-child { border-bottom: none; }
+  .note-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+  .note-who { font-weight: 600; }
+  .note-when { font-family: 'JetBrains Mono'; font-size: 9px; color: var(--text-3); }
+  .note-body { font-size: 12px; color: var(--text-2); margin-top: 4px; line-height: 1.5; }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate { animation: fadeIn 0.35s cubic-bezier(0.19,1,0.22,1) both; }
+</style>
+</head>
+<body>
+
+<div class="label">Font 5 — Manrope + Playfair Display</div>
+
+<div class="app-shell">
+
+  <!-- ============ SIMULATED NAV SIDEBAR ============ -->
+  <nav class="nav-sidebar">
+    <div class="nav-logo">Astrea<span>.</span></div>
+
+    <div class="nav-section-label">Main</div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Sites
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-4l-2 4h8l-2-4z"/></svg>
+      Devices
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Alerts
+    </div>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Settings</div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </div>
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Organizations
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Users
+    </div>
+  </nav>
+
+  <!-- ============ MAIN CONTENT AREA ============ -->
+  <div class="main-area">
+
+    <!-- Top Header (breadcrumbs) -->
+    <div class="top-header">
+      <div class="breadcrumb">
+        <a href="#">Settings</a>
+        <span class="sep">/</span>
+        <a href="#">Organizations</a>
+        <span class="sep">/</span>
+        <span class="current">OXXO Corporativo</span>
+      </div>
+      <div class="top-header-right">
+        <div class="avatar-sm">SA</div>
+      </div>
+    </div>
+
+    <!-- Page Content (scrollable) -->
+    <div class="page-scroll">
+
+      <!-- ===== DARK HERO ZONE ===== -->
+      <div class="dark-hero animate">
+        <div class="hero-top">
+          <button class="back-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="hero-info">
+            <h1>OXXO Corporativo</h1>
+            <div class="hero-slug">oxxo-corporativo</div>
+            <div class="hero-badges">
+              <span class="h-badge active">Active</span>
+              <span class="h-badge segment">Retail</span>
+              <span class="h-badge plan">Enterprise</span>
+            </div>
+          </div>
+          <div class="hero-actions">
+            <button class="btn-hero warn">Suspend</button>
+            <button class="btn-hero danger">Archive</button>
+            <button class="btn-hero">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
+            <button class="btn-hero primary">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          </div>
+        </div>
+
+        <div class="kpi-strip">
+          <div class="kpi cyan"><div class="kpi-label">Sites</div><div class="kpi-value">12</div><div class="kpi-sub">9 active</div></div>
+          <div class="kpi"><div class="kpi-label">Devices</div><div class="kpi-value">87</div><div class="kpi-sub">72 online</div></div>
+          <div class="kpi red"><div class="kpi-label">Alerts</div><div class="kpi-value">4</div><div class="kpi-sub">1 critical</div></div>
+          <div class="kpi amber"><div class="kpi-label">Work Orders</div><div class="kpi-value">2</div><div class="kpi-sub">open</div></div>
+          <div class="kpi emerald"><div class="kpi-label">Users</div><div class="kpi-value">24</div><div class="kpi-sub">3 roles</div></div>
+        </div>
+      </div>
+
+      <!-- ===== LIGHT CONTENT ZONE ===== -->
+      <div class="light-content">
+        <div class="content-grid">
+
+          <!-- Left -->
+          <div class="left-col">
+            <div class="charts-row animate" style="animation-delay:80ms">
+              <div class="chart-card">
+                <div class="chart-title">Sites by Status / User Roles</div>
+                <div class="h-bars">
+                  <div class="h-bar-row"><span class="h-bar-lbl">Active</span><div class="h-bar-track"><div class="h-bar-fill" style="width:75%;background:var(--emerald)"></div></div><span class="h-bar-val">9</span></div>
+                  <div class="h-bar-row"><span class="h-bar-lbl">Onboarding</span><div class="h-bar-track"><div class="h-bar-fill" style="width:17%;background:var(--blue)"></div></div><span class="h-bar-val">2</span></div>
+                  <div class="h-bar-row"><span class="h-bar-lbl">Draft</span><div class="h-bar-track"><div class="h-bar-fill" style="width:8%;background:var(--text-3)"></div></div><span class="h-bar-val">1</span></div>
+                </div>
+                <div style="margin-top:16px;border-top:1px solid var(--border-light);padding-top:12px">
+                  <div class="h-bars">
+                    <div class="h-bar-row"><span class="h-bar-lbl">Org Admin</span><div class="h-bar-track"><div class="h-bar-fill" style="width:12%;background:var(--violet)"></div></div><span class="h-bar-val">3</span></div>
+                    <div class="h-bar-row"><span class="h-bar-lbl">Site Mgr</span><div class="h-bar-track"><div class="h-bar-fill" style="width:33%;background:var(--blue)"></div></div><span class="h-bar-val">8</span></div>
+                    <div class="h-bar-row"><span class="h-bar-lbl">Viewer</span><div class="h-bar-track"><div class="h-bar-fill" style="width:54%;background:var(--emerald)"></div></div><span class="h-bar-val">13</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">Devices per Site</div>
+                <div class="v-bars">
+                  <div class="v-col"><div class="v-cnt">14</div><div class="v-bar" style="height:90px;background:var(--blue)"></div><div class="v-lbl">Suc. A</div></div>
+                  <div class="v-col"><div class="v-cnt">12</div><div class="v-bar" style="height:76px;background:var(--blue)"></div><div class="v-lbl">CEDIS</div></div>
+                  <div class="v-col"><div class="v-cnt">8</div><div class="v-bar" style="height:51px;background:var(--blue)"></div><div class="v-lbl">Plaza N</div></div>
+                  <div class="v-col"><div class="v-cnt">9</div><div class="v-bar" style="height:57px;background:var(--blue)"></div><div class="v-lbl">Bodega</div></div>
+                  <div class="v-col"><div class="v-cnt">6</div><div class="v-bar" style="height:38px;background:var(--blue)"></div><div class="v-lbl">Exp GDL</div></div>
+                  <div class="v-col"><div class="v-cnt">10</div><div class="v-bar" style="height:64px;background:var(--blue)"></div><div class="v-lbl">CDMX</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="animate" style="animation-delay:140ms">
+              <div class="tabs">
+                <button class="tab active">Sites <span class="tab-n">12</span></button>
+                <button class="tab">Users <span class="tab-n">24</span></button>
+                <button class="tab">Alerts <span class="tab-n alert">4</span></button>
+                <button class="tab">Activity</button>
+                <button class="tab">Notes <span class="tab-n">3</span></button>
+              </div>
+              <table class="data-table">
+                <thead><tr><th>Site</th><th>Devices</th><th>Online</th><th>Alerts</th><th>Work Orders</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><div class="site-name">Sucursal Apodaca</div><div class="site-sub">8/10 online</div></td>
+                    <td class="mono">10</td>
+                    <td><span class="mono green">80%</span><span class="pct-bar"><span class="pct-fill" style="width:80%;background:var(--emerald)"></span></span></td>
+                    <td class="mono pink">2</td>
+                    <td class="mono muted">0</td>
+                    <td><span class="status-sm active">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td><div class="site-name">CEDIS Monterrey</div><div class="site-sub">12/12 online</div></td>
+                    <td class="mono">12</td>
+                    <td><span class="mono green">100%</span><span class="pct-bar"><span class="pct-fill" style="width:100%;background:var(--emerald)"></span></span></td>
+                    <td class="mono muted">0</td>
+                    <td class="mono muted">0</td>
+                    <td><span class="status-sm active">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td><div class="site-name">Plaza Norte Saltillo</div><div class="site-sub">5/8 online</div></td>
+                    <td class="mono">8</td>
+                    <td><span class="mono yellow">62%</span><span class="pct-bar"><span class="pct-fill" style="width:62%;background:var(--amber)"></span></span></td>
+                    <td class="mono pink">1</td>
+                    <td class="mono yellow">1</td>
+                    <td><span class="status-sm active">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td><div class="site-name">Bodega Sur Reynosa</div><div class="site-sub">9/9 online</div></td>
+                    <td class="mono">9</td>
+                    <td><span class="mono green">100%</span><span class="pct-bar"><span class="pct-fill" style="width:100%;background:var(--emerald)"></span></span></td>
+                    <td class="mono muted">0</td>
+                    <td class="mono muted">0</td>
+                    <td><span class="status-sm active">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td><div class="site-name">Express Guadalajara</div><div class="site-sub">0/6 online</div></td>
+                    <td class="mono">6</td>
+                    <td><span class="mono pink">0%</span><span class="pct-bar"><span class="pct-fill" style="width:0%"></span></span></td>
+                    <td class="mono pink">1</td>
+                    <td class="mono yellow">1</td>
+                    <td><span class="status-sm onboarding">Onboarding</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Right Sidebar -->
+          <div class="right-col">
+            <div class="animate" style="animation-delay:100ms">
+              <div class="section-lbl">Organization Details</div>
+              <div class="detail-card">
+                <div class="detail-row"><span class="detail-key">Slug</span><span class="detail-val"><code>oxxo-corporativo</code></span></div>
+                <div class="detail-row"><span class="detail-key">Segment</span><span class="detail-val"><span class="pill-sm blue">Retail</span></span></div>
+                <div class="detail-row"><span class="detail-key">Plan</span><span class="detail-val"><span class="pill-sm violet">Enterprise</span></span></div>
+                <div class="detail-row"><span class="detail-key">Timezone</span><span class="detail-val"><code>America/Monterrey</code></span></div>
+                <div class="detail-row"><span class="detail-key">Opening</span><span class="detail-val"><code>07:00</code></span></div>
+                <div class="detail-row"><span class="detail-key">Created</span><span class="detail-val"><code>Mar 2024</code></span></div>
+                <div class="detail-row"><span class="detail-key">Last Active</span><span class="detail-val"><code>2h ago</code></span></div>
+                <div class="detail-row"><span class="detail-key">Branding</span><span class="detail-val"><div class="swatches"><div class="swatch" style="background:#cc0000"></div><div class="swatch" style="background:#fff"></div><div class="swatch" style="background:#ffd700"></div></div></span></div>
+              </div>
+            </div>
+
+            <div class="animate" style="animation-delay:140ms">
+              <div class="section-lbl">Primary Contact</div>
+              <div class="contact-card">
+                <div class="contact-av">RC</div>
+                <div>
+                  <div class="contact-name">Roberto Campos</div>
+                  <div class="contact-sub">rcampos@oxxo.com.mx</div>
+                  <div class="contact-sub">+52 81 1234 5678</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="animate" style="animation-delay:180ms">
+              <div class="section-lbl">Notes</div>
+              <div class="notes-card">
+                <div class="notes-compose"><textarea placeholder="Add a note..." rows="2"></textarea></div>
+                <div class="note-item">
+                  <div class="note-meta"><span class="note-who">Ana Torres</span><span class="note-when">2 days ago</span></div>
+                  <p class="note-body">Requested firmware update for CEDIS Monterrey sensors. Scheduling for next window.</p>
+                </div>
+                <div class="note-item">
+                  <div class="note-meta"><span class="note-who">Diego Salinas</span><span class="note-when">1 week ago</span></div>
+                  <p class="note-body">Onboarding call done. Adding 3 more sites in Q2.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

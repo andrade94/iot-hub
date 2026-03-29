@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variation C — Pipeline Rows</title>
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&family=syne:500,600,700,800&family=jetbrains-mono:400,500,700&family=space-grotesk:500,700" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #09090b;
+    --surface-1: #111113;
+    --surface-2: #18181b;
+    --surface-3: #1e1e22;
+    --surface-4: #27272a;
+    --border: #27272a;
+    --border-light: #1e1e22;
+    --text: #fafafa;
+    --text-2: #a1a1aa;
+    --text-3: #52525b;
+    --text-4: #3f3f46;
+    --brand: #a78bfa;
+    --brand-dim: rgba(167, 139, 250, 0.1);
+    --emerald: #34d399;
+    --emerald-dim: rgba(52, 211, 153, 0.1);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.1);
+    --rose: #fb7185;
+    --rose-dim: rgba(251, 113, 133, 0.1);
+    --sky: #38bdf8;
+    --sky-dim: rgba(56, 189, 248, 0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    padding: 40px;
+  }
+
+  /* --- Topbar: compact, utilitarian --- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .topbar-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--brand-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand);
+  }
+
+  .topbar h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .topbar .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-3);
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface-2);
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-secondary:hover {
+    background: var(--surface-3);
+    color: var(--text);
+    border-color: var(--surface-4);
+  }
+
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--brand);
+    color: var(--bg);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(167, 139, 250, 0.25);
+  }
+
+  /* --- Pipeline status sections --- */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .pipeline-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pipeline-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .pipeline-header .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .pipeline-header .dot.active { background: var(--emerald); box-shadow: 0 0 8px rgba(52, 211, 153, 0.4); }
+  .pipeline-header .dot.onboarding { background: var(--sky); box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
+  .pipeline-header .dot.suspended { background: var(--rose); box-shadow: 0 0 8px rgba(251, 113, 133, 0.4); }
+
+  .pipeline-header .label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-3);
+  }
+
+  .pipeline-header .count-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--surface-3);
+    color: var(--text-3);
+  }
+
+  .pipeline-header .line {
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+  }
+
+  /* --- Org Row --- */
+  .org-row {
+    display: grid;
+    grid-template-columns: 56px 1.5fr 0.8fr 0.6fr repeat(3, 0.5fr) 80px 36px;
+    align-items: center;
+    gap: 0;
+    padding: 16px 20px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .org-row:hover {
+    background: var(--surface-2);
+    border-color: var(--border);
+    transform: translateX(4px);
+  }
+
+  .org-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .org-row:hover::before { opacity: 1; }
+  .org-row.active::before { background: var(--emerald); }
+  .org-row.onboarding::before { background: var(--sky); }
+  .org-row.suspended::before { background: var(--rose); }
+
+  /* Avatar */
+  .row-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    background: var(--surface-3);
+    color: var(--text-2);
+  }
+
+  .org-row.active .row-avatar { background: var(--emerald-dim); color: var(--emerald); }
+  .org-row.onboarding .row-avatar { background: var(--sky-dim); color: var(--sky); }
+  .org-row.suspended .row-avatar { background: var(--rose-dim); color: var(--rose); }
+
+  /* Name */
+  .row-name {
+    padding-left: 4px;
+  }
+
+  .row-name .name {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  .row-name .slug {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-4);
+    margin-top: 2px;
+  }
+
+  /* Segment */
+  .row-segment {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .segment-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .segment-icon.retail { background: rgba(251, 191, 36, 0.1); }
+  .segment-icon.cold_chain { background: rgba(56, 189, 248, 0.1); }
+  .segment-icon.foodservice { background: rgba(251, 113, 133, 0.1); }
+  .segment-icon.industrial { background: rgba(167, 139, 250, 0.1); }
+  .segment-icon.commercial { background: rgba(52, 211, 153, 0.1); }
+
+  .segment-text {
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  /* Plan */
+  .row-plan {
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .plan-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-4);
+  }
+
+  .row-plan.enterprise .plan-dot { background: var(--brand); }
+  .row-plan.enterprise { color: var(--brand); }
+  .row-plan.standard { color: var(--text-2); }
+  .row-plan.starter { color: var(--text-3); }
+
+  /* Stats */
+  .row-stat {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .row-stat .label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-4);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .org-row.suspended .row-stat {
+    color: var(--text-3);
+  }
+
+  /* Health ring */
+  .health-ring {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ring-svg {
+    width: 36px;
+    height: 36px;
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg {
+    fill: none;
+    stroke: var(--surface-3);
+    stroke-width: 3;
+  }
+
+  .ring-fill {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .ring-fill.good { stroke: var(--emerald); }
+  .ring-fill.warn { stroke: var(--amber); }
+  .ring-fill.critical { stroke: var(--rose); }
+
+  .ring-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: 700;
+    position: absolute;
+    color: var(--text-2);
+  }
+
+  /* Arrow */
+  .row-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-4);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.2s;
+  }
+
+  .org-row:hover .row-arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* --- Quick filters --- */
+  .quick-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .qf-search {
+    position: relative;
+    margin-right: 8px;
+  }
+
+  .qf-search input {
+    width: 240px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 8px 12px 8px 34px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .qf-search input:focus { border-color: var(--brand); }
+  .qf-search input::placeholder { color: var(--text-4); }
+
+  .qf-search svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-4);
+  }
+
+  .qf-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border-light);
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .qf-pill:hover {
+    border-color: var(--border);
+    color: var(--text-2);
+  }
+
+  .qf-pill.active {
+    border-color: var(--brand);
+    background: var(--brand-dim);
+    color: var(--brand);
+  }
+
+  .qf-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border-light);
+    margin: 0 4px;
+  }
+
+  .qf-segment {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid var(--border-light);
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .qf-segment:hover {
+    border-color: var(--border);
+    color: var(--text-2);
+  }
+
+  /* Animations */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .org-row {
+    animation: slideIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) both;
+  }
+
+  .pipeline-section:nth-child(1) .org-row:nth-child(2) { animation-delay: 0ms; }
+  .pipeline-section:nth-child(1) .org-row:nth-child(3) { animation-delay: 40ms; }
+  .pipeline-section:nth-child(1) .org-row:nth-child(4) { animation-delay: 80ms; }
+  .pipeline-section:nth-child(1) .org-row:nth-child(5) { animation-delay: 120ms; }
+  .pipeline-section:nth-child(1) .org-row:nth-child(6) { animation-delay: 160ms; }
+  .pipeline-section:nth-child(2) .org-row:nth-child(2) { animation-delay: 200ms; }
+  .pipeline-section:nth-child(3) .org-row:nth-child(2) { animation-delay: 240ms; }
+
+  /* Label */
+  .design-label {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--brand);
+    color: var(--bg);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    z-index: 100;
+  }
+
+  @media (max-width: 1024px) {
+    .org-row {
+      grid-template-columns: 44px 1.2fr 0.8fr repeat(3, 0.5fr) 36px;
+    }
+    .row-plan, .health-ring { display: none; }
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 20px; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .quick-filters { flex-wrap: wrap; }
+    .org-row { grid-template-columns: 40px 1fr 36px; padding: 14px 16px; }
+    .row-segment, .row-plan, .row-stat, .health-ring { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="design-label">Variation C -- Pipeline Rows</div>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <h1>Organizations <span class="count">8 total</span></h1>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-secondary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+    <button class="btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Organization
+    </button>
+  </div>
+</div>
+
+<!-- Quick Filters -->
+<div class="quick-filters">
+  <div class="qf-search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search..." />
+  </div>
+  <button class="qf-pill active">All</button>
+  <button class="qf-pill">Active</button>
+  <button class="qf-pill">Onboarding</button>
+  <button class="qf-pill">Suspended</button>
+  <div class="qf-divider"></div>
+  <button class="qf-segment">Retail</button>
+  <button class="qf-segment">Cold Chain</button>
+  <button class="qf-segment">Industrial</button>
+  <button class="qf-segment">Foodservice</button>
+  <button class="qf-segment">Commercial</button>
+</div>
+
+<!-- Pipeline -->
+<div class="pipeline">
+
+  <!-- Active Section -->
+  <div class="pipeline-section">
+    <div class="pipeline-header">
+      <div class="dot active"></div>
+      <span class="label">Active</span>
+      <span class="count-badge">5</span>
+      <div class="line"></div>
+    </div>
+
+    <div class="org-row active">
+      <div class="row-avatar">OX</div>
+      <div class="row-name">
+        <div class="name">OXXO Corporativo</div>
+        <div class="slug">oxxo-corporativo</div>
+      </div>
+      <div class="row-segment">
+        <div class="segment-icon retail">&#x1f6d2;</div>
+        <span class="segment-text">Retail</span>
+      </div>
+      <div class="row-plan enterprise"><div class="plan-dot"></div> Enterprise</div>
+      <div class="row-stat">12<div class="label">Sites</div></div>
+      <div class="row-stat">87<div class="label">Devices</div></div>
+      <div class="row-stat">24<div class="label">Users</div></div>
+      <div class="health-ring" style="position:relative">
+        <svg class="ring-svg" viewBox="0 0 36 36">
+          <circle class="ring-bg" cx="18" cy="18" r="15"/>
+          <circle class="ring-fill good" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="7.5"/>
+        </svg>
+        <span class="ring-label">92%</span>
+      </div>
+      <div class="row-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="org-row active">
+      <div class="row-avatar">SM</div>
+      <div class="row-name">
+        <div class="name">Sigma Alimentos</div>
+        <div class="slug">sigma-alimentos</div>
+      </div>
+      <div class="row-segment">
+        <div class="segment-icon cold_chain">&#x2744;</div>
+        <span class="segment-text">Cold Chain</span>
+      </div>
+      <div class="row-plan enterprise"><div class="plan-dot"></div> Enterprise</div>
+      <div class="row-stat">8<div class="label">Sites</div></div>
+      <div class="row-stat">63<div class="label">Devices</div></div>
+      <div class="row-stat">15<div class="label">Users</div></div>
+      <div class="health-ring" style="position:relative">
+        <svg class="ring-svg" viewBox="0 0 36 36">
+          <circle class="ring-bg" cx="18" cy="18" r="15"/>
+          <circle class="ring-fill good" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="11.3"/>
+        </svg>
+        <span class="ring-label">88%</span>
+      </div>
+      <div class="row-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="org-row active">
+      <div class="row-avatar">CF</div>
+      <div class="row-name">
+        <div class="name">Coppel Farmacias</div>
+        <div class="slug">coppel-farmacias</div>
+      </div>
+      <div class="row-segment">
+        <div class="segment-icon retail">&#x1f6d2;</div>
+        <span class="segment-text">Retail</span>
+      </div>
+      <div class="row-plan standard"><div class="plan-dot"></div> Standard</div>
+      <div class="row-stat">5<div class="label">Sites</div></div>
+      <div class="row-stat">32<div class="label">Devices</div></div>
+      <div class="row-stat">9<div class="label">Users</div></div>
+      <div class="health-ring" style="position:relative">
+        <svg class="ring-svg" viewBox="0 0 36 36">
+          <circle class="ring-bg" cx="18" cy="18" r="15"/>
+          <circle class="ring-fill good" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="2.8"/>
+        </svg>
+        <span class="ring-label">97%</span>
+      </div>
+      <div class="row-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="org-row active">
+      <div class="row-avatar">GN</div>
+      <div class="row-name">
+        <div class="name">Grupo Nacional</div>
+        <div class="slug">grupo-nacional</div>
+      </div>
+      <div class="row-segment">
+        <div class="segment-icon commercial">&#x1f3e2;</div>
+        <span class="segment-text">Commercial</span>
+      </div>
+      <div class="row-plan enterprise"><div class="plan-dot"></div> Enterprise</div>
+      <div class="row-stat">4<div class="label">Sites</div></div>
+      <div class="row-stat">33<div class="label">Devices</div></div>
+      <div class="row-stat">11<div class="label">Users</div></div>
+      <div class="health-ring" style="position:relative">
+        <svg class="ring-svg" viewBox="0 0 36 36">
+          <circle class="ring-bg" cx="18" cy="18" r="15"/>
+          <circle class="ring-fill good" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="14.1"/>
+        </svg>
+        <span class="ring-label">85%</span>
+      </div>
+      <div class="row-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="org-row active">
+      <div class="row-avatar">LA</div>
+      <div class="row-name">
+        <div class="name">La Anita Foods</div>
+        <div class="slug">la-anita-foods</div>
+      </div>
+      <div class="row-segment">
+        <div class="segment-icon cold_chain">&#x2744;</div>
+        <span class="segment-text">Cold Chain</span>
+      </div>
+      <div class="row-plan starter"><div class="plan-dot"></div> Starter</div>
+      <div class="row-stat">2<div class="label">Sites</div></div>
+      <div class="row-stat">11<div class="label">Devices</div></div>
+      <div class="row-stat">4<div class="label">Users</div></div>
+      <div class="health-ring" style="position:relative">
+        <svg class="ring-svg" viewBox="0 0 36 36">
+          <circle class="ring-bg" cx="18" cy="18" r="15"/>
+          <circle class="ring-fill warn" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="28.3"/>
+        </svg>
+        <span class="ring-label">70%</span>
+      </div>
+      <div class="row-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding Section -->
+  <div class="pipeline-section">
+    <div class="pipeline-header">
+      <div class="dot onboarding"></div>
+      <span class="label">Onboarding</span>
+      <span class="count-badge">2</span>
+      <div class="line"></div>
+    </div>
+
+    <div class="org-row onboarding">
+      <div class="row-avatar">BK</div>
+      <div class="row-name">
+        <div class="name">Burger King MX</div>
+        <div class="slug">burger-king-mx</div>
+      </div>
+      <div class="row-segment">
+        <div class="segment-icon foodservice">&#x1f354;</div>
+        <span class="segment-text">Foodservice</span>
+      </div>
+      <div class="row-plan standard"><div class="plan-dot"></div> Standard</div>
+      <div class="row-stat">3<div class="label">Sites</div></div>
+      <div class="row-stat">18<div class="label">Devices</div></div>
+      <div class="row-stat">5<div class="label">Users</div></div>
+      <div class="health-ring" style="position:relative">
+        <svg class="ring-svg" viewBox="0 0 36 36">
+          <circle class="ring-bg" cx="18" cy="18" r="15"/>
+          <circle class="ring-fill warn" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="51.8"/>
+        </svg>
+        <span class="ring-label">45%</span>
+      </div>
+      <div class="row-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Suspended Section -->
+  <div class="pipeline-section">
+    <div class="pipeline-header">
+      <div class="dot suspended"></div>
+      <span class="label">Suspended</span>
+      <span class="count-badge">1</span>
+      <div class="line"></div>
+    </div>
+
+    <div class="org-row suspended">
+      <div class="row-avatar">AT</div>
+      <div class="row-name">
+        <div class="name">Alimentos del Tropico</div>
+        <div class="slug">alimentos-tropico</div>
+      </div>
+      <div class="row-segment">
+        <div class="segment-icon industrial">&#x1f3ed;</div>
+        <span class="segment-text">Industrial</span>
+      </div>
+      <div class="row-plan starter"><div class="plan-dot"></div> Starter</div>
+      <div class="row-stat">2<div class="label">Sites</div></div>
+      <div class="row-stat">14<div class="label">Devices</div></div>
+      <div class="row-stat">3<div class="label">Users</div></div>
+      <div class="health-ring" style="position:relative">
+        <svg class="ring-svg" viewBox="0 0 36 36">
+          <circle class="ring-bg" cx="18" cy="18" r="15"/>
+          <circle class="ring-fill critical" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="82.9"/>
+        </svg>
+        <span class="ring-label">12%</span>
+      </div>
+      <div class="row-arrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

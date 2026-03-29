@@ -8,17 +8,17 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    /* Typography - DM Sans for body + Syne for bold display headings */
+    /* Typography - Lexend for body + Bricolage Grotesque for display headings */
     --font-sans:
-        'DM Sans', ui-sans-serif, system-ui, sans-serif,
+        'Lexend', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
     --font-display:
-        'Syne', ui-sans-serif, system-ui, sans-serif;
+        'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
     --font-label:
-        'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+        'Lexend', ui-sans-serif, system-ui, sans-serif;
     --font-mono:
-        'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', 'Monaco',
+        'Fira Code', ui-monospace, 'SF Mono', 'Menlo', 'Monaco',
         'Consolas', 'Liberation Mono', monospace;
 
     /* Obsidian Metric Design System — Surface Hierarchy */
@@ -663,6 +663,76 @@
 .ob-row-accent-ember { box-shadow: inset 4px 0 0 0 #ff716a; }
 .ob-row-accent-steel { box-shadow: inset 4px 0 0 0 #b9c7df; }
 .ob-row-accent-dim { box-shadow: inset 4px 0 0 0 #484848; }
+
+/* ================================================================
+   Two-Tone Layout — Dark hero zone + Light content zone
+   Used on organization pages for editorial contrast.
+   ================================================================ */
+
+.zone-dark {
+    --background: #111111;
+    --foreground: #f0efeb;
+    --card: #181818;
+    --card-foreground: #f0efeb;
+    --muted: #181818;
+    --muted-foreground: #8a8987;
+    --border: #252525;
+    --input: #111111;
+    --accent: #1f1f1f;
+    --accent-foreground: #f0efeb;
+    --primary: #f0efeb;
+    --primary-foreground: #111111;
+    color: #f0efeb;
+    background: #111111;
+}
+
+.zone-light {
+    --background: #fafaf8;
+    --foreground: #1a1917;
+    --card: #ffffff;
+    --card-foreground: #1a1917;
+    --muted: #f6f5f2;
+    --muted-foreground: #9a9895;
+    --border: #e8e6e2;
+    --input: #ffffff;
+    --accent: #f6f5f2;
+    --accent-foreground: #1a1917;
+    --primary: #1a1917;
+    --primary-foreground: #fafaf8;
+    color: #1a1917;
+    background: #fafaf8;
+}
+
+/* Two-tone KPI card with bottom accent line */
+.kpi-accent::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 16px;
+    right: 16px;
+    height: 2px;
+    border-radius: 1px;
+}
+
+.kpi-accent-emerald::after { background: #059669; }
+.kpi-accent-red::after { background: #dc2626; }
+.kpi-accent-blue::after { background: #2563eb; }
+.kpi-accent-amber::after { background: #d97706; }
+
+/* Segment colors for monograms and pills */
+.seg-amber { background: rgba(251,191,36,0.1); color: #d97706; }
+.seg-blue { background: rgba(37,99,235,0.1); color: #2563eb; }
+.seg-red { background: rgba(220,38,38,0.1); color: #dc2626; }
+.seg-violet { background: rgba(124,58,237,0.1); color: #7c3aed; }
+.seg-emerald { background: rgba(5,150,105,0.1); color: #059669; }
+
+/* Status dots (light zone) */
+.status-dot-active { color: #059669; }
+.status-dot-active::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #059669; margin-right: 5px; }
+.status-dot-onboarding { color: #2563eb; }
+.status-dot-onboarding::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #2563eb; margin-right: 5px; }
+.status-dot-suspended { color: #dc2626; }
+.status-dot-suspended::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #dc2626; margin-right: 5px; }
 
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
