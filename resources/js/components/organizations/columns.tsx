@@ -1,6 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { formatTimeAgo } from '@/utils/date';
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown, Building2 } from 'lucide-react';
@@ -36,21 +35,19 @@ function SortableHeader({
 }) {
     const sorted = column.getIsSorted();
     return (
-        <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-3 h-8 font-medium"
+        <button
+            className="-ml-1 flex items-center gap-1 rounded px-1 py-0.5 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70 transition-colors hover:text-foreground/70"
             onClick={() => column.toggleSorting(sorted === 'asc')}
         >
             {title}
             {sorted === 'asc' ? (
-                <ArrowUp className="ml-1.5 h-3.5 w-3.5" />
+                <ArrowUp className="h-3 w-3" />
             ) : sorted === 'desc' ? (
-                <ArrowDown className="ml-1.5 h-3.5 w-3.5" />
+                <ArrowDown className="h-3 w-3" />
             ) : (
-                <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 text-muted-foreground/50" />
+                <ArrowUpDown className="h-3 w-3 opacity-40" />
             )}
-        </Button>
+        </button>
     );
 }
 

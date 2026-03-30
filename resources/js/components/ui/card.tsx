@@ -4,11 +4,11 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const cardVariants = cva(
-  "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border border-border/50 py-6 shadow-sm shadow-black/[0.04] ring-1 ring-black/[0.03] dark:shadow-black/[0.2] dark:ring-white/[0.05]",
+  "bg-card text-card-foreground flex flex-col rounded-[10px] border border-border py-0 overflow-hidden",
   {
     variants: {
       interactive: {
-        true: "transition-all duration-200 cursor-pointer hover:shadow-lg hover:shadow-black/[0.08] dark:hover:shadow-black/[0.3] hover:ring-black/[0.05] dark:hover:ring-white/[0.08] hover:-translate-y-0.5 hover:border-border",
+        true: "transition-all duration-200 cursor-pointer hover:border-border/80 hover:bg-accent/20 hover:-translate-y-0.5",
         false: "",
       },
     },
@@ -37,7 +37,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-5 pt-5 pb-0 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-5",
         className
       )}
       {...props}
@@ -82,7 +82,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("px-6", className)}
+      className={cn("px-5 py-5", className)}
       {...props}
     />
   )
@@ -92,7 +92,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-footer"
-      className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
+      className={cn("flex items-center px-5 py-4 [.border-t]:pt-4", className)}
       {...props}
     />
   )

@@ -36,6 +36,7 @@ class OrganizationCatalogController extends Controller
         return Inertia::render('settings/organizations/index', [
             'organizations' => $organizations,
             'segments' => \App\Models\Segment::active()->pluck('name'),
+            'timezones' => timezone_identifiers_list(\DateTimeZone::AMERICA),
         ]);
     }
 
