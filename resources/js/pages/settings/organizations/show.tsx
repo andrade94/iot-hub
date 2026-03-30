@@ -10,7 +10,7 @@ import type { BreadcrumbItem, Subscription } from '@/types';
 import { formatTimeAgo } from '@/utils/date';
 import { Head, router, useForm } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { AlertTriangle, Archive, ArrowLeft, Download, MapPin, Pencil, ShieldAlert, Users } from 'lucide-react';
+import { AlertTriangle, Archive, ArrowLeft, Download, MapPin, MapPinPlus, Pencil, ShieldAlert, UserPlus, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -18,7 +18,7 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis
 /* -- Types ------------------------------------------------------------ */
 interface SiteWithCounts { id: number; name: string; status: string; timezone: string | null; devices_count: number; gateways_count: number; online_devices_count: number; active_alerts_count: number; critical_alerts_count: number; open_work_orders_count: number; }
 interface UserSummary { id: number; name: string; email: string; role: string; status: string; }
-interface OrganizationDetail { id: number; name: string; slug: string; segment: string | null; plan: string | null; status: string; logo: string | null; branding: Record<string, string> | null; default_timezone: string | null; default_opening_hour: string | null; created_at: string; }
+interface OrganizationDetail { id: number; name: string; slug: string; segment: string | null; plan: string | null; status: string; logo: string | null; branding: Record<string, string> | null; default_timezone: string | null; created_at: string; }
 interface AlertFeedItem { id: number; severity: 'low' | 'medium' | 'high' | 'critical'; status: 'active' | 'acknowledged'; device_name: string; site_name: string; triggered_at: string; metric: string | null; value: number | null; threshold: number | null; rule_name: string | null; }
 interface PrimaryContact { id: number; name: string; email: string; phone: string | null; }
 interface OrganizationNote { id: number; note: string; created_at: string; user: { id: number; name: string }; }
@@ -32,7 +32,7 @@ const STATUS_COLORS: Record<string, string> = { active: '#10b981', onboarding: '
 const ROLE_COLORS = ['#94a3b8', '#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#6b7280'];
 
 /* -- Main Component --------------------------------------------------- */
-export default function OrganizationShow({ organization, sites, users, primary_contact, last_user_activity, recent_alerts, notes }: Props) {
+export default function OrganizationShow({ organization, sites, users, subscription, primary_contact, last_user_activity, recent_alerts, notes }: Props) {
     const { t } = useLang();
     const [suspendOpen, setSuspendOpen] = useState(false);
     const [archiveOpen, setArchiveOpen] = useState(false);
@@ -121,6 +121,17 @@ export default function OrganizationShow({ organization, sites, users, primary_c
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                            {/* Quick actions */}
+                            <Button variant="outline" size="sm" className="text-[11px]" onClick={() => router.get('/settings/users')}>
+                                <UserPlus className="mr-1 h-3.5 w-3.5" />{t('Invite User')}
+                            </Button>
+                            <Button variant="outline" size="sm" className="text-[11px]" onClick={() => router.get('/settings/sites')}>
+                                <MapPinPlus className="mr-1 h-3.5 w-3.5" />{t('Add Site')}
+                            </Button>
+
+                            <div className="mx-1 h-4 w-px bg-border/30" />
+
+                            {/* Lifecycle actions */}
                             {['active', 'onboarding'].includes(organization.status) && (
                                 <Button variant="ghost" size="sm" className="text-[11px] text-amber-400 hover:text-amber-300" onClick={() => setSuspendOpen(true)}>
                                     <ShieldAlert className="mr-1 h-3.5 w-3.5" />{t('Suspend')}
@@ -167,6 +178,18 @@ export default function OrganizationShow({ organization, sites, users, primary_c
                                 label={t('Contact')}
                                 value={`${primary_contact.name} · ${primary_contact.email}${primary_contact.phone ? ` · ${primary_contact.phone}` : ''}`}
                             />
+                        )}
+                        {subscription && (
+                            <>
+                                <DetailInline label={t('Subscription')} value={subscription.status} accent={subscription.status === 'active'} />
+                                <DetailInline label={t('Contract')} value={subscription.contract_type} />
+                            </>
+                        )}
+                        {!subscription && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-muted-foreground/40">{t('Subscription')}</span>
+                                <span className="rounded bg-accent/50 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground/40">{t('Coming soon')}</span>
+                            </div>
                         )}
                         {brandingColors.length > 0 && (
                             <div className="flex items-center gap-2">

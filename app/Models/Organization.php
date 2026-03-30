@@ -35,7 +35,6 @@ class Organization extends Model
         'settings',
         'logo',
         'branding',
-        'default_opening_hour',
         'default_timezone',
     ];
 
@@ -79,7 +78,6 @@ class Organization extends Model
         return [
             'settings' => 'array',
             'branding' => 'array',
-            'default_opening_hour' => 'datetime:H:i',
         ];
     }
 

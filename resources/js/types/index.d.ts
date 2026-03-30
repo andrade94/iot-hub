@@ -39,7 +39,6 @@ export interface Organization {
     logo?: string | null;
     branding?: Record<string, unknown> | null;
     default_timezone?: string | null;
-    default_opening_hour?: string | null;
 }
 
 export interface Site {

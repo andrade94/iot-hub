@@ -23,7 +23,6 @@ class OrganizationSettingsController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'default_timezone' => 'nullable|string|max:100|timezone:all',
-            'default_opening_hour' => 'nullable|date_format:H:i',
             'logo' => 'nullable|string|max:500',
             'branding' => 'nullable|array',
             'branding.primary_color' => 'nullable|string|max:20',

@@ -264,7 +264,6 @@ const organizationSchema = z.object({
     segment: z.string().min(1, 'Segment is required'),
     plan: z.string().min(1, 'Plan is required'),
     default_timezone: z.string().min(1, 'Timezone is required'),
-    default_opening_hour: z.string().min(1, 'Opening hour is required'),
 });
 
 function CreateOrganizationForm({ segments, onSuccess }: { segments: string[]; onSuccess: () => void }) {
@@ -275,7 +274,6 @@ function CreateOrganizationForm({ segments, onSuccess }: { segments: string[]; o
         segment: '',
         plan: '',
         default_timezone: 'America/Mexico_City',
-        default_opening_hour: '08:00',
     });
 
     function generateSlug(name: string): string {
@@ -377,16 +375,6 @@ function CreateOrganizationForm({ segments, onSuccess }: { segments: string[]; o
                     <InputError message={form.errors.default_timezone} />
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="org-opening">{t('Opening Hour')}</Label>
-                    <Input
-                        id="org-opening"
-                        type="time"
-                        value={form.data.default_opening_hour}
-                        onChange={(e) => form.setData('default_opening_hour', e.target.value)}
-                    />
-                    <InputError message={form.errors.default_opening_hour} />
-                </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={form.processing}>

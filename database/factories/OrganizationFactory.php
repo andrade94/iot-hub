@@ -19,7 +19,6 @@ class OrganizationFactory extends Factory
             'settings' => [],
             'logo' => null,
             'branding' => [],
-            'default_opening_hour' => fake()->time('H:i'),
             'default_timezone' => fake()->timezone(),
         ];
     }

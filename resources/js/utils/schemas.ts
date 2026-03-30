@@ -110,7 +110,6 @@ export type ApiKeyFormData = z.infer<typeof apiKeySchema>;
 export const organizationSettingsSchema = z.object({
     name: z.string().min(1, 'Required').max(255),
     default_timezone: z.string().optional(),
-    default_opening_hour: z.string().optional(),
     logo: z.string().optional(),
     branding: z.object({
         primary_color: z.string().optional(),

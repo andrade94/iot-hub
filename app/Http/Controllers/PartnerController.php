@@ -31,7 +31,6 @@ class PartnerController extends Controller
             'segment' => ['required', 'string', Rule::in(\App\Models\Segment::active()->pluck('name'))],
             'plan' => 'required|string|in:starter,standard,enterprise',
             'default_timezone' => 'nullable|string|max:50',
-            'default_opening_hour' => 'nullable|date_format:H:i',
         ]);
 
         $org = Organization::create($validated);

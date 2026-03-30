@@ -81,7 +81,6 @@ class HandleInertiaRequests extends Middleware
                 'logo' => $currentOrg->logo,
                 'branding' => $currentOrg->branding,
                 'default_timezone' => $currentOrg->default_timezone,
-                'default_opening_hour' => $currentOrg->default_opening_hour?->format('H:i'),
             ] : null,
             'accessible_sites' => $user ? $user->accessibleSites()->map(fn ($site) => [
                 'id' => $site->id,

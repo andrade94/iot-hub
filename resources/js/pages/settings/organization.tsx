@@ -32,7 +32,6 @@ export default function OrganizationSettings({ organization }: Props) {
     const form = useValidatedForm(organizationSettingsSchema, {
         name: organization.name,
         default_timezone: organization.default_timezone ?? '',
-        default_opening_hour: organization.default_opening_hour ?? '',
         logo: organization.logo ?? '',
         branding: {
             primary_color: brandingData?.primary_color ?? '',
@@ -88,17 +87,6 @@ export default function OrganizationSettings({ organization }: Props) {
                                         <InputError message={form.errors.default_timezone} />
                                     </div>
 
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="default_opening_hour">{t('Default Opening Hour')}</Label>
-                                        <Input
-                                            id="default_opening_hour"
-                                            type="time"
-                                            value={form.data.default_opening_hour}
-                                            onChange={(e) => form.setData('default_opening_hour', e.target.value)}
-                                            className="font-mono tabular-nums"
-                                        />
-                                        <InputError message={form.errors.default_opening_hour} />
-                                    </div>
                                 </div>
                             </FormSection>
 
