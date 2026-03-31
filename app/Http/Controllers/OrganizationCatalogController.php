@@ -172,6 +172,25 @@ class OrganizationCatalogController extends Controller
         ]);
     }
 
+    public function edit(Organization $organization)
+    {
+        return Inertia::render('settings/organizations/edit', [
+            'organization' => [
+                'id' => $organization->id,
+                'name' => $organization->name,
+                'slug' => $organization->slug,
+                'segment' => $organization->segment,
+                'plan' => $organization->plan,
+                'status' => $organization->status ?? 'active',
+                'logo' => $organization->logo,
+                'branding' => $organization->branding,
+                'default_timezone' => $organization->default_timezone,
+            ],
+            'segments' => \App\Models\Segment::active()->pluck('name'),
+            'timezones' => timezone_identifiers_list(\DateTimeZone::AMERICA),
+        ]);
+    }
+
     public function update(Request $request, Organization $organization)
     {
         $validated = $request->validate([

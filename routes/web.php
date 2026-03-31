@@ -445,6 +445,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::middleware('role:super_admin')->prefix('settings/organizations')->name('organizations.')->group(function () {
         Route::get('/', [OrganizationCatalogController::class, 'index'])->name('index');
         Route::get('{organization}', [OrganizationCatalogController::class, 'show'])->name('show');
+        Route::get('{organization}/edit', [OrganizationCatalogController::class, 'edit'])->name('edit');
         Route::put('{organization}', [OrganizationCatalogController::class, 'update'])->name('update');
         Route::post('{organization}/suspend', [OrganizationCatalogController::class, 'suspend'])->name('suspend');
         Route::post('{organization}/reactivate', [OrganizationCatalogController::class, 'reactivate'])->name('reactivate');
