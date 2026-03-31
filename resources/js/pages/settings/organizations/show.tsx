@@ -101,7 +101,20 @@ export default function OrganizationShow({ organization, sites, users, subscript
     ], [t]);
 
     const brandingColors = [organization.branding?.primary_color, organization.branding?.secondary_color, organization.branding?.accent_color].filter(Boolean) as string[];
-    const chartTooltipStyle = { borderRadius: 6, fontSize: 11, border: 'none', backgroundColor: 'rgba(17,19,24,0.95)', color: '#e0e4ea' };
+    const isDark = document.documentElement.classList.contains('dark');
+    const chartTooltipStyle = {
+        borderRadius: 8,
+        fontSize: 11,
+        fontFamily: 'var(--font-body)',
+        border: isDark ? 'none' : '1px solid #dfe3ea',
+        backgroundColor: isDark ? 'rgba(17,19,24,0.95)' : '#ffffff',
+        color: isDark ? '#e0e4ea' : '#0f1218',
+        boxShadow: isDark ? 'none' : '0 4px 12px rgba(0,0,0,0.08)',
+    };
+    const chartGridStroke = isDark ? 'rgba(30,34,40,0.6)' : 'rgba(0,0,0,0.06)';
+    const chartAxisFill = isDark ? '#6b7280' : '#9ca3af';
+    const chartAxisLabelFill = isDark ? '#b0b8c4' : '#6b7280';
+    const chartCursorFill = isDark ? 'rgba(6,182,212,0.04)' : 'rgba(6,182,212,0.06)';
     const sitesEmpty = (<div className="flex flex-col items-center gap-2 py-10"><MapPin className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No sites configured')}</p></div>);
     const usersEmpty = (<div className="flex flex-col items-center gap-2 py-10"><Users className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No users')}</p></div>);
 
@@ -292,10 +305,10 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 {siteStatusData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height={100}>
                                         <BarChart data={siteStatusData} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(30,34,40,0.6)" />
-                                            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                                            <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 10, fill: '#b0b8c4' }} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: 'rgba(6,182,212,0.04)' }} />
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridStroke} />
+                                            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: chartAxisFill }} axisLine={false} tickLine={false} />
+                                            <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 10, fill: chartAxisLabelFill }} axisLine={false} tickLine={false} />
+                                            <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: chartCursorFill }} formatter={(val: number) => [val, null]} labelStyle={{ fontWeight: 600, marginBottom: 2 }} />
                                             <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={18}>{siteStatusData.map((e) => <Cell key={e.name} fill={e.fill} />)}</Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -304,10 +317,10 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 {roleData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height={100}>
                                         <BarChart data={roleData} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(30,34,40,0.6)" />
-                                            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                                            <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 9, fill: '#b0b8c4' }} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: 'rgba(6,182,212,0.04)' }} />
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridStroke} />
+                                            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: chartAxisFill }} axisLine={false} tickLine={false} />
+                                            <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 9, fill: chartAxisLabelFill }} axisLine={false} tickLine={false} />
+                                            <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: chartCursorFill }} formatter={(val: number) => [val, null]} labelStyle={{ fontWeight: 600, marginBottom: 2 }} />
                                             <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={16}>{roleData.map((e) => <Cell key={e.name} fill={e.fill} />)}</Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -320,10 +333,10 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 {devicesPerSite.length > 0 ? (
                                     <ResponsiveContainer width="100%" height={240}>
                                         <BarChart data={devicesPerSite} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(30,34,40,0.6)" />
-                                            <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                                            <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: 'rgba(6,182,212,0.04)' }} />
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridStroke} />
+                                            <XAxis dataKey="name" tick={{ fontSize: 9, fill: chartAxisFill }} axisLine={false} tickLine={false} />
+                                            <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: chartAxisFill }} axisLine={false} tickLine={false} />
+                                            <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: chartCursorFill }} formatter={(val: number) => [val, null]} labelStyle={{ fontWeight: 600, marginBottom: 2 }} />
                                             <Bar dataKey="devices" fill="#06b6d4" radius={[4, 4, 0, 0]} maxBarSize={28} name={t('Devices')} />
                                             <Bar dataKey="gateways" fill="#94a3b8" radius={[4, 4, 0, 0]} maxBarSize={28} name={t('Gateways')} />
                                         </BarChart>
