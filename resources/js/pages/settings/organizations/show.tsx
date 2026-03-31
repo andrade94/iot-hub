@@ -420,9 +420,13 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 {recent_alerts.length > 0 ? (
                                     <div className="divide-y divide-border/30">{recent_alerts.map((alert) => {
                                         const sev: Record<string, string> = { critical: 'bg-red-500', high: 'bg-orange-500', medium: 'bg-amber-500', low: 'bg-slate-400' };
-                                        return (<div key={alert.id} className="flex cursor-pointer items-start gap-3 px-5 py-4 transition-colors hover:bg-accent/20" onClick={() => router.get(`/alerts/${alert.id}`)}>
-                                            <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${sev[alert.severity] ?? 'bg-muted-foreground'}`} />
-                                            <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="truncate text-sm font-medium text-foreground">{alert.rule_name ?? alert.metric ?? t('Alert')}</p><Badge variant={alert.severity === 'critical' ? 'destructive' : 'outline'} className="shrink-0 text-[9px] capitalize">{alert.severity}</Badge></div><p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">{alert.device_name} @ {alert.site_name}</p></div>
+                                        return (<div key={alert.id} className="flex cursor-pointer items-center gap-3 px-5 py-3.5 transition-colors hover:bg-accent/20" onClick={() => router.get(`/alerts/${alert.id}`)}>
+                                            <span className={`h-2 w-2 shrink-0 rounded-full ${sev[alert.severity] ?? 'bg-muted-foreground'}`} />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-[13px] font-medium text-foreground">{alert.rule_name ?? alert.metric ?? t('Alert')}</p>
+                                                <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">{alert.device_name} @ {alert.site_name}</p>
+                                            </div>
+                                            <Badge variant={alert.severity === 'critical' ? 'destructive' : 'outline'} className="shrink-0 text-[9px] capitalize">{alert.severity}</Badge>
                                             <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">{formatTimeAgo(alert.triggered_at)}</span>
                                         </div>);
                                     })}</div>
@@ -444,7 +448,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                                 const priorityColors: Record<string, string> = { critical: 'bg-red-500', high: 'bg-orange-500', medium: 'bg-amber-500', low: 'bg-slate-400' };
                                                 const statusLabels: Record<string, string> = { open: 'Open', assigned: 'Assigned', in_progress: 'In Progress' };
                                                 return (
-                                                    <div key={wo.id} className="flex cursor-pointer items-center gap-4 px-5 py-3.5 transition-colors hover:bg-accent/20" onClick={() => router.get(`/work-orders/${wo.id}`)}>
+                                                    <div key={wo.id} className="flex cursor-pointer items-center gap-3 px-5 py-3.5 transition-colors hover:bg-accent/20" onClick={() => router.get(`/work-orders/${wo.id}`)}>
                                                         <span className={`h-2 w-2 shrink-0 rounded-full ${priorityColors[wo.priority] ?? 'bg-slate-400'}`} />
                                                         <div className="min-w-0 flex-1">
                                                             <p className="truncate text-[13px] font-medium text-foreground">{wo.title}</p>
@@ -468,7 +472,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                         {activeTab === 'activity' && (
                             <Card className="border-border shadow-none">
                                 {activitiesLoading ? <div className="space-y-3 p-4">{Array.from({ length: 5 }).map((_, i) => (<div key={i} className="flex items-center gap-3"><Skeleton className="h-7 w-7 rounded-full" /><div className="flex-1 space-y-1"><Skeleton className="h-3 w-32" /><Skeleton className="h-3 w-48" /></div></div>))}</div>
-                                : activities && activities.length > 0 ? <div className="divide-y divide-border/30">{activities.map((a) => (<div key={a.id} className="flex items-start gap-3 px-5 py-3.5"><div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/50"><span className="font-mono text-[10px] font-medium text-muted-foreground">{a.causer?.name?.charAt(0)?.toUpperCase() ?? '?'}</span></div><div className="min-w-0 flex-1 pt-0.5"><p className="text-[13px]"><span className="font-medium text-foreground">{a.causer?.name ?? t('System')}</span> <span className="text-muted-foreground">{a.description}</span></p></div><span className="shrink-0 pt-1 font-mono text-[10px] tabular-nums text-muted-foreground">{formatTimeAgo(a.created_at)}</span></div>))}</div>
+                                : activities && activities.length > 0 ? <div className="divide-y divide-border/30">{activities.map((a) => (<div key={a.id} className="flex items-center gap-3 px-5 py-3.5"><div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/50"><span className="font-mono text-[10px] font-medium text-muted-foreground">{a.causer?.name?.charAt(0)?.toUpperCase() ?? '?'}</span></div><div className="min-w-0 flex-1"><p className="text-[13px]"><span className="font-medium text-foreground">{a.causer?.name ?? t('System')}</span> <span className="text-muted-foreground">{a.description}</span></p></div><span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">{formatTimeAgo(a.created_at)}</span></div>))}</div>
                                 : <div className="flex flex-col items-center gap-2 py-10"><Users className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No activity')}</p></div>}
                             </Card>
                         )}
