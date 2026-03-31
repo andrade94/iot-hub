@@ -230,8 +230,8 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => router.get('/settings/organization')}>
-                                <Pencil className="mr-1.5 h-3.5 w-3.5" />{t('Edit')}
+                            <Button variant="outline" size="sm" className="text-[11px]" onClick={() => router.get('/settings/organization')}>
+                                <Pencil className="mr-1 h-3.5 w-3.5" />{t('Edit')}
                             </Button>
                         </div>
                     </div>
