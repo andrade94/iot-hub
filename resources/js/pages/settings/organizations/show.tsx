@@ -16,7 +16,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TimeInput } from '@/components/ui/time-input';
 import { TimezoneSelect } from '@/components/ui/timezone-select';
-import { AlertTriangle, Archive, ArrowLeft, Download, MapPin, MapPinPlus, Pencil, ShieldAlert, UserPlus, Users } from 'lucide-react';
+import {
+    DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { AlertTriangle, Archive, ArrowLeft, Bell, Calendar, ClipboardList, Download, ExternalLink, FileBarChart, Key, Link2, MapPin, MapPinPlus, Pencil, Settings2, ShieldAlert, Wrench, UserPlus, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -28,7 +31,8 @@ interface OrganizationDetail { id: number; name: string; slug: string; segment: 
 interface AlertFeedItem { id: number; severity: 'low' | 'medium' | 'high' | 'critical'; status: 'active' | 'acknowledged'; device_name: string; site_name: string; triggered_at: string; metric: string | null; value: number | null; threshold: number | null; rule_name: string | null; }
 interface PrimaryContact { id: number; name: string; email: string; phone: string | null; }
 interface OrganizationNote { id: number; note: string; created_at: string; user: { id: number; name: string }; }
-interface Props { organization: OrganizationDetail; sites: SiteWithCounts[]; users: UserSummary[]; subscription?: Subscription | null; timezones: string[]; segments: string[]; primary_contact: PrimaryContact | null; last_user_activity: string | null; recent_alerts: AlertFeedItem[]; notes: OrganizationNote[]; }
+interface WorkOrderSummary { id: number; title: string; status: string; priority: string; site_name: string | null; assigned_to_name: string | null; created_at: string; }
+interface Props { organization: OrganizationDetail; sites: SiteWithCounts[]; users: UserSummary[]; subscription?: Subscription | null; timezones: string[]; segments: string[]; primary_contact: PrimaryContact | null; last_user_activity: string | null; recent_alerts: AlertFeedItem[]; open_work_orders: WorkOrderSummary[]; notes: OrganizationNote[]; }
 
 /* -- Constants -------------------------------------------------------- */
 const statusVariants: Record<string, 'success' | 'warning' | 'destructive' | 'secondary'> = { active: 'success', onboarding: 'warning', suspended: 'destructive', archived: 'secondary' };
@@ -38,7 +42,7 @@ const STATUS_COLORS: Record<string, string> = { active: '#10b981', onboarding: '
 const ROLE_COLORS = ['#94a3b8', '#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#6b7280'];
 
 /* -- Main Component --------------------------------------------------- */
-export default function OrganizationShow({ organization, sites, users, subscription, timezones, primary_contact, last_user_activity, recent_alerts, notes }: Props) {
+export default function OrganizationShow({ organization, sites, users, subscription, timezones, primary_contact, last_user_activity, recent_alerts, open_work_orders, notes }: Props) {
     const { t } = useLang();
     const [suspendOpen, setSuspendOpen] = useState(false);
     const [archiveOpen, setArchiveOpen] = useState(false);
@@ -129,6 +133,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                            {/* Lifecycle */}
                             {['active', 'onboarding'].includes(organization.status) && (
                                 <Button variant="ghost" size="sm" className="text-[11px] text-amber-400 hover:text-amber-300" onClick={() => setSuspendOpen(true)}>
                                     <ShieldAlert className="mr-1 h-3.5 w-3.5" />{t('Suspend')}
@@ -142,9 +147,60 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                     <Archive className="mr-1 h-3.5 w-3.5" />{t('Archive')}
                                 </Button>
                             )}
-                            <Button variant="ghost" size="sm" className="text-[11px]" onClick={() => router.post(`/settings/organizations/${organization.id}/export`)}>
-                                <Download className="mr-1 h-3.5 w-3.5" />{t('Export')}
-                            </Button>
+
+                            {/* Manage dropdown */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="text-[11px]">
+                                        <Settings2 className="mr-1 h-3.5 w-3.5" />{t('Manage')}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                    <DropdownMenuLabel className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground/50">{t('Monitoring')}</DropdownMenuLabel>
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem onClick={() => router.get('/settings/escalation-chains')}>
+                                            <Bell className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />{t('Escalation Chains')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.get('/analytics/alerts')}>
+                                            <FileBarChart className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />{t('Alert Analytics')}
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuLabel className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground/50">{t('Operations')}</DropdownMenuLabel>
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem onClick={() => router.get('/settings/maintenance-windows')}>
+                                            <Wrench className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />{t('Maintenance Windows')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.get('/settings/report-schedules')}>
+                                            <FileBarChart className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />{t('Report Schedules')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.get('/settings/compliance')}>
+                                            <Calendar className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />{t('Compliance Calendar')}
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuLabel className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground/50">{t('Setup')}</DropdownMenuLabel>
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem onClick={() => router.get('/settings/site-templates')}>
+                                            <ClipboardList className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />{t('Site Templates')}
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuLabel className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground/50">{t('Advanced')}</DropdownMenuLabel>
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem onClick={() => router.get('/settings/api-keys')}>
+                                            <Key className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />{t('API Keys')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.get('/settings/integrations')}>
+                                            <Link2 className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />{t('Integrations')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.post(`/settings/organizations/${organization.id}/export`)}>
+                                            <Download className="mr-2 h-3.5 w-3.5 text-muted-foreground/50" />{t('Export All Data')}
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
                             <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => router.get('/settings/organization')}>
                                 <Pencil className="mr-1.5 h-3.5 w-3.5" />{t('Edit')}
                             </Button>
@@ -155,12 +211,12 @@ export default function OrganizationShow({ organization, sites, users, subscript
                 {/* ━━ SUMMARY STRIP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
                 <FadeIn delay={50} duration={400}>
                     <div className="mt-6 flex items-stretch overflow-hidden rounded-lg border border-border bg-card">
-                        <SummaryStat label={t('Sites')} value={sites.length} />
+                        <SummaryStat label={t('Sites')} value={sites.length} onClick={() => setActiveTab('sites')} />
                         <SummaryStat label={t('Devices')} value={totalDevices} subtitle={`${totalGateways} ${t('gateways')}`} />
                         <SummaryStat label={t('Online')} value={healthPct} suffix="%" color={healthPct >= 90 ? 'text-emerald-400' : healthPct > 50 ? 'text-amber-400' : 'text-rose-400'} />
-                        <SummaryStat label={t('Alerts')} value={totalAlerts} color={totalAlerts > 0 ? 'text-rose-400' : undefined} subtitle={totalCritical > 0 ? `${totalCritical} ${t('critical')}` : undefined} />
-                        <SummaryStat label={t('Work Orders')} value={totalWorkOrders} color={totalWorkOrders > 0 ? 'text-amber-400' : undefined} />
-                        <SummaryStat label={t('Users')} value={users.length} last />
+                        <SummaryStat label={t('Alerts')} value={totalAlerts} color={totalAlerts > 0 ? 'text-rose-400' : undefined} subtitle={totalCritical > 0 ? `${totalCritical} ${t('critical')}` : undefined} onClick={() => setActiveTab('alerts')} />
+                        <SummaryStat label={t('Work Orders')} value={totalWorkOrders} color={totalWorkOrders > 0 ? 'text-amber-400' : undefined} onClick={() => setActiveTab('work_orders')} />
+                        <SummaryStat label={t('Users')} value={users.length} onClick={() => setActiveTab('users')} last />
                     </div>
                 </FadeIn>
 
@@ -196,6 +252,34 @@ export default function OrganizationShow({ organization, sites, users, subscript
                         )}
                     </div>
                 </FadeIn>
+
+                {/* ━━ SMART STATUS ROW ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                {(totalCritical > 0 || open_work_orders.length > 0 || sites.some((s) => s.status === 'draft')) && (
+                    <FadeIn delay={85} duration={300}>
+                        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-amber-500/10 bg-amber-500/[0.03] px-4 py-2.5">
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-400/60" />
+                            {totalCritical > 0 && (
+                                <button onClick={() => setActiveTab('alerts')} className="text-[11px] text-amber-400 transition-colors hover:text-amber-300">
+                                    {totalCritical} {t('critical alert')}{totalCritical > 1 ? 's' : ''}
+                                </button>
+                            )}
+                            {totalCritical > 0 && open_work_orders.length > 0 && <span className="text-[10px] text-muted-foreground/20">·</span>}
+                            {open_work_orders.length > 0 && (
+                                <button onClick={() => setActiveTab('work_orders')} className="text-[11px] text-amber-400 transition-colors hover:text-amber-300">
+                                    {open_work_orders.length} {t('open work order')}{open_work_orders.length > 1 ? 's' : ''}
+                                </button>
+                            )}
+                            {sites.some((s) => s.status === 'draft') && (
+                                <>
+                                    <span className="text-[10px] text-muted-foreground/20">·</span>
+                                    <button onClick={() => setActiveTab('sites')} className="text-[11px] text-cyan-400 transition-colors hover:text-cyan-300">
+                                        {sites.filter((s) => s.status === 'draft').length} {t('site')}{sites.filter((s) => s.status === 'draft').length > 1 ? 's' : ''} {t('pending setup')}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </FadeIn>
+                )}
 
                 {/* ━━ BREAKDOWN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
                 <SectionDivider label={t('Breakdown')} />
@@ -260,6 +344,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                             { key: 'sites', label: t('Sites'), count: sites.length },
                             { key: 'users', label: t('Users'), count: users.length },
                             { key: 'alerts', label: t('Alerts'), count: recent_alerts.length, isAlert: true },
+                            { key: 'work_orders', label: t('Work Orders'), count: open_work_orders.length, isAlert: open_work_orders.length > 0 },
                             { key: 'activity', label: t('Activity') },
                             { key: 'notes', label: t('Notes'), count: notes.length },
                         ].map((tab) => (
@@ -331,6 +416,42 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 ) : <div className="flex flex-col items-center gap-2 py-10"><AlertTriangle className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No active alerts')}</p></div>}
                             </Card>
                         )}
+                        {activeTab === 'work_orders' && (
+                            <div>
+                                <div className="mb-3 flex items-center justify-between">
+                                    <span className="font-mono text-[10px] text-muted-foreground/30">{open_work_orders.length} {t('open')}</span>
+                                    <Button variant="outline" size="sm" className="text-[11px]" onClick={() => router.get('/work-orders')}>
+                                        <ExternalLink className="mr-1 h-3.5 w-3.5" />{t('View All Work Orders')}
+                                    </Button>
+                                </div>
+                                <Card className="editorial-table border-border shadow-none">
+                                    {open_work_orders.length > 0 ? (
+                                        <div className="divide-y divide-border/30">
+                                            {open_work_orders.map((wo) => {
+                                                const priorityColors: Record<string, string> = { critical: 'bg-red-500', high: 'bg-orange-500', medium: 'bg-amber-500', low: 'bg-slate-400' };
+                                                const statusLabels: Record<string, string> = { open: 'Open', assigned: 'Assigned', in_progress: 'In Progress' };
+                                                return (
+                                                    <div key={wo.id} className="flex cursor-pointer items-center gap-4 px-5 py-3.5 transition-colors hover:bg-accent/20" onClick={() => router.get(`/work-orders/${wo.id}`)}>
+                                                        <span className={`h-2 w-2 shrink-0 rounded-full ${priorityColors[wo.priority] ?? 'bg-slate-400'}`} />
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="truncate text-[13px] font-medium text-foreground">{wo.title}</p>
+                                                            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{wo.site_name}{wo.assigned_to_name && ` · ${wo.assigned_to_name}`}</p>
+                                                        </div>
+                                                        <Badge variant="outline" className="shrink-0 text-[9px] capitalize">{statusLabels[wo.status] ?? wo.status}</Badge>
+                                                        <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">{formatTimeAgo(wo.created_at)}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 py-10">
+                                            <ClipboardList className="h-6 w-6 text-muted-foreground/30" />
+                                            <p className="text-sm text-muted-foreground">{t('No open work orders')}</p>
+                                        </div>
+                                    )}
+                                </Card>
+                            </div>
+                        )}
                         {activeTab === 'activity' && (
                             <Card className="border-border shadow-none">
                                 {activitiesLoading ? <div className="space-y-3 p-4">{Array.from({ length: 5 }).map((_, i) => (<div key={i} className="flex items-center gap-3"><Skeleton className="h-7 w-7 rounded-full" /><div className="flex-1 space-y-1"><Skeleton className="h-3 w-32" /><Skeleton className="h-3 w-48" /></div></div>))}</div>
@@ -352,15 +473,19 @@ export default function OrganizationShow({ organization, sites, users, subscript
 
 /* -- Helpers ---------------------------------------------------------- */
 
-function SummaryStat({ label, value, suffix, subtitle, color, last }: { label: string; value: number; suffix?: string; subtitle?: string; color?: string; last?: boolean }) {
+function SummaryStat({ label, value, suffix, subtitle, color, last, onClick }: { label: string; value: number; suffix?: string; subtitle?: string; color?: string; last?: boolean; onClick?: () => void }) {
+    const Comp = onClick ? 'button' : 'div';
     return (
-        <div className={`flex flex-1 flex-col items-center gap-1 py-5 ${!last ? 'border-r border-border/50' : ''}`}>
+        <Comp
+            onClick={onClick}
+            className={`flex flex-1 flex-col items-center gap-1 py-5 transition-colors ${!last ? 'border-r border-border/50' : ''} ${onClick ? 'cursor-pointer hover:bg-accent/20' : ''}`}
+        >
             <span className={`font-display text-4xl font-bold leading-none tracking-tight ${color ?? 'text-foreground'}`}>
                 {value}{suffix && <span className="text-2xl">{suffix}</span>}
             </span>
             <span className="text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground/50">{label}</span>
             {subtitle && <span className="font-mono text-[9px] text-muted-foreground/30">{subtitle}</span>}
-        </div>
+        </Comp>
     );
 }
 

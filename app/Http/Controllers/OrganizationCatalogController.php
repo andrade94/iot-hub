@@ -148,6 +148,21 @@ class OrganizationCatalogController extends Controller
                 ? \Carbon\Carbon::createFromTimestamp($lastActivity)->toIso8601String()
                 : null,
             'recent_alerts' => $recentAlerts,
+            'open_work_orders' => \App\Models\WorkOrder::whereIn('site_id', $organization->sites->pluck('id'))
+                ->whereIn('status', ['open', 'assigned', 'in_progress'])
+                ->with(['site:id,name', 'assignedTo:id,name'])
+                ->orderByRaw("FIELD(priority, 'critical', 'high', 'medium', 'low')")
+                ->limit(20)
+                ->get()
+                ->map(fn ($wo) => [
+                    'id' => $wo->id,
+                    'title' => $wo->title,
+                    'status' => $wo->status,
+                    'priority' => $wo->priority,
+                    'site_name' => $wo->site?->name,
+                    'assigned_to_name' => $wo->assignedTo?->name,
+                    'created_at' => $wo->created_at->toIso8601String(),
+                ]),
             'notes' => $organization->notes->map(fn ($note) => [
                 'id' => $note->id,
                 'note' => $note->note,
