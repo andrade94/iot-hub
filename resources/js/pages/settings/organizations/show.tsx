@@ -164,15 +164,15 @@ export default function OrganizationShow({ organization, sites, users, subscript
                         <div className="flex items-center gap-2">
                             {/* Lifecycle */}
                             {['active', 'onboarding'].includes(organization.status) && (
-                                <Button variant="outline" size="sm" className="text-[11px] text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 hover:bg-amber-50 dark:hover:bg-amber-950" onClick={() => setSuspendOpen(true)}>
+                                <Button variant="outline" size="sm" className="text-[11px] text-amber-600 dark:text-amber-400 border-border hover:border-amber-300 dark:hover:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30" onClick={() => setSuspendOpen(true)}>
                                     <ShieldAlert className="mr-1 h-3.5 w-3.5" />{t('Suspend')}
                                 </Button>
                             )}
                             {organization.status === 'suspended' && (
-                                <Button variant="outline" size="sm" className="text-[11px] text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900 hover:bg-emerald-50 dark:hover:bg-emerald-950" onClick={() => setReactivateOpen(true)}>{t('Reactivate')}</Button>
+                                <Button variant="outline" size="sm" className="text-[11px] text-emerald-600 dark:text-emerald-400 border-border hover:border-emerald-300 dark:hover:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30" onClick={() => setReactivateOpen(true)}>{t('Reactivate')}</Button>
                             )}
                             {organization.status !== 'archived' && (
-                                <Button variant="outline" size="sm" className="text-[11px] text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900 hover:bg-rose-50 dark:hover:bg-rose-950" onClick={() => setArchiveOpen(true)}>
+                                <Button variant="outline" size="sm" className="text-[11px] text-rose-600 dark:text-rose-400 border-border hover:border-rose-300 dark:hover:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/30" onClick={() => setArchiveOpen(true)}>
                                     <Archive className="mr-1 h-3.5 w-3.5" />{t('Archive')}
                                 </Button>
                             )}
