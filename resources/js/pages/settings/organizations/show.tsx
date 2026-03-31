@@ -597,78 +597,43 @@ function NotesTab({ organizationId, notes }: { organizationId: number; notes: Or
 
 function AddSiteForm({ timezones, onSuccess }: { timezones: string[]; onSuccess: () => void }) {
     const { t } = useLang();
-    const form = useForm({ name: '', address: '', timezone: 'America/Mexico_City', opening_hour: '', status: 'draft' });
-    const [createdSiteId, setCreatedSiteId] = useState<number | null>(null);
+    const form = useForm({ name: '', address: '', timezone: 'America/Mexico_City', status: 'draft' });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         form.post('/settings/sites', {
             preserveScroll: true,
             onSuccess: (page) => {
+                onSuccess();
+                // Redirect to onboarding wizard if site ID is available
                 const flash = (page.props as Record<string, unknown>).flash as Record<string, unknown> | undefined;
                 const newId = flash?.created_id as number | undefined;
-                if (newId) setCreatedSiteId(newId);
-                else { form.reset(); onSuccess(); }
+                if (newId) {
+                    router.get(`/sites/${newId}/onboard`);
+                }
             },
         });
     }
 
-    if (createdSiteId) {
-        return (
-            <div className="flex flex-col items-center gap-4 py-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
-                    <MapPin className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div className="text-center">
-                    <p className="font-display text-lg font-semibold text-foreground">{t('Site Created')}</p>
-                    <p className="mt-1 text-[13px] text-muted-foreground">{t('Configure devices and alert rules on the site page.')}</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => { setCreatedSiteId(null); form.reset(); onSuccess(); }}>
-                        {t('Done')}
-                    </Button>
-                    <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => router.get(`/sites/${createdSiteId}`)}>
-                        {t('Go to Site')}
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-[13px] text-muted-foreground">{t('Create the site record, then set up gateways and devices in the onboarding wizard.')}</p>
             <div className="space-y-2">
                 <Label>{t('Site Name')}</Label>
-                <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder={t('e.g. CEDIS Monterrey')} />
+                <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder={t('e.g. CEDIS Monterrey')} autoFocus />
                 {form.errors.name && <p className="text-[11px] text-destructive-foreground">{form.errors.name}</p>}
             </div>
             <div className="space-y-2">
                 <Label>{t('Address')}</Label>
                 <Input value={form.data.address} onChange={(e) => form.setData('address', e.target.value)} placeholder={t('Street address (optional)')} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label>{t('Timezone')}</Label>
-                    <TimezoneSelect timezones={timezones} value={form.data.timezone} onValueChange={(v) => form.setData('timezone', v)} />
-                    {form.errors.timezone && <p className="text-[11px] text-destructive-foreground">{form.errors.timezone}</p>}
-                </div>
-                <div className="space-y-2">
-                    <Label>{t('Opening Hour')}</Label>
-                    <TimeInput value={form.data.opening_hour} onChange={(v) => form.setData('opening_hour', v)} />
-                </div>
-            </div>
             <div className="space-y-2">
-                <Label>{t('Initial Status')}</Label>
-                <Select value={form.data.status} onValueChange={(v) => form.setData('status', v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="draft">{t('Draft — not yet active')}</SelectItem>
-                        <SelectItem value="active">{t('Active — ready for monitoring')}</SelectItem>
-                    </SelectContent>
-                </Select>
+                <Label>{t('Timezone')}</Label>
+                <TimezoneSelect timezones={timezones} value={form.data.timezone} onValueChange={(v) => form.setData('timezone', v)} />
+                {form.errors.timezone && <p className="text-[11px] text-destructive-foreground">{form.errors.timezone}</p>}
             </div>
-            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.processing}>
-                {form.processing ? t('Creating...') : t('Create Site')}
+            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.processing || !form.data.name.trim()}>
+                {form.processing ? t('Creating...') : t('Create & Set Up Site')}
             </Button>
         </form>
     );
