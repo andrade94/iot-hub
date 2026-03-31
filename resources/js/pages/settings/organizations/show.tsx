@@ -10,6 +10,11 @@ import type { BreadcrumbItem, Subscription } from '@/types';
 import { formatTimeAgo } from '@/utils/date';
 import { Head, router, useForm } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TimezoneSelect } from '@/components/ui/timezone-select';
 import { AlertTriangle, Archive, ArrowLeft, Download, MapPin, MapPinPlus, Pencil, ShieldAlert, UserPlus, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useMemo, useState } from 'react';
@@ -32,13 +37,15 @@ const STATUS_COLORS: Record<string, string> = { active: '#10b981', onboarding: '
 const ROLE_COLORS = ['#94a3b8', '#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#6b7280'];
 
 /* -- Main Component --------------------------------------------------- */
-export default function OrganizationShow({ organization, sites, users, subscription, primary_contact, last_user_activity, recent_alerts, notes }: Props) {
+export default function OrganizationShow({ organization, sites, users, subscription, timezones, primary_contact, last_user_activity, recent_alerts, notes }: Props) {
     const { t } = useLang();
     const [suspendOpen, setSuspendOpen] = useState(false);
     const [archiveOpen, setArchiveOpen] = useState(false);
     const [reactivateOpen, setReactivateOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('sites');
+    const [showAddSite, setShowAddSite] = useState(false);
+    const [showAddMember, setShowAddMember] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Settings', href: '/settings/profile' },
@@ -121,17 +128,6 @@ export default function OrganizationShow({ organization, sites, users, subscript
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            {/* Quick actions */}
-                            <Button variant="outline" size="sm" className="text-[11px]" onClick={() => router.get('/settings/users')}>
-                                <UserPlus className="mr-1 h-3.5 w-3.5" />{t('Invite User')}
-                            </Button>
-                            <Button variant="outline" size="sm" className="text-[11px]" onClick={() => router.get('/settings/sites')}>
-                                <MapPinPlus className="mr-1 h-3.5 w-3.5" />{t('Add Site')}
-                            </Button>
-
-                            <div className="mx-1 h-4 w-px bg-border/30" />
-
-                            {/* Lifecycle actions */}
                             {['active', 'onboarding'].includes(organization.status) && (
                                 <Button variant="ghost" size="sm" className="text-[11px] text-amber-400 hover:text-amber-300" onClick={() => setSuspendOpen(true)}>
                                     <ShieldAlert className="mr-1 h-3.5 w-3.5" />{t('Suspend')}
@@ -278,8 +274,48 @@ export default function OrganizationShow({ organization, sites, users, subscript
 
                     {/* Tab Content */}
                     <div className="mt-4">
-                        {activeTab === 'sites' && <Card className="editorial-table border-border shadow-none"><DataTable columns={siteColumns} data={sites} getRowId={(r) => String(r.id)} onRowClick={(s) => router.get(`/sites/${s.id}`)} bordered={false} emptyState={sitesEmpty} /></Card>}
-                        {activeTab === 'users' && <Card className="editorial-table border-border shadow-none"><DataTable columns={userColumns} data={users} getRowId={(r) => String(r.id)} bordered={false} emptyState={usersEmpty} /></Card>}
+                        {activeTab === 'sites' && (
+                            <div>
+                                <div className="mb-3 flex items-center justify-between">
+                                    <span className="font-mono text-[10px] text-muted-foreground/30">{sites.length} {t('sites')}</span>
+                                    <Dialog open={showAddSite} onOpenChange={setShowAddSite}>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="text-[11px]">
+                                                <MapPinPlus className="mr-1 h-3.5 w-3.5" />{t('Add Site')}
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-lg">
+                                            <DialogHeader><DialogTitle>{t('Add Site')}</DialogTitle></DialogHeader>
+                                            <AddSiteForm timezones={timezones} onSuccess={() => setShowAddSite(false)} />
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+                                <Card className="editorial-table border-border shadow-none">
+                                    <DataTable columns={siteColumns} data={sites} getRowId={(r) => String(r.id)} onRowClick={(s) => router.get(`/sites/${s.id}`)} bordered={false} emptyState={sitesEmpty} />
+                                </Card>
+                            </div>
+                        )}
+                        {activeTab === 'users' && (
+                            <div>
+                                <div className="mb-3 flex items-center justify-between">
+                                    <span className="font-mono text-[10px] text-muted-foreground/30">{users.length} {t('members')}</span>
+                                    <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="text-[11px]">
+                                                <UserPlus className="mr-1 h-3.5 w-3.5" />{t('Add Member')}
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-lg">
+                                            <DialogHeader><DialogTitle>{t('Add Member')}</DialogTitle></DialogHeader>
+                                            <AddMemberForm onSuccess={() => setShowAddMember(false)} />
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+                                <Card className="editorial-table border-border shadow-none">
+                                    <DataTable columns={userColumns} data={users} getRowId={(r) => String(r.id)} bordered={false} emptyState={usersEmpty} />
+                                </Card>
+                            </div>
+                        )}
                         {activeTab === 'alerts' && (
                             <Card className="border-border shadow-none">
                                 {recent_alerts.length > 0 ? (
@@ -380,5 +416,106 @@ function NotesTab({ organizationId, notes }: { organizationId: number; notes: Or
                 ))}</div>
             ) : <div className="flex flex-col items-center gap-2 px-5 pb-8 pt-4"><p className="text-xs text-muted-foreground">{t('No notes yet.')}</p></div>}
         </Card>
+    );
+}
+
+/* -- Add Site Form ---------------------------------------------------- */
+
+function AddSiteForm({ timezones, onSuccess }: { timezones: string[]; onSuccess: () => void }) {
+    const { t } = useLang();
+    const form = useForm({ name: '', address: '', timezone: 'America/Mexico_City', opening_hour: '', status: 'draft' });
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        form.post('/settings/sites', { preserveScroll: true, onSuccess: () => { form.reset(); onSuccess(); } });
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+                <Label>{t('Site Name')}</Label>
+                <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder={t('e.g. CEDIS Monterrey')} />
+                {form.errors.name && <p className="text-[11px] text-destructive-foreground">{form.errors.name}</p>}
+            </div>
+            <div className="space-y-2">
+                <Label>{t('Address')}</Label>
+                <Input value={form.data.address} onChange={(e) => form.setData('address', e.target.value)} placeholder={t('Optional')} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label>{t('Timezone')}</Label>
+                    <TimezoneSelect timezones={timezones} value={form.data.timezone} onValueChange={(v) => form.setData('timezone', v)} />
+                    {form.errors.timezone && <p className="text-[11px] text-destructive-foreground">{form.errors.timezone}</p>}
+                </div>
+                <div className="space-y-2">
+                    <Label>{t('Opening Hour')}</Label>
+                    <Input type="time" value={form.data.opening_hour} onChange={(e) => form.setData('opening_hour', e.target.value)} className="font-mono" />
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label>{t('Status')}</Label>
+                <Select value={form.data.status} onValueChange={(v) => form.setData('status', v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="draft">{t('Draft')}</SelectItem>
+                        <SelectItem value="active">{t('Active')}</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.processing}>
+                {form.processing ? t('Creating...') : t('Create Site')}
+            </Button>
+        </form>
+    );
+}
+
+/* -- Add Member Form -------------------------------------------------- */
+
+function AddMemberForm({ onSuccess }: { onSuccess: () => void }) {
+    const { t } = useLang();
+    const form = useForm({ name: '', email: '', password: '', role: 'client_site_viewer' });
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        form.post('/settings/users', { preserveScroll: true, onSuccess: () => { form.reset(); onSuccess(); } });
+    }
+
+    const CLIENT_ROLES = [
+        { value: 'client_org_admin', label: 'Organization Admin' },
+        { value: 'client_site_manager', label: 'Site Manager' },
+        { value: 'client_site_viewer', label: 'Site Viewer' },
+    ];
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+                <Label>{t('Name')}</Label>
+                <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder={t('Full name')} />
+                {form.errors.name && <p className="text-[11px] text-destructive-foreground">{form.errors.name}</p>}
+            </div>
+            <div className="space-y-2">
+                <Label>{t('Email')}</Label>
+                <Input type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} placeholder={t('user@company.com')} />
+                {form.errors.email && <p className="text-[11px] text-destructive-foreground">{form.errors.email}</p>}
+            </div>
+            <div className="space-y-2">
+                <Label>{t('Password')}</Label>
+                <Input type="password" value={form.data.password} onChange={(e) => form.setData('password', e.target.value)} placeholder={t('Temporary password')} />
+                {form.errors.password && <p className="text-[11px] text-destructive-foreground">{form.errors.password}</p>}
+            </div>
+            <div className="space-y-2">
+                <Label>{t('Role')}</Label>
+                <Select value={form.data.role} onValueChange={(v) => form.setData('role', v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        {CLIENT_ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{t(r.label)}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                {form.errors.role && <p className="text-[11px] text-destructive-foreground">{form.errors.role}</p>}
+            </div>
+            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.processing}>
+                {form.processing ? t('Creating...') : t('Add Member')}
+            </Button>
+        </form>
     );
 }
