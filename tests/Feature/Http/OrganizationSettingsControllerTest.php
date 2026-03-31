@@ -8,7 +8,6 @@ beforeEach(function () {
     $this->org = createOrg([
         'name' => 'Acme Corp',
         'default_timezone' => 'America/New_York',
-        'default_opening_hour' => '08:00',
         'branding' => ['primary_color' => '#000000', 'accent_color' => '#ffffff'],
     ]);
 
@@ -81,17 +80,6 @@ test('org_admin can update default_timezone', function () {
     expect($this->org->fresh()->default_timezone)->toBe('Europe/London');
 });
 
-test('org_admin can update default_opening_hour', function () {
-    $this->actingAs($this->admin)
-        ->patch(route('organization.update'), [
-            'name' => 'Acme Corp',
-            'default_opening_hour' => '09:30',
-        ])
-        ->assertRedirect();
-
-    expect($this->org->fresh()->default_opening_hour->format('H:i'))->toBe('09:30');
-});
-
 test('org_admin can update branding', function () {
     $this->actingAs($this->admin)
         ->patch(route('organization.update'), [
@@ -124,15 +112,6 @@ test('validates timezone format', function () {
             'default_timezone' => 'Not/A_Timezone',
         ])
         ->assertSessionHasErrors(['default_timezone']);
-});
-
-test('validates opening_hour format', function () {
-    $this->actingAs($this->admin)
-        ->patch(route('organization.update'), [
-            'name' => 'Acme Corp',
-            'default_opening_hour' => '25:99',
-        ])
-        ->assertSessionHasErrors(['default_opening_hour']);
 });
 
 test('returns success flash message after update', function () {
