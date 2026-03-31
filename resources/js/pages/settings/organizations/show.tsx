@@ -180,7 +180,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                             {/* Manage dropdown */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="text-[11px]">
+                                    <Button variant="outline" size="sm" className="text-[11px] bg-accent/50 hover:bg-accent">
                                         <Settings2 className="mr-1 h-3.5 w-3.5" />{t('Manage')}
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -230,7 +230,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            <Button variant="outline" size="sm" className="text-[11px]" onClick={() => router.get('/settings/organization')}>
+                            <Button variant="outline" size="sm" className="text-[11px] bg-accent/50 hover:bg-accent" onClick={() => router.get('/settings/organization')}>
                                 <Pencil className="mr-1 h-3.5 w-3.5" />{t('Edit')}
                             </Button>
                         </div>
