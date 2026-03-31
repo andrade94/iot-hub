@@ -151,7 +151,7 @@ class OrganizationCatalogController extends Controller
             'open_work_orders' => \App\Models\WorkOrder::whereIn('site_id', $organization->sites->pluck('id'))
                 ->whereIn('status', ['open', 'assigned', 'in_progress'])
                 ->with(['site:id,name', 'assignedTo:id,name'])
-                ->orderByRaw("FIELD(priority, 'critical', 'high', 'medium', 'low')")
+                ->orderByRaw("CASE priority WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 ELSE 5 END")
                 ->limit(20)
                 ->get()
                 ->map(fn ($wo) => [
