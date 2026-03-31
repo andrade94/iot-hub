@@ -230,7 +230,8 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            <Button variant="outline" size="sm" className="text-[11px] bg-accent hover:bg-accent/80 dark:bg-accent dark:hover:bg-accent/60" onClick={() => router.get('/settings/organization')}>
+                            <Button variant="outline" size="sm" className="text-[11px] bg-accent hover:bg-accent/80 dark:bg-accent dark:hover:bg-accent/60"
+                                onClick={() => router.post('/org/switch', { org_id: organization.id }, { onSuccess: () => router.get('/settings/organization') })}>
                                 <Pencil className="mr-1 h-3.5 w-3.5" />{t('Edit')}
                             </Button>
                         </div>
