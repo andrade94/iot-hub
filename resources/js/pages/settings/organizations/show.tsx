@@ -67,8 +67,13 @@ export default function OrganizationShow({ organization, sites, users, subscript
     const healthPct = totalDevices > 0 ? Math.round((totalOnline / totalDevices) * 100) : 0;
 
     const siteStatusData = useMemo(() => { const c: Record<string, number> = {}; sites.forEach((s) => { c[s.status] = (c[s.status] ?? 0) + 1; }); return Object.entries(c).map(([st, v]) => ({ name: st.charAt(0).toUpperCase() + st.slice(1), value: v, fill: STATUS_COLORS[st] ?? '#374151' })); }, [sites]);
-    const devicesPerSite = useMemo(() => sites.map((s) => ({ name: s.name.length > 12 ? s.name.substring(0, 12) + '…' : s.name, devices: s.devices_count, gateways: s.gateways_count })), [sites]);
-    const roleData = useMemo(() => { const c: Record<string, number> = {}; users.forEach((u) => { const r = u.role.replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()); c[r] = (c[r] ?? 0) + 1; }); return Object.entries(c).map(([r, v], i) => ({ name: r, value: v, fill: ROLE_COLORS[i % ROLE_COLORS.length] })); }, [users]);
+    const siteDeviceData = useMemo(() => sites.map((s) => ({
+        name: s.name.length > 14 ? s.name.substring(0, 14) + '…' : s.name,
+        online: s.online_devices_count,
+        offline: s.devices_count - s.online_devices_count,
+        total: s.devices_count,
+        gateways: s.gateways_count,
+    })), [sites]);
 
     function handleSuspend() { setActionLoading(true); router.post(`/settings/organizations/${organization.id}/suspend`, {}, { preserveScroll: true, onFinish: () => { setActionLoading(false); setSuspendOpen(false); } }); }
     function handleReactivate() { setActionLoading(true); router.post(`/settings/organizations/${organization.id}/reactivate`, {}, { preserveScroll: true, onFinish: () => { setActionLoading(false); setReactivateOpen(false); } }); }
@@ -114,7 +119,8 @@ export default function OrganizationShow({ organization, sites, users, subscript
     const chartGridStroke = isDark ? 'rgba(30,34,40,0.6)' : 'rgba(0,0,0,0.06)';
     const chartAxisFill = isDark ? '#6b7280' : '#9ca3af';
     const chartAxisLabelFill = isDark ? '#b0b8c4' : '#6b7280';
-    const chartCursorFill = isDark ? 'rgba(6,182,212,0.04)' : 'rgba(6,182,212,0.06)';
+    const chartCursorFill = isDark ? 'rgba(6,182,212,0.08)' : 'rgba(8,145,178,0.06)';
+    const totalOffline = totalDevices - totalOnline;
     const sitesEmpty = (<div className="flex flex-col items-center gap-2 py-10"><MapPin className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No sites configured')}</p></div>);
     const usersEmpty = (<div className="flex flex-col items-center gap-2 py-10"><Users className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No users')}</p></div>);
 
@@ -299,49 +305,74 @@ export default function OrganizationShow({ organization, sites, users, subscript
 
                 <FadeIn delay={100} duration={400}>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        {/* Card 1: Fleet Overview */}
                         <Card className="border-border shadow-none">
                             <CardContent>
-                                <p className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/50">{t('Sites by Status')}</p>
+                                {/* Device Health Bar */}
+                                <div className="mb-5">
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <p className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/50">{t('Fleet Health')}</p>
+                                        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                                            {totalOnline}/{totalDevices} {t('online')}
+                                        </span>
+                                    </div>
+                                    <div className="flex h-3 overflow-hidden rounded-full bg-accent">
+                                        {totalDevices > 0 && (
+                                            <>
+                                                <div className="rounded-l-full bg-emerald-500 transition-all duration-500" style={{ width: `${healthPct}%` }} />
+                                                {totalOffline > 0 && <div className="bg-muted-foreground/20" style={{ width: `${100 - healthPct}%` }} />}
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="mt-1.5 flex items-center gap-4 text-[10px]">
+                                        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t('Online')} ({totalOnline})</span>
+                                        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />{t('Offline')} ({totalOffline})</span>
+                                        <span className="flex items-center gap-1.5 text-muted-foreground/40"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/15" />{t('Gateways')} ({totalGateways})</span>
+                                    </div>
+                                </div>
+
+                                {/* Sites by Status */}
+                                <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/50">{t('Sites by Status')}</p>
                                 {siteStatusData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height={100}>
-                                        <BarChart data={siteStatusData} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridStroke} />
-                                            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: chartAxisFill }} axisLine={false} tickLine={false} />
-                                            <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 10, fill: chartAxisLabelFill }} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: chartCursorFill }} formatter={(val: number) => [val, null]} labelStyle={{ fontWeight: 600, marginBottom: 2 }} />
-                                            <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={18}>{siteStatusData.map((e) => <Cell key={e.name} fill={e.fill} />)}</Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                ) : <p className="py-6 text-center text-[10px] text-muted-foreground">{t('No data')}</p>}
-                                <p className="mb-3 mt-5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/50">{t('User Roles')}</p>
-                                {roleData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height={100}>
-                                        <BarChart data={roleData} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridStroke} />
-                                            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: chartAxisFill }} axisLine={false} tickLine={false} />
-                                            <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 9, fill: chartAxisLabelFill }} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: chartCursorFill }} formatter={(val: number) => [val, null]} labelStyle={{ fontWeight: 600, marginBottom: 2 }} />
-                                            <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={16}>{roleData.map((e) => <Cell key={e.name} fill={e.fill} />)}</Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                ) : <p className="py-6 text-center text-[10px] text-muted-foreground">{t('No data')}</p>}
+                                    <div className="space-y-2">
+                                        {siteStatusData.map((entry) => (
+                                            <div key={entry.name} className="flex items-center gap-3">
+                                                <span className="w-16 text-right text-[11px] text-muted-foreground">{entry.name}</span>
+                                                <div className="flex h-2 flex-1 overflow-hidden rounded-full bg-accent">
+                                                    <div className="rounded-full transition-all duration-500" style={{ width: `${(entry.value / sites.length) * 100}%`, backgroundColor: entry.fill }} />
+                                                </div>
+                                                <span className="w-6 font-mono text-[11px] tabular-nums text-foreground">{entry.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : <p className="py-4 text-center text-[10px] text-muted-foreground">{t('No data')}</p>}
                             </CardContent>
                         </Card>
+
+                        {/* Card 2: Online Devices per Site (stacked) */}
                         <Card className="border-border shadow-none">
                             <CardContent>
                                 <p className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/50">{t('Devices per Site')}</p>
-                                {devicesPerSite.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height={240}>
-                                        <BarChart data={devicesPerSite} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
+                                {siteDeviceData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height={220}>
+                                        <BarChart data={siteDeviceData} margin={{ top: 0, right: 4, left: -10, bottom: 0 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridStroke} />
                                             <XAxis dataKey="name" tick={{ fontSize: 9, fill: chartAxisFill }} axisLine={false} tickLine={false} />
                                             <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: chartAxisFill }} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: chartCursorFill }} formatter={(val: number) => [val, null]} labelStyle={{ fontWeight: 600, marginBottom: 2 }} />
-                                            <Bar dataKey="devices" fill="#06b6d4" radius={[4, 4, 0, 0]} maxBarSize={28} name={t('Devices')} />
-                                            <Bar dataKey="gateways" fill="#94a3b8" radius={[4, 4, 0, 0]} maxBarSize={28} name={t('Gateways')} />
+                                            <Tooltip
+                                                contentStyle={chartTooltipStyle}
+                                                cursor={{ fill: chartCursorFill }}
+                                                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                                            />
+                                            <Bar dataKey="online" stackId="devices" fill="#10b981" radius={[0, 0, 0, 0]} maxBarSize={32} name={t('Online')} />
+                                            <Bar dataKey="offline" stackId="devices" fill={isDark ? '#374151' : '#d1d5db'} radius={[4, 4, 0, 0]} maxBarSize={32} name={t('Offline')} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : <p className="py-6 text-center text-[10px] text-muted-foreground">{t('No data')}</p>}
+                                <div className="mt-2 flex items-center gap-4 text-[10px]">
+                                    <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t('Online')}</span>
+                                    <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: isDark ? '#374151' : '#d1d5db' }} />{t('Offline')}</span>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
