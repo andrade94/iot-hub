@@ -34,12 +34,22 @@ interface OrganizationNote { id: number; note: string; created_at: string; user:
 interface WorkOrderSummary { id: number; title: string; status: string; priority: string; site_name: string | null; assigned_to_name: string | null; created_at: string; }
 interface Props { organization: OrganizationDetail; sites: SiteWithCounts[]; users: UserSummary[]; subscription?: Subscription | null; timezones: string[]; segments: string[]; primary_contact: PrimaryContact | null; last_user_activity: string | null; recent_alerts: AlertFeedItem[]; open_work_orders: WorkOrderSummary[]; notes: OrganizationNote[]; }
 
-/* -- Constants -------------------------------------------------------- */
+/* -- Design Tokens ---------------------------------------------------- */
+
+/** Standardized palette — use these everywhere instead of ad-hoc hex values */
+const PALETTE = {
+    emerald: { hex: '#10b981', light: '#059669', dark: '#34d399' },
+    cyan: { hex: '#06b6d4', light: '#0891b2', dark: '#22d3ee' },
+    rose: { hex: '#f43f5e', light: '#e11d48', dark: '#fb7185' },
+    amber: { hex: '#f59e0b', light: '#d97706', dark: '#fbbf24' },
+    slate: { hex: '#64748b', light: '#475569', dark: '#94a3b8' },
+    offline: { hex: '#fda4af', light: '#fda4af', dark: '#9f1239' },
+} as const;
+
 const statusVariants: Record<string, 'success' | 'warning' | 'destructive' | 'secondary'> = { active: 'success', onboarding: 'warning', suspended: 'destructive', archived: 'secondary' };
 const segmentVariants: Record<string, 'info' | 'secondary' | 'outline' | 'warning' | 'success'> = { retail: 'info', cold_chain: 'secondary', industrial: 'warning', commercial: 'outline', foodservice: 'success' };
 const siteStatusVariants: Record<string, 'success' | 'warning' | 'outline'> = { active: 'success', onboarding: 'warning', draft: 'outline', suspended: 'warning' };
-const STATUS_COLORS: Record<string, string> = { active: '#10b981', onboarding: '#06b6d4', suspended: '#f43f5e', draft: '#374151', archived: '#374151' };
-const ROLE_COLORS = ['#94a3b8', '#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#6b7280'];
+const STATUS_COLORS: Record<string, string> = { active: PALETTE.emerald.hex, onboarding: PALETTE.cyan.hex, suspended: PALETTE.rose.hex, draft: PALETTE.slate.hex, archived: PALETTE.slate.hex };
 
 /* -- Main Component --------------------------------------------------- */
 export default function OrganizationShow({ organization, sites, users, subscription, timezones, primary_contact, last_user_activity, recent_alerts, open_work_orders, notes }: Props) {
@@ -154,15 +164,15 @@ export default function OrganizationShow({ organization, sites, users, subscript
                         <div className="flex items-center gap-2">
                             {/* Lifecycle */}
                             {['active', 'onboarding'].includes(organization.status) && (
-                                <Button variant="ghost" size="sm" className="text-[11px] text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:text-amber-300" onClick={() => setSuspendOpen(true)}>
+                                <Button variant="outline" size="sm" className="text-[11px] text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 hover:bg-amber-50 dark:hover:bg-amber-950" onClick={() => setSuspendOpen(true)}>
                                     <ShieldAlert className="mr-1 h-3.5 w-3.5" />{t('Suspend')}
                                 </Button>
                             )}
                             {organization.status === 'suspended' && (
-                                <Button variant="ghost" size="sm" className="text-[11px] text-emerald-600 dark:text-emerald-400" onClick={() => setReactivateOpen(true)}>{t('Reactivate')}</Button>
+                                <Button variant="outline" size="sm" className="text-[11px] text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900 hover:bg-emerald-50 dark:hover:bg-emerald-950" onClick={() => setReactivateOpen(true)}>{t('Reactivate')}</Button>
                             )}
                             {organization.status !== 'archived' && (
-                                <Button variant="ghost" size="sm" className="text-[11px] text-rose-600 dark:text-rose-400 hover:text-rose-500 dark:text-rose-300" onClick={() => setArchiveOpen(true)}>
+                                <Button variant="outline" size="sm" className="text-[11px] text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900 hover:bg-rose-50 dark:hover:bg-rose-950" onClick={() => setArchiveOpen(true)}>
                                     <Archive className="mr-1 h-3.5 w-3.5" />{t('Archive')}
                                 </Button>
                             )}
@@ -364,14 +374,14 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                                 cursor={{ fill: chartCursorFill }}
                                                 labelStyle={{ fontWeight: 600, marginBottom: 4 }}
                                             />
-                                            <Bar dataKey="online" stackId="devices" fill="#10b981" radius={[0, 0, 0, 0]} maxBarSize={32} name={t('Online')} />
-                                            <Bar dataKey="offline" stackId="devices" fill={isDark ? '#9f1239' : '#fda4af'} radius={[4, 4, 0, 0]} maxBarSize={32} name={t('Offline')} />
+                                            <Bar dataKey="online" stackId="devices" fill={PALETTE.emerald.hex} radius={[0, 0, 0, 0]} maxBarSize={32} name={t('Online')} />
+                                            <Bar dataKey="offline" stackId="devices" fill={isDark ? PALETTE.offline.dark : PALETTE.offline.light} radius={[4, 4, 0, 0]} maxBarSize={32} name={t('Offline')} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : <p className="py-6 text-center text-[10px] text-muted-foreground">{t('No data')}</p>}
                                 <div className="mt-2 flex items-center gap-4 text-[10px]">
                                     <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t('Online')}</span>
-                                    <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: isDark ? '#9f1239' : '#fda4af' }} />{t('Offline')}</span>
+                                    <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: isDark ? PALETTE.offline.dark : PALETTE.offline.light }} />{t('Offline')}</span>
                                 </div>
                             </CardContent>
                         </Card>
