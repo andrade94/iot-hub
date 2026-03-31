@@ -87,9 +87,9 @@ export default function OrganizationShow({ organization, sites, users, subscript
     const siteColumns = useMemo<ColumnDef<SiteWithCounts>[]>(() => [
         { accessorKey: 'name', header: () => t('Site'), cell: ({ row }) => <span className="font-medium text-foreground">{row.original.name}</span> },
         { accessorKey: 'devices_count', header: () => t('Devices'), cell: ({ row }) => <span className="font-mono tabular-nums">{row.original.devices_count}</span> },
-        { id: 'online', header: () => t('Online'), cell: ({ row }) => { const { devices_count: d, online_devices_count: o } = row.original; const p = d > 0 ? Math.round((o / d) * 100) : 0; return <span className={`font-mono text-xs font-semibold tabular-nums ${p >= 90 ? 'text-emerald-400' : p > 50 ? 'text-amber-400' : 'text-rose-400'}`}>{p}%</span>; } },
-        { accessorKey: 'active_alerts_count', header: () => t('Alerts'), cell: ({ row }) => { const c = row.original.active_alerts_count; return <span className={`font-mono tabular-nums ${c > 0 ? 'text-rose-400' : 'text-muted-foreground'}`}>{c}</span>; } },
-        { accessorKey: 'open_work_orders_count', header: () => t('Work Orders'), cell: ({ row }) => { const c = row.original.open_work_orders_count; return <span className={`font-mono tabular-nums ${c > 0 ? 'text-amber-400' : 'text-muted-foreground'}`}>{c}</span>; } },
+        { id: 'online', header: () => t('Online'), cell: ({ row }) => { const { devices_count: d, online_devices_count: o } = row.original; const p = d > 0 ? Math.round((o / d) * 100) : 0; return <span className={`font-mono text-xs font-semibold tabular-nums ${p >= 90 ? 'text-emerald-600 dark:text-emerald-400' : p > 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}`}>{p}%</span>; } },
+        { accessorKey: 'active_alerts_count', header: () => t('Alerts'), cell: ({ row }) => { const c = row.original.active_alerts_count; return <span className={`font-mono tabular-nums ${c > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}>{c}</span>; } },
+        { accessorKey: 'open_work_orders_count', header: () => t('Work Orders'), cell: ({ row }) => { const c = row.original.open_work_orders_count; return <span className={`font-mono tabular-nums ${c > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>{c}</span>; } },
         { accessorKey: 'status', header: () => t('Status'), cell: ({ row }) => <Badge variant={siteStatusVariants[row.original.status] ?? 'outline'} className="text-xs capitalize">{row.original.status}</Badge> },
     ], [t]);
 
@@ -148,15 +148,15 @@ export default function OrganizationShow({ organization, sites, users, subscript
                         <div className="flex items-center gap-2">
                             {/* Lifecycle */}
                             {['active', 'onboarding'].includes(organization.status) && (
-                                <Button variant="ghost" size="sm" className="text-[11px] text-amber-400 hover:text-amber-300" onClick={() => setSuspendOpen(true)}>
+                                <Button variant="ghost" size="sm" className="text-[11px] text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:text-amber-300" onClick={() => setSuspendOpen(true)}>
                                     <ShieldAlert className="mr-1 h-3.5 w-3.5" />{t('Suspend')}
                                 </Button>
                             )}
                             {organization.status === 'suspended' && (
-                                <Button variant="ghost" size="sm" className="text-[11px] text-emerald-400" onClick={() => setReactivateOpen(true)}>{t('Reactivate')}</Button>
+                                <Button variant="ghost" size="sm" className="text-[11px] text-emerald-600 dark:text-emerald-400" onClick={() => setReactivateOpen(true)}>{t('Reactivate')}</Button>
                             )}
                             {organization.status !== 'archived' && (
-                                <Button variant="ghost" size="sm" className="text-[11px] text-rose-400 hover:text-rose-300" onClick={() => setArchiveOpen(true)}>
+                                <Button variant="ghost" size="sm" className="text-[11px] text-rose-600 dark:text-rose-400 hover:text-rose-500 dark:text-rose-300" onClick={() => setArchiveOpen(true)}>
                                     <Archive className="mr-1 h-3.5 w-3.5" />{t('Archive')}
                                 </Button>
                             )}
@@ -226,9 +226,9 @@ export default function OrganizationShow({ organization, sites, users, subscript
                     <div className="mt-6 flex items-stretch overflow-hidden rounded-lg border border-border bg-card">
                         <SummaryStat label={t('Sites')} value={sites.length} onClick={() => setActiveTab('sites')} />
                         <SummaryStat label={t('Devices')} value={totalDevices} subtitle={`${totalGateways} ${t('gateways')}`} />
-                        <SummaryStat label={t('Online')} value={healthPct} suffix="%" color={healthPct >= 90 ? 'text-emerald-400' : healthPct > 50 ? 'text-amber-400' : 'text-rose-400'} />
-                        <SummaryStat label={t('Alerts')} value={totalAlerts} color={totalAlerts > 0 ? 'text-rose-400' : undefined} subtitle={totalCritical > 0 ? `${totalCritical} ${t('critical')}` : undefined} onClick={() => setActiveTab('alerts')} />
-                        <SummaryStat label={t('Work Orders')} value={totalWorkOrders} color={totalWorkOrders > 0 ? 'text-amber-400' : undefined} onClick={() => setActiveTab('work_orders')} />
+                        <SummaryStat label={t('Online')} value={healthPct} suffix="%" color={healthPct >= 90 ? 'text-emerald-600 dark:text-emerald-400' : healthPct > 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'} />
+                        <SummaryStat label={t('Alerts')} value={totalAlerts} color={totalAlerts > 0 ? 'text-rose-600 dark:text-rose-400' : undefined} subtitle={totalCritical > 0 ? `${totalCritical} ${t('critical')}` : undefined} onClick={() => setActiveTab('alerts')} />
+                        <SummaryStat label={t('Work Orders')} value={totalWorkOrders} color={totalWorkOrders > 0 ? 'text-amber-600 dark:text-amber-400' : undefined} onClick={() => setActiveTab('work_orders')} />
                         <SummaryStat label={t('Users')} value={users.length} onClick={() => setActiveTab('users')} last />
                     </div>
                 </FadeIn>
@@ -270,22 +270,22 @@ export default function OrganizationShow({ organization, sites, users, subscript
                 {(totalCritical > 0 || open_work_orders.length > 0 || sites.some((s) => s.status === 'draft')) && (
                     <FadeIn delay={85} duration={300}>
                         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-amber-500/10 bg-amber-500/[0.03] px-4 py-2.5">
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-400/60" />
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400/60" />
                             {totalCritical > 0 && (
-                                <button onClick={() => setActiveTab('alerts')} className="text-[11px] text-amber-400 transition-colors hover:text-amber-300">
+                                <button onClick={() => setActiveTab('alerts')} className="text-[11px] text-amber-600 dark:text-amber-400 transition-colors hover:text-amber-500 dark:text-amber-300">
                                     {totalCritical} {t('critical alert')}{totalCritical > 1 ? 's' : ''}
                                 </button>
                             )}
                             {totalCritical > 0 && open_work_orders.length > 0 && <span className="text-[10px] text-muted-foreground/20">·</span>}
                             {open_work_orders.length > 0 && (
-                                <button onClick={() => setActiveTab('work_orders')} className="text-[11px] text-amber-400 transition-colors hover:text-amber-300">
+                                <button onClick={() => setActiveTab('work_orders')} className="text-[11px] text-amber-600 dark:text-amber-400 transition-colors hover:text-amber-500 dark:text-amber-300">
                                     {open_work_orders.length} {t('open work order')}{open_work_orders.length > 1 ? 's' : ''}
                                 </button>
                             )}
                             {sites.some((s) => s.status === 'draft') && (
                                 <>
                                     <span className="text-[10px] text-muted-foreground/20">·</span>
-                                    <button onClick={() => setActiveTab('sites')} className="text-[11px] text-cyan-400 transition-colors hover:text-cyan-300">
+                                    <button onClick={() => setActiveTab('sites')} className="text-[11px] text-cyan-600 dark:text-cyan-400 transition-colors hover:text-cyan-500 dark:text-cyan-300">
                                         {sites.filter((s) => s.status === 'draft').length} {t('site')}{sites.filter((s) => s.status === 'draft').length > 1 ? 's' : ''} {t('pending setup')}
                                     </button>
                                 </>
@@ -365,7 +365,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.06em] transition-colors ${activeTab === tab.key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground/70'}`}>
                                 {tab.label}
                                 {tab.count !== undefined && tab.count > 0 && (
-                                    <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] tabular-nums ${tab.isAlert && tab.count > 0 ? 'bg-rose-500/15 text-rose-400' : activeTab === tab.key ? 'bg-accent text-foreground' : 'bg-accent/50 text-muted-foreground'}`}>{tab.count}</span>
+                                    <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] tabular-nums ${tab.isAlert && tab.count > 0 ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' : activeTab === tab.key ? 'bg-accent text-foreground' : 'bg-accent/50 text-muted-foreground'}`}>{tab.count}</span>
                                 )}
                             </button>
                         ))}
@@ -516,7 +516,7 @@ function DetailInline({ label, value, mono, accent }: { label: string; value: st
     return (
         <div className="flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground/40">{label}</span>
-            <span className={`text-[12px] ${mono ? 'font-mono text-[11px]' : ''} ${accent ? 'text-emerald-400' : 'text-foreground/80'}`}>{value}</span>
+            <span className={`text-[12px] ${mono ? 'font-mono text-[11px]' : ''} ${accent ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground/80'}`}>{value}</span>
         </div>
     );
 }
@@ -548,7 +548,7 @@ function NotesTab({ organizationId, notes }: { organizationId: number; notes: Or
                             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/50"><span className="font-mono text-[9px] font-medium text-muted-foreground">{note.user.name.charAt(0).toUpperCase()}</span></div>
                             <span className="text-xs font-medium text-foreground">{note.user.name}</span>
                             <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{formatTimeAgo(note.created_at)}</span>
-                            <Button variant="ghost" size="sm" className="ml-auto h-5 px-1.5 text-[10px] text-muted-foreground opacity-0 transition-opacity hover:text-rose-400 group-hover:opacity-100" onClick={() => router.delete(`/settings/organizations/${organizationId}/notes/${note.id}`, { preserveScroll: true })}>{t('Delete')}</Button>
+                            <Button variant="ghost" size="sm" className="ml-auto h-5 px-1.5 text-[10px] text-muted-foreground opacity-0 transition-opacity hover:text-rose-600 dark:text-rose-400 group-hover:opacity-100" onClick={() => router.delete(`/settings/organizations/${organizationId}/notes/${note.id}`, { preserveScroll: true })}>{t('Delete')}</Button>
                         </div>
                         <p className="mt-2 pl-8 whitespace-pre-wrap text-[13px] leading-relaxed text-foreground/70">{note.note}</p>
                     </div>
@@ -582,7 +582,7 @@ function AddSiteForm({ timezones, onSuccess }: { timezones: string[]; onSuccess:
         return (
             <div className="flex flex-col items-center gap-4 py-6">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
-                    <MapPin className="h-6 w-6 text-emerald-400" />
+                    <MapPin className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div className="text-center">
                     <p className="font-display text-lg font-semibold text-foreground">{t('Site Created')}</p>
@@ -745,7 +745,7 @@ function InviteMemberForm({ sites: orgSites, onSuccess }: { sites: SiteWithCount
         <form onSubmit={handleSubmit} className="space-y-4">
             {/* Step indicator */}
             <div className="flex items-center gap-2">
-                <button type="button" onClick={() => setStep(1)} className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-[11px] font-semibold text-emerald-400">&#10003;</button>
+                <button type="button" onClick={() => setStep(1)} className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">&#10003;</button>
                 <span className="text-[13px] text-muted-foreground">{t('Member Details')}</span>
                 <div className="h-px flex-1 bg-border/30" />
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">2</div>

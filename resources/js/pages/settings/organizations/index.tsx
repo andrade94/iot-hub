@@ -149,8 +149,8 @@ export default function OrganizationsIndex({ organizations, segments, timezones 
                 <FadeIn delay={50} duration={400}>
                     <div className="mt-6 flex items-stretch overflow-hidden rounded-lg border border-border bg-card">
                         <SummaryStat label={t('Total')} value={String(organizations.length).padStart(2, '0')} />
-                        <SummaryStat label={t('Active')} value={String(stats.active).padStart(2, '0')} color="text-emerald-400" />
-                        <SummaryStat label={t('Suspended')} value={String(stats.suspended).padStart(2, '0')} color="text-rose-400" />
+                        <SummaryStat label={t('Active')} value={String(stats.active).padStart(2, '0')} color="text-emerald-600 dark:text-emerald-400" />
+                        <SummaryStat label={t('Suspended')} value={String(stats.suspended).padStart(2, '0')} color="text-rose-600 dark:text-rose-400" />
                         <SummaryStat label={t('Sites')} value={String(stats.totalSites)} />
                         <SummaryStat label={t('Devices')} value={String(stats.totalDevices)} last />
                     </div>
