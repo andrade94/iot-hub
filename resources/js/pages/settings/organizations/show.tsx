@@ -320,13 +320,13 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                         {totalDevices > 0 && (
                                             <>
                                                 <div className="rounded-l-full bg-emerald-500 transition-all duration-500" style={{ width: `${healthPct}%` }} />
-                                                {totalOffline > 0 && <div className="bg-muted-foreground/20" style={{ width: `${100 - healthPct}%` }} />}
+                                                {totalOffline > 0 && <div className="bg-rose-300 dark:bg-rose-900" style={{ width: `${100 - healthPct}%` }} />}
                                             </>
                                         )}
                                     </div>
                                     <div className="mt-1.5 flex items-center gap-4 text-[10px]">
                                         <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t('Online')} ({totalOnline})</span>
-                                        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />{t('Offline')} ({totalOffline})</span>
+                                        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-rose-400" />{t('Offline')} ({totalOffline})</span>
                                         <span className="flex items-center gap-1.5 text-muted-foreground/40"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/15" />{t('Gateways')} ({totalGateways})</span>
                                     </div>
                                 </div>
@@ -365,13 +365,13 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                                 labelStyle={{ fontWeight: 600, marginBottom: 4 }}
                                             />
                                             <Bar dataKey="online" stackId="devices" fill="#10b981" radius={[0, 0, 0, 0]} maxBarSize={32} name={t('Online')} />
-                                            <Bar dataKey="offline" stackId="devices" fill={isDark ? '#374151' : '#d1d5db'} radius={[4, 4, 0, 0]} maxBarSize={32} name={t('Offline')} />
+                                            <Bar dataKey="offline" stackId="devices" fill={isDark ? '#9f1239' : '#fda4af'} radius={[4, 4, 0, 0]} maxBarSize={32} name={t('Offline')} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : <p className="py-6 text-center text-[10px] text-muted-foreground">{t('No data')}</p>}
                                 <div className="mt-2 flex items-center gap-4 text-[10px]">
                                     <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t('Online')}</span>
-                                    <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: isDark ? '#374151' : '#d1d5db' }} />{t('Offline')}</span>
+                                    <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: isDark ? '#9f1239' : '#fda4af' }} />{t('Offline')}</span>
                                 </div>
                             </CardContent>
                         </Card>
