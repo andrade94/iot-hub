@@ -18,6 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLang } from '@/hooks/use-lang';
 import { useValidatedForm } from '@/hooks/use-validated-form';
 import AppLayout from '@/layouts/app-layout';
+import { TimeInput } from '@/components/ui/time-input';
 import type { BreadcrumbItem, SharedData } from '@/types';
 import { siteSchema } from '@/utils/schemas';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -377,11 +378,9 @@ function CreateSiteForm({
                 </div>
                 <div className="grid gap-2">
                     <Label>{t('Opening Hour')}</Label>
-                    <Input
-                        type="time"
+                    <TimeInput
                         value={form.data.opening_hour ?? ''}
-                        onChange={(e) => form.setData('opening_hour', e.target.value)}
-                        className="font-mono tabular-nums"
+                        onChange={(v) => form.setData('opening_hour', v)}
                     />
                     <InputError message={form.errors.opening_hour} />
                 </div>

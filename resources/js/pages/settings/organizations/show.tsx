@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TimeInput } from '@/components/ui/time-input';
 import { TimezoneSelect } from '@/components/ui/timezone-select';
 import { AlertTriangle, Archive, ArrowLeft, Download, MapPin, MapPinPlus, Pencil, ShieldAlert, UserPlus, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -449,7 +450,7 @@ function AddSiteForm({ timezones, onSuccess }: { timezones: string[]; onSuccess:
                 </div>
                 <div className="space-y-2">
                     <Label>{t('Opening Hour')}</Label>
-                    <Input type="time" value={form.data.opening_hour} onChange={(e) => form.setData('opening_hour', e.target.value)} className="font-mono" />
+                    <TimeInput value={form.data.opening_hour} onChange={(v) => form.setData('opening_hour', v)} />
                 </div>
             </div>
             <div className="space-y-2">
