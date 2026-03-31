@@ -307,8 +307,8 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent className="max-w-lg">
-                                            <DialogHeader><DialogTitle>{t('Add Member')}</DialogTitle></DialogHeader>
-                                            <AddMemberForm onSuccess={() => setShowAddMember(false)} />
+                                            <DialogHeader><DialogTitle>{t('Invite Member')}</DialogTitle></DialogHeader>
+                                            <InviteMemberForm sites={sites} onSuccess={() => setShowAddMember(false)} />
                                         </DialogContent>
                                     </Dialog>
                                 </div>
@@ -425,10 +425,41 @@ function NotesTab({ organizationId, notes }: { organizationId: number; notes: Or
 function AddSiteForm({ timezones, onSuccess }: { timezones: string[]; onSuccess: () => void }) {
     const { t } = useLang();
     const form = useForm({ name: '', address: '', timezone: 'America/Mexico_City', opening_hour: '', status: 'draft' });
+    const [createdSiteId, setCreatedSiteId] = useState<number | null>(null);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        form.post('/settings/sites', { preserveScroll: true, onSuccess: () => { form.reset(); onSuccess(); } });
+        form.post('/settings/sites', {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                const flash = (page.props as Record<string, unknown>).flash as Record<string, unknown> | undefined;
+                const newId = flash?.created_id as number | undefined;
+                if (newId) setCreatedSiteId(newId);
+                else { form.reset(); onSuccess(); }
+            },
+        });
+    }
+
+    if (createdSiteId) {
+        return (
+            <div className="flex flex-col items-center gap-4 py-6">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
+                    <MapPin className="h-6 w-6 text-emerald-400" />
+                </div>
+                <div className="text-center">
+                    <p className="font-display text-lg font-semibold text-foreground">{t('Site Created')}</p>
+                    <p className="mt-1 text-[13px] text-muted-foreground">{t('Configure devices and alert rules on the site page.')}</p>
+                </div>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => { setCreatedSiteId(null); form.reset(); onSuccess(); }}>
+                        {t('Done')}
+                    </Button>
+                    <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => router.get(`/sites/${createdSiteId}`)}>
+                        {t('Go to Site')}
+                    </Button>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -440,7 +471,7 @@ function AddSiteForm({ timezones, onSuccess }: { timezones: string[]; onSuccess:
             </div>
             <div className="space-y-2">
                 <Label>{t('Address')}</Label>
-                <Input value={form.data.address} onChange={(e) => form.setData('address', e.target.value)} placeholder={t('Optional')} />
+                <Input value={form.data.address} onChange={(e) => form.setData('address', e.target.value)} placeholder={t('Street address (optional)')} />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -454,12 +485,12 @@ function AddSiteForm({ timezones, onSuccess }: { timezones: string[]; onSuccess:
                 </div>
             </div>
             <div className="space-y-2">
-                <Label>{t('Status')}</Label>
+                <Label>{t('Initial Status')}</Label>
                 <Select value={form.data.status} onValueChange={(v) => form.setData('status', v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="draft">{t('Draft')}</SelectItem>
-                        <SelectItem value="active">{t('Active')}</SelectItem>
+                        <SelectItem value="draft">{t('Draft — not yet active')}</SelectItem>
+                        <SelectItem value="active">{t('Active — ready for monitoring')}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -470,53 +501,205 @@ function AddSiteForm({ timezones, onSuccess }: { timezones: string[]; onSuccess:
     );
 }
 
-/* -- Add Member Form -------------------------------------------------- */
+/* -- Invite Member Flow (2-step) -------------------------------------- */
 
-function AddMemberForm({ onSuccess }: { onSuccess: () => void }) {
+const CLIENT_ROLES = [
+    { value: 'client_org_admin', label: 'Organization Admin', description: 'Full access to organization settings, sites, and users' },
+    { value: 'client_site_manager', label: 'Site Manager', description: 'Manage assigned sites, devices, and alerts' },
+    { value: 'client_site_viewer', label: 'Site Viewer', description: 'View-only access to assigned site data' },
+];
+
+function InviteMemberForm({ sites: orgSites, onSuccess }: { sites: SiteWithCounts[]; onSuccess: () => void }) {
     const { t } = useLang();
-    const form = useForm({ name: '', email: '', password: '', role: 'client_site_viewer' });
+    const [step, setStep] = useState(1);
+    const form = useForm({
+        name: '',
+        email: '',
+        password: '',
+        role: 'client_site_viewer',
+        site_ids: [] as number[],
+        has_app_access: false,
+    });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        form.post('/settings/users', { preserveScroll: true, onSuccess: () => { form.reset(); onSuccess(); } });
+        form.post('/settings/users', {
+            preserveScroll: true,
+            onSuccess: () => { form.reset(); setStep(1); onSuccess(); },
+        });
     }
 
-    const CLIENT_ROLES = [
-        { value: 'client_org_admin', label: 'Organization Admin' },
-        { value: 'client_site_manager', label: 'Site Manager' },
-        { value: 'client_site_viewer', label: 'Site Viewer' },
-    ];
+    function toggleSite(siteId: number) {
+        const current = form.data.site_ids;
+        form.setData('site_ids', current.includes(siteId) ? current.filter((id) => id !== siteId) : [...current, siteId]);
+    }
 
+    function selectAllSites() {
+        form.setData('site_ids', orgSites.map((s) => s.id));
+    }
+
+    // Step 1: Basic info
+    if (step === 1) {
+        return (
+            <div className="space-y-4">
+                {/* Step indicator */}
+                <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">1</div>
+                    <span className="text-[13px] font-medium">{t('Member Details')}</span>
+                    <div className="h-px flex-1 bg-border/30" />
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[11px] text-muted-foreground">2</div>
+                    <span className="text-[13px] text-muted-foreground">{t('Site Access')}</span>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>{t('Name')}</Label>
+                    <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder={t('Full name')} />
+                </div>
+                <div className="space-y-2">
+                    <Label>{t('Email')}</Label>
+                    <Input type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} placeholder={t('user@company.com')} />
+                </div>
+                <div className="space-y-2">
+                    <Label>{t('Temporary Password')}</Label>
+                    <Input type="password" value={form.data.password} onChange={(e) => form.setData('password', e.target.value)} placeholder={t('Min. 8 characters')} />
+                    <p className="text-[10px] text-muted-foreground/50">{t('The member can change this after first login.')}</p>
+                </div>
+                <div className="space-y-2">
+                    <Label>{t('Role')}</Label>
+                    <div className="space-y-2">
+                        {CLIENT_ROLES.map((r) => (
+                            <label
+                                key={r.value}
+                                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                                    form.data.role === r.value ? 'border-primary/40 bg-primary/5' : 'border-border hover:border-border/80'
+                                }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value={r.value}
+                                    checked={form.data.role === r.value}
+                                    onChange={() => form.setData('role', r.value)}
+                                    className="mt-0.5 accent-primary"
+                                />
+                                <div>
+                                    <p className="text-[13px] font-medium">{t(r.label)}</p>
+                                    <p className="text-[11px] text-muted-foreground">{t(r.description)}</p>
+                                </div>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                <Button
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    disabled={!form.data.name || !form.data.email || !form.data.password || form.data.password.length < 8}
+                    onClick={() => setStep(2)}
+                >
+                    {t('Next: Site Access')}
+                </Button>
+            </div>
+        );
+    }
+
+    // Step 2: Site access
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-                <Label>{t('Name')}</Label>
-                <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder={t('Full name')} />
-                {form.errors.name && <p className="text-[11px] text-destructive-foreground">{form.errors.name}</p>}
+            {/* Step indicator */}
+            <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setStep(1)} className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-[11px] font-semibold text-emerald-400">&#10003;</button>
+                <span className="text-[13px] text-muted-foreground">{t('Member Details')}</span>
+                <div className="h-px flex-1 bg-border/30" />
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">2</div>
+                <span className="text-[13px] font-medium">{t('Site Access')}</span>
             </div>
-            <div className="space-y-2">
-                <Label>{t('Email')}</Label>
-                <Input type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} placeholder={t('user@company.com')} />
-                {form.errors.email && <p className="text-[11px] text-destructive-foreground">{form.errors.email}</p>}
+
+            {/* Summary of step 1 */}
+            <div className="rounded-lg border border-border/50 bg-accent/20 px-4 py-3">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-[13px] font-medium">{form.data.name}</p>
+                        <p className="font-mono text-[11px] text-muted-foreground">{form.data.email}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] capitalize">{form.data.role.replace(/_/g, ' ').replace('client ', '')}</Badge>
+                </div>
             </div>
-            <div className="space-y-2">
-                <Label>{t('Password')}</Label>
-                <Input type="password" value={form.data.password} onChange={(e) => form.setData('password', e.target.value)} placeholder={t('Temporary password')} />
-                {form.errors.password && <p className="text-[11px] text-destructive-foreground">{form.errors.password}</p>}
+
+            {/* Site selection */}
+            <div>
+                <div className="mb-2 flex items-center justify-between">
+                    <Label>{t('Grant access to sites')}</Label>
+                    {orgSites.length > 0 && (
+                        <button type="button" onClick={selectAllSites} className="text-[11px] text-primary transition-colors hover:text-primary/80">
+                            {t('Select all')}
+                        </button>
+                    )}
+                </div>
+                {orgSites.length > 0 ? (
+                    <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
+                        {orgSites.map((site) => (
+                            <label
+                                key={site.id}
+                                className={`flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 transition-colors ${
+                                    form.data.site_ids.includes(site.id) ? 'bg-primary/5' : 'hover:bg-accent/30'
+                                }`}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={form.data.site_ids.includes(site.id)}
+                                    onChange={() => toggleSite(site.id)}
+                                    className="accent-primary"
+                                />
+                                <div className="flex-1">
+                                    <p className="text-[13px]">{site.name}</p>
+                                </div>
+                                <Badge variant={site.status === 'active' ? 'success' : 'outline'} className="text-[9px] capitalize">{site.status}</Badge>
+                            </label>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="rounded-lg border border-border/50 px-4 py-6 text-center text-[12px] text-muted-foreground">
+                        {t('No sites yet. Add a site first, then assign access.')}
+                    </p>
+                )}
+                {form.data.site_ids.length > 0 && (
+                    <p className="mt-1.5 font-mono text-[10px] text-muted-foreground/40">
+                        {form.data.site_ids.length} {t('of')} {orgSites.length} {t('sites selected')}
+                    </p>
+                )}
             </div>
-            <div className="space-y-2">
-                <Label>{t('Role')}</Label>
-                <Select value={form.data.role} onValueChange={(v) => form.setData('role', v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        {CLIENT_ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{t(r.label)}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-                {form.errors.role && <p className="text-[11px] text-destructive-foreground">{form.errors.role}</p>}
+
+            {/* App access toggle */}
+            <label className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-4 py-3">
+                <div>
+                    <p className="text-[13px] font-medium">{t('Mobile App Access')}</p>
+                    <p className="text-[11px] text-muted-foreground">{t('Allow this member to use the Astrea mobile app')}</p>
+                </div>
+                <input
+                    type="checkbox"
+                    checked={form.data.has_app_access}
+                    onChange={(e) => form.setData('has_app_access', e.target.checked)}
+                    className="h-4 w-4 accent-primary"
+                />
+            </label>
+
+            {/* Error display */}
+            {Object.keys(form.errors).length > 0 && (
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3">
+                    {Object.values(form.errors).map((err, i) => (
+                        <p key={i} className="text-[11px] text-destructive-foreground">{err}</p>
+                    ))}
+                </div>
+            )}
+
+            <div className="flex gap-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>
+                    {t('Back')}
+                </Button>
+                <Button type="submit" className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.processing}>
+                    {form.processing ? t('Adding...') : t('Add Member')}
+                </Button>
             </div>
-            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.processing}>
-                {form.processing ? t('Creating...') : t('Add Member')}
-            </Button>
         </form>
     );
 }
