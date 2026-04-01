@@ -1,7 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight } from 'lucide-react';
 
 export interface UserRecord {
     id: number;
@@ -38,10 +37,7 @@ function getRoleLabel(role: string, t: (key: string) => string): string {
 }
 
 interface UserColumnOptions {
-    onEdit: (user: UserRecord) => void;
-    onDelete: (user: UserRecord) => void;
     t: (key: string) => string;
-    canManage: boolean;
     allOrgsMode?: boolean;
 }
 
@@ -58,7 +54,7 @@ function SortableHeader({ column, title }: { column: { getIsSorted: () => false 
     );
 }
 
-export function getUserColumns({ onEdit, onDelete, t, canManage, allOrgsMode }: UserColumnOptions): ColumnDef<UserRecord>[] {
+export function getUserColumns({ t, allOrgsMode }: UserColumnOptions): ColumnDef<UserRecord>[] {
     const columns: ColumnDef<UserRecord>[] = [
         {
             accessorKey: 'name',
@@ -121,23 +117,12 @@ export function getUserColumns({ onEdit, onDelete, t, canManage, allOrgsMode }: 
         },
     );
 
-    if (canManage) {
-        columns.push({
-            id: 'actions',
-            enableSorting: false,
-            enableHiding: false,
-            cell: ({ row }) => (
-                <div className="flex gap-1">
-                    <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); onEdit(row.original); }}>
-                        <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon-sm" className="text-destructive-foreground" onClick={(e) => { e.stopPropagation(); onDelete(row.original); }}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                </div>
-            ),
-        });
-    }
+    columns.push({
+        id: 'arrow',
+        enableSorting: false,
+        enableHiding: false,
+        cell: () => <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />,
+    });
 
     return columns;
 }

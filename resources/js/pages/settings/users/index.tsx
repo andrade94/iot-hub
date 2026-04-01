@@ -2,7 +2,6 @@ import { Can, usePermission } from '@/components/Can';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -56,10 +55,6 @@ export default function UsersIndex({ users, sites, roles, allOrgsMode = false, o
     const { t } = useLang();
     const { can } = usePermission();
     const [showCreate, setShowCreate] = useState(false);
-    const [editUser, setEditUser] = useState<UserRecord | null>(null);
-    const [deleteUser, setDeleteUser] = useState<UserRecord | null>(null);
-    const [deleting, setDeleting] = useState(false);
-    const canManage = can('manage users');
 
     // Filters
     const [roleFilter, setRoleFilter] = useState('all');
@@ -105,13 +100,7 @@ export default function UsersIndex({ users, sites, roles, allOrgsMode = false, o
         withApp: users.filter((u) => u.has_app_access).length,
     }), [users]);
 
-    const columns = useMemo(() => getUserColumns({ onEdit: (u) => setEditUser(u), onDelete: (u) => setDeleteUser(u), t, canManage, allOrgsMode }), [t, canManage, allOrgsMode]);
-
-    function handleDelete() {
-        if (!deleteUser) return;
-        setDeleting(true);
-        router.delete(`/settings/users/${deleteUser.id}`, { preserveScroll: true, onFinish: () => { setDeleting(false); setDeleteUser(null); } });
-    }
+    const columns = useMemo(() => getUserColumns({ t, allOrgsMode }), [t, allOrgsMode]);
 
     const emptyStateNode = (
         <EmptyState size="sm" variant="muted" icon={<Users className="h-5 w-5 text-muted-foreground" />}
@@ -256,19 +245,6 @@ export default function UsersIndex({ users, sites, roles, allOrgsMode = false, o
                 </FadeIn>
             </div>
 
-            {/* Edit dialog */}
-            <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
-                <DialogContent className="max-w-lg">
-                    <DialogHeader><DialogTitle>{t('Edit User')}</DialogTitle></DialogHeader>
-                    {editUser && <UserForm user={editUser} sites={sites} roles={roles} onSuccess={() => setEditUser(null)} />}
-                </DialogContent>
-            </Dialog>
-
-            <ConfirmationDialog
-                open={!!deleteUser} onOpenChange={(open) => !open && setDeleteUser(null)}
-                title={t('Delete User')} description={`${t('Are you sure you want to delete')} ${deleteUser?.name}?`}
-                warningMessage={t('This action cannot be undone.')} loading={deleting} onConfirm={handleDelete} actionLabel={t('Delete')}
-            />
         </AppLayout>
     );
 }
