@@ -87,6 +87,81 @@ class UserManagementController extends Controller
         ]);
     }
 
+    public function show(Request $request, User $user)
+    {
+        // Authorization: super_admin can view any user, org admin can view users in their org
+        $currentUser = $request->user();
+        if (! $currentUser->hasRole('super_admin') && $currentUser->org_id !== $user->org_id) {
+            abort(403);
+        }
+
+        $user->load(['roles', 'sites:id,name,status', 'organization:id,name']);
+
+        // Sites with extra info
+        $sites = $user->sites->map(fn ($site) => [
+            'id' => $site->id,
+            'name' => $site->name,
+            'status' => $site->status,
+            'devices_count' => $site->devices()->count(),
+        ]);
+
+        // Recent activity
+        $activities = \Spatie\Activitylog\Models\Activity::where('causer_type', User::class)
+            ->where('causer_id', $user->id)
+            ->latest()
+            ->limit(15)
+            ->get()
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'description' => $a->description,
+                'event' => $a->event,
+                'created_at' => $a->created_at->toIso8601String(),
+            ]);
+
+        // Assigned work orders
+        $workOrders = \App\Models\WorkOrder::where('assigned_to', $user->id)
+            ->whereIn('status', ['open', 'assigned', 'in_progress'])
+            ->with('site:id,name')
+            ->orderByRaw("CASE priority WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 ELSE 5 END")
+            ->limit(10)
+            ->get()
+            ->map(fn ($wo) => [
+                'id' => $wo->id,
+                'title' => $wo->title,
+                'status' => $wo->status,
+                'priority' => $wo->priority,
+                'site_name' => $wo->site?->name,
+                'created_at' => $wo->created_at->toIso8601String(),
+            ]);
+
+        // Last activity timestamp
+        $lastActivity = \DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->max('last_activity');
+
+        return Inertia::render('settings/users/show', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'whatsapp_phone' => $user->whatsapp_phone,
+                'has_app_access' => $user->has_app_access,
+                'role' => $user->roles->first()?->name,
+                'organization_name' => $user->organization?->name,
+                'deactivated_at' => $user->deactivated_at,
+                'created_at' => $user->created_at->toIso8601String(),
+            ],
+            'sites' => $sites,
+            'activities' => $activities,
+            'work_orders' => $workOrders,
+            'last_activity' => $lastActivity
+                ? \Carbon\Carbon::createFromTimestamp($lastActivity)->toIso8601String()
+                : null,
+            'is_super_admin' => $currentUser->hasRole('super_admin'),
+        ]);
+    }
+
     public function store(Request $request)
     {
         // Super admins can specify org_id in the form

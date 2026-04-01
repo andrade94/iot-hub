@@ -419,6 +419,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     // User Management
     Route::middleware('permission:manage users')->prefix('settings/users')->name('users.')->group(function () {
         Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::get('{user}', [UserManagementController::class, 'show'])->name('show');
         Route::post('/', [UserManagementController::class, 'store'])->name('store');
         Route::put('{user}', [UserManagementController::class, 'update'])->name('update');
         Route::delete('{user}', [UserManagementController::class, 'destroy'])->name('destroy');

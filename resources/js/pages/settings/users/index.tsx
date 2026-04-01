@@ -251,7 +251,7 @@ export default function UsersIndex({ users, sites, roles, allOrgsMode = false, o
                 {/* ━━ TABLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
                 <FadeIn delay={175} duration={500}>
                     <Card className="editorial-table border-border shadow-none">
-                        <DataTable columns={columns} data={filteredUsers} bordered={false} emptyState={emptyStateNode} />
+                        <DataTable columns={columns} data={filteredUsers} getRowId={(r) => String(r.id)} onRowClick={(u) => router.get(`/settings/users/${u.id}`)} bordered={false} emptyState={emptyStateNode} />
                     </Card>
                 </FadeIn>
             </div>
