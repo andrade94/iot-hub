@@ -102,7 +102,7 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
         };
 
         return (
-            <div className={cn("relative", className)} ref={dropdownRef}>
+            <div className={cn("relative z-40", className)} ref={dropdownRef}>
                 <Button
                     ref={ref}
                     type="button"
@@ -127,7 +127,7 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                 </Button>
 
                 {isOpen && (
-                    <div className="absolute left-0 z-50 mt-1.5 w-full overflow-hidden rounded-lg border border-border bg-popover shadow-xl shadow-black/50">
+                    <div className="absolute left-0 z-[100] mt-1.5 w-full overflow-hidden rounded-lg border border-border shadow-2xl" style={{ backgroundColor: '#1e2330' }}>
                         <div className="flex items-center gap-2.5 border-b border-border px-3 py-0.5">
                             <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
                             <input
