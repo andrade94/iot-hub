@@ -142,71 +142,39 @@ export default function OrganizationEditPage({ organization, segments, timezones
                         <FadeIn delay={100} duration={400}>
                             <SectionDivider label={t('Branding')} />
                             <Card className="border-border shadow-none">
-                                <CardContent className="space-y-6">
+                                <CardContent className="space-y-0">
+                                    {/* Logo — full width drop zone */}
+                                    <LogoUpload
+                                        currentLogo={form.data.logo}
+                                        organizationId={organization.id}
+                                        onRemove={() => {
+                                            router.delete(`/settings/organizations/${organization.id}/logo`, { preserveScroll: true });
+                                            form.setData('logo', '');
+                                        }}
+                                    />
+                                    {form.errors.logo && <div className="mt-2"><InputError message={form.errors.logo} /></div>}
+
                                     {/* Colors */}
-                                    <div className="grid gap-6 md:grid-cols-3">
-                                        <ColorField
-                                            label={t('Primary Color')}
-                                            value={form.data.branding.primary_color}
-                                            onChange={(v) => form.setData('branding', { ...form.data.branding, primary_color: v })}
-                                        />
-                                        <ColorField
-                                            label={t('Secondary Color')}
-                                            value={form.data.branding.secondary_color}
-                                            onChange={(v) => form.setData('branding', { ...form.data.branding, secondary_color: v })}
-                                        />
-                                        <ColorField
-                                            label={t('Accent Color')}
-                                            value={form.data.branding.accent_color}
-                                            onChange={(v) => form.setData('branding', { ...form.data.branding, accent_color: v })}
-                                        />
-                                    </div>
-
-                                    {/* Logo */}
-                                    <div className="space-y-2">
-                                        <Label className="text-[13px]">{t('Logo')}</Label>
-                                        <LogoUpload
-                                            currentLogo={form.data.logo}
-                                            organizationId={organization.id}
-                                            onRemove={() => {
-                                                router.delete(`/settings/organizations/${organization.id}/logo`, { preserveScroll: true });
-                                                form.setData('logo', '');
-                                            }}
-                                        />
-                                        {form.errors.logo && <InputError message={form.errors.logo} />}
-                                    </div>
-
-                                    {/* Live Preview */}
-                                    {(form.data.branding.primary_color || form.data.branding.secondary_color || form.data.branding.accent_color || form.data.logo) && (
-                                        <div className="rounded-lg border border-border/50 bg-accent/30 p-5">
-                                            <p className="mb-3 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/40">{t('Preview')}</p>
-                                            <div className="flex items-center gap-5">
-                                                {form.data.logo && (
-                                                    <img src={form.data.logo} alt="" className="h-12 w-12 rounded-xl object-contain border border-border/50" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                )}
-                                                <div className="flex gap-3">
-                                                    {form.data.branding.primary_color && (
-                                                        <div className="flex flex-col items-center gap-1">
-                                                            <div className="h-10 w-10 rounded-lg border border-border/30" style={{ backgroundColor: form.data.branding.primary_color }} />
-                                                            <span className="font-mono text-[8px] text-muted-foreground/40">{t('Primary')}</span>
-                                                        </div>
-                                                    )}
-                                                    {form.data.branding.secondary_color && (
-                                                        <div className="flex flex-col items-center gap-1">
-                                                            <div className="h-10 w-10 rounded-lg border border-border/30" style={{ backgroundColor: form.data.branding.secondary_color }} />
-                                                            <span className="font-mono text-[8px] text-muted-foreground/40">{t('Secondary')}</span>
-                                                        </div>
-                                                    )}
-                                                    {form.data.branding.accent_color && (
-                                                        <div className="flex flex-col items-center gap-1">
-                                                            <div className="h-10 w-10 rounded-lg border border-border/30" style={{ backgroundColor: form.data.branding.accent_color }} />
-                                                            <span className="font-mono text-[8px] text-muted-foreground/40">{t('Accent')}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
+                                    <div className="mt-6 border-t border-border/30 pt-6">
+                                        <p className="mb-4 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/40">{t('Brand Colors')}</p>
+                                        <div className="grid gap-5 md:grid-cols-3">
+                                            <ColorField
+                                                label={t('Primary')}
+                                                value={form.data.branding.primary_color}
+                                                onChange={(v) => form.setData('branding', { ...form.data.branding, primary_color: v })}
+                                            />
+                                            <ColorField
+                                                label={t('Secondary')}
+                                                value={form.data.branding.secondary_color}
+                                                onChange={(v) => form.setData('branding', { ...form.data.branding, secondary_color: v })}
+                                            />
+                                            <ColorField
+                                                label={t('Accent')}
+                                                value={form.data.branding.accent_color}
+                                                onChange={(v) => form.setData('branding', { ...form.data.branding, accent_color: v })}
+                                            />
                                         </div>
-                                    )}
+                                    </div>
                                 </CardContent>
                             </Card>
                         </FadeIn>
@@ -268,7 +236,6 @@ function LogoUpload({ currentLogo, organizationId, onRemove }: { currentLogo: st
         setUploading(true);
         const formData = new FormData();
         formData.append('logo', file);
-
         router.post(`/settings/organizations/${organizationId}/logo`, formData, {
             forceFormData: true,
             preserveScroll: true,
@@ -290,45 +257,58 @@ function LogoUpload({ currentLogo, organizationId, onRemove }: { currentLogo: st
     }
 
     return (
-        <div className="flex items-start gap-5">
-            {/* Drop zone / preview */}
-            <div
-                className={`flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-colors ${
-                    dragOver ? 'border-primary bg-primary/5' : 'border-border bg-accent/30 hover:border-border/80'
-                }`}
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-            >
-                {uploading ? (
-                    <div className="flex flex-col items-center gap-1 text-primary">
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        <span className="text-[8px]">{t('Uploading')}</span>
-                    </div>
-                ) : currentLogo ? (
-                    <img src={currentLogo} alt="" className="h-full w-full object-contain p-2" />
-                ) : (
-                    <div className="flex flex-col items-center gap-1.5 text-muted-foreground/30">
-                        <Upload className="h-5 w-5" />
-                        <span className="text-[8px] uppercase tracking-wider">{t('Logo')}</span>
-                    </div>
-                )}
-            </div>
+        <div>
+            <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden" onChange={handleFileChange} />
 
-            {/* Actions */}
-            <div className="flex-1 space-y-2 pt-1">
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                <Button type="button" variant="outline" size="sm" className="text-[11px]" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                    <Upload className="mr-1 h-3.5 w-3.5" />{currentLogo ? t('Change Logo') : t('Upload Logo')}
-                </Button>
-                {currentLogo && (
-                    <button type="button" onClick={onRemove} className="ml-2 text-[11px] text-rose-600 dark:text-rose-400 transition-colors hover:text-rose-500">
-                        {t('Remove')}
-                    </button>
-                )}
-                <p className="text-[10px] text-muted-foreground/40">{t('PNG, JPG, SVG or WebP. Max 2MB.')}</p>
-            </div>
+            {currentLogo ? (
+                /* ── Has logo: show preview with change/remove actions ── */
+                <div className="flex items-center gap-5">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-accent/20">
+                        <img src={currentLogo} alt="" className="h-full w-full object-contain p-2" />
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-[13px] font-medium text-foreground">{t('Organization Logo')}</p>
+                        <div className="flex items-center gap-2">
+                            <Button type="button" variant="outline" size="sm" className="text-[11px]" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                                {uploading ? t('Uploading...') : t('Change')}
+                            </Button>
+                            <button type="button" onClick={onRemove} className="text-[11px] text-muted-foreground transition-colors hover:text-rose-600 dark:hover:text-rose-400">
+                                {t('Remove')}
+                            </button>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/40">{t('PNG, JPG, SVG or WebP. Max 2MB.')}</p>
+                    </div>
+                </div>
+            ) : (
+                /* ── No logo: full-width drop zone ── */
+                <div
+                    className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-8 transition-all ${
+                        dragOver
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border/50 bg-accent/10 hover:border-border hover:bg-accent/20'
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={handleDrop}
+                >
+                    {uploading ? (
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            <span className="text-[12px] text-primary">{t('Uploading...')}</span>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/50">
+                                <Upload className="h-5 w-5 text-muted-foreground/40" />
+                            </div>
+                            <p className="mt-3 text-[13px] font-medium text-foreground">{t('Upload logo')}</p>
+                            <p className="mt-1 text-[11px] text-muted-foreground/50">{t('Drag and drop or click to browse')}</p>
+                            <p className="mt-0.5 text-[10px] text-muted-foreground/30">{t('PNG, JPG, SVG or WebP. Max 2MB.')}</p>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
