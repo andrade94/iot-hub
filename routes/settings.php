@@ -27,9 +27,17 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
 
-    // Organization settings
+    // Organization settings — redirect to catalog edit page
     Route::middleware(['verified', 'org.scope', 'permission:manage org settings'])->group(function () {
-        Route::get('settings/organization', [OrganizationSettingsController::class, 'edit'])->name('organization.edit');
-        Route::patch('settings/organization', [OrganizationSettingsController::class, 'update'])->name('organization.update');
+        Route::get('settings/organization', function () {
+            $org = app()->bound('current_organization') ? app('current_organization') : null;
+            if (!$org && auth()->user()->org_id) {
+                $org = \App\Models\Organization::find(auth()->user()->org_id);
+            }
+            if (!$org) {
+                return redirect('/settings/profile')->with('error', 'No organization found.');
+            }
+            return redirect("/settings/organizations/{$org->id}/edit");
+        })->name('organization.edit');
     });
 });

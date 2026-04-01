@@ -442,19 +442,24 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::post('recipes/{recipe}/overrides', [RecipeController::class, 'storeOverride'])->name('recipes.overrides.store');
 
     // Organization Catalog (super_admin)
+    // Organization catalog — super_admin only (list, show, lifecycle)
     Route::middleware('role:super_admin')->prefix('settings/organizations')->name('organizations.')->group(function () {
         Route::get('/', [OrganizationCatalogController::class, 'index'])->name('index');
         Route::get('{organization}', [OrganizationCatalogController::class, 'show'])->name('show');
-        Route::get('{organization}/edit', [OrganizationCatalogController::class, 'edit'])->name('edit');
-        Route::put('{organization}', [OrganizationCatalogController::class, 'update'])->name('update');
-        Route::post('{organization}/logo', [OrganizationCatalogController::class, 'uploadLogo'])->name('logo.upload');
-        Route::delete('{organization}/logo', [OrganizationCatalogController::class, 'deleteLogo'])->name('logo.delete');
         Route::post('{organization}/suspend', [OrganizationCatalogController::class, 'suspend'])->name('suspend');
         Route::post('{organization}/reactivate', [OrganizationCatalogController::class, 'reactivate'])->name('reactivate');
         Route::post('{organization}/notes', [OrganizationCatalogController::class, 'storeNote'])->name('notes.store');
         Route::delete('{organization}/notes/{note}', [OrganizationCatalogController::class, 'destroyNote'])->name('notes.destroy');
         Route::post('{organization}/export', [OrganizationCatalogController::class, 'export'])->name('export');
         Route::delete('{organization}', [OrganizationCatalogController::class, 'destroy'])->name('destroy');
+    });
+
+    // Organization edit — super_admin OR org admin editing their own org
+    Route::prefix('settings/organizations')->name('organizations.')->group(function () {
+        Route::get('{organization}/edit', [OrganizationCatalogController::class, 'edit'])->name('edit');
+        Route::put('{organization}', [OrganizationCatalogController::class, 'update'])->name('update');
+        Route::post('{organization}/logo', [OrganizationCatalogController::class, 'uploadLogo'])->name('logo.upload');
+        Route::delete('{organization}/logo', [OrganizationCatalogController::class, 'deleteLogo'])->name('logo.delete');
     });
 
     // Module Catalog (super_admin)

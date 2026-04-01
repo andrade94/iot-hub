@@ -172,8 +172,10 @@ class OrganizationCatalogController extends Controller
         ]);
     }
 
-    public function edit(Organization $organization)
+    public function edit(Request $request, Organization $organization)
     {
+        $this->authorizeOrgAccess($request, $organization);
+
         return Inertia::render('settings/organizations/edit', [
             'organization' => [
                 'id' => $organization->id,
@@ -193,6 +195,7 @@ class OrganizationCatalogController extends Controller
 
     public function update(Request $request, Organization $organization)
     {
+        $this->authorizeOrgAccess($request, $organization);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:organizations,slug,' . $organization->id,
@@ -221,6 +224,7 @@ class OrganizationCatalogController extends Controller
 
     public function uploadLogo(Request $request, Organization $organization)
     {
+        $this->authorizeOrgAccess($request, $organization);
         $request->validate([
             'logo' => 'required|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
         ]);
@@ -237,8 +241,9 @@ class OrganizationCatalogController extends Controller
         return back()->with('success', 'Logo uploaded.');
     }
 
-    public function deleteLogo(Organization $organization)
+    public function deleteLogo(Request $request, Organization $organization)
     {
+        $this->authorizeOrgAccess($request, $organization);
         if ($organization->logo) {
             $oldPath = str_replace('/storage/', '', $organization->logo);
             \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
@@ -320,5 +325,24 @@ class OrganizationCatalogController extends Controller
         \App\Jobs\ExportOrganizationData::dispatch($export->id);
 
         return back()->with('success', "Export queued for '{$organization->name}'. You'll be notified when it's ready.");
+    }
+
+    /**
+     * Authorize that the user can edit this organization.
+     * Super admins can edit any org. Org admins can edit their own org.
+     */
+    private function authorizeOrgAccess(Request $request, Organization $organization): void
+    {
+        $user = $request->user();
+
+        if ($user->hasRole('super_admin')) {
+            return;
+        }
+
+        if ($user->org_id === $organization->id && $user->hasPermissionTo('manage org settings')) {
+            return;
+        }
+
+        abort(403, 'You are not authorized to edit this organization.');
     }
 }
