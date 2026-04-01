@@ -101,7 +101,7 @@ class UserManagementController extends Controller
         }
 
         $allowedRoles = $request->user()->hasRole('super_admin')
-            ? ['client_org_admin', 'client_site_manager', 'client_site_viewer', 'technician']
+            ? collect(array_keys(RoleDefinitions::ROLES))->reject(fn ($r) => $r === 'super_admin')->values()->toArray()
             : RoleDefinitions::CLIENT_ASSIGNABLE;
 
         $validated = $request->validate([
@@ -152,7 +152,7 @@ class UserManagementController extends Controller
         }
 
         $allowedRoles = $request->user()->hasRole('super_admin')
-            ? ['client_org_admin', 'client_site_manager', 'client_site_viewer', 'technician']
+            ? collect(array_keys(RoleDefinitions::ROLES))->reject(fn ($r) => $r === 'super_admin')->values()->toArray()
             : RoleDefinitions::CLIENT_ASSIGNABLE;
 
         $validated = $request->validate([
