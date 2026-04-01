@@ -1,3 +1,4 @@
+import * as React from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -164,39 +165,14 @@ export default function OrganizationEditPage({ organization, segments, timezones
                                     {/* Logo */}
                                     <div className="space-y-2">
                                         <Label className="text-[13px]">{t('Logo')}</Label>
-                                        <div className="flex items-start gap-5">
-                                            {/* Preview / placeholder */}
-                                            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-accent/30">
-                                                {form.data.logo ? (
-                                                    <img
-                                                        src={form.data.logo}
-                                                        alt=""
-                                                        className="h-full w-full object-contain p-1"
-                                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                    />
-                                                ) : (
-                                                    <div className="flex flex-col items-center gap-1 text-muted-foreground/30">
-                                                        <Upload className="h-5 w-5" />
-                                                        <span className="text-[8px] uppercase tracking-wider">{t('Logo')}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {/* URL input + actions */}
-                                            <div className="flex-1 space-y-2">
-                                                <Input
-                                                    value={form.data.logo}
-                                                    onChange={(e) => form.setData('logo', e.target.value)}
-                                                    placeholder="https://example.com/logo.png"
-                                                    className="font-mono text-[13px]"
-                                                />
-                                                <p className="text-[10px] text-muted-foreground/40">{t('Paste a URL to your logo image. Supported: PNG, SVG, JPG.')}</p>
-                                                {form.data.logo && (
-                                                    <button type="button" onClick={() => form.setData('logo', '')} className="text-[11px] text-rose-600 dark:text-rose-400 transition-colors hover:text-rose-500">
-                                                        {t('Remove logo')}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
+                                        <LogoUpload
+                                            currentLogo={form.data.logo}
+                                            organizationId={organization.id}
+                                            onRemove={() => {
+                                                router.delete(`/settings/organizations/${organization.id}/logo`, { preserveScroll: true });
+                                                form.setData('logo', '');
+                                            }}
+                                        />
                                         {form.errors.logo && <InputError message={form.errors.logo} />}
                                     </div>
 
@@ -277,6 +253,82 @@ function FieldGroup({ label, hint, error, children }: { label: string; hint?: st
             {children}
             {hint && !error && <p className="text-[10px] text-muted-foreground/40">{hint}</p>}
             {error && <InputError message={error} />}
+        </div>
+    );
+}
+
+function LogoUpload({ currentLogo, organizationId, onRemove }: { currentLogo: string; organizationId: number; onRemove: () => void }) {
+    const { t } = useLang();
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = React.useState(false);
+    const [dragOver, setDragOver] = React.useState(false);
+
+    function handleUpload(file: File) {
+        if (!file.type.startsWith('image/')) return;
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('logo', file);
+
+        router.post(`/settings/organizations/${organizationId}/logo`, formData, {
+            forceFormData: true,
+            preserveScroll: true,
+            onFinish: () => setUploading(false),
+        });
+    }
+
+    function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (file) handleUpload(file);
+        e.target.value = '';
+    }
+
+    function handleDrop(e: React.DragEvent) {
+        e.preventDefault();
+        setDragOver(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) handleUpload(file);
+    }
+
+    return (
+        <div className="flex items-start gap-5">
+            {/* Drop zone / preview */}
+            <div
+                className={`flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-colors ${
+                    dragOver ? 'border-primary bg-primary/5' : 'border-border bg-accent/30 hover:border-border/80'
+                }`}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+            >
+                {uploading ? (
+                    <div className="flex flex-col items-center gap-1 text-primary">
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        <span className="text-[8px]">{t('Uploading')}</span>
+                    </div>
+                ) : currentLogo ? (
+                    <img src={currentLogo} alt="" className="h-full w-full object-contain p-2" />
+                ) : (
+                    <div className="flex flex-col items-center gap-1.5 text-muted-foreground/30">
+                        <Upload className="h-5 w-5" />
+                        <span className="text-[8px] uppercase tracking-wider">{t('Logo')}</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex-1 space-y-2 pt-1">
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                <Button type="button" variant="outline" size="sm" className="text-[11px]" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                    <Upload className="mr-1 h-3.5 w-3.5" />{currentLogo ? t('Change Logo') : t('Upload Logo')}
+                </Button>
+                {currentLogo && (
+                    <button type="button" onClick={onRemove} className="ml-2 text-[11px] text-rose-600 dark:text-rose-400 transition-colors hover:text-rose-500">
+                        {t('Remove')}
+                    </button>
+                )}
+                <p className="text-[10px] text-muted-foreground/40">{t('PNG, JPG, SVG or WebP. Max 2MB.')}</p>
+            </div>
         </div>
     );
 }

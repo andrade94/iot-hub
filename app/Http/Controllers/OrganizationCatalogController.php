@@ -219,6 +219,35 @@ class OrganizationCatalogController extends Controller
         return back()->with('success', "Organization '{$organization->name}' updated.");
     }
 
+    public function uploadLogo(Request $request, Organization $organization)
+    {
+        $request->validate([
+            'logo' => 'required|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+        ]);
+
+        // Delete old logo if exists
+        if ($organization->logo) {
+            $oldPath = str_replace('/storage/', '', $organization->logo);
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+        }
+
+        $path = $request->file('logo')->store("organizations/{$organization->id}", 'public');
+        $organization->update(['logo' => "/storage/{$path}"]);
+
+        return back()->with('success', 'Logo uploaded.');
+    }
+
+    public function deleteLogo(Organization $organization)
+    {
+        if ($organization->logo) {
+            $oldPath = str_replace('/storage/', '', $organization->logo);
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+            $organization->update(['logo' => null]);
+        }
+
+        return back()->with('success', 'Logo removed.');
+    }
+
     public function suspend(Organization $organization)
     {
         if (! $organization->canTransitionTo('suspended')) {

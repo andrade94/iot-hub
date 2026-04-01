@@ -447,6 +447,8 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::get('{organization}', [OrganizationCatalogController::class, 'show'])->name('show');
         Route::get('{organization}/edit', [OrganizationCatalogController::class, 'edit'])->name('edit');
         Route::put('{organization}', [OrganizationCatalogController::class, 'update'])->name('update');
+        Route::post('{organization}/logo', [OrganizationCatalogController::class, 'uploadLogo'])->name('logo.upload');
+        Route::delete('{organization}/logo', [OrganizationCatalogController::class, 'deleteLogo'])->name('logo.delete');
         Route::post('{organization}/suspend', [OrganizationCatalogController::class, 'suspend'])->name('suspend');
         Route::post('{organization}/reactivate', [OrganizationCatalogController::class, 'reactivate'])->name('reactivate');
         Route::post('{organization}/notes', [OrganizationCatalogController::class, 'storeNote'])->name('notes.store');
