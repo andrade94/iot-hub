@@ -127,53 +127,43 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                 </Button>
 
                 {isOpen && (
-                    <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95">
-                        <div className="flex items-center border-b px-3">
-                            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                            <Input
+                    <div className="absolute left-0 z-50 mt-1 w-full rounded-lg border border-border bg-popover text-popover-foreground shadow-lg shadow-black/20">
+                        <div className="flex items-center gap-2 border-b border-border/50 px-3">
+                            <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                            <input
                                 ref={inputRef}
                                 type="text"
                                 placeholder={searchPlaceholder}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="h-10 border-0 bg-transparent p-0 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/40"
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Escape') {
-                                        setIsOpen(false);
-                                    }
+                                    if (e.key === 'Escape') setIsOpen(false);
                                     e.stopPropagation();
                                 }}
                             />
                         </div>
-                        <div className="max-h-[300px] overflow-y-auto">
+                        <div className="max-h-[240px] overflow-y-auto p-1">
                             {filteredOptions.length === 0 ? (
-                                <div className="py-6 text-center text-sm text-muted-foreground">
+                                <div className="py-6 text-center text-[12px] text-muted-foreground">
                                     {emptyText}
                                 </div>
                             ) : (
-                                <div className="p-1">
-                                    {filteredOptions.map((option) => (
-                                        <button
-                                            key={option.value}
-                                            type="button"
-                                            className={cn(
-                                                "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors",
-                                                "hover:bg-accent hover:text-accent-foreground",
-                                                "focus:bg-accent focus:text-accent-foreground",
-                                                value === option.value && "bg-accent text-accent-foreground"
-                                            )}
-                                            onClick={() => handleSelect(option.value)}
-                                        >
-                                            <Check
-                                                className={cn(
-                                                    "mr-2 h-4 w-4",
-                                                    value === option.value ? "opacity-100" : "opacity-0"
-                                                )}
-                                            />
-                                            <span className="truncate">{option.label}</span>
-                                        </button>
-                                    ))}
-                                </div>
+                                filteredOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        className={cn(
+                                            "relative flex w-full cursor-pointer select-none items-center rounded-md px-2.5 py-2 text-[13px] outline-none transition-colors",
+                                            "hover:bg-accent/50",
+                                            value === option.value && "bg-accent text-foreground"
+                                        )}
+                                        onClick={() => handleSelect(option.value)}
+                                    >
+                                        <Check className={cn("mr-2 h-3.5 w-3.5 shrink-0", value === option.value ? "opacity-100 text-primary" : "opacity-0")} />
+                                        <span className="truncate">{option.label}</span>
+                                    </button>
+                                ))
                             )}
                         </div>
                     </div>
