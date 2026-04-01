@@ -70,196 +70,208 @@ export default function OrganizationEditPage({ organization, segments, timezones
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${t('Edit')} — ${organization.name}`} />
-            <div className="obsidian flex h-full flex-1 flex-col bg-background p-5 md:p-8">
+            <div className="obsidian flex h-full flex-1 flex-col bg-background">
 
-                {/* Header */}
-                <FadeIn direction="down" duration={400}>
-                    <div className="flex items-start justify-between gap-4">
-                        <div>
-                            <button onClick={() => router.get(`/settings/organizations/${organization.id}`)} className="mb-2 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
-                                <ArrowLeft className="h-3 w-3" />{organization.name}
-                            </button>
-                            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[28px]">
-                                {t('Edit Organization')}
-                            </h1>
-                            <p className="mt-1 text-[13px] text-muted-foreground">
-                                {t('Update organization profile, settings, and branding.')}
-                            </p>
-                        </div>
-                    </div>
-                </FadeIn>
+                {/* Centered container */}
+                <div className="mx-auto w-full max-w-3xl px-5 py-8 md:px-8">
 
-                <form onSubmit={handleSubmit} className="mt-6 max-w-2xl">
-
-                    {/* ── PROFILE ── */}
-                    <FadeIn delay={50} duration={400}>
-                        <SectionDivider label={t('Profile')} />
-                        <Card className="border-border shadow-none">
-                            <CardContent className="space-y-5">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>{t('Organization Name')}</Label>
-                                        <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
-                                        <InputError message={form.errors.name} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>{t('Slug')}</Label>
-                                        <Input value={form.data.slug} onChange={(e) => form.setData('slug', e.target.value)} className="font-mono" />
-                                        <InputError message={form.errors.slug} />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>{t('Segment')}</Label>
-                                        <Select value={form.data.segment} onValueChange={(v) => form.setData('segment', v)}>
-                                            <SelectTrigger><SelectValue placeholder={t('Select')} /></SelectTrigger>
-                                            <SelectContent>
-                                                {segments.map((seg) => (
-                                                    <SelectItem key={seg} value={seg} className="capitalize">{formatSegment(seg)}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <InputError message={form.errors.segment} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>{t('Plan')}</Label>
-                                        <Select value={form.data.plan} onValueChange={(v) => form.setData('plan', v)}>
-                                            <SelectTrigger><SelectValue placeholder={t('Select')} /></SelectTrigger>
-                                            <SelectContent>
-                                                {PLANS.map((p) => (
-                                                    <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <InputError message={form.errors.plan} />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>{t('Timezone')}</Label>
-                                    <TimezoneSelect timezones={timezones} value={form.data.default_timezone} onValueChange={(v) => form.setData('default_timezone', v)} />
-                                    <InputError message={form.errors.default_timezone} />
-                                </div>
-                            </CardContent>
-                        </Card>
+                    {/* Header */}
+                    <FadeIn direction="down" duration={400}>
+                        <button onClick={() => router.get(`/settings/organizations/${organization.id}`)} className="mb-3 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
+                            <ArrowLeft className="h-3 w-3" />{organization.name}
+                        </button>
+                        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+                            {t('Edit Organization')}
+                        </h1>
+                        <p className="mt-1 text-[13px] text-muted-foreground">
+                            {t('Update organization profile, settings, and branding.')}
+                        </p>
                     </FadeIn>
 
-                    {/* ── BRANDING ── */}
-                    <FadeIn delay={100} duration={400}>
-                        <SectionDivider label={t('Branding')} />
-                        <Card className="border-border shadow-none">
-                            <CardContent className="space-y-5">
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>{t('Primary Color')}</Label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="color"
-                                                value={form.data.branding.primary_color || '#3B82F6'}
-                                                onChange={(e) => form.setData('branding', { ...form.data.branding, primary_color: e.target.value })}
-                                                className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
-                                            />
-                                            <Input
-                                                value={form.data.branding.primary_color}
-                                                onChange={(e) => form.setData('branding', { ...form.data.branding, primary_color: e.target.value })}
-                                                placeholder="#3B82F6"
-                                                className="font-mono text-xs"
-                                            />
-                                        </div>
+                    <form onSubmit={handleSubmit}>
+
+                        {/* ── PROFILE ─────────────────────────────────── */}
+                        <FadeIn delay={50} duration={400}>
+                            <SectionDivider label={t('Profile')} />
+                            <Card className="border-border shadow-none">
+                                <CardContent className="space-y-6">
+                                    {/* Name + Slug */}
+                                    <div className="grid gap-6 md:grid-cols-2">
+                                        <FieldGroup label={t('Organization Name')} error={form.errors.name}>
+                                            <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
+                                        </FieldGroup>
+                                        <FieldGroup label={t('Slug')} error={form.errors.slug} hint={t('URL-safe identifier')}>
+                                            <Input value={form.data.slug} onChange={(e) => form.setData('slug', e.target.value)} className="font-mono text-[13px]" />
+                                        </FieldGroup>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label>{t('Secondary Color')}</Label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="color"
-                                                value={form.data.branding.secondary_color || '#6366F1'}
-                                                onChange={(e) => form.setData('branding', { ...form.data.branding, secondary_color: e.target.value })}
-                                                className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
-                                            />
-                                            <Input
-                                                value={form.data.branding.secondary_color}
-                                                onChange={(e) => form.setData('branding', { ...form.data.branding, secondary_color: e.target.value })}
-                                                placeholder="#6366F1"
-                                                className="font-mono text-xs"
-                                            />
-                                        </div>
+
+                                    {/* Segment + Plan */}
+                                    <div className="grid gap-6 md:grid-cols-2">
+                                        <FieldGroup label={t('Segment')} error={form.errors.segment}>
+                                            <Select value={form.data.segment} onValueChange={(v) => form.setData('segment', v)}>
+                                                <SelectTrigger><SelectValue placeholder={t('Select segment')} /></SelectTrigger>
+                                                <SelectContent>
+                                                    {segments.map((seg) => (
+                                                        <SelectItem key={seg} value={seg} className="capitalize">{formatSegment(seg)}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FieldGroup>
+                                        <FieldGroup label={t('Plan')} error={form.errors.plan}>
+                                            <Select value={form.data.plan} onValueChange={(v) => form.setData('plan', v)}>
+                                                <SelectTrigger><SelectValue placeholder={t('Select plan')} /></SelectTrigger>
+                                                <SelectContent>
+                                                    {PLANS.map((p) => (
+                                                        <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FieldGroup>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label>{t('Accent Color')}</Label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="color"
-                                                value={form.data.branding.accent_color || '#10B981'}
-                                                onChange={(e) => form.setData('branding', { ...form.data.branding, accent_color: e.target.value })}
-                                                className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
-                                            />
-                                            <Input
-                                                value={form.data.branding.accent_color}
-                                                onChange={(e) => form.setData('branding', { ...form.data.branding, accent_color: e.target.value })}
-                                                placeholder="#10B981"
-                                                className="font-mono text-xs"
-                                            />
-                                        </div>
+
+                                    {/* Timezone */}
+                                    <FieldGroup label={t('Default Timezone')} error={form.errors.default_timezone}>
+                                        <TimezoneSelect timezones={timezones} value={form.data.default_timezone} onValueChange={(v) => form.setData('default_timezone', v)} />
+                                    </FieldGroup>
+                                </CardContent>
+                            </Card>
+                        </FadeIn>
+
+                        {/* ── BRANDING ────────────────────────────────── */}
+                        <FadeIn delay={100} duration={400}>
+                            <SectionDivider label={t('Branding')} />
+                            <Card className="border-border shadow-none">
+                                <CardContent className="space-y-6">
+                                    {/* Colors */}
+                                    <div className="grid gap-6 md:grid-cols-3">
+                                        <ColorField
+                                            label={t('Primary Color')}
+                                            value={form.data.branding.primary_color}
+                                            onChange={(v) => form.setData('branding', { ...form.data.branding, primary_color: v })}
+                                        />
+                                        <ColorField
+                                            label={t('Secondary Color')}
+                                            value={form.data.branding.secondary_color}
+                                            onChange={(v) => form.setData('branding', { ...form.data.branding, secondary_color: v })}
+                                        />
+                                        <ColorField
+                                            label={t('Accent Color')}
+                                            value={form.data.branding.accent_color}
+                                            onChange={(v) => form.setData('branding', { ...form.data.branding, accent_color: v })}
+                                        />
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>{t('Logo URL')}</Label>
-                                    <Input
-                                        value={form.data.logo}
-                                        onChange={(e) => form.setData('logo', e.target.value)}
-                                        placeholder="https://example.com/logo.png"
-                                        className="font-mono text-xs"
-                                    />
-                                    <p className="text-[10px] text-muted-foreground/50">{t('Enter a URL to your organization logo image.')}</p>
-                                    <InputError message={form.errors.logo} />
-                                </div>
-                                {/* Preview */}
-                                {(form.data.branding.primary_color || form.data.branding.secondary_color || form.data.branding.accent_color || form.data.logo) && (
-                                    <div className="rounded-lg border border-border/50 bg-accent/20 p-4">
-                                        <p className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/40">{t('Preview')}</p>
-                                        <div className="flex items-center gap-4">
-                                            {form.data.logo && (
-                                                <img src={form.data.logo} alt="" className="h-10 w-10 rounded-lg object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                            )}
-                                            <div className="flex gap-2">
-                                                {form.data.branding.primary_color && <div className="h-8 w-8 rounded-full border border-border" style={{ backgroundColor: form.data.branding.primary_color }} title={t('Primary')} />}
-                                                {form.data.branding.secondary_color && <div className="h-8 w-8 rounded-full border border-border" style={{ backgroundColor: form.data.branding.secondary_color }} title={t('Secondary')} />}
-                                                {form.data.branding.accent_color && <div className="h-8 w-8 rounded-full border border-border" style={{ backgroundColor: form.data.branding.accent_color }} title={t('Accent')} />}
+
+                                    {/* Logo */}
+                                    <FieldGroup label={t('Logo URL')} error={form.errors.logo} hint={t('Enter a URL to your organization logo image')}>
+                                        <Input
+                                            value={form.data.logo}
+                                            onChange={(e) => form.setData('logo', e.target.value)}
+                                            placeholder="https://example.com/logo.png"
+                                            className="font-mono text-[13px]"
+                                        />
+                                    </FieldGroup>
+
+                                    {/* Live Preview */}
+                                    {(form.data.branding.primary_color || form.data.branding.secondary_color || form.data.branding.accent_color || form.data.logo) && (
+                                        <div className="rounded-lg border border-border/50 bg-accent/30 p-5">
+                                            <p className="mb-3 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/40">{t('Preview')}</p>
+                                            <div className="flex items-center gap-5">
+                                                {form.data.logo && (
+                                                    <img src={form.data.logo} alt="" className="h-12 w-12 rounded-xl object-contain border border-border/50" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                )}
+                                                <div className="flex gap-3">
+                                                    {form.data.branding.primary_color && (
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <div className="h-10 w-10 rounded-lg border border-border/30" style={{ backgroundColor: form.data.branding.primary_color }} />
+                                                            <span className="font-mono text-[8px] text-muted-foreground/40">{t('Primary')}</span>
+                                                        </div>
+                                                    )}
+                                                    {form.data.branding.secondary_color && (
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <div className="h-10 w-10 rounded-lg border border-border/30" style={{ backgroundColor: form.data.branding.secondary_color }} />
+                                                            <span className="font-mono text-[8px] text-muted-foreground/40">{t('Secondary')}</span>
+                                                        </div>
+                                                    )}
+                                                    {form.data.branding.accent_color && (
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <div className="h-10 w-10 rounded-lg border border-border/30" style={{ backgroundColor: form.data.branding.accent_color }} />
+                                                            <span className="font-mono text-[8px] text-muted-foreground/40">{t('Accent')}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </FadeIn>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </FadeIn>
 
-                    {/* Actions */}
-                    <FadeIn delay={150} duration={400}>
-                        <div className="mt-6 flex items-center gap-3">
-                            <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.processing}>
-                                {form.processing ? t('Saving...') : t('Save Changes')}
-                            </Button>
-                            <Button type="button" variant="outline" onClick={() => router.get(`/settings/organizations/${organization.id}`)}>
-                                {t('Cancel')}
-                            </Button>
-                            {form.isDirty && (
-                                <span className="text-[11px] text-muted-foreground">{t('You have unsaved changes.')}</span>
-                            )}
-                        </div>
-                    </FadeIn>
-                </form>
+                        {/* ── ACTIONS ─────────────────────────────────── */}
+                        <FadeIn delay={150} duration={400}>
+                            <div className="mt-8 flex items-center justify-between border-t border-border/50 pt-6">
+                                <div className="flex items-center gap-3">
+                                    <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={form.processing}>
+                                        {form.processing ? t('Saving...') : t('Save Changes')}
+                                    </Button>
+                                    <Button type="button" variant="outline" onClick={() => router.get(`/settings/organizations/${organization.id}`)}>
+                                        {t('Cancel')}
+                                    </Button>
+                                </div>
+                                {form.isDirty && (
+                                    <span className="text-[11px] text-amber-600 dark:text-amber-400">{t('Unsaved changes')}</span>
+                                )}
+                            </div>
+                        </FadeIn>
+                    </form>
+                </div>
             </div>
         </AppLayout>
     );
 }
 
-/* -- Section Divider -------------------------------------------------- */
+/* -- Helpers ---------------------------------------------------------- */
 
 function SectionDivider({ label }: { label: string }) {
     return (
-        <div className="my-6 flex items-center gap-4">
+        <div className="my-7 flex items-center gap-4">
             <div className="h-px flex-1 bg-border/50" />
             <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/30">{label.toUpperCase()}</span>
             <div className="h-px flex-1 bg-border/50" />
+        </div>
+    );
+}
+
+function FieldGroup({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {
+    return (
+        <div className="space-y-2">
+            <Label className="text-[13px]">{label}</Label>
+            {children}
+            {hint && !error && <p className="text-[10px] text-muted-foreground/40">{hint}</p>}
+            {error && <InputError message={error} />}
+        </div>
+    );
+}
+
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+    return (
+        <div className="space-y-2">
+            <Label className="text-[13px]">{label}</Label>
+            <div className="flex items-center gap-2.5">
+                <div className="relative">
+                    <input
+                        type="color"
+                        value={value || '#3B82F6'}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="h-10 w-10 cursor-pointer appearance-none rounded-lg border border-border bg-transparent p-0.5 [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0"
+                    />
+                </div>
+                <Input
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder="#3B82F6"
+                    className="flex-1 font-mono text-[13px]"
+                />
+            </div>
         </div>
     );
 }
