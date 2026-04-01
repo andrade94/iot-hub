@@ -81,12 +81,20 @@ class UserManagementController extends Controller
             'roles' => $assignableRoles,
             'roleOptions' => $roleOptions,
             'allOrgsMode' => $allOrgsMode,
+            'organizations' => $allOrgsMode
+                ? Organization::orderBy('name')->get(['id', 'name'])->map(fn ($o) => ['id' => $o->id, 'name' => $o->name])
+                : [],
         ]);
     }
 
     public function store(Request $request)
     {
-        $org = $this->resolveOrganization($request);
+        // Super admins can specify org_id in the form
+        if ($request->user()->hasRole('super_admin') && $request->filled('org_id')) {
+            $org = Organization::findOrFail($request->input('org_id'));
+        } else {
+            $org = $this->resolveOrganization($request);
+        }
 
         if (! $org) {
             return back()->with('error', 'Select an organization before creating users.');

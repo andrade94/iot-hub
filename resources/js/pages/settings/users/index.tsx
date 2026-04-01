@@ -24,12 +24,14 @@ import { ChevronDown, Filter, Plus, Search, Users, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 interface SiteOption { id: number; name: string; }
+interface OrgOption { id: number; name: string; }
 
 interface Props {
     users: UserRecord[];
     sites: SiteOption[];
     roles: string[];
     allOrgsMode?: boolean;
+    organizations?: OrgOption[];
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -47,7 +49,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Users', href: '#' },
 ];
 
-export default function UsersIndex({ users, sites, roles, allOrgsMode = false }: Props) {
+export default function UsersIndex({ users, sites, roles, allOrgsMode = false, organizations = [] }: Props) {
     const { t } = useLang();
     const { can } = usePermission();
     const [showCreate, setShowCreate] = useState(false);
@@ -141,7 +143,7 @@ export default function UsersIndex({ users, sites, roles, allOrgsMode = false }:
                                 </DialogTrigger>
                                 <DialogContent className="max-w-lg">
                                     <DialogHeader><DialogTitle>{t('Add User')}</DialogTitle></DialogHeader>
-                                    <UserForm sites={sites} roles={roles} onSuccess={() => setShowCreate(false)} />
+                                    <UserForm sites={sites} roles={roles} organizations={organizations} allOrgsMode={allOrgsMode} onSuccess={() => setShowCreate(false)} />
                                 </DialogContent>
                             </Dialog>
                         </Can>
@@ -309,9 +311,12 @@ function FilterButton({ children, active, onClick, dot }: { children: React.Reac
 
 /* -- User Form ------------------------------------------------------- */
 
-function UserForm({ user, sites, roles, onSuccess }: { user?: UserRecord; sites: SiteOption[]; roles: string[]; onSuccess: () => void }) {
+function UserForm({ user, sites, roles, organizations = [], allOrgsMode = false, onSuccess }: { user?: UserRecord; sites: SiteOption[]; roles: string[]; organizations?: OrgOption[]; allOrgsMode?: boolean; onSuccess: () => void }) {
     const { t } = useLang();
     const isEdit = !!user;
+    const [selectedOrgId, setSelectedOrgId] = useState<string>(user?.organization_name ? '' : '');
+    const [orgSites, setOrgSites] = useState<SiteOption[]>(sites);
+    const [loadingSites, setLoadingSites] = useState(false);
 
     const form = useValidatedForm(userSchema, {
         name: user?.name ?? '',
@@ -324,13 +329,26 @@ function UserForm({ user, sites, roles, onSuccess }: { user?: UserRecord; sites:
         has_app_access: user?.has_app_access ?? false,
     });
 
+    // When org changes in allOrgsMode, fetch sites for that org
+    function handleOrgChange(orgId: string) {
+        setSelectedOrgId(orgId);
+        form.setData('site_ids', []);
+        if (!orgId) { setOrgSites([]); return; }
+        setLoadingSites(true);
+        fetch(`/api/organizations/${orgId}/sites`, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then((r) => r.json())
+            .then((data) => { setOrgSites(data); setLoadingSites(false); })
+            .catch(() => { setOrgSites([]); setLoadingSites(false); });
+    }
+
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!form.validate()) return;
+        const data = allOrgsMode && !isEdit ? { ...form.data, org_id: selectedOrgId } : form.data;
         if (isEdit) {
             form.put(`/settings/users/${user!.id}`, { preserveScroll: true, onSuccess });
         } else {
-            form.post('/settings/users', { preserveScroll: true, onSuccess: () => { form.reset(); onSuccess(); } });
+            router.post('/settings/users', data as Record<string, unknown>, { preserveScroll: true, onSuccess: () => { form.reset(); onSuccess(); } });
         }
     }
 
@@ -339,8 +357,25 @@ function UserForm({ user, sites, roles, onSuccess }: { user?: UserRecord; sites:
         form.setData('site_ids', current.includes(siteId) ? current.filter((id: number) => id !== siteId) : [...current, siteId]);
     }
 
+    const availableSites = allOrgsMode && !isEdit ? orgSites : sites;
+
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Organization selector — super_admin in allOrgsMode only */}
+            {allOrgsMode && !isEdit && (
+                <div className="space-y-2">
+                    <Label>{t('Organization')}</Label>
+                    <Select value={selectedOrgId} onValueChange={handleOrgChange}>
+                        <SelectTrigger><SelectValue placeholder={t('Select organization')} /></SelectTrigger>
+                        <SelectContent>
+                            {organizations.map((org) => (
+                                <SelectItem key={org.id} value={String(org.id)}>{org.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
+
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                     <Label>{t('Name')}</Label>
@@ -390,15 +425,19 @@ function UserForm({ user, sites, roles, onSuccess }: { user?: UserRecord; sites:
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
                     <Label>{t('Site Access')}</Label>
-                    {sites.length > 0 && (
-                        <button type="button" onClick={() => form.setData('site_ids', sites.map((s) => s.id))} className="text-[11px] text-primary transition-colors hover:text-primary/80">{t('Select all')}</button>
+                    {availableSites.length > 0 && (
+                        <button type="button" onClick={() => form.setData('site_ids', availableSites.map((s) => s.id))} className="text-[11px] text-primary transition-colors hover:text-primary/80">{t('Select all')}</button>
                     )}
                 </div>
                 <div className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-border p-2 scrollbar-thin">
-                    {sites.length === 0 ? (
-                        <p className="py-4 text-center text-[12px] text-muted-foreground">{t('No sites available')}</p>
+                    {loadingSites ? (
+                        <p className="py-4 text-center text-[12px] text-muted-foreground">{t('Loading sites...')}</p>
+                    ) : availableSites.length === 0 ? (
+                        <p className="py-4 text-center text-[12px] text-muted-foreground">
+                            {allOrgsMode && !selectedOrgId ? t('Select an organization first') : t('No sites available')}
+                        </p>
                     ) : (
-                        sites.map((site) => (
+                        availableSites.map((site) => (
                             <label key={site.id} className={`flex cursor-pointer items-center gap-3 rounded-md px-3 py-1.5 text-[13px] transition-colors ${form.data.site_ids.includes(site.id) ? 'bg-primary/5' : 'hover:bg-accent/30'}`}>
                                 <input type="checkbox" checked={form.data.site_ids.includes(site.id)} onChange={() => toggleSite(site.id)} className="accent-primary" />
                                 {site.name}

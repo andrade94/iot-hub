@@ -106,6 +106,11 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         return back();
     })->name('org.switch');
 
+    // Fetch sites for an organization (used by user form org selector)
+    Route::get('api/organizations/{organization}/sites', function (\App\Models\Organization $organization) {
+        return $organization->sites()->orderBy('name')->get(['id', 'name']);
+    })->name('api.org.sites')->middleware('role:super_admin');
+
     // Site context switching
     Route::post('site/switch', function (Request $request) {
         $siteId = $request->input('site_id');
