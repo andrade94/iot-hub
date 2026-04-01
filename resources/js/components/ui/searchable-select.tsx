@@ -60,6 +60,8 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
             if (!isOpen) setSearch("");
         };
 
+        const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
         // Position the dropdown when opened
         React.useEffect(() => {
             if (isOpen && triggerRef.current) {
@@ -144,19 +146,23 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                 {isOpen && createPortal(
                     <div
                         ref={dropdownRef}
-                        style={{ ...dropdownStyle, backgroundColor: '#1a1f2b' }}
-                        className="z-[9999] overflow-hidden rounded-lg border border-[#2a3040] shadow-2xl shadow-black/60"
+                        style={{ ...dropdownStyle, backgroundColor: isDark ? '#1a1f2b' : '#ffffff' }}
+                        className={cn(
+                            "z-[9999] overflow-hidden rounded-lg border shadow-2xl",
+                            isDark ? "border-[#2a3040] shadow-black/60" : "border-[#dfe3ea] shadow-black/10"
+                        )}
                     >
                         {/* Search */}
-                        <div className="flex items-center gap-2.5 border-b border-[#2a3040] px-3" style={{ backgroundColor: '#161b25' }}>
-                            <Search className="h-3.5 w-3.5 shrink-0 text-[#4a5568]" />
+                        <div className="flex items-center gap-2.5 px-3" style={{ backgroundColor: isDark ? '#161b25' : '#f5f6f8', borderBottom: `1px solid ${isDark ? '#2a3040' : '#e5e7eb'}` }}>
+                            <Search className="h-3.5 w-3.5 shrink-0" style={{ color: isDark ? '#4a5568' : '#9ca3af' }} />
                             <input
                                 ref={inputRef}
                                 type="text"
                                 placeholder={searchPlaceholder}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="h-9 w-full bg-transparent text-[13px] text-[#e0e4ea] outline-none placeholder:text-[#4a5568]"
+                                className="h-9 w-full bg-transparent text-[13px] outline-none"
+                                style={{ color: isDark ? '#e0e4ea' : '#0f1218', }}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Escape') setIsOpen(false);
                                     e.stopPropagation();
@@ -166,7 +172,7 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                         {/* Options */}
                         <div className="max-h-[260px] overflow-y-auto overscroll-contain p-1 scrollbar-thin">
                             {filteredOptions.length === 0 ? (
-                                <div className="py-6 text-center text-[12px] text-[#4a5568]">
+                                <div className="py-6 text-center text-[12px]" style={{ color: isDark ? '#4a5568' : '#9ca3af' }}>
                                     {emptyText}
                                 </div>
                             ) : (
@@ -177,12 +183,15 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                                         className={cn(
                                             "flex w-full cursor-pointer select-none items-center rounded px-3 py-1.5 text-[13px] outline-none transition-colors",
                                             value === option.value
-                                                ? "bg-[#06b6d4]/10 text-[#06b6d4]"
-                                                : "text-[#b0b8c4] hover:bg-white/[0.04] hover:text-[#e0e4ea]"
+                                                ? "text-[#0891b2]"
+                                                : isDark
+                                                    ? "text-[#b0b8c4] hover:bg-white/[0.04] hover:text-[#e0e4ea]"
+                                                    : "text-[#374151] hover:bg-black/[0.03] hover:text-[#0f1218]"
                                         )}
+                                        style={value === option.value ? { backgroundColor: isDark ? 'rgba(6,182,212,0.1)' : 'rgba(8,145,178,0.08)' } : undefined}
                                         onClick={() => handleSelect(option.value)}
                                     >
-                                        {value === option.value && <Check className="mr-2 h-3 w-3 shrink-0 text-[#06b6d4]" />}
+                                        {value === option.value && <Check className="mr-2 h-3 w-3 shrink-0 text-[#0891b2]" />}
                                         <span className="truncate">{option.label}</span>
                                     </button>
                                 ))
