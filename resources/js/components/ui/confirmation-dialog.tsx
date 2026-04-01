@@ -41,13 +41,15 @@ export function ConfirmationDialog({
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>{title}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        {description}
-                        <div className="mt-3 rounded-md bg-destructive/10 p-3 text-sm">
-                            <AlertTriangle className="mr-2 inline h-4 w-4" />
-                            <strong>Warning:</strong> {warningMessage}
+                    <AlertDialogDescription asChild>
+                        <div className="text-muted-foreground text-sm">
+                            <p>{description}</p>
+                            <span className="mt-3 flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm">
+                                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                                <span><strong>Warning:</strong> {warningMessage}</span>
+                            </span>
+                            {children}
                         </div>
-                        {children}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
