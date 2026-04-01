@@ -118,9 +118,9 @@ export default function OrganizationEditPage({ organization, segments, timezones
                                                 </SelectContent>
                                             </Select>
                                         </FieldGroup>
-                                        <FieldGroup label={t('Plan')} error={form.errors.plan}>
-                                            <Select value={form.data.plan} onValueChange={(v) => form.setData('plan', v)}>
-                                                <SelectTrigger><SelectValue placeholder={t('Select plan')} /></SelectTrigger>
+                                        <FieldGroup label={t('Plan')} hint={t('Managed by subscription')}>
+                                            <Select value={form.data.plan} onValueChange={(v) => form.setData('plan', v)} disabled>
+                                                <SelectTrigger className="capitalize">{form.data.plan || t('No plan')}</SelectTrigger>
                                                 <SelectContent>
                                                     {PLANS.map((p) => (
                                                         <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
