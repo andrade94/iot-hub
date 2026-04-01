@@ -39,7 +39,7 @@ class UserManagementController extends Controller
                     'created_at' => $user->created_at,
                 ]);
 
-            $sites = Site::select('id', 'name')->orderBy('name')->get();
+            $sites = collect(); // Sites loaded per-org via API when creating users
         } else {
             $users = User::where('org_id', $org->id)
                 ->with(['roles', 'sites:id,name'])
