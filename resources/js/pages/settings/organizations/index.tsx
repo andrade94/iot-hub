@@ -165,13 +165,13 @@ export default function OrganizationsIndex({ organizations, segments, timezones 
                         {/* Toolbar row */}
                         <div className="flex items-center gap-3">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/40" />
+                                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder={t('Search organizations...')}
-                                    className="w-64 rounded-md border border-border bg-card px-3.5 py-2 pl-9 text-xs font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground/40 focus:border-muted-foreground/30"
+                                    className="w-64 rounded-md border border-border bg-card px-3.5 py-2 pl-9 text-xs font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-muted-foreground/30"
                                 />
                             </div>
 
@@ -199,7 +199,7 @@ export default function OrganizationsIndex({ organizations, segments, timezones 
                                 </button>
                             )}
 
-                            <span className="ml-auto font-mono text-[10px] tabular-nums text-muted-foreground/30">
+                            <span className="ml-auto font-mono text-[10px] tabular-nums text-muted-foreground/50">
                                 {filteredOrgs.length} {t('of')} {organizations.length}
                             </span>
                         </div>
@@ -210,7 +210,7 @@ export default function OrganizationsIndex({ organizations, segments, timezones 
                                 <div className="grid grid-cols-2 gap-6">
                                     {/* Status */}
                                     <div>
-                                        <p className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/40">{t('Status')}</p>
+                                        <p className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60">{t('Status')}</p>
                                         <div className="flex flex-wrap gap-1">
                                             {['all', 'active', 'onboarding', 'suspended', 'archived'].map((st) => (
                                                 <button
@@ -234,7 +234,7 @@ export default function OrganizationsIndex({ organizations, segments, timezones 
                                     </div>
                                     {/* Segment */}
                                     <div>
-                                        <p className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/40">{t('Segment')}</p>
+                                        <p className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60">{t('Segment')}</p>
                                         <div className="flex flex-wrap gap-1">
                                             {['all', ...segments].map((seg) => (
                                                 <button
@@ -302,7 +302,7 @@ function SectionDivider({ label, delay = 0 }: { label: string; delay?: number })
         <FadeIn delay={delay} duration={400}>
             <div className="my-7 flex items-center gap-4">
                 <div className="h-px flex-1 bg-border" />
-                <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/40">
+                <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/60">
                     {label.toUpperCase()}
                 </span>
                 <div className="h-px flex-1 bg-border" />

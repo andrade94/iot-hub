@@ -131,8 +131,8 @@ export default function OrganizationShow({ organization, sites, users, subscript
     const chartAxisLabelFill = isDark ? '#b0b8c4' : '#6b7280';
     const chartCursorFill = isDark ? 'rgba(6,182,212,0.08)' : 'rgba(8,145,178,0.06)';
     const totalOffline = totalDevices - totalOnline;
-    const sitesEmpty = (<div className="flex flex-col items-center gap-2 py-10"><MapPin className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No sites configured')}</p></div>);
-    const usersEmpty = (<div className="flex flex-col items-center gap-2 py-10"><Users className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No users')}</p></div>);
+    const sitesEmpty = (<div className="flex flex-col items-center gap-2 py-10"><MapPin className="h-6 w-6 text-muted-foreground/50" /><p className="text-sm text-muted-foreground">{t('No sites configured')}</p></div>);
+    const usersEmpty = (<div className="flex flex-col items-center gap-2 py-10"><Users className="h-6 w-6 text-muted-foreground/50" /><p className="text-sm text-muted-foreground">{t('No users')}</p></div>);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -153,7 +153,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                 <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[28px]">
                                     {organization.name}
                                 </h1>
-                                <span className="font-mono text-[11px] text-muted-foreground/40">{organization.slug}</span>
+                                <span className="font-mono text-[11px] text-muted-foreground/60">{organization.slug}</span>
                             </div>
                             <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                 <Badge variant={statusVariants[organization.status] ?? 'outline'} className="text-[10px] capitalize">{organization.status}</Badge>
@@ -270,13 +270,13 @@ export default function OrganizationShow({ organization, sites, users, subscript
                         )}
                         {!subscription && (
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-muted-foreground/40">{t('Subscription')}</span>
-                                <span className="rounded bg-accent/50 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground/40">{t('Coming soon')}</span>
+                                <span className="text-[10px] text-muted-foreground/60">{t('Subscription')}</span>
+                                <span className="rounded bg-accent/50 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground/60">{t('Coming soon')}</span>
                             </div>
                         )}
                         {brandingColors.length > 0 && (
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-muted-foreground/40">{t('Branding')}</span>
+                                <span className="text-[10px] text-muted-foreground/60">{t('Branding')}</span>
                                 <div className="flex gap-1">{brandingColors.map((c) => <span key={c} className="h-4 w-4 rounded-full border border-border/50" style={{ backgroundColor: c }} />)}</div>
                             </div>
                         )}
@@ -338,7 +338,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                     <div className="mt-1.5 flex items-center gap-4 text-[10px]">
                                         <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t('Online')} ({totalOnline})</span>
                                         <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-rose-400" />{t('Offline')} ({totalOffline})</span>
-                                        <span className="flex items-center gap-1.5 text-muted-foreground/40"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/15" />{t('Gateways')} ({totalGateways})</span>
+                                        <span className="flex items-center gap-1.5 text-muted-foreground/60"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/15" />{t('Gateways')} ({totalGateways})</span>
                                     </div>
                                 </div>
 
@@ -418,7 +418,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                         {activeTab === 'sites' && (
                             <div>
                                 <div className="mb-3 flex items-center justify-between">
-                                    <span className="font-mono text-[10px] text-muted-foreground/30">{sites.length} {t('sites')}</span>
+                                    <span className="font-mono text-[10px] text-muted-foreground/50">{sites.length} {t('sites')}</span>
                                     <Dialog open={showAddSite} onOpenChange={setShowAddSite}>
                                         <DialogTrigger asChild>
                                             <Button variant="outline" size="sm" className="text-[11px]">
@@ -439,7 +439,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                         {activeTab === 'users' && (
                             <div>
                                 <div className="mb-3 flex items-center justify-between">
-                                    <span className="font-mono text-[10px] text-muted-foreground/30">{users.length} {t('members')}</span>
+                                    <span className="font-mono text-[10px] text-muted-foreground/50">{users.length} {t('members')}</span>
                                     <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
                                         <DialogTrigger asChild>
                                             <Button variant="outline" size="sm" className="text-[11px]">
@@ -472,13 +472,13 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                             <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">{formatTimeAgo(alert.triggered_at)}</span>
                                         </div>);
                                     })}</div>
-                                ) : <div className="flex flex-col items-center gap-2 py-10"><AlertTriangle className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No active alerts')}</p></div>}
+                                ) : <div className="flex flex-col items-center gap-2 py-10"><AlertTriangle className="h-6 w-6 text-muted-foreground/50" /><p className="text-sm text-muted-foreground">{t('No active alerts')}</p></div>}
                             </Card>
                         )}
                         {activeTab === 'work_orders' && (
                             <div>
                                 <div className="mb-3 flex items-center justify-between">
-                                    <span className="font-mono text-[10px] text-muted-foreground/30">{open_work_orders.length} {t('open')}</span>
+                                    <span className="font-mono text-[10px] text-muted-foreground/50">{open_work_orders.length} {t('open')}</span>
                                     <Button variant="outline" size="sm" className="text-[11px]" onClick={() => router.get('/work-orders')}>
                                         <ExternalLink className="mr-1 h-3.5 w-3.5" />{t('View All Work Orders')}
                                     </Button>
@@ -504,7 +504,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center gap-2 py-10">
-                                            <ClipboardList className="h-6 w-6 text-muted-foreground/30" />
+                                            <ClipboardList className="h-6 w-6 text-muted-foreground/50" />
                                             <p className="text-sm text-muted-foreground">{t('No open work orders')}</p>
                                         </div>
                                     )}
@@ -515,7 +515,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                             <Card className="border-border shadow-none">
                                 {activitiesLoading ? <div className="space-y-3 p-4">{Array.from({ length: 5 }).map((_, i) => (<div key={i} className="flex items-center gap-3"><Skeleton className="h-7 w-7 rounded-full" /><div className="flex-1 space-y-1"><Skeleton className="h-3 w-32" /><Skeleton className="h-3 w-48" /></div></div>))}</div>
                                 : activities && activities.length > 0 ? <div className="divide-y divide-border/30">{activities.map((a) => (<div key={a.id} className="flex items-center gap-3 px-5 py-3.5"><div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/50"><span className="font-mono text-[10px] font-medium text-muted-foreground">{a.causer?.name?.charAt(0)?.toUpperCase() ?? '?'}</span></div><div className="min-w-0 flex-1"><p className="text-[13px]"><span className="font-medium text-foreground">{a.causer?.name ?? t('System')}</span> <span className="text-muted-foreground">{a.description}</span></p></div><span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">{formatTimeAgo(a.created_at)}</span></div>))}</div>
-                                : <div className="flex flex-col items-center gap-2 py-10"><Users className="h-6 w-6 text-muted-foreground/30" /><p className="text-sm text-muted-foreground">{t('No activity')}</p></div>}
+                                : <div className="flex flex-col items-center gap-2 py-10"><Users className="h-6 w-6 text-muted-foreground/50" /><p className="text-sm text-muted-foreground">{t('No activity')}</p></div>}
                             </Card>
                         )}
                         {activeTab === 'notes' && <NotesTab organizationId={organization.id} notes={notes} />}
@@ -543,7 +543,7 @@ function SummaryStat({ label, value, suffix, subtitle, color, last, onClick }: {
                 {value}{suffix && <span className="text-2xl">{suffix}</span>}
             </span>
             <span className="text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground/50">{label}</span>
-            {subtitle && <span className="font-mono text-[9px] text-muted-foreground/30">{subtitle}</span>}
+            {subtitle && <span className="font-mono text-[9px] text-muted-foreground/50">{subtitle}</span>}
         </Comp>
     );
 }
@@ -552,7 +552,7 @@ function SectionDivider({ label }: { label: string }) {
     return (
         <div className="my-6 flex items-center gap-4">
             <div className="h-px flex-1 bg-border/50" />
-            <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/30">{label.toUpperCase()}</span>
+            <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/50">{label.toUpperCase()}</span>
             <div className="h-px flex-1 bg-border/50" />
         </div>
     );
@@ -561,7 +561,7 @@ function SectionDivider({ label }: { label: string }) {
 function DetailInline({ label, value, mono, accent }: { label: string; value: string; mono?: boolean; accent?: boolean }) {
     return (
         <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground/40">{label}</span>
+            <span className="text-[10px] text-muted-foreground/60">{label}</span>
             <span className={`text-[12px] ${mono ? 'font-mono text-[11px]' : ''} ${accent ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground/80'}`}>{value}</span>
         </div>
     );
@@ -579,7 +579,7 @@ function NotesTab({ organizationId, notes }: { organizationId: number; notes: Or
             <div className="p-5">
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <textarea value={form.data.note} onChange={(e) => form.setData('note', e.target.value)} placeholder={t('Add a note about this organization...')} rows={3}
-                        className="w-full resize-none rounded-lg border border-border bg-accent/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                        className="w-full resize-none rounded-lg border border-border bg-accent/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30" />
                     <div className="flex justify-end">
                         <Button size="sm" type="submit" disabled={form.processing || !form.data.note.trim()} className="bg-primary text-primary-foreground hover:bg-primary/90">
                             {form.processing ? t('Saving...') : t('Post Note')}
@@ -812,7 +812,7 @@ function InviteMemberForm({ sites: orgSites, onSuccess }: { sites: SiteWithCount
                     </p>
                 )}
                 {form.data.site_ids.length > 0 && (
-                    <p className="mt-1.5 font-mono text-[10px] text-muted-foreground/40">
+                    <p className="mt-1.5 font-mono text-[10px] text-muted-foreground/60">
                         {form.data.site_ids.length} {t('of')} {orgSites.length} {t('sites selected')}
                     </p>
                 )}
