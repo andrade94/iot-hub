@@ -32,7 +32,7 @@ interface AlertFeedItem { id: number; severity: 'low' | 'medium' | 'high' | 'cri
 interface PrimaryContact { id: number; name: string; email: string; phone: string | null; }
 interface OrganizationNote { id: number; note: string; created_at: string; user: { id: number; name: string }; }
 interface WorkOrderSummary { id: number; title: string; status: string; priority: string; site_name: string | null; assigned_to_name: string | null; created_at: string; }
-interface Props { organization: OrganizationDetail; sites: SiteWithCounts[]; users: UserSummary[]; subscription?: Subscription | null; timezones: string[]; segments: string[]; primary_contact: PrimaryContact | null; last_user_activity: string | null; recent_alerts: AlertFeedItem[]; open_work_orders: WorkOrderSummary[]; notes: OrganizationNote[]; }
+interface Props { organization: OrganizationDetail; sites: SiteWithCounts[]; users: UserSummary[]; subscription?: Subscription | null; timezones: string[]; segments: string[]; primary_contact: PrimaryContact | null; last_user_activity: string | null; recent_alerts: AlertFeedItem[]; open_work_orders: WorkOrderSummary[]; notes: OrganizationNote[]; is_super_admin: boolean; }
 
 /* -- Design Tokens ---------------------------------------------------- */
 
@@ -52,7 +52,7 @@ const siteStatusVariants: Record<string, 'success' | 'warning' | 'outline'> = { 
 const STATUS_COLORS: Record<string, string> = { active: PALETTE.emerald.hex, onboarding: PALETTE.cyan.hex, suspended: PALETTE.rose.hex, draft: PALETTE.slate.hex, archived: PALETTE.slate.hex };
 
 /* -- Main Component --------------------------------------------------- */
-export default function OrganizationShow({ organization, sites, users, subscription, timezones, primary_contact, last_user_activity, recent_alerts, open_work_orders, notes }: Props) {
+export default function OrganizationShow({ organization, sites, users, subscription, timezones, primary_contact, last_user_activity, recent_alerts, open_work_orders, notes, is_super_admin }: Props) {
     const { t } = useLang();
     const [suspendOpen, setSuspendOpen] = useState(false);
     const [archiveOpen, setArchiveOpen] = useState(false);
@@ -143,9 +143,11 @@ export default function OrganizationShow({ organization, sites, users, subscript
                 <FadeIn direction="down" duration={400}>
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <button onClick={() => router.get('/settings/organizations')} className="mb-2 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
-                                <ArrowLeft className="h-3 w-3" />{t('Organizations')}
-                            </button>
+                            {is_super_admin && (
+                                <button onClick={() => router.get('/settings/organizations')} className="mb-2 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
+                                    <ArrowLeft className="h-3 w-3" />{t('Organizations')}
+                                </button>
+                            )}
                             <div className="flex flex-wrap items-center gap-3">
                                 {organization.logo && (
                                     <img src={organization.logo} alt="" className="h-8 w-8 rounded-lg object-contain" />
@@ -162,23 +164,23 @@ export default function OrganizationShow({ organization, sites, users, subscript
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            {/* Lifecycle */}
-                            {['active', 'onboarding'].includes(organization.status) && (
+                            {/* Lifecycle — super_admin only */}
+                            {is_super_admin && ['active', 'onboarding'].includes(organization.status) && (
                                 <Button variant="outline" size="sm" className="text-[11px] text-amber-600 dark:text-amber-400 border-border hover:border-amber-300 dark:hover:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30" onClick={() => setSuspendOpen(true)}>
                                     <ShieldAlert className="mr-1 h-3.5 w-3.5" />{t('Suspend')}
                                 </Button>
                             )}
-                            {organization.status === 'suspended' && (
+                            {is_super_admin && organization.status === 'suspended' && (
                                 <Button variant="outline" size="sm" className="text-[11px] text-emerald-600 dark:text-emerald-400 border-border hover:border-emerald-300 dark:hover:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30" onClick={() => setReactivateOpen(true)}>{t('Reactivate')}</Button>
                             )}
-                            {organization.status !== 'archived' && (
+                            {is_super_admin && organization.status !== 'archived' && (
                                 <Button variant="outline" size="sm" className="text-[11px] text-rose-600 dark:text-rose-400 border-border hover:border-rose-300 dark:hover:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/30" onClick={() => setArchiveOpen(true)}>
                                     <Archive className="mr-1 h-3.5 w-3.5" />{t('Archive')}
                                 </Button>
                             )}
 
-                            {/* Manage dropdown */}
-                            <DropdownMenu>
+                            {/* Manage dropdown — super_admin only */}
+                            {is_super_admin && <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" size="sm" className="text-[11px] bg-accent hover:bg-accent/80 dark:bg-accent dark:hover:bg-accent/60">
                                         <Settings2 className="mr-1 h-3.5 w-3.5" />{t('Manage')}
@@ -228,7 +230,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                                         </DropdownMenuItem>
                                     </DropdownMenuGroup>
                                 </DropdownMenuContent>
-                            </DropdownMenu>
+                            </DropdownMenu>}
 
                             <Button variant="outline" size="sm" className="text-[11px] bg-accent hover:bg-accent/80 dark:bg-accent dark:hover:bg-accent/60"
                                 onClick={() => router.get(`/settings/organizations/${organization.id}/edit`)}>
@@ -401,7 +403,7 @@ export default function OrganizationShow({ organization, sites, users, subscript
                             { key: 'alerts', label: t('Alerts'), count: recent_alerts.length, isAlert: true },
                             { key: 'work_orders', label: t('Work Orders'), count: open_work_orders.length, isAlert: open_work_orders.length > 0 },
                             { key: 'activity', label: t('Activity') },
-                            { key: 'notes', label: t('Notes'), count: notes.length },
+                            ...(is_super_admin ? [{ key: 'notes', label: t('Notes'), count: notes.length }] : []),
                         ].map((tab) => (
                             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                                 className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.06em] transition-colors ${activeTab === tab.key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground/70'}`}>

@@ -40,8 +40,9 @@ class OrganizationCatalogController extends Controller
         ]);
     }
 
-    public function show(Organization $organization)
+    public function show(Request $request, Organization $organization)
     {
+        $this->authorizeOrgAccess($request, $organization);
         $organization->load([
             'sites' => function ($query) {
                 $query->withCount([
@@ -169,6 +170,7 @@ class OrganizationCatalogController extends Controller
                 'created_at' => $note->created_at->toIso8601String(),
                 'user' => ['id' => $note->user->id, 'name' => $note->user->name],
             ]),
+            'is_super_admin' => $request->user()->hasRole('super_admin'),
         ]);
     }
 
