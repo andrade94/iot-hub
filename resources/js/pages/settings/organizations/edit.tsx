@@ -10,7 +10,7 @@ import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload } from 'lucide-react';
 
 const PLANS = ['starter', 'standard', 'professional', 'enterprise'] as const;
 
@@ -162,14 +162,43 @@ export default function OrganizationEditPage({ organization, segments, timezones
                                     </div>
 
                                     {/* Logo */}
-                                    <FieldGroup label={t('Logo URL')} error={form.errors.logo} hint={t('Enter a URL to your organization logo image')}>
-                                        <Input
-                                            value={form.data.logo}
-                                            onChange={(e) => form.setData('logo', e.target.value)}
-                                            placeholder="https://example.com/logo.png"
-                                            className="font-mono text-[13px]"
-                                        />
-                                    </FieldGroup>
+                                    <div className="space-y-2">
+                                        <Label className="text-[13px]">{t('Logo')}</Label>
+                                        <div className="flex items-start gap-5">
+                                            {/* Preview / placeholder */}
+                                            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-accent/30">
+                                                {form.data.logo ? (
+                                                    <img
+                                                        src={form.data.logo}
+                                                        alt=""
+                                                        className="h-full w-full object-contain p-1"
+                                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                    />
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-1 text-muted-foreground/30">
+                                                        <Upload className="h-5 w-5" />
+                                                        <span className="text-[8px] uppercase tracking-wider">{t('Logo')}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {/* URL input + actions */}
+                                            <div className="flex-1 space-y-2">
+                                                <Input
+                                                    value={form.data.logo}
+                                                    onChange={(e) => form.setData('logo', e.target.value)}
+                                                    placeholder="https://example.com/logo.png"
+                                                    className="font-mono text-[13px]"
+                                                />
+                                                <p className="text-[10px] text-muted-foreground/40">{t('Paste a URL to your logo image. Supported: PNG, SVG, JPG.')}</p>
+                                                {form.data.logo && (
+                                                    <button type="button" onClick={() => form.setData('logo', '')} className="text-[11px] text-rose-600 dark:text-rose-400 transition-colors hover:text-rose-500">
+                                                        {t('Remove logo')}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {form.errors.logo && <InputError message={form.errors.logo} />}
+                                    </div>
 
                                     {/* Live Preview */}
                                     {(form.data.branding.primary_color || form.data.branding.secondary_color || form.data.branding.accent_color || form.data.logo) && (
