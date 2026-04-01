@@ -347,11 +347,21 @@ function UserForm({ user, sites, roles, organizations = [], allOrgsMode = false,
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!form.validate()) return;
-        const data = allOrgsMode && !isEdit ? { ...form.data, org_id: selectedOrgId } : form.data;
+        if (allOrgsMode && !isEdit && !selectedOrgId) return;
         if (isEdit) {
             form.put(`/settings/users/${user!.id}`, { preserveScroll: true, onSuccess });
         } else {
-            router.post('/settings/users', data as Record<string, unknown>, { preserveScroll: true, onSuccess: () => { form.reset(); onSuccess(); } });
+            // Include org_id for super_admin in all-orgs mode
+            const submitData = allOrgsMode && selectedOrgId
+                ? { ...form.data, org_id: Number(selectedOrgId) }
+                : form.data;
+            router.post('/settings/users', submitData as Record<string, unknown>, {
+                preserveScroll: true,
+                onSuccess: () => { form.reset(); onSuccess(); },
+                onError: (errors) => {
+                    form.setError(errors as Record<string, string>);
+                },
+            });
         }
     }
 
