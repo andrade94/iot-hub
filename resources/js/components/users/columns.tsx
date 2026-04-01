@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
 
 export interface UserRecord {
     id: number;
@@ -24,6 +24,16 @@ const roleBadgeVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
     technician: 'outline',
 };
 
+const ROLE_LABELS: Record<string, string> = {
+    super_admin: 'Super Admin',
+    support: 'Support',
+    account_manager: 'Account Manager',
+    technician: 'Technician',
+    client_org_admin: 'Org Admin',
+    client_site_manager: 'Site Manager',
+    client_site_viewer: 'Site Viewer',
+};
+
 interface UserColumnOptions {
     onEdit: (user: UserRecord) => void;
     onDelete: (user: UserRecord) => void;
@@ -32,119 +42,78 @@ interface UserColumnOptions {
     allOrgsMode?: boolean;
 }
 
+function SortableHeader({ column, title }: { column: { getIsSorted: () => false | 'asc' | 'desc'; toggleSorting: (desc: boolean) => void }; title: string }) {
+    const sorted = column.getIsSorted();
+    return (
+        <button
+            className="-ml-1 flex items-center gap-1 rounded px-1 py-0.5 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70 transition-colors hover:text-foreground/70"
+            onClick={() => column.toggleSorting(sorted === 'asc')}
+        >
+            {title}
+            {sorted === 'asc' ? <ArrowUp className="h-3 w-3" /> : sorted === 'desc' ? <ArrowDown className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-40" />}
+        </button>
+    );
+}
+
 export function getUserColumns({ onEdit, onDelete, t, canManage, allOrgsMode }: UserColumnOptions): ColumnDef<UserRecord>[] {
     const columns: ColumnDef<UserRecord>[] = [
         {
             accessorKey: 'name',
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="-ml-3 h-8"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                >
-                    {t('Name')}
-                    <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
-                </Button>
+            header: ({ column }) => <SortableHeader column={column} title={t('Name')} />,
+            cell: ({ row }) => (
+                <div>
+                    <span className="font-medium text-foreground">{row.getValue('name')}</span>
+                    {row.original.deactivated_at && <span className="ml-2 text-[10px] text-rose-600 dark:text-rose-400">{t('Deactivated')}</span>}
+                </div>
             ),
-            cell: ({ row }) => <span className="font-medium">{row.getValue('name')}</span>,
         },
         {
             accessorKey: 'email',
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="-ml-3 h-8"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                >
-                    {t('Email')}
-                    <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
-                </Button>
-            ),
-            cell: ({ row }) => (
-                <span className="text-muted-foreground">{row.getValue('email')}</span>
-            ),
+            header: ({ column }) => <SortableHeader column={column} title={t('Email')} />,
+            cell: ({ row }) => <span className="font-mono text-[12px] text-muted-foreground">{row.getValue('email')}</span>,
         },
     ];
 
     if (allOrgsMode) {
         columns.push({
             accessorKey: 'organization_name',
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="-ml-3 h-8"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                >
-                    {t('Organization')}
-                    <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
-                </Button>
-            ),
-            cell: ({ row }) => (
-                <span className="text-muted-foreground">{row.original.organization_name ?? '-'}</span>
-            ),
+            header: ({ column }) => <SortableHeader column={column} title={t('Organization')} />,
+            cell: ({ row }) => <span className="text-muted-foreground">{row.original.organization_name ?? '—'}</span>,
         });
     }
 
     columns.push(
         {
             accessorKey: 'role',
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="-ml-3 h-8"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                >
-                    {t('Role')}
-                    <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
-                </Button>
-            ),
+            header: ({ column }) => <SortableHeader column={column} title={t('Role')} />,
             cell: ({ row }) => {
                 const role = row.getValue('role') as string | null;
                 if (!role) return null;
-                return (
-                    <Badge variant={roleBadgeVariant[role] ?? 'outline'}>
-                        {role.replace('_', ' ')}
-                    </Badge>
-                );
+                return <Badge variant={roleBadgeVariant[role] ?? 'outline'} className="text-[10px] capitalize">{ROLE_LABELS[role] ?? role.replace(/_/g, ' ')}</Badge>;
             },
         },
         {
             accessorKey: 'sites',
-            header: t('Sites'),
+            header: () => t('Sites'),
             enableSorting: false,
             cell: ({ row }) => {
                 const sites = row.original.sites;
+                if (sites.length === 0) return <span className="text-muted-foreground">—</span>;
                 return (
                     <div className="flex flex-wrap gap-1">
-                        {sites.slice(0, 2).map((s) => (
-                            <Badge key={s.id} variant="outline" className="text-[10px]">
-                                {s.name}
-                            </Badge>
-                        ))}
-                        {sites.length > 2 && (
-                            <Badge variant="outline" className="font-mono text-[10px] tabular-nums">
-                                +{sites.length - 2}
-                            </Badge>
-                        )}
+                        {sites.slice(0, 2).map((s) => <Badge key={s.id} variant="outline" className="text-[10px]">{s.name}</Badge>)}
+                        {sites.length > 2 && <Badge variant="outline" className="font-mono text-[10px] tabular-nums">+{sites.length - 2}</Badge>}
                     </div>
                 );
             },
         },
         {
             accessorKey: 'has_app_access',
-            header: t('App Access'),
+            header: () => t('App'),
             enableSorting: false,
             cell: ({ row }) => {
-                const hasAccess = row.getValue('has_app_access') as boolean;
-                return (
-                    <Badge variant={hasAccess ? 'success' : 'outline'} className="text-xs">
-                        {hasAccess ? t('Yes') : t('No')}
-                    </Badge>
-                );
+                const has = row.getValue('has_app_access') as boolean;
+                return <Badge variant={has ? 'success' : 'outline'} className="text-[10px]">{has ? t('Yes') : t('No')}</Badge>;
             },
         },
     );
@@ -154,34 +123,16 @@ export function getUserColumns({ onEdit, onDelete, t, canManage, allOrgsMode }: 
             id: 'actions',
             enableSorting: false,
             enableHiding: false,
-            cell: ({ row }) => {
-                const user = row.original;
-                return (
-                    <div className="flex gap-1">
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEdit(user);
-                            }}
-                        >
-                            <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-destructive"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(user);
-                            }}
-                        >
-                            <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                    </div>
-                );
-            },
+            cell: ({ row }) => (
+                <div className="flex gap-1">
+                    <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); onEdit(row.original); }}>
+                        <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon-sm" className="text-destructive-foreground" onClick={(e) => { e.stopPropagation(); onDelete(row.original); }}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                </div>
+            ),
         });
     }
 

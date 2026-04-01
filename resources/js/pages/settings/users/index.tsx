@@ -1,15 +1,12 @@
 import { Can, usePermission } from '@/components/Can';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { ContentWithSidebar } from '@/components/ui/content-with-sidebar';
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FadeIn } from '@/components/ui/fade-in';
-import { FilterToolbar } from '@/components/ui/filter-toolbar';
-import type { FilterPill } from '@/components/ui/filter-toolbar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,13 +20,10 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { userSchema } from '@/utils/schemas';
 import { Head, router } from '@inertiajs/react';
-import { Plus, Search, Users } from 'lucide-react';
+import { ChevronDown, Filter, Plus, Search, Users, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-interface SiteOption {
-    id: number;
-    name: string;
-}
+interface SiteOption { id: number; name: string; }
 
 interface Props {
     users: UserRecord[];
@@ -48,11 +42,6 @@ const ROLE_LABELS: Record<string, string> = {
     client_site_viewer: 'Site Viewer',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-    active: 'Active',
-    deactivated: 'Deactivated',
-};
-
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Settings', href: '/settings/profile' },
     { title: 'Users', href: '#' },
@@ -65,360 +54,262 @@ export default function UsersIndex({ users, sites, roles, allOrgsMode = false }:
     const [editUser, setEditUser] = useState<UserRecord | null>(null);
     const [deleteUser, setDeleteUser] = useState<UserRecord | null>(null);
     const [deleting, setDeleting] = useState(false);
-
     const canManage = can('manage users');
 
-    // Client-side filters
+    // Filters
     const [roleFilter, setRoleFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
     const [orgFilter, setOrgFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
-
-    // Unique org names for filter dropdown (only used in allOrgsMode)
-    const orgNames = useMemo(() => {
-        if (!allOrgsMode) return [];
-        const names = new Set(users.map((u) => u.organization_name).filter(Boolean) as string[]);
-        return Array.from(names).sort();
-    }, [users, allOrgsMode]);
-
-    // Filter sidebar visibility with localStorage persistence
     const [showFilters, setShowFilters] = useState(() => {
-        try {
-            return localStorage.getItem('users-show-filters') === 'true';
-        } catch {
-            return true;
-        }
+        try { return localStorage.getItem('users-filters') !== 'false'; } catch { return false; }
     });
 
     function toggleFilters() {
         const next = !showFilters;
         setShowFilters(next);
-        try {
-            localStorage.setItem('users-show-filters', String(next));
-        } catch {
-            // ignore
-        }
+        try { localStorage.setItem('users-filters', String(next)); } catch { /* */ }
     }
 
-    // Client-side filtering
+    const orgNames = useMemo(() => {
+        if (!allOrgsMode) return [];
+        return Array.from(new Set(users.map((u) => u.organization_name).filter(Boolean) as string[])).sort();
+    }, [users, allOrgsMode]);
+
     const filteredUsers = useMemo(() => {
         let result = users;
-
-        if (roleFilter !== 'all') {
-            result = result.filter((user) => user.role === roleFilter);
-        }
-
-        if (statusFilter !== 'all') {
-            if (statusFilter === 'active') {
-                result = result.filter((user) => !user.deactivated_at);
-            } else if (statusFilter === 'deactivated') {
-                result = result.filter((user) => !!user.deactivated_at);
-            }
-        }
-
-        if (allOrgsMode && orgFilter !== 'all') {
-            result = result.filter((user) => user.organization_name === orgFilter);
-        }
-
+        if (roleFilter !== 'all') result = result.filter((u) => u.role === roleFilter);
+        if (statusFilter === 'active') result = result.filter((u) => !u.deactivated_at);
+        else if (statusFilter === 'deactivated') result = result.filter((u) => !!u.deactivated_at);
+        if (allOrgsMode && orgFilter !== 'all') result = result.filter((u) => u.organization_name === orgFilter);
         if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase().trim();
-            result = result.filter(
-                (user) =>
-                    user.name.toLowerCase().includes(query) ||
-                    user.email.toLowerCase().includes(query),
-            );
+            const q = searchQuery.toLowerCase().trim();
+            result = result.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
         }
-
         return result;
     }, [users, roleFilter, statusFilter, orgFilter, allOrgsMode, searchQuery]);
 
     const hasFilters = roleFilter !== 'all' || statusFilter !== 'all' || orgFilter !== 'all' || searchQuery.trim() !== '';
+    const activeFilterCount = (roleFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0) + (orgFilter !== 'all' ? 1 : 0);
+    function clearAllFilters() { setRoleFilter('all'); setStatusFilter('all'); setOrgFilter('all'); setSearchQuery(''); }
 
-    function clearAllFilters() {
-        setRoleFilter('all');
-        setStatusFilter('all');
-        setOrgFilter('all');
-        setSearchQuery('');
-    }
+    // Stats
+    const stats = useMemo(() => ({
+        active: users.filter((u) => !u.deactivated_at).length,
+        deactivated: users.filter((u) => !!u.deactivated_at).length,
+        withApp: users.filter((u) => u.has_app_access).length,
+    }), [users]);
 
-    // Build filter pills
-    const filterPills = useMemo<FilterPill[]>(() => {
-        const pills: FilterPill[] = [];
-        if (orgFilter !== 'all') {
-            pills.push({
-                key: 'org',
-                label: `Organization: ${orgFilter}`,
-                onRemove: () => setOrgFilter('all'),
-            });
-        }
-        if (roleFilter !== 'all') {
-            pills.push({
-                key: 'role',
-                label: `Role: ${ROLE_LABELS[roleFilter] ?? roleFilter.replace('_', ' ')}`,
-                onRemove: () => setRoleFilter('all'),
-            });
-        }
-        if (statusFilter !== 'all') {
-            pills.push({
-                key: 'status',
-                label: `Status: ${STATUS_LABELS[statusFilter] ?? statusFilter}`,
-                onRemove: () => setStatusFilter('all'),
-            });
-        }
-        if (searchQuery.trim()) {
-            pills.push({
-                key: 'search',
-                label: `Search: "${searchQuery}"`,
-                onRemove: () => setSearchQuery(''),
-            });
-        }
-        return pills;
-    }, [orgFilter, roleFilter, statusFilter, searchQuery]);
-
-    const columns = useMemo(
-        () =>
-            getUserColumns({
-                onEdit: (user) => setEditUser(user),
-                onDelete: (user) => setDeleteUser(user),
-                t,
-                canManage,
-                allOrgsMode,
-            }),
-        [t, canManage, allOrgsMode],
-    );
+    const columns = useMemo(() => getUserColumns({ onEdit: (u) => setEditUser(u), onDelete: (u) => setDeleteUser(u), t, canManage, allOrgsMode }), [t, canManage, allOrgsMode]);
 
     function handleDelete() {
         if (!deleteUser) return;
         setDeleting(true);
-        router.delete(`/settings/users/${deleteUser.id}`, {
-            preserveScroll: true,
-            onFinish: () => {
-                setDeleting(false);
-                setDeleteUser(null);
-            },
-        });
+        router.delete(`/settings/users/${deleteUser.id}`, { preserveScroll: true, onFinish: () => { setDeleting(false); setDeleteUser(null); } });
     }
 
-    // Empty state
     const emptyStateNode = (
-        <EmptyState
-            size="sm"
-            variant="muted"
-            icon={<Users className="h-5 w-5 text-muted-foreground" />}
-            title={
-                hasFilters
-                    ? t('No users match these filters')
-                    : t('No users registered')
-            }
-            description={
-                hasFilters
-                    ? t('Try adjusting your filters to see more results')
-                    : t('Add your first user to get started')
-            }
-            action={
-                hasFilters ? (
-                    <Button variant="outline" size="sm" onClick={clearAllFilters}>
-                        {t('Clear filters')}
-                    </Button>
-                ) : undefined
-            }
+        <EmptyState size="sm" variant="muted" icon={<Users className="h-5 w-5 text-muted-foreground" />}
+            title={hasFilters ? t('No users match these filters') : t('No users registered')}
+            description={hasFilters ? t('Try adjusting your filters to see more results') : t('Add your first user to get started')}
+            action={hasFilters ? <Button variant="outline" size="sm" onClick={clearAllFilters}>{t('Clear filters')}</Button> : undefined}
         />
-    );
-
-    // Filter sidebar
-    const filterSidebar = (
-        <Card className="shadow-elevation-1">
-            <CardContent className="flex flex-col gap-4 p-4">
-                {allOrgsMode && (
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground">
-                            {t('Organization')}
-                        </Label>
-                        <Select value={orgFilter} onValueChange={setOrgFilter}>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder={t('Organization')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('All Organizations')}</SelectItem>
-                                {orgNames.map((name) => (
-                                    <SelectItem key={name} value={name}>
-                                        {name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                )}
-
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">
-                        {t('Role')}
-                    </Label>
-                    <Select value={roleFilter} onValueChange={setRoleFilter}>
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder={t('Role')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">{t('All Roles')}</SelectItem>
-                            {roles.map((role) => (
-                                <SelectItem key={role} value={role}>
-                                    {ROLE_LABELS[role] ?? role.replace('_', ' ')}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">
-                        {t('Status')}
-                    </Label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder={t('Status')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">{t('All Status')}</SelectItem>
-                            <SelectItem value="active">{t('Active')}</SelectItem>
-                            <SelectItem value="deactivated">{t('Deactivated')}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">
-                        {t('Search')}
-                    </Label>
-                    <div className="relative">
-                        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={t('Name or email...')}
-                            className="pl-8"
-                        />
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
     );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Users')} />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-                {/* -- Header -------------------------------------------------- */}
+            <div className="obsidian flex h-full flex-1 flex-col bg-background p-5 md:p-8">
+
+                {/* ━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
                 <FadeIn direction="down" duration={400}>
-                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
-                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
-                        <div className="relative flex items-start justify-between p-6 md:p-8">
-                            <div>
-                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
-                                    {t('User Management')}
-                                </p>
-                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
-                                    {t('Users')}
-                                </h1>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    <span className="font-mono tabular-nums font-medium text-foreground">{users.length}</span>{' '}
-                                    {t('user(s) registered')}
-                                </p>
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <h1 className="font-display text-[28px] font-bold tracking-tight text-foreground md:text-[32px]">
+                                {t('Users')}
+                            </h1>
+                            <p className="mt-1 text-[13px] font-light text-muted-foreground">
+                                {t('Manage team members, roles, and site access.')}
+                            </p>
+                        </div>
+                        <Can permission="manage users">
+                            <Dialog open={showCreate} onOpenChange={setShowCreate}>
+                                <DialogTrigger asChild>
+                                    <Button className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
+                                        <Plus className="mr-1.5 h-4 w-4" />{t('Add User')}
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-lg">
+                                    <DialogHeader><DialogTitle>{t('Add User')}</DialogTitle></DialogHeader>
+                                    <UserForm sites={sites} roles={roles} onSuccess={() => setShowCreate(false)} />
+                                </DialogContent>
+                            </Dialog>
+                        </Can>
+                    </div>
+                </FadeIn>
+
+                {/* ━━ SUMMARY STRIP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                <FadeIn delay={50} duration={400}>
+                    <div className="mt-6 flex items-stretch overflow-hidden rounded-lg border border-border bg-card">
+                        <SummaryStat label={t('Total')} value={String(users.length).padStart(2, '0')} />
+                        <SummaryStat label={t('Active')} value={String(stats.active).padStart(2, '0')} color="text-emerald-600 dark:text-emerald-400" />
+                        <SummaryStat label={t('Deactivated')} value={String(stats.deactivated).padStart(2, '0')} color={stats.deactivated > 0 ? 'text-rose-600 dark:text-rose-400' : undefined} />
+                        <SummaryStat label={t('App Access')} value={String(stats.withApp).padStart(2, '0')} last />
+                    </div>
+                </FadeIn>
+
+                {/* ━━ SECTION DIVIDER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                <SectionDivider label={t('Directory')} />
+
+                {/* ━━ TOOLBAR + FILTER DRAWER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                <FadeIn delay={125} duration={400}>
+                    <div className="mb-5 space-y-0">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder={t('Search users...')}
+                                    className="w-64 rounded-md border border-border bg-background px-3.5 py-2 pl-9 text-xs font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-muted-foreground/70"
+                                />
                             </div>
-                            <Can permission="manage users">
-                                <Dialog open={showCreate} onOpenChange={setShowCreate}>
-                                    <DialogTrigger asChild>
-                                        <Button>
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            {t('Add User')}
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-lg">
-                                        <DialogHeader>
-                                            <DialogTitle>{t('Add User')}</DialogTitle>
-                                        </DialogHeader>
-                                        <UserForm
-                                            sites={sites}
-                                            roles={roles}
-                                            onSuccess={() => setShowCreate(false)}
-                                        />
-                                    </DialogContent>
-                                </Dialog>
-                            </Can>
+                            <button
+                                onClick={toggleFilters}
+                                className={`flex items-center gap-1.5 rounded-md border px-3 py-2 text-[11px] font-medium transition-colors ${
+                                    showFilters || activeFilterCount > 0
+                                        ? 'border-primary/30 bg-primary/5 text-primary'
+                                        : 'border-border bg-background text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                <Filter className="h-3 w-3" />
+                                {t('Filters')}
+                                {activeFilterCount > 0 && (
+                                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary/20 px-1 font-mono text-[9px] tabular-nums text-primary">{activeFilterCount}</span>
+                                )}
+                                <ChevronDown className={`h-3 w-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                            </button>
+                            {hasFilters && (
+                                <button onClick={clearAllFilters} className="flex items-center gap-1 text-[11px] text-muted-foreground/70 transition-colors hover:text-foreground">
+                                    <X className="h-3 w-3" />{t('Clear')}
+                                </button>
+                            )}
+                            <span className="ml-auto font-mono text-[10px] tabular-nums text-muted-foreground/70">
+                                {filteredUsers.length} {t('of')} {users.length}
+                            </span>
+                        </div>
+
+                        {/* Filter drawer */}
+                        <div className={`overflow-hidden transition-all duration-200 ${showFilters ? 'mt-3 max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
+                            <div className="rounded-lg border border-border/50 bg-card p-4">
+                                <div className={`grid gap-6 ${allOrgsMode ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                                    {/* Role */}
+                                    <div>
+                                        <p className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t('Role')}</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            <FilterButton active={roleFilter === 'all'} onClick={() => setRoleFilter('all')}>{t('All Roles')}</FilterButton>
+                                            {roles.map((role) => (
+                                                <FilterButton key={role} active={roleFilter === role} onClick={() => setRoleFilter(role)}>
+                                                    {ROLE_LABELS[role] ?? role.replace(/_/g, ' ')}
+                                                </FilterButton>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    {/* Status */}
+                                    <div>
+                                        <p className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t('Status')}</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            <FilterButton active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>{t('All')}</FilterButton>
+                                            <FilterButton active={statusFilter === 'active'} onClick={() => setStatusFilter('active')} dot="bg-emerald-400">{t('Active')}</FilterButton>
+                                            <FilterButton active={statusFilter === 'deactivated'} onClick={() => setStatusFilter('deactivated')} dot="bg-rose-400">{t('Deactivated')}</FilterButton>
+                                        </div>
+                                    </div>
+                                    {/* Organization (allOrgsMode) */}
+                                    {allOrgsMode && (
+                                        <div>
+                                            <p className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t('Organization')}</p>
+                                            <div className="flex flex-wrap gap-1">
+                                                <FilterButton active={orgFilter === 'all'} onClick={() => setOrgFilter('all')}>{t('All')}</FilterButton>
+                                                {orgNames.map((name) => (
+                                                    <FilterButton key={name} active={orgFilter === name} onClick={() => setOrgFilter(name)}>{name}</FilterButton>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </FadeIn>
 
-                {/* -- FilterToolbar + ContentWithSidebar ---------------------- */}
-                <FadeIn delay={75} duration={400}>
-                    <FilterToolbar
-                        showSidebar={showFilters}
-                        onToggleSidebar={toggleFilters}
-                        pills={filterPills}
-                        onClearAll={hasFilters ? clearAllFilters : undefined}
-                    />
-                </FadeIn>
-
-                <FadeIn delay={150} duration={500}>
-                    <ContentWithSidebar
-                        showSidebar={showFilters}
-                        sidebar={filterSidebar}
-                    >
-                        <Card className="flex-1 shadow-elevation-1">
-                            <DataTable
-                                columns={columns}
-                                data={filteredUsers}
-                                bordered={false}
-                                emptyState={emptyStateNode}
-                            />
-                        </Card>
-                    </ContentWithSidebar>
+                {/* ━━ TABLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                <FadeIn delay={175} duration={500}>
+                    <Card className="editorial-table border-border shadow-none">
+                        <DataTable columns={columns} data={filteredUsers} bordered={false} emptyState={emptyStateNode} />
+                    </Card>
                 </FadeIn>
             </div>
 
-            {/* -- Edit dialog (controlled outside table) -- */}
+            {/* Edit dialog */}
             <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
                 <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>{t('Edit User')}</DialogTitle>
-                    </DialogHeader>
-                    {editUser && (
-                        <UserForm
-                            user={editUser}
-                            sites={sites}
-                            roles={roles}
-                            onSuccess={() => setEditUser(null)}
-                        />
-                    )}
+                    <DialogHeader><DialogTitle>{t('Edit User')}</DialogTitle></DialogHeader>
+                    {editUser && <UserForm user={editUser} sites={sites} roles={roles} onSuccess={() => setEditUser(null)} />}
                 </DialogContent>
             </Dialog>
 
             <ConfirmationDialog
-                open={!!deleteUser}
-                onOpenChange={(open) => !open && setDeleteUser(null)}
-                title={t('Delete User')}
-                description={`${t('Are you sure you want to delete')} ${deleteUser?.name}?`}
-                warningMessage={t('This action cannot be undone.')}
-                loading={deleting}
-                onConfirm={handleDelete}
-                actionLabel={t('Delete')}
+                open={!!deleteUser} onOpenChange={(open) => !open && setDeleteUser(null)}
+                title={t('Delete User')} description={`${t('Are you sure you want to delete')} ${deleteUser?.name}?`}
+                warningMessage={t('This action cannot be undone.')} loading={deleting} onConfirm={handleDelete} actionLabel={t('Delete')}
             />
         </AppLayout>
     );
 }
 
-/* -- User Form --------------------------------------------------- */
+/* -- Summary Stat ---------------------------------------------------- */
 
-function UserForm({
-    user,
-    sites,
-    roles,
-    onSuccess,
-}: {
-    user?: UserRecord;
-    sites: { id: number; name: string }[];
-    roles: string[];
-    onSuccess: () => void;
-}) {
+function SummaryStat({ label, value, color, last }: { label: string; value: string; color?: string; last?: boolean }) {
+    return (
+        <div className={`flex flex-1 flex-col items-center gap-1.5 py-5 ${!last ? 'border-r border-border/50' : ''}`}>
+            <span className={`font-display text-4xl font-bold leading-none tracking-tight ${color ?? 'text-foreground'}`}>{value}</span>
+            <span className="text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
+        </div>
+    );
+}
+
+/* -- Section Divider ------------------------------------------------- */
+
+function SectionDivider({ label }: { label: string }) {
+    return (
+        <div className="my-7 flex items-center gap-4">
+            <div className="h-px flex-1 bg-border" />
+            <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/70">{label.toUpperCase()}</span>
+            <div className="h-px flex-1 bg-border" />
+        </div>
+    );
+}
+
+/* -- Filter Button --------------------------------------------------- */
+
+function FilterButton({ children, active, onClick, dot }: { children: React.ReactNode; active: boolean; onClick: () => void; dot?: string }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                active ? 'bg-accent text-foreground' : 'text-muted-foreground/70 hover:bg-accent/30 hover:text-muted-foreground'
+            }`}
+        >
+            {dot && <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />}
+            {children}
+        </button>
+    );
+}
+
+/* -- User Form ------------------------------------------------------- */
+
+function UserForm({ user, sites, roles, onSuccess }: { user?: UserRecord; sites: SiteOption[]; roles: string[]; onSuccess: () => void }) {
     const { t } = useLang();
     const isEdit = !!user;
 
@@ -437,189 +328,125 @@ function UserForm({
         e.preventDefault();
         if (!form.validate()) return;
         if (isEdit) {
-            form.put(`/settings/users/${user!.id}`, {
-                preserveScroll: true,
-                onSuccess,
-            });
+            form.put(`/settings/users/${user!.id}`, { preserveScroll: true, onSuccess });
         } else {
-            form.post('/settings/users', {
-                preserveScroll: true,
-                onSuccess: () => {
-                    form.reset();
-                    onSuccess();
-                },
-            });
+            form.post('/settings/users', { preserveScroll: true, onSuccess: () => { form.reset(); onSuccess(); } });
         }
     }
 
     function toggleSite(siteId: number) {
         const current = form.data.site_ids;
-        if (current.includes(siteId)) {
-            form.setData(
-                'site_ids',
-                current.filter((id: number) => id !== siteId),
-            );
-        } else {
-            form.setData('site_ids', [...current, siteId]);
-        }
+        form.setData('site_ids', current.includes(siteId) ? current.filter((id: number) => id !== siteId) : [...current, siteId]);
     }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-2">
-                <Label>{t('Name')}</Label>
-                <Input
-                    value={form.data.name}
-                    onChange={(e) => form.setData('name', e.target.value)}
-                    required
-                />
-                <InputError message={form.errors.name} />
-            </div>
-
-            <div className="grid gap-2">
-                <Label>{t('Email')}</Label>
-                <Input
-                    type="email"
-                    value={form.data.email}
-                    onChange={(e) => form.setData('email', e.target.value)}
-                    required
-                />
-                <InputError message={form.errors.email} />
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                    <Label>{t('Name')}</Label>
+                    <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder={t('Full name')} />
+                    <InputError message={form.errors.name} />
+                </div>
+                <div className="space-y-2">
+                    <Label>{t('Email')}</Label>
+                    <Input type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} placeholder={t('user@company.com')} />
+                    <InputError message={form.errors.email} />
+                </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2">
+                <div className="space-y-2">
                     <Label>{t('Phone')}</Label>
-                    <Input
-                        value={form.data.phone}
-                        onChange={(e) => form.setData('phone', e.target.value)}
-                    />
-                    <InputError message={form.errors.phone} />
+                    <Input value={form.data.phone} onChange={(e) => form.setData('phone', e.target.value)} placeholder={t('Optional')} />
                 </div>
-                <div className="grid gap-2">
+                <div className="space-y-2">
                     <Label>{t('WhatsApp')}</Label>
-                    <Input
-                        value={form.data.whatsapp_phone}
-                        onChange={(e) => form.setData('whatsapp_phone', e.target.value)}
-                    />
-                    <InputError message={form.errors.whatsapp_phone} />
+                    <Input value={form.data.whatsapp_phone} onChange={(e) => form.setData('whatsapp_phone', e.target.value)} placeholder={t('Optional')} />
                 </div>
             </div>
 
             {!isEdit && (
-                <div className="grid gap-2">
+                <div className="space-y-2">
                     <Label>{t('Password')}</Label>
-                    <Input
-                        type="password"
-                        value={form.data.password}
-                        onChange={(e) => form.setData('password', e.target.value)}
-                        required
-                    />
+                    <Input type="password" value={form.data.password} onChange={(e) => form.setData('password', e.target.value)} placeholder={t('Min. 8 characters')} />
+                    <p className="text-[10px] text-muted-foreground">{t('The user can change this after first login.')}</p>
                     <InputError message={form.errors.password} />
                 </div>
             )}
 
-            <div className="grid gap-2">
+            <div className="space-y-2">
                 <Label>{t('Role')}</Label>
                 <Select value={form.data.role} onValueChange={(v) => form.setData('role', v)}>
-                    <SelectTrigger>
-                        <SelectValue placeholder={t('Select role')} />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t('Select role')} /></SelectTrigger>
                     <SelectContent>
                         {roles.map((role) => (
-                            <SelectItem key={role} value={role}>
-                                {role.replace('_', ' ')}
-                            </SelectItem>
+                            <SelectItem key={role} value={role} className="capitalize">{ROLE_LABELS[role] ?? role.replace(/_/g, ' ')}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
                 <InputError message={form.errors.role} />
             </div>
 
-            <div className="grid gap-2">
-                <Label>{t('Site Access')}</Label>
-                <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border p-3">
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <Label>{t('Site Access')}</Label>
+                    {sites.length > 0 && (
+                        <button type="button" onClick={() => form.setData('site_ids', sites.map((s) => s.id))} className="text-[11px] text-primary transition-colors hover:text-primary/80">{t('Select all')}</button>
+                    )}
+                </div>
+                <div className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-border p-2 scrollbar-thin">
                     {sites.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">{t('No sites available')}</p>
+                        <p className="py-4 text-center text-[12px] text-muted-foreground">{t('No sites available')}</p>
                     ) : (
                         sites.map((site) => (
-                            <label key={site.id} className="flex items-center gap-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    checked={form.data.site_ids.includes(site.id)}
-                                    onChange={() => toggleSite(site.id)}
-                                    className="rounded border-input"
-                                />
+                            <label key={site.id} className={`flex cursor-pointer items-center gap-3 rounded-md px-3 py-1.5 text-[13px] transition-colors ${form.data.site_ids.includes(site.id) ? 'bg-primary/5' : 'hover:bg-accent/30'}`}>
+                                <input type="checkbox" checked={form.data.site_ids.includes(site.id)} onChange={() => toggleSite(site.id)} className="accent-primary" />
                                 {site.name}
                             </label>
                         ))
                     )}
                 </div>
-                <InputError message={form.errors.site_ids} />
             </div>
 
-            <div className="flex items-center gap-2">
-                <Switch
-                    checked={form.data.has_app_access}
-                    onCheckedChange={(v) => form.setData('has_app_access', v)}
-                />
-                <Label>{t('App Access')}</Label>
-            </div>
+            <label className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-4 py-3">
+                <div>
+                    <p className="text-[13px] font-medium">{t('Mobile App Access')}</p>
+                    <p className="text-[11px] text-muted-foreground">{t('Allow this user to use the Astrea mobile app')}</p>
+                </div>
+                <Switch checked={form.data.has_app_access} onCheckedChange={(v) => form.setData('has_app_access', v)} />
+            </label>
 
-            <Button type="submit" disabled={form.processing} className="w-full">
-                {isEdit ? t('Update User') : t('Create User')}
+            <Button type="submit" disabled={form.processing} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                {form.processing ? t('Saving...') : isEdit ? t('Update User') : t('Create User')}
             </Button>
         </form>
     );
 }
 
-/* -- Skeleton --------------------------------------------------------- */
+/* -- Skeleton -------------------------------------------------------- */
 
 export function UsersIndexSkeleton() {
     return (
-        <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-            {/* Header */}
-            <div className="rounded-xl border p-6 md:p-8">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="mt-3 h-8 w-20" />
-                <Skeleton className="mt-2 h-4 w-24" />
+        <div className="obsidian flex flex-col bg-background p-5 md:p-8">
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="mt-2 h-4 w-64" />
+            <div className="mt-6 flex overflow-hidden rounded-lg border border-border">
+                {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 flex-1" />)}
             </div>
-            {/* Filter Toolbar */}
-            <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-24" />
-            </div>
-            {/* Table */}
-            <Card>
+            <div className="my-7 h-px bg-border" />
+            <Skeleton className="mb-5 h-9 w-64" />
+            <Card className="border-border">
                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead><Skeleton className="h-3 w-12" /></TableHead>
-                            <TableHead><Skeleton className="h-3 w-12" /></TableHead>
-                            <TableHead><Skeleton className="h-3 w-10" /></TableHead>
-                            <TableHead><Skeleton className="h-3 w-10" /></TableHead>
-                            <TableHead><Skeleton className="h-3 w-20" /></TableHead>
-                            <TableHead />
-                        </TableRow>
-                    </TableHeader>
+                    <TableHeader><TableRow>{Array.from({ length: 6 }).map((_, i) => <TableHead key={i}><Skeleton className="h-3 w-14" /></TableHead>)}</TableRow></TableHeader>
                     <TableBody>
                         {Array.from({ length: 6 }).map((_, i) => (
                             <TableRow key={i}>
                                 <TableCell><Skeleton className="h-4 w-28" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                                <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                                <TableCell>
-                                    <div className="flex gap-1">
-                                        <Skeleton className="h-5 w-16" />
-                                        <Skeleton className="h-5 w-16" />
-                                    </div>
-                                </TableCell>
+                                <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-10" /></TableCell>
-                                <TableCell>
-                                    <div className="flex gap-1">
-                                        <Skeleton className="h-7 w-7 rounded-md" />
-                                        <Skeleton className="h-7 w-7 rounded-md" />
-                                    </div>
-                                </TableCell>
+                                <TableCell><Skeleton className="h-6 w-14" /></TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
