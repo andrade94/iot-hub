@@ -159,6 +159,10 @@ class UserManagementController extends Controller
                 ? \Carbon\Carbon::createFromTimestamp($lastActivity)->toIso8601String()
                 : null,
             'is_super_admin' => $currentUser->hasRole('super_admin'),
+            'available_sites' => Site::where('org_id', $user->org_id)->select('id', 'name')->orderBy('name')->get(),
+            'available_roles' => $currentUser->hasRole('super_admin')
+                ? collect(array_keys(RoleDefinitions::ROLES))->reject(fn ($r) => $r === 'super_admin')->values()
+                : collect(RoleDefinitions::CLIENT_ASSIGNABLE),
         ]);
     }
 

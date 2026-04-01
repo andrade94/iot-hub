@@ -1,12 +1,20 @@
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FadeIn } from '@/components/ui/fade-in';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useLang } from '@/hooks/use-lang';
+import { useValidatedForm } from '@/hooks/use-validated-form';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { formatTimeAgo } from '@/utils/date';
+import { userSchema } from '@/utils/schemas';
 import { Head, router } from '@inertiajs/react';
 import { ArrowLeft, Pencil, ShieldAlert, Smartphone, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -49,6 +57,8 @@ interface WorkOrderItem {
     created_at: string;
 }
 
+interface SiteOption { id: number; name: string; }
+
 interface Props {
     user: UserDetail;
     sites: SiteAccess[];
@@ -56,6 +66,8 @@ interface Props {
     work_orders: WorkOrderItem[];
     last_activity: string | null;
     is_super_admin: boolean;
+    available_sites: SiteOption[];
+    available_roles: string[];
 }
 
 /* -- Constants -------------------------------------------------------- */
@@ -73,8 +85,9 @@ const roleBadgeVariant: Record<string, 'success' | 'secondary' | 'outline'> = {
 
 /* -- Main Component --------------------------------------------------- */
 
-export default function UserShow({ user, sites, activities, work_orders, last_activity, is_super_admin }: Props) {
+export default function UserShow({ user, sites, activities, work_orders, last_activity, is_super_admin, available_sites, available_roles }: Props) {
     const { t } = useLang();
+    const [editOpen, setEditOpen] = useState(false);
     const [deactivateOpen, setDeactivateOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
@@ -164,7 +177,7 @@ export default function UserShow({ user, sites, activities, work_orders, last_ac
                                         <ShieldAlert className="mr-1 h-3.5 w-3.5" />{t('Deactivate')}
                                     </Button>
                                 )}
-                                <Button variant="outline" size="sm" className="text-[11px] bg-accent hover:bg-accent/80 dark:bg-accent dark:hover:bg-accent/60" onClick={() => router.get('/settings/users')}>
+                                <Button variant="outline" size="sm" className="text-[11px] bg-accent hover:bg-accent/80 dark:bg-accent dark:hover:bg-accent/60" onClick={() => setEditOpen(true)}>
                                     <Pencil className="mr-1 h-3.5 w-3.5" />{t('Edit')}
                                 </Button>
                             </div>
@@ -296,6 +309,14 @@ export default function UserShow({ user, sites, activities, work_orders, last_ac
                 </div>
             </div>
 
+            {/* Edit Dialog */}
+            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader><DialogTitle>{t('Edit User')}</DialogTitle></DialogHeader>
+                    <EditUserForm user={user} sites={available_sites} roles={available_roles} currentSiteIds={sites.map((s) => s.id)} onSuccess={() => setEditOpen(false)} />
+                </DialogContent>
+            </Dialog>
+
             {/* Confirmation Dialogs */}
             <ConfirmationDialog open={deactivateOpen} onOpenChange={setDeactivateOpen} title={t('Deactivate User')} description={`${t('Are you sure you want to deactivate')} ${user.name}?`} warningMessage={t('The user will lose access but data is preserved.')} loading={actionLoading} onConfirm={handleDeactivate} actionLabel={t('Deactivate')} />
             <ConfirmationDialog open={deleteOpen} onOpenChange={setDeleteOpen} title={t('Delete User')} description={`${t('Are you sure you want to delete')} ${user.name}?`} warningMessage={t('This action cannot be undone.')} loading={actionLoading} onConfirm={handleDelete} actionLabel={t('Delete')} />
@@ -321,5 +342,111 @@ function DetailInline({ label, value, mono, accent }: { label: string; value: st
             <span className="text-[10px] text-muted-foreground">{label}</span>
             <span className={`text-[12px] ${mono ? 'font-mono text-[11px]' : ''} ${accent ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground/80'}`}>{value}</span>
         </div>
+    );
+}
+
+/* -- Edit User Form --------------------------------------------------- */
+
+function getRoleLabel(role: string, t: (key: string) => string): string {
+    const labels: Record<string, string> = {
+        super_admin: t('Super Admin'), support: t('Support'), account_manager: t('Account Manager'),
+        technician: t('Technician'), client_org_admin: t('Org Admin'),
+        client_site_manager: t('Site Manager'), client_site_viewer: t('Site Viewer'),
+    };
+    return labels[role] ?? role.replace(/_/g, ' ');
+}
+
+function EditUserForm({ user, sites, roles, currentSiteIds, onSuccess }: { user: UserDetail; sites: SiteOption[]; roles: string[]; currentSiteIds: number[]; onSuccess: () => void }) {
+    const { t } = useLang();
+
+    const form = useValidatedForm(userSchema, {
+        name: user.name,
+        email: user.email,
+        phone: user.phone ?? '',
+        whatsapp_phone: user.whatsapp_phone ?? '',
+        password: '',
+        role: user.role ?? '',
+        site_ids: currentSiteIds,
+        has_app_access: user.has_app_access,
+    });
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        if (!form.validate()) return;
+        form.put(`/settings/users/${user.id}`, { preserveScroll: true, onSuccess });
+    }
+
+    function toggleSite(siteId: number) {
+        const current = form.data.site_ids;
+        form.setData('site_ids', current.includes(siteId) ? current.filter((id: number) => id !== siteId) : [...current, siteId]);
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                    <Label>{t('Name')}</Label>
+                    <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
+                    <InputError message={form.errors.name} />
+                </div>
+                <div className="space-y-2">
+                    <Label>{t('Email')}</Label>
+                    <Input type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} />
+                    <InputError message={form.errors.email} />
+                </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                    <Label>{t('Phone')}</Label>
+                    <Input value={form.data.phone} onChange={(e) => form.setData('phone', e.target.value)} placeholder={t('Optional')} />
+                </div>
+                <div className="space-y-2">
+                    <Label>{t('WhatsApp')}</Label>
+                    <Input value={form.data.whatsapp_phone} onChange={(e) => form.setData('whatsapp_phone', e.target.value)} placeholder={t('Optional')} />
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label>{t('Role')}</Label>
+                <Select value={form.data.role} onValueChange={(v) => form.setData('role', v)}>
+                    <SelectTrigger><SelectValue placeholder={t('Select role')} /></SelectTrigger>
+                    <SelectContent>
+                        {roles.map((role) => (
+                            <SelectItem key={role} value={role} className="capitalize">{getRoleLabel(role, t)}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <InputError message={form.errors.role} />
+            </div>
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <Label>{t('Site Access')}</Label>
+                    {sites.length > 0 && (
+                        <button type="button" onClick={() => form.setData('site_ids', sites.map((s) => s.id))} className="text-[11px] text-primary transition-colors hover:text-primary/80">{t('Select all')}</button>
+                    )}
+                </div>
+                <div className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-border p-2 scrollbar-thin">
+                    {sites.length === 0 ? (
+                        <p className="py-4 text-center text-[12px] text-muted-foreground">{t('No sites available')}</p>
+                    ) : (
+                        sites.map((site) => (
+                            <label key={site.id} className={`flex cursor-pointer items-center gap-3 rounded-md px-3 py-1.5 text-[13px] transition-colors ${form.data.site_ids.includes(site.id) ? 'bg-primary/5' : 'hover:bg-accent/30'}`}>
+                                <input type="checkbox" checked={form.data.site_ids.includes(site.id)} onChange={() => toggleSite(site.id)} className="accent-primary" />
+                                {site.name}
+                            </label>
+                        ))
+                    )}
+                </div>
+            </div>
+            <label className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-4 py-3">
+                <div>
+                    <p className="text-[13px] font-medium">{t('Mobile App Access')}</p>
+                    <p className="text-[11px] text-muted-foreground">{t('Allow this user to use the Astrea mobile app')}</p>
+                </div>
+                <Switch checked={form.data.has_app_access} onCheckedChange={(v) => form.setData('has_app_access', v)} />
+            </label>
+            <Button type="submit" disabled={form.processing} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                {form.processing ? t('Saving...') : t('Update User')}
+            </Button>
+        </form>
     );
 }
