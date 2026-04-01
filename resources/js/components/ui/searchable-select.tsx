@@ -1,8 +1,8 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 export interface SearchableSelectOption {
     value: string;
@@ -34,56 +34,72 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
     }, ref) => {
         const [isOpen, setIsOpen] = React.useState(false);
         const [search, setSearch] = React.useState("");
+        const triggerRef = React.useRef<HTMLButtonElement>(null);
         const dropdownRef = React.useRef<HTMLDivElement>(null);
         const inputRef = React.useRef<HTMLInputElement>(null);
+        const [dropdownStyle, setDropdownStyle] = React.useState<React.CSSProperties>({});
 
-        // Find the selected option
         const selectedOption = options.find((option) => option.value === value);
 
-        // Filter options based on search
         const filteredOptions = React.useMemo(() => {
             if (!search) return options;
-            
             const searchTerm = search.toLowerCase();
             return options.filter((option) => {
-                // Search in label
-                if (option.label.toLowerCase().includes(searchTerm)) {
-                    return true;
-                }
-                
-                // Search in value
-                if (option.value.toLowerCase().includes(searchTerm)) {
-                    return true;
-                }
-                
-                // Search in additional search terms
+                if (option.label.toLowerCase().includes(searchTerm)) return true;
+                if (option.value.toLowerCase().includes(searchTerm)) return true;
                 if (option.searchTerms) {
-                    return option.searchTerms.some(term => 
-                        term.toLowerCase().includes(searchTerm)
-                    );
+                    return option.searchTerms.some(term => term.toLowerCase().includes(searchTerm));
                 }
-                
                 return false;
             });
         }, [options, search]);
 
-        // Handle click outside
+        const handleToggle = () => {
+            if (disabled) return;
+            setIsOpen(!isOpen);
+            if (!isOpen) setSearch("");
+        };
+
+        // Position the dropdown when opened
         React.useEffect(() => {
+            if (isOpen && triggerRef.current) {
+                const rect = triggerRef.current.getBoundingClientRect();
+                setDropdownStyle({
+                    position: 'fixed' as const,
+                    top: rect.bottom + 6,
+                    left: rect.left,
+                    width: rect.width,
+                });
+                setTimeout(() => inputRef.current?.focus(), 0);
+            }
+        }, [isOpen]);
+
+        // Close on click outside
+        React.useEffect(() => {
+            if (!isOpen) return;
             const handleClickOutside = (event: MouseEvent) => {
-                if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                if (
+                    triggerRef.current && !triggerRef.current.contains(event.target as Node) &&
+                    dropdownRef.current && !dropdownRef.current.contains(event.target as Node)
+                ) {
                     setIsOpen(false);
                 }
             };
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }, [isOpen]);
 
-            if (isOpen) {
-                document.addEventListener('mousedown', handleClickOutside);
-                // Focus search input when opened
-                setTimeout(() => inputRef.current?.focus(), 0);
-            }
-
-            return () => {
-                document.removeEventListener('mousedown', handleClickOutside);
+        // Close on scroll (optional, prevents stale positioning)
+        React.useEffect(() => {
+            if (!isOpen) return;
+            const handleScroll = () => {
+                if (triggerRef.current) {
+                    const rect = triggerRef.current.getBoundingClientRect();
+                    setDropdownStyle(prev => ({ ...prev, top: rect.bottom + 6, left: rect.left, width: rect.width }));
+                }
             };
+            window.addEventListener('scroll', handleScroll, true);
+            return () => window.removeEventListener('scroll', handleScroll, true);
         }, [isOpen]);
 
         const handleSelect = (selectedValue: string) => {
@@ -92,27 +108,26 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
             setSearch("");
         };
 
-        const handleToggle = () => {
-            if (!disabled) {
-                setIsOpen(!isOpen);
-                if (!isOpen) {
-                    setSearch("");
-                }
-            }
-        };
+        // Merge refs
+        const mergedRef = React.useCallback((node: HTMLButtonElement | null) => {
+            (triggerRef as React.MutableRefObject<HTMLButtonElement | null>).current = node;
+            if (typeof ref === 'function') ref(node);
+            else if (ref) (ref as React.MutableRefObject<HTMLButtonElement | null>).current = node;
+        }, [ref]);
 
         return (
-            <div className={cn("relative z-40", className)} ref={dropdownRef}>
+            <>
                 <Button
-                    ref={ref}
+                    ref={mergedRef}
                     type="button"
                     variant="outline"
                     role="combobox"
                     aria-expanded={isOpen}
                     aria-haspopup="listbox"
                     className={cn(
-                        "w-full justify-between h-10 rounded-lg bg-background border-input font-normal shadow-xs hover:border-border/80",
-                        !selectedOption && "text-muted-foreground"
+                        "w-full justify-between h-10 rounded-lg font-normal",
+                        !selectedOption && "text-muted-foreground",
+                        className,
                     )}
                     disabled={disabled}
                     onClick={handleToggle}
@@ -126,9 +141,14 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                     )} />
                 </Button>
 
-                {isOpen && (
-                    <div className="absolute left-0 z-[100] mt-1.5 w-full overflow-hidden rounded-lg border border-border shadow-2xl" style={{ backgroundColor: '#1e2330' }}>
-                        <div className="flex items-center gap-2.5 border-b border-border px-3 py-0.5">
+                {isOpen && createPortal(
+                    <div
+                        ref={dropdownRef}
+                        style={dropdownStyle}
+                        className="z-[9999] overflow-hidden rounded-lg border border-border shadow-2xl shadow-black/50"
+                    >
+                        {/* Search */}
+                        <div className="flex items-center gap-2.5 border-b border-border px-3 py-0.5" style={{ backgroundColor: '#1e2330' }}>
                             <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
                             <input
                                 ref={inputRef}
@@ -136,14 +156,15 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                                 placeholder={searchPlaceholder}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="h-9 w-full bg-transparent text-[13px] outline-none placeholder:text-muted-foreground/40"
+                                className="h-9 w-full bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground/40"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Escape') setIsOpen(false);
                                     e.stopPropagation();
                                 }}
                             />
                         </div>
-                        <div className="max-h-[220px] overflow-y-auto overscroll-contain p-1 scrollbar-thin">
+                        {/* Options */}
+                        <div className="max-h-[260px] overflow-y-auto overscroll-contain p-1 scrollbar-thin" style={{ backgroundColor: '#1e2330' }}>
                             {filteredOptions.length === 0 ? (
                                 <div className="py-6 text-center text-[12px] text-muted-foreground">
                                     {emptyText}
@@ -154,8 +175,8 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                                         key={option.value}
                                         type="button"
                                         className={cn(
-                                            "relative flex w-full cursor-pointer select-none items-center rounded-md px-2.5 py-1.5 text-[13px] outline-none transition-colors",
-                                            "hover:bg-accent",
+                                            "relative flex w-full cursor-pointer select-none items-center rounded-md px-2.5 py-1.5 text-[13px] text-foreground outline-none transition-colors",
+                                            "hover:bg-white/5",
                                             value === option.value && "bg-primary/10 text-primary"
                                         )}
                                         onClick={() => handleSelect(option.value)}
@@ -166,9 +187,10 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                                 ))
                             )}
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
-            </div>
+            </>
         );
     }
 );
