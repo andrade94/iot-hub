@@ -111,7 +111,7 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                     aria-expanded={isOpen}
                     aria-haspopup="listbox"
                     className={cn(
-                        "w-full justify-between h-10 rounded-lg bg-background/50 border-input font-normal shadow-xs hover:border-border/80",
+                        "w-full justify-between h-10 rounded-lg bg-background border-input font-normal shadow-xs hover:border-border/80",
                         !selectedOption && "text-muted-foreground"
                     )}
                     disabled={disabled}
