@@ -127,8 +127,8 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                 </Button>
 
                 {isOpen && (
-                    <div className="absolute left-0 z-50 mt-1 w-full rounded-lg border border-border bg-popover text-popover-foreground shadow-lg shadow-black/20">
-                        <div className="flex items-center gap-2 border-b border-border/50 px-3">
+                    <div className="absolute left-0 z-50 mt-1.5 w-full overflow-hidden rounded-lg border border-border bg-card shadow-xl shadow-black/40 dark:bg-[#161a22]">
+                        <div className="flex items-center gap-2.5 border-b border-border px-3 py-0.5">
                             <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
                             <input
                                 ref={inputRef}
@@ -136,14 +136,14 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                                 placeholder={searchPlaceholder}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/40"
+                                className="h-9 w-full bg-transparent text-[13px] outline-none placeholder:text-muted-foreground/40"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Escape') setIsOpen(false);
                                     e.stopPropagation();
                                 }}
                             />
                         </div>
-                        <div className="max-h-[240px] overflow-y-auto p-1">
+                        <div className="max-h-[220px] overflow-y-auto overscroll-contain p-1 scrollbar-thin">
                             {filteredOptions.length === 0 ? (
                                 <div className="py-6 text-center text-[12px] text-muted-foreground">
                                     {emptyText}
@@ -154,9 +154,9 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                                         key={option.value}
                                         type="button"
                                         className={cn(
-                                            "relative flex w-full cursor-pointer select-none items-center rounded-md px-2.5 py-2 text-[13px] outline-none transition-colors",
-                                            "hover:bg-accent/50",
-                                            value === option.value && "bg-accent text-foreground"
+                                            "relative flex w-full cursor-pointer select-none items-center rounded-md px-2.5 py-1.5 text-[13px] outline-none transition-colors",
+                                            "hover:bg-accent",
+                                            value === option.value && "bg-primary/10 text-primary"
                                         )}
                                         onClick={() => handleSelect(option.value)}
                                     >
