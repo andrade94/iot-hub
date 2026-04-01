@@ -197,7 +197,7 @@ class OrganizationCatalogController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:organizations,slug,' . $organization->id,
             'segment' => ['required', 'string', Rule::in(\App\Models\Segment::active()->pluck('name'))],
-            'plan' => 'required|string|in:starter,standard,enterprise',
+            'plan' => 'required|string|in:starter,standard,professional,enterprise',
             'default_timezone' => 'nullable|string|max:50',
             'branding' => 'nullable|array',
             'branding.primary_color' => 'nullable|string|max:20',

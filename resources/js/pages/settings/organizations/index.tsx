@@ -32,7 +32,7 @@ interface Props {
     timezones: string[];
 }
 
-const PLANS = ['starter', 'standard', 'enterprise'] as const;
+const PLANS = ['starter', 'standard', 'professional', 'enterprise'] as const;
 
 /** Capitalize segment slugs — handles known labels and falls back to title case */
 function formatSegment(slug: string): string {

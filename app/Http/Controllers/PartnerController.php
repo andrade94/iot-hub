@@ -29,7 +29,7 @@ class PartnerController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:organizations,slug',
             'segment' => ['required', 'string', Rule::in(\App\Models\Segment::active()->pluck('name'))],
-            'plan' => 'required|string|in:starter,standard,enterprise',
+            'plan' => 'required|string|in:starter,standard,professional,enterprise',
             'default_timezone' => 'nullable|string|max:50',
         ]);
 
