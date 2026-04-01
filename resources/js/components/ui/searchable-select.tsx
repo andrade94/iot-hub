@@ -144,19 +144,19 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                 {isOpen && createPortal(
                     <div
                         ref={dropdownRef}
-                        style={dropdownStyle}
-                        className="z-[9999] overflow-hidden rounded-lg border border-border shadow-2xl shadow-black/50"
+                        style={{ ...dropdownStyle, backgroundColor: '#1a1f2b' }}
+                        className="z-[9999] overflow-hidden rounded-lg border border-[#2a3040] shadow-2xl shadow-black/60"
                     >
                         {/* Search */}
-                        <div className="flex items-center gap-2.5 border-b border-border px-3 py-0.5" style={{ backgroundColor: '#1e2330' }}>
-                            <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                        <div className="flex items-center gap-2.5 border-b border-[#2a3040] px-3" style={{ backgroundColor: '#161b25' }}>
+                            <Search className="h-3.5 w-3.5 shrink-0 text-[#4a5568]" />
                             <input
                                 ref={inputRef}
                                 type="text"
                                 placeholder={searchPlaceholder}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="h-9 w-full bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground/40"
+                                className="h-9 w-full bg-transparent text-[13px] text-[#e0e4ea] outline-none placeholder:text-[#4a5568]"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Escape') setIsOpen(false);
                                     e.stopPropagation();
@@ -164,9 +164,9 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                             />
                         </div>
                         {/* Options */}
-                        <div className="max-h-[260px] overflow-y-auto overscroll-contain p-1 scrollbar-thin" style={{ backgroundColor: '#1e2330' }}>
+                        <div className="max-h-[260px] overflow-y-auto overscroll-contain p-1 scrollbar-thin">
                             {filteredOptions.length === 0 ? (
-                                <div className="py-6 text-center text-[12px] text-muted-foreground">
+                                <div className="py-6 text-center text-[12px] text-[#4a5568]">
                                     {emptyText}
                                 </div>
                             ) : (
@@ -175,13 +175,14 @@ const SearchableSelect = React.forwardRef<HTMLButtonElement, SearchableSelectPro
                                         key={option.value}
                                         type="button"
                                         className={cn(
-                                            "relative flex w-full cursor-pointer select-none items-center rounded-md px-2.5 py-1.5 text-[13px] text-foreground outline-none transition-colors",
-                                            "hover:bg-white/5",
-                                            value === option.value && "bg-primary/10 text-primary"
+                                            "flex w-full cursor-pointer select-none items-center rounded px-3 py-1.5 text-[13px] outline-none transition-colors",
+                                            value === option.value
+                                                ? "bg-[#06b6d4]/10 text-[#06b6d4]"
+                                                : "text-[#b0b8c4] hover:bg-white/[0.04] hover:text-[#e0e4ea]"
                                         )}
                                         onClick={() => handleSelect(option.value)}
                                     >
-                                        <Check className={cn("mr-2 h-3.5 w-3.5 shrink-0", value === option.value ? "opacity-100 text-primary" : "opacity-0")} />
+                                        {value === option.value && <Check className="mr-2 h-3 w-3 shrink-0 text-[#06b6d4]" />}
                                         <span className="truncate">{option.label}</span>
                                     </button>
                                 ))
