@@ -34,15 +34,18 @@ interface Props {
     organizations?: OrgOption[];
 }
 
-const ROLE_LABELS: Record<string, string> = {
-    super_admin: 'Super Admin',
-    support: 'Support',
-    account_manager: 'Account Manager',
-    technician: 'Technician',
-    client_org_admin: 'Org Admin',
-    client_site_manager: 'Site Manager',
-    client_site_viewer: 'Site Viewer',
-};
+function getRoleLabel(role: string, t: (key: string) => string): string {
+    const labels: Record<string, string> = {
+        super_admin: t('Super Admin'),
+        support: t('Support'),
+        account_manager: t('Account Manager'),
+        technician: t('Technician'),
+        client_org_admin: t('Org Admin'),
+        client_site_manager: t('Site Manager'),
+        client_site_viewer: t('Site Viewer'),
+    };
+    return labels[role] ?? role.replace(/_/g, ' ');
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Settings', href: '/settings/profile' },
@@ -213,7 +216,7 @@ export default function UsersIndex({ users, sites, roles, allOrgsMode = false, o
                                             <FilterButton active={roleFilter === 'all'} onClick={() => setRoleFilter('all')}>{t('All Roles')}</FilterButton>
                                             {roles.map((role) => (
                                                 <FilterButton key={role} active={roleFilter === role} onClick={() => setRoleFilter(role)}>
-                                                    {ROLE_LABELS[role] ?? role.replace(/_/g, ' ')}
+                                                    {getRoleLabel(role, t)}
                                                 </FilterButton>
                                             ))}
                                         </div>
@@ -415,7 +418,7 @@ function UserForm({ user, sites, roles, organizations = [], allOrgsMode = false,
                     <SelectTrigger><SelectValue placeholder={t('Select role')} /></SelectTrigger>
                     <SelectContent>
                         {roles.map((role) => (
-                            <SelectItem key={role} value={role} className="capitalize">{ROLE_LABELS[role] ?? role.replace(/_/g, ' ')}</SelectItem>
+                            <SelectItem key={role} value={role} className="capitalize">{getRoleLabel(role, t)}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>

@@ -24,15 +24,18 @@ const roleBadgeVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
     technician: 'outline',
 };
 
-const ROLE_LABELS: Record<string, string> = {
-    super_admin: 'Super Admin',
-    support: 'Support',
-    account_manager: 'Account Manager',
-    technician: 'Technician',
-    client_org_admin: 'Org Admin',
-    client_site_manager: 'Site Manager',
-    client_site_viewer: 'Site Viewer',
-};
+function getRoleLabel(role: string, t: (key: string) => string): string {
+    const labels: Record<string, string> = {
+        super_admin: t('Super Admin'),
+        support: t('Support'),
+        account_manager: t('Account Manager'),
+        technician: t('Technician'),
+        client_org_admin: t('Org Admin'),
+        client_site_manager: t('Site Manager'),
+        client_site_viewer: t('Site Viewer'),
+    };
+    return labels[role] ?? role.replace(/_/g, ' ');
+}
 
 interface UserColumnOptions {
     onEdit: (user: UserRecord) => void;
@@ -89,7 +92,7 @@ export function getUserColumns({ onEdit, onDelete, t, canManage, allOrgsMode }: 
             cell: ({ row }) => {
                 const role = row.getValue('role') as string | null;
                 if (!role) return null;
-                return <Badge variant={roleBadgeVariant[role] ?? 'outline'} className="text-[10px] capitalize">{ROLE_LABELS[role] ?? role.replace(/_/g, ' ')}</Badge>;
+                return <Badge variant={roleBadgeVariant[role] ?? 'outline'} className="text-[10px] capitalize">{getRoleLabel(role, t)}</Badge>;
             },
         },
         {
