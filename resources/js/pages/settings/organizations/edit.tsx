@@ -156,7 +156,7 @@ export default function OrganizationEditPage({ organization, segments, timezones
 
                                     {/* Colors */}
                                     <div className="mt-6 border-t border-border/30 pt-6">
-                                        <p className="mb-4 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60">{t('Brand Colors')}</p>
+                                        <p className="mb-4 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t('Brand Colors')}</p>
                                         <div className="grid gap-5 md:grid-cols-3">
                                             <ColorField
                                                 label={t('Primary')}
@@ -208,7 +208,7 @@ function SectionDivider({ label }: { label: string }) {
     return (
         <div className="my-7 flex items-center gap-4">
             <div className="h-px flex-1 bg-border/50" />
-            <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/50">{label.toUpperCase()}</span>
+            <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/70">{label.toUpperCase()}</span>
             <div className="h-px flex-1 bg-border/50" />
         </div>
     );
@@ -219,7 +219,7 @@ function FieldGroup({ label, hint, error, children }: { label: string; hint?: st
         <div className="space-y-2">
             <Label className="text-[13px]">{label}</Label>
             {children}
-            {hint && !error && <p className="text-[10px] text-muted-foreground/60">{hint}</p>}
+            {hint && !error && <p className="text-[10px] text-muted-foreground">{hint}</p>}
             {error && <InputError message={error} />}
         </div>
     );
@@ -276,7 +276,7 @@ function LogoUpload({ currentLogo, organizationId, onRemove }: { currentLogo: st
                                 {t('Remove')}
                             </button>
                         </div>
-                        <p className="text-[10px] text-muted-foreground/60">{t('PNG, JPG, SVG or WebP. Max 2MB.')}</p>
+                        <p className="text-[10px] text-muted-foreground">{t('PNG, JPG, SVG or WebP. Max 2MB.')}</p>
                     </div>
                 </div>
             ) : (
@@ -300,11 +300,11 @@ function LogoUpload({ currentLogo, organizationId, onRemove }: { currentLogo: st
                     ) : (
                         <>
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/50">
-                                <Upload className="h-5 w-5 text-muted-foreground/60" />
+                                <Upload className="h-5 w-5 text-muted-foreground" />
                             </div>
                             <p className="mt-3 text-[13px] font-medium text-foreground">{t('Upload logo')}</p>
-                            <p className="mt-1 text-[11px] text-muted-foreground/50">{t('Drag and drop or click to browse')}</p>
-                            <p className="mt-0.5 text-[10px] text-muted-foreground/50">{t('PNG, JPG, SVG or WebP. Max 2MB.')}</p>
+                            <p className="mt-1 text-[11px] text-muted-foreground/70">{t('Drag and drop or click to browse')}</p>
+                            <p className="mt-0.5 text-[10px] text-muted-foreground/70">{t('PNG, JPG, SVG or WebP. Max 2MB.')}</p>
                         </>
                     )}
                 </div>
