@@ -133,7 +133,7 @@ export function LeftSidebar({
                     <ScrollArea className="flex-1 p-2">
                         {floorPlans.map((fp) => (
                             <FloorCard key={fp.id} floorPlan={fp} isActive={activeFloorId === fp.id}
-                                onClick={() => onFloorChange(fp.id)} onDelete={() => onFloorDelete(fp.id)} />
+                                siteId={siteId} onClick={() => onFloorChange(fp.id)} onDelete={() => onFloorDelete(fp.id)} />
                         ))}
                         <FloorUploadDialog siteId={siteId} existingFloors={floorPlans} />
                     </ScrollArea>
@@ -169,14 +169,30 @@ function DeviceCard({ device, selected, onClick, unplaced }: {
 
 /* -- Floor Card with Delete -- */
 
-function FloorCard({ floorPlan, isActive, onClick, onDelete }: {
-    floorPlan: FloorPlanWithDevices; isActive: boolean; onClick: () => void; onDelete: () => void;
+function FloorCard({ floorPlan, isActive, siteId, onClick, onDelete }: {
+    floorPlan: FloorPlanWithDevices; isActive: boolean; siteId: number; onClick: () => void; onDelete: () => void;
 }) {
     const { t } = useLang();
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const replaceInputRef = useRef<HTMLInputElement>(null);
+    const isBlank = floorPlan.image_path?.includes('blank-floor');
+
+    function handleReplaceImage(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('_method', 'PUT');
+        fetch(`/sites/${siteId}/floor-plans/${floorPlan.id}`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        }).then(() => window.location.reload());
+    }
 
     return (
         <>
+            <input ref={replaceInputRef} type="file" accept="image/*" className="hidden" onChange={handleReplaceImage} />
             <div onClick={onClick}
                 className={cn('group rounded-md border p-3 mb-2 cursor-pointer transition-colors',
                     isActive ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/30')}>
@@ -188,9 +204,17 @@ function FloorCard({ floorPlan, isActive, onClick, onDelete }: {
                         </p>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        {isActive && (
+                        {isActive && !isBlank && (
                             <Badge variant="outline" className="text-[8px] text-emerald-600 dark:text-emerald-400">{t('Active')}</Badge>
                         )}
+                        {isBlank && (
+                            <Badge variant="outline" className="text-[8px] text-amber-600 dark:text-amber-400">{t('Blank')}</Badge>
+                        )}
+                        <button onClick={(e) => { e.stopPropagation(); replaceInputRef.current?.click(); }}
+                            className="hidden h-6 w-6 items-center justify-center rounded text-muted-foreground/40 transition-colors hover:bg-accent hover:text-foreground group-hover:flex"
+                            title={t('Replace Image')}>
+                            <Upload className="h-3 w-3" />
+                        </button>
                         <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
                             className="hidden h-6 w-6 items-center justify-center rounded text-muted-foreground/40 transition-colors hover:bg-destructive/10 hover:text-rose-500 group-hover:flex">
                             <X className="h-3.5 w-3.5" />

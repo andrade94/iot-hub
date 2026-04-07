@@ -46,9 +46,26 @@ class FloorPlanController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'floor_number' => 'sometimes|integer|min:0',
+            'floor_number' => 'sometimes|integer',
+            'image' => 'nullable|image|max:10240',
         ]);
 
+        // Replace image if a new one is uploaded
+        if ($request->hasFile('image')) {
+            // Delete old image (if not a placeholder)
+            if ($floorPlan->image_path && ! str_starts_with($floorPlan->image_path, '/images/')) {
+                \Storage::disk('public')->delete($floorPlan->image_path);
+            }
+
+            $path = $request->file('image')->store("floor-plans/{$site->id}", 'public');
+            $imageInfo = getimagesize($request->file('image')->getRealPath());
+
+            $validated['image_path'] = $path;
+            $validated['width_px'] = $imageInfo[0] ?? null;
+            $validated['height_px'] = $imageInfo[1] ?? null;
+        }
+
+        unset($validated['image']);
         $floorPlan->update($validated);
 
         return back()->with('success', 'Floor plan updated.');
