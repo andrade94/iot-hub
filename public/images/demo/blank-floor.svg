@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" fill="none">
+  <rect width="1200" height="600" fill="#f8f9fb"/>
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#e8ecf1" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="600" fill="url(#grid)"/>
+  <text x="600" y="290" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="#9ca3af">Draw zones and place devices on this canvas</text>
+  <text x="600" y="315" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#d1d5db">Upload a floor plan image to replace this blank canvas</text>
+</svg>

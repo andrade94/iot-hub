@@ -305,7 +305,7 @@ function FloorUploadDialog({ siteId, existingFloors }: { siteId: number; existin
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!form.data.image || !form.data.name) return;
+        if (!form.data.name) return;
         form.post(`/sites/${siteId}/floor-plans`, {
             forceFormData: true,
             preserveScroll: true,
@@ -361,6 +361,7 @@ function FloorUploadDialog({ siteId, existingFloors }: { siteId: number; existin
                                     <p className="mt-1 text-[11px] text-muted-foreground">{t('or click to browse')}</p>
                                 </div>
                                 <p className="font-mono text-[9px] text-muted-foreground/50">PNG, JPG, SVG — Max 10MB</p>
+                                <p className="mt-2 text-[10px] text-muted-foreground/40">{t('or skip to create a blank canvas')}</p>
                             </div>
                         ) : (
                             <div className="relative overflow-hidden rounded-lg border border-border">
@@ -408,9 +409,12 @@ function FloorUploadDialog({ siteId, existingFloors }: { siteId: number; existin
 
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={handleClose}>{t('Cancel')}</Button>
-                            <Button type="submit" disabled={form.processing || !form.data.image || !form.data.name.trim()}>
-                                <Upload className="mr-1.5 h-3.5 w-3.5" />
-                                {form.processing ? t('Uploading...') : t('Upload Floor Plan')}
+                            <Button type="submit" disabled={form.processing || !form.data.name.trim()}>
+                                {form.data.image ? (
+                                    <><Upload className="mr-1.5 h-3.5 w-3.5" />{form.processing ? t('Uploading...') : t('Upload Floor Plan')}</>
+                                ) : (
+                                    <>{form.processing ? t('Creating...') : t('Create Blank Floor')}</>
+                                )}
                             </Button>
                         </DialogFooter>
                     </form>

@@ -13,16 +13,21 @@ class FloorPlanController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'floor_number' => 'required|integer|min:0',
-            'image' => 'required|image|max:10240',
+            'floor_number' => 'required|integer',
+            'image' => 'nullable|image|max:10240',
         ]);
 
-        $path = $request->file('image')->store("floor-plans/{$site->id}", 'public');
-
-        // Get image dimensions
-        $imageInfo = getimagesize($request->file('image')->getRealPath());
-        $widthPx = $imageInfo[0] ?? null;
-        $heightPx = $imageInfo[1] ?? null;
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store("floor-plans/{$site->id}", 'public');
+            $imageInfo = getimagesize($request->file('image')->getRealPath());
+            $widthPx = $imageInfo[0] ?? null;
+            $heightPx = $imageInfo[1] ?? null;
+        } else {
+            // Blank floor — use placeholder
+            $path = '/images/demo/blank-floor.svg';
+            $widthPx = 1200;
+            $heightPx = 600;
+        }
 
         $floorPlan = $site->floorPlans()->create([
             'name' => $validated['name'],
@@ -32,10 +37,9 @@ class FloorPlanController extends Controller
             'height_px' => $heightPx,
         ]);
 
-        // Update site floor_plan_count
         $site->update(['floor_plan_count' => $site->floorPlans()->count()]);
 
-        return back()->with('success', "Floor plan '{$floorPlan->name}' uploaded.");
+        return back()->with('success', "Floor plan '{$floorPlan->name}' created.");
     }
 
     public function update(Request $request, Site $site, FloorPlan $floorPlan)
