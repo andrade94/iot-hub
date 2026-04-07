@@ -71,18 +71,45 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     }, [activeFloorId, zones]);
 
     const handleZoneCreated = useCallback((zone: ZoneBoundary) => {
-        setZones((prev) => [...prev, zone]);
+        const newZones = [...zones, zone];
+        setZones(newZones);
         setSelectedZoneId(zone.id);
         setEditorMode('select');
+        recalcDeviceZones(newZones);
+    }, [zones, recalcDeviceZones]);
+
+    const recalcDeviceZones = useCallback((updatedZones: ZoneBoundary[]) => {
+        setDevices((prev) => {
+            let changed = false;
+            const result = prev.map((d) => {
+                if (d.floor_id == null || d.floor_x == null || d.floor_y == null) return d;
+                const newZone = getZoneForPosition(d.floor_x, d.floor_y, updatedZones, d.floor_id);
+                if (newZone !== null && newZone !== d.zone) {
+                    changed = true;
+                    return { ...d, zone: newZone };
+                }
+                return d;
+            });
+            if (!changed) return prev;
+            // Track changed devices for save
+            result.forEach((d, i) => {
+                if (d !== prev[i]) setChangedDeviceIds((ids) => new Set([...ids, d.id]));
+            });
+            return result;
+        });
     }, []);
 
     const handleZoneResize = useCallback((updated: ZoneBoundary) => {
-        setZones((prev) => prev.map((z) => z.id === updated.id ? updated : z));
-    }, []);
+        const newZones = zones.map((z) => z.id === updated.id ? updated : z);
+        setZones(newZones);
+        recalcDeviceZones(newZones);
+    }, [zones, recalcDeviceZones]);
 
     const handleZoneUpdate = useCallback((updated: ZoneBoundary) => {
-        setZones((prev) => prev.map((z) => z.id === updated.id ? updated : z));
-    }, []);
+        const newZones = zones.map((z) => z.id === updated.id ? updated : z);
+        setZones(newZones);
+        recalcDeviceZones(newZones);
+    }, [zones, recalcDeviceZones]);
 
     const handleZoneDelete = useCallback((id: number) => {
         setZones((prev) => prev.filter((z) => z.id !== id));
