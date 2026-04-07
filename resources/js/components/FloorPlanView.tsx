@@ -142,7 +142,7 @@ function DeviceDot({ device, editable, isDragging, highlighted, onMouseDown }: D
         >
             {/* Pulsing highlight ring */}
             {highlighted && (
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                     <div className="h-8 w-8 animate-ping rounded-full bg-primary/30" />
                     <div className="absolute inset-0 h-8 w-8 rounded-full border-2 border-primary/60" />
                 </div>
@@ -163,7 +163,7 @@ function DeviceDot({ device, editable, isDragging, highlighted, onMouseDown }: D
             />
             {/* Name label — shown when highlighted */}
             {highlighted && (
-                <div className="absolute left-1/2 -translate-x-1/2 -top-7 whitespace-nowrap rounded bg-foreground/90 px-2 py-0.5 text-[10px] font-semibold text-background shadow-md">
+                <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 -top-7 whitespace-nowrap rounded bg-foreground/90 px-2 py-0.5 text-[10px] font-semibold text-background shadow-md">
                     {device.name}
                     <div className="absolute left-1/2 -translate-x-1/2 top-full h-0 w-0 border-x-[4px] border-t-[4px] border-x-transparent border-t-foreground/90" />
                 </div>
@@ -171,7 +171,7 @@ function DeviceDot({ device, editable, isDragging, highlighted, onMouseDown }: D
         </div>
     );
 
-    if (editable && !highlighted) return dot;
+    if (editable) return dot;
 
     return (
         <Tooltip>
