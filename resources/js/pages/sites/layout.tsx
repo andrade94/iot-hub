@@ -34,6 +34,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     const [editorMode, setEditorMode] = useState<EditorMode>('view');
     const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
     const [selectedZoneId, setSelectedZoneId] = useState<number | null>(null);
+    const [placingDeviceId, setPlacingDeviceId] = useState<number | null>(null);
     const [saving, setSaving] = useState(false);
 
     // ── Local State (mutable copies) ──
@@ -66,6 +67,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
         ));
         setChangedDeviceIds((prev) => new Set([...prev, deviceId]));
         setSelectedDeviceId(deviceId);
+        setPlacingDeviceId(null);
     }, [activeFloorId, zones]);
 
     const handleZoneCreated = useCallback((zone: ZoneBoundary) => {
@@ -220,6 +222,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                             selectedDeviceId={selectedDeviceId}
                             selectedZoneId={selectedZoneId}
                             onDeviceSelect={setSelectedDeviceId}
+                            onDevicePlace={(id) => { setPlacingDeviceId(id); setEditorMode('select'); }}
                             onZoneSelect={setSelectedZoneId}
                             onFloorChange={setActiveFloorId}
                             onFloorDelete={handleFloorDelete}
@@ -234,8 +237,10 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                             zoneBoundaries={zones}
                             editorMode={editorMode}
                             selectedZoneId={selectedZoneId}
+                            placingDeviceId={placingDeviceId}
                             siteId={site.id}
                             onDevicePlaced={handleDevicePlaced}
+                            onPlacementClear={() => setPlacingDeviceId(null)}
                             onZoneSelect={setSelectedZoneId}
                             onZoneCreated={handleZoneCreated}
                             onZoneResize={handleZoneResize}

@@ -12,16 +12,18 @@ interface CanvasPanelProps {
     zoneBoundaries: ZoneBoundary[];
     editorMode: EditorMode;
     selectedZoneId: number | null;
+    placingDeviceId: number | null;
     siteId: number;
     onDevicePlaced: (deviceId: number, x: number, y: number) => void;
+    onPlacementClear: () => void;
     onZoneSelect: (id: number | null) => void;
     onZoneCreated: (zone: ZoneBoundary) => void;
     onZoneResize: (zone: ZoneBoundary) => void;
 }
 
 export function CanvasPanel({
-    floorPlan, devices, zoneBoundaries, editorMode, selectedZoneId, siteId,
-    onDevicePlaced, onZoneSelect, onZoneCreated, onZoneResize,
+    floorPlan, devices, zoneBoundaries, editorMode, selectedZoneId, placingDeviceId, siteId,
+    onDevicePlaced, onPlacementClear, onZoneSelect, onZoneCreated, onZoneResize,
 }: CanvasPanelProps) {
     const { t } = useLang();
 
@@ -58,6 +60,14 @@ export function CanvasPanel({
 
     return (
         <div className="relative flex h-full flex-col overflow-auto bg-muted/20">
+            {/* Placement mode instruction */}
+            {placingDeviceId && editorMode === 'select' && (
+                <div className="flex items-center gap-2 border-b border-emerald-200/60 bg-emerald-50/50 px-4 py-2 text-[12px] text-emerald-700 dark:border-emerald-800/30 dark:bg-emerald-950/20 dark:text-emerald-300">
+                    <span>📍</span>
+                    {t('Click on the floor plan to place')} <strong>{devices.find(d => d.id === placingDeviceId)?.name}</strong>
+                    <button onClick={onPlacementClear} className="ml-auto text-[10px] text-muted-foreground hover:text-foreground">✕ {t('Cancel')}</button>
+                </div>
+            )}
             {/* Draw mode instruction */}
             {editorMode === 'draw-zone' && (
                 <div className="flex items-center gap-2 border-b border-cyan-200/60 bg-cyan-50/50 px-4 py-2 text-[12px] text-cyan-700 dark:border-cyan-800/30 dark:bg-cyan-950/20 dark:text-cyan-300">
@@ -73,6 +83,8 @@ export function CanvasPanel({
                         devices={floorDevices}
                         editable={editorMode === 'select'}
                         compact
+                        externalPlacementId={editorMode === 'select' ? placingDeviceId : null}
+                        onExternalPlacementClear={onPlacementClear}
                         onDevicePlaced={editorMode === 'select' ? onDevicePlaced : undefined}
                         overlayContent={
                             <>

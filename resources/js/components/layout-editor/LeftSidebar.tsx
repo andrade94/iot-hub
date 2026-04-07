@@ -26,6 +26,7 @@ interface LeftSidebarProps {
     selectedDeviceId: number | null;
     selectedZoneId: number | null;
     onDeviceSelect: (id: number | null) => void;
+    onDevicePlace: (id: number) => void;
     onZoneSelect: (id: number | null) => void;
     onFloorChange: (id: number) => void;
     onFloorDelete: (id: number) => void;
@@ -35,7 +36,7 @@ interface LeftSidebarProps {
 export function LeftSidebar({
     siteId, devices, zoneBoundaries, floorPlans, activeFloorId,
     selectedDeviceId, selectedZoneId,
-    onDeviceSelect, onZoneSelect, onFloorChange, onFloorDelete, onStartDrawZone,
+    onDeviceSelect, onDevicePlace, onZoneSelect, onFloorChange, onFloorDelete, onStartDrawZone,
 }: LeftSidebarProps) {
     const { t } = useLang();
     const [deviceSearch, setDeviceSearch] = useState('');
@@ -85,7 +86,7 @@ export function LeftSidebar({
                                 </p>
                                 {unplaced.map((d) => (
                                     <DeviceCard key={d.id} device={d} selected={selectedDeviceId === d.id}
-                                        onClick={() => onDeviceSelect(d.id)} unplaced />
+                                        onClick={() => onDevicePlace(d.id)} unplaced />
                                 ))}
                             </>
                         )}

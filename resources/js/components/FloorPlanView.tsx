@@ -39,6 +39,10 @@ interface FloorPlanViewProps {
     overlayContent?: React.ReactNode;
     /** Hide built-in sidebar, legend, and status bar — used when wrapped by the layout editor */
     compact?: boolean;
+    /** External device ID to place — set by parent (layout editor) instead of internal sidebar */
+    externalPlacementId?: number | null;
+    /** Clear the external placement after placing */
+    onExternalPlacementClear?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -233,6 +237,8 @@ export default function FloorPlanView({
     onDevicePlaced,
     overlayContent,
     compact = false,
+    externalPlacementId,
+    onExternalPlacementClear,
 }: FloorPlanViewProps) {
     const { t } = useLang();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -268,14 +274,20 @@ export default function FloorPlanView({
 
     // Place an unplaced device at a clicked position on the floor plan
     function handleFloorPlanClick(e: React.MouseEvent): void {
-        if (!editable || selectedUnplacedId === null) return;
+        if (!editable) return;
+
+        // Use external placement ID (from layout editor) or internal one (from sidebar)
+        const deviceToPlace = externalPlacementId ?? selectedUnplacedId;
+        if (deviceToPlace === null && !externalPlacementId) return;
+        if (deviceToPlace === null) return;
 
         const pos = getNormalizedPosition(e);
         if (!pos) return;
 
-        setLocalPositions((prev) => ({ ...prev, [selectedUnplacedId]: pos }));
+        setLocalPositions((prev) => ({ ...prev, [deviceToPlace]: pos }));
         setHasChanges(true);
-        onDevicePlaced?.(selectedUnplacedId, pos.x, pos.y);
+        onDevicePlaced?.(deviceToPlace, pos.x, pos.y);
+        if (externalPlacementId) onExternalPlacementClear?.();
         setSelectedUnplacedId(null);
     }
 
@@ -365,7 +377,7 @@ export default function FloorPlanView({
                     ref={containerRef}
                     className={cn(
                         'relative overflow-hidden rounded-lg border bg-muted/30',
-                        editable && selectedUnplacedId !== null && 'cursor-crosshair',
+                        editable && (selectedUnplacedId !== null || externalPlacementId) && 'cursor-crosshair',
                         editable && draggingId !== null && 'cursor-grabbing',
                     )}
                     onClick={handleFloorPlanClick}

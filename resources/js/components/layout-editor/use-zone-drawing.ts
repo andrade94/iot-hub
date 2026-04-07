@@ -1,5 +1,5 @@
 import type { ZoneBoundary } from '@/types';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseZoneDrawingOptions {
     floorPlanId: number;
@@ -15,12 +15,30 @@ export function useZoneDrawing({ floorPlanId, siteId, onZoneCreated }: UseZoneDr
     const containerRef = useRef<HTMLElement | null>(null);
     const drawingRef = useRef<ZoneBoundary | null>(null);
 
+    // Cache the img element after first find — clear on floor change
+    const imgRef = useRef<HTMLElement | null>(null);
+    useEffect(() => { imgRef.current = null; }, [floorPlanId]);
+
     const getNormalized = useCallback((e: MouseEvent | React.MouseEvent): { x: number; y: number } | null => {
-        const container = containerRef.current;
-        if (!container) return null;
-        const img = container.querySelector('img');
-        if (!img) return null;
-        const rect = img.getBoundingClientRect();
+        // Find the img if not cached
+        if (!imgRef.current) {
+            // Try containerRef first
+            const container = containerRef.current;
+            if (container) {
+                imgRef.current = container.querySelector('img');
+            }
+            // Fallback: walk up from event target
+            if (!imgRef.current && e.target instanceof HTMLElement) {
+                let node: HTMLElement | null = e.target;
+                while (node) {
+                    const img = node.querySelector('img');
+                    if (img) { imgRef.current = img; break; }
+                    node = node.parentElement;
+                }
+            }
+        }
+        if (!imgRef.current) return null;
+        const rect = imgRef.current.getBoundingClientRect();
         return {
             x: Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
             y: Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
