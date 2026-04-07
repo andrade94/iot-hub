@@ -45,8 +45,10 @@ export interface Site {
     id: number;
     org_id: number;
     name: string;
-    status: 'active' | 'inactive' | 'onboarding';
+    address?: string;
+    status: 'active' | 'inactive' | 'onboarding' | 'draft';
     timezone?: string;
+    created_at?: string;
 }
 
 export interface SharedData {

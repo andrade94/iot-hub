@@ -34,7 +34,7 @@ class ReadingQueryService
 
     /**
      * Get time-bucketed aggregated readings.
-     * Uses TimescaleDB time_bucket() in production, SQLite-compatible fallback in dev.
+     * Uses PostgreSQL date_trunc/epoch flooring in production, SQLite strftime fallback in dev.
      */
     protected function getAggregatedReadings(
         int $deviceId,
@@ -53,7 +53,7 @@ class ReadingQueryService
     }
 
     /**
-     * TimescaleDB time_bucket aggregation.
+     * Standard PostgreSQL aggregation using date_trunc + interval floor.
      */
     protected function getTimescaleAggregated(
         int $deviceId,
@@ -62,11 +62,32 @@ class ReadingQueryService
         Carbon $to,
         string $resolution,
     ): Collection {
-        $interval = $this->resolutionToInterval($resolution);
+        $truncUnit = $this->resolutionToTruncUnit($resolution);
+        $seconds = $this->resolutionToSeconds($resolution);
 
+        // For units that date_trunc supports natively (minute, hour, day), use it directly.
+        // For multi-minute intervals (5m, 15m), floor to the nearest interval via epoch arithmetic.
+        if (in_array($truncUnit, ['hour', 'day'])) {
+            return collect(DB::select("
+                SELECT
+                    date_trunc(?, time) AS bucket,
+                    AVG(value) AS avg_value,
+                    MIN(value) AS min_value,
+                    MAX(value) AS max_value,
+                    COUNT(*) AS reading_count
+                FROM sensor_readings
+                WHERE device_id = ?
+                  AND metric = ?
+                  AND time BETWEEN ? AND ?
+                GROUP BY bucket
+                ORDER BY bucket
+            ", [$truncUnit, $deviceId, $metric, $from, $to]));
+        }
+
+        // For sub-hour intervals, use epoch-based flooring
         return collect(DB::select("
             SELECT
-                time_bucket(?, time) AS bucket,
+                to_timestamp(floor(extract(epoch FROM time) / ?) * ?) AS bucket,
                 AVG(value) AS avg_value,
                 MIN(value) AS min_value,
                 MAX(value) AS max_value,
@@ -77,7 +98,7 @@ class ReadingQueryService
               AND time BETWEEN ? AND ?
             GROUP BY bucket
             ORDER BY bucket
-        ", [$interval, $deviceId, $metric, $from, $to]));
+        ", [$seconds, $seconds, $deviceId, $metric, $from, $to]));
     }
 
     /**
@@ -157,18 +178,34 @@ class ReadingQueryService
     }
 
     /**
-     * Convert resolution string to PostgreSQL interval.
+     * Convert resolution to a date_trunc unit (for simple intervals).
      */
-    protected function resolutionToInterval(string $resolution): string
+    protected function resolutionToTruncUnit(string $resolution): string
     {
         return match ($resolution) {
-            '1m' => '1 minute',
-            '5m' => '5 minutes',
-            '15m' => '15 minutes',
-            '1h' => '1 hour',
-            '6h' => '6 hours',
-            '1d' => '1 day',
-            default => '1 hour',
+            '1m' => 'minute',
+            '5m' => 'minute',
+            '15m' => 'minute',
+            '1h' => 'hour',
+            '6h' => 'hour',
+            '1d' => 'day',
+            default => 'hour',
+        };
+    }
+
+    /**
+     * Convert resolution to seconds (for epoch-based flooring).
+     */
+    protected function resolutionToSeconds(string $resolution): int
+    {
+        return match ($resolution) {
+            '1m' => 60,
+            '5m' => 300,
+            '15m' => 900,
+            '1h' => 3600,
+            '6h' => 21600,
+            '1d' => 86400,
+            default => 3600,
         };
     }
 

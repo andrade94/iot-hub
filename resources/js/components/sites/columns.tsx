@@ -54,11 +54,15 @@ export function getSiteColumns({ t, showOrg }: SiteColumnOptions): ColumnDef<Sit
     if (showOrg) {
         columns.push({
             accessorKey: 'organization_name',
-            header: () => t('Organization'),
+            header: () => <span className="font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">{t('Organization')}</span>,
             cell: ({ row }) => <span className="text-muted-foreground">{row.original.organization_name ?? '—'}</span>,
             enableSorting: false,
         });
     }
+
+    const staticHeader = (title: string) => () => (
+        <span className="font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">{title}</span>
+    );
 
     columns.push(
         {
@@ -77,7 +81,7 @@ export function getSiteColumns({ t, showOrg }: SiteColumnOptions): ColumnDef<Sit
         },
         {
             id: 'online_pct',
-            header: () => t('Online'),
+            header: staticHeader(t('Online')),
             cell: ({ row }) => {
                 const { device_count, online_count } = row.original;
                 if (device_count === 0) return <span className="font-mono tabular-nums text-muted-foreground">—</span>;
@@ -94,7 +98,7 @@ export function getSiteColumns({ t, showOrg }: SiteColumnOptions): ColumnDef<Sit
         },
         {
             accessorKey: 'active_alerts',
-            header: () => t('Alerts'),
+            header: staticHeader(t('Alerts')),
             cell: ({ row }) => {
                 const c = row.original.active_alerts;
                 return <span className={cn('font-mono tabular-nums', c > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground')}>{c}</span>;
@@ -103,7 +107,7 @@ export function getSiteColumns({ t, showOrg }: SiteColumnOptions): ColumnDef<Sit
         },
         {
             accessorKey: 'open_work_orders',
-            header: () => t('WOs'),
+            header: staticHeader(t('WOs')),
             cell: ({ row }) => {
                 const c = row.original.open_work_orders;
                 return <span className={cn('font-mono tabular-nums', c > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground')}>{c}</span>;
@@ -112,7 +116,7 @@ export function getSiteColumns({ t, showOrg }: SiteColumnOptions): ColumnDef<Sit
         },
         {
             accessorKey: 'gateway_count',
-            header: () => t('GWs'),
+            header: staticHeader(t('GWs')),
             cell: ({ row }) => <span className="font-mono tabular-nums text-muted-foreground">{row.original.gateway_count}</span>,
             enableSorting: false,
         },

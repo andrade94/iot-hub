@@ -18,7 +18,7 @@ class SiteDetailController extends Controller
         $sites = Site::whereIn('id', $siteIds)
             ->withCount([
                 'devices',
-                'devices as online_count' => fn ($q) => $q->where('status', 'active')->where('last_seen_at', '>=', now()->subMinutes(15)),
+                'devices as online_count' => fn ($q) => $q->where('status', 'active')->where('last_reading_at', '>=', now()->subMinutes(15)),
                 'alerts as active_alerts_count' => fn ($q) => $q->whereIn('status', ['active', 'acknowledged']),
                 'workOrders as open_work_orders_count' => fn ($q) => $q->whereNotIn('status', ['completed', 'cancelled']),
                 'gateways as gateways_count',
@@ -73,30 +73,27 @@ class SiteDetailController extends Controller
             ->whereIn('status', ['active', 'acknowledged'])
             ->with('device')
             ->latest('triggered_at')
-            ->limit(10)
             ->get();
 
-        // Floor plans with placed devices
+        // Floor plans with devices filtered by floor_id
         $floorPlans = $site->floorPlans->map(function ($fp) use ($site) {
-            $placedDevices = $site->devices
-                ->filter(fn ($d) => $d->floor_x !== null && $d->floor_y !== null)
+            $floorDevices = $site->devices
+                ->filter(fn ($d) => $d->floor_id === $fp->id && $d->floor_x !== null && $d->floor_y !== null)
                 ->values();
 
             return array_merge($fp->toArray(), [
-                'devices' => $placedDevices,
+                'devices' => $floorDevices,
             ]);
         });
 
         $user = $request->user();
 
-        // Feature 3: Viewer's own maintenance requests
-        $myRequests = $user->hasRole('client_site_viewer')
-            ? WorkOrder::where('site_id', $site->id)
-                ->where('created_by', $user->id)
-                ->latest()
-                ->limit(5)
-                ->get()
-            : [];
+        // Feature 3: Open work orders for this site
+        $myRequests = WorkOrder::where('site_id', $site->id)
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->latest()
+            ->limit(5)
+            ->get();
 
         // Feature 4: Onboarding checklist data
         $onboardingChecklist = null;
@@ -110,6 +107,22 @@ class SiteDetailController extends Controller
             ];
         }
 
+        $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::AMERICA);
+
+        // Compliance summary — temperature excursions in last 24h
+        $tempExcursions24h = $site->alerts()
+            ->where('triggered_at', '>=', now()->subHours(24))
+            ->whereJsonContains('data->metric', 'temperature')
+            ->count();
+
+        // Setup tab configuration counts
+        $configCounts = [
+            'alert_rules' => \App\Models\AlertRule::where('site_id', $site->id)->count(),
+            'escalation_chains' => $site->escalationChains()->count(),
+            'report_schedules' => \App\Models\ReportSchedule::where('site_id', $site->id)->count(),
+            'maintenance_windows' => \App\Models\MaintenanceWindow::where('site_id', $site->id)->count(),
+        ];
+
         return Inertia::render('sites/show', [
             'site' => $site,
             'kpis' => $kpis,
@@ -118,6 +131,9 @@ class SiteDetailController extends Controller
             'floorPlans' => $floorPlans,
             'myRequests' => $myRequests,
             'onboardingChecklist' => $onboardingChecklist,
+            'timezones' => $timezones,
+            'configCounts' => $configCounts,
+            'tempExcursions24h' => $tempExcursions24h,
         ]);
     }
 
@@ -136,12 +152,23 @@ class SiteDetailController extends Controller
             ->limit(20)
             ->get();
 
+        // Devices not in this zone (for "assign to zone" feature)
+        $availableDevices = $site->devices()
+            ->where(function ($q) use ($zone) {
+                $q->whereNull('zone')
+                    ->orWhere('zone', '')
+                    ->orWhere('zone', '!=', $zone);
+            })
+            ->select('id', 'name', 'model', 'zone')
+            ->get();
+
         return Inertia::render('sites/zone', [
             'site' => $site,
             'zone' => $zone,
             'devices' => $devices,
             'summary' => $summary,
             'alerts' => $alerts,
+            'availableDevices' => $availableDevices,
         ]);
     }
 }

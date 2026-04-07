@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Show — Mockup | Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8f9fb;
+    --card: #ffffff;
+    --surface: #f1f3f7;
+    --border: #dfe3ea;
+    --border-subtle: #e8ecf1;
+    --text: #0f1218;
+    --text-secondary: #374151;
+    --muted: #6b7280;
+    --dim: #9ca3af;
+    --emerald: #10b981;
+    --cyan: #0891b2;
+    --rose: #f43f5e;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+
+    --font-display: 'Bricolage Grotesque', serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+  }
+
+  html {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body { padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
+
+  /* ── Typography ──────────────────── */
+  .font-display { font-family: var(--font-display); }
+  .font-mono { font-family: var(--font-mono); }
+  .text-muted { color: var(--muted); }
+  .text-dim { color: var(--dim); }
+  .text-emerald { color: var(--emerald); }
+  .text-rose { color: var(--rose); }
+  .text-amber { color: var(--amber); }
+  .text-cyan { color: var(--cyan); }
+
+  /* ── Back link ───────────────────── */
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted); text-decoration: none;
+    margin-bottom: 8px; transition: color .15s;
+  }
+  .back-link:hover { color: var(--text); }
+  .back-link svg { width: 12px; height: 12px; }
+
+  /* ── Header ──────────────────────── */
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 32px; font-weight: 700; letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; padding: 2px 8px;
+    font-size: 10px; font-weight: 500; border-radius: 999px;
+    border: 1px solid var(--border);
+  }
+  .badge-success { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+  .badge-mono { font-family: var(--font-mono); font-size: 10px; }
+  .badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+
+  /* ── KPI Strip ───────────────────── */
+  .kpi-strip {
+    display: flex; margin-top: 24px;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card); overflow: hidden;
+  }
+  .kpi-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 4px; padding: 20px 0;
+    border-right: 1px solid var(--border-subtle);
+  }
+  .kpi-item:last-child { border-right: none; }
+  .kpi-value {
+    font-family: var(--font-display); font-size: 36px; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .kpi-label {
+    font-size: 9px; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--muted);
+  }
+
+  /* ── Health Bar ──────────────────── */
+  .health-bar-container {
+    margin-top: 16px; padding: 12px 20px;
+    border: 1px solid var(--border-subtle); border-radius: 10px;
+    background: rgba(255,255,255,0.5);
+  }
+  .health-bar-header {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 10px; color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .health-bar-header .label { font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; }
+  .health-bar-track {
+    height: 8px; border-radius: 999px; background: #f1f3f7; overflow: hidden;
+    display: flex;
+  }
+  .health-bar-fill-green { background: var(--emerald); border-radius: 999px 0 0 999px; }
+  .health-bar-fill-red { background: var(--rose); }
+
+  /* ── Details Bar ─────────────────── */
+  .details-bar {
+    margin-top: 16px; padding: 12px 20px;
+    border: 1px solid var(--border-subtle); border-radius: 10px;
+    background: rgba(255,255,255,0.5);
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+    font-size: 11px;
+  }
+  .details-bar .sep { color: var(--border); }
+  .details-bar .mono { font-family: var(--font-mono); color: var(--text-secondary); }
+
+  /* ── Tab Selector ────────────────── */
+  .tabs {
+    display: flex; margin-top: 24px;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card); overflow: hidden;
+  }
+  .tab-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 10px 0;
+    font-size: 11px; font-weight: 500; cursor: pointer;
+    background: none; border: none; color: var(--dim);
+    border-right: 1px solid var(--border-subtle);
+    transition: all .15s;
+  }
+  .tab-btn:last-child { border-right: none; }
+  .tab-btn:hover { background: var(--surface); color: var(--muted); }
+  .tab-btn.active { background: var(--surface); color: var(--text); }
+  .tab-btn .count {
+    font-family: var(--font-mono); font-size: 9px;
+    background: var(--surface); padding: 2px 7px; border-radius: 999px;
+  }
+  .tab-btn.active .count { background: rgba(0,0,0,0.06); }
+  .tab-btn .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+
+  /* ── Section Divider ─────────────── */
+  .section-divider {
+    display: flex; align-items: center; gap: 16px;
+    margin: 28px 0;
+  }
+  .section-divider .line { flex: 1; height: 1px; background: var(--border); }
+  .section-divider .label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.15em; color: var(--dim); text-transform: uppercase;
+  }
+
+  /* ── Floor Plan ──────────────────── */
+  .floor-plan-card {
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card); overflow: hidden;
+  }
+  .floor-plan-header {
+    padding: 16px 20px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .floor-plan-header h3 {
+    font-size: 13px; font-weight: 600;
+  }
+  .floor-plan-header .floor-num {
+    font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-left: 8px;
+  }
+  .floor-plan-body {
+    padding: 16px 20px 20px;
+    position: relative;
+  }
+  .floor-plan-img {
+    width: 100%; height: 320px;
+    background: linear-gradient(135deg, #f0f2f5 0%, #e4e8ed 100%);
+    border-radius: 8px; border: 1px solid var(--border-subtle);
+    position: relative; overflow: hidden;
+  }
+  /* Fake floor plan grid lines */
+  .floor-plan-img::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.6;
+  }
+  /* Fake rooms */
+  .room {
+    position: absolute; border: 2px solid rgba(0,0,0,0.08);
+    border-radius: 6px; background: rgba(255,255,255,0.6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 500; color: var(--muted);
+    font-family: var(--font-mono); letter-spacing: 0.05em;
+  }
+  /* Fake device dots on floor plan */
+  .device-dot {
+    position: absolute; width: 14px; height: 14px;
+    border-radius: 50%; border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    cursor: pointer; transition: transform .15s;
+  }
+  .device-dot:hover { transform: scale(1.4); }
+  .device-dot.online { background: var(--emerald); }
+  .device-dot.offline { background: var(--rose); }
+  .device-dot .tooltip {
+    display: none; position: absolute; bottom: calc(100% + 6px); left: 50%;
+    transform: translateX(-50%);
+    background: var(--text); color: white; padding: 4px 8px;
+    border-radius: 4px; font-size: 10px; white-space: nowrap;
+    font-family: var(--font-mono);
+  }
+  .device-dot:hover .tooltip { display: block; }
+
+  /* ── Zone Summary Strip ──────────── */
+  .zone-strip {
+    display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;
+  }
+  .zone-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--card);
+    cursor: pointer; transition: all .15s; flex: 1; min-width: 140px;
+  }
+  .zone-pill:hover { border-color: var(--cyan); background: rgba(8,145,178,0.03); }
+  .zone-pill .zone-name { font-size: 13px; font-weight: 600; flex: 1; }
+  .zone-pill .zone-temp {
+    font-family: var(--font-display); font-size: 22px; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .zone-pill .zone-temp .unit { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+  .zone-pill .zone-meta {
+    font-family: var(--font-mono); font-size: 9px; color: var(--dim);
+  }
+  .zone-pill .zone-health {
+    width: 3px; height: 28px; border-radius: 2px; flex-shrink: 0;
+  }
+  .zone-pill .zone-health.ok { background: var(--emerald); }
+  .zone-pill .zone-health.warn { background: var(--amber); }
+  .zone-pill .zone-health.bad { background: var(--rose); }
+
+  /* ── No Floor Plan Fallback ──────── */
+  .zone-cards-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  }
+  .zone-card {
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card); padding: 16px; cursor: pointer;
+    transition: background .15s;
+  }
+  .zone-card:hover { background: var(--surface); }
+  .zone-card-header { display: flex; justify-content: space-between; align-items: center; }
+  .zone-card-header .name { font-size: 14px; font-weight: 600; }
+  .zone-card-header .count { font-family: var(--font-mono); font-size: 10px; color: var(--rose); }
+  .zone-card .big-num {
+    font-family: var(--font-display); font-size: 32px; font-weight: 700;
+    margin-top: 12px; line-height: 1;
+  }
+  .zone-card .big-num .unit { font-size: 14px; color: var(--muted); }
+  .zone-card .range { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .zone-card .bar-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  .zone-card .bar-track { flex: 1; height: 4px; border-radius: 2px; background: var(--surface); overflow: hidden; }
+  .zone-card .bar-fill { height: 100%; border-radius: 2px; }
+  .zone-card .bar-pct { font-family: var(--font-mono); font-size: 9px; color: var(--dim); }
+
+  /* ── Filter Bar ──────────────────── */
+  .filter-bar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .search-input {
+    flex: 1; min-width: 180px; height: 32px; padding: 0 12px 0 36px;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--card);
+    font-family: var(--font-body); font-size: 12px; color: var(--text);
+    outline: none; position: relative;
+  }
+  .search-input:focus { border-color: var(--cyan); }
+  .search-wrap { position: relative; flex: 1; min-width: 180px; }
+  .search-wrap svg {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; color: var(--dim);
+  }
+  .seg-control {
+    display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  }
+  .seg-btn {
+    padding: 6px 10px; font-size: 10px; font-weight: 500; cursor: pointer;
+    background: none; border: none; border-right: 1px solid var(--border);
+    color: var(--dim); transition: all .15s; font-family: var(--font-mono);
+  }
+  .seg-btn:last-child { border-right: none; }
+  .seg-btn:hover { background: var(--surface); }
+  .seg-btn.active { background: var(--surface); color: var(--text); }
+  .filter-count { font-family: var(--font-mono); font-size: 10px; color: var(--dim); }
+
+  /* ── Alert Row ───────────────────── */
+  .alert-list { border: 1px solid var(--border); border-radius: 10px; background: var(--card); overflow: hidden; }
+  .alert-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer; transition: background .1s;
+  }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-row:hover { background: var(--surface); }
+  .severity-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .severity-dot.critical { background: var(--rose); }
+  .severity-dot.high { background: #f97316; }
+  .severity-dot.medium { background: var(--amber); }
+  .severity-dot.low { background: var(--blue); }
+  .alert-info { flex: 1; min-width: 0; }
+  .alert-info .name { font-size: 13px; font-weight: 500; }
+  .alert-info .device { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+  .severity-badge {
+    font-size: 9px; font-weight: 500; padding: 2px 8px;
+    border-radius: 4px; border: 1px solid; text-transform: capitalize;
+  }
+  .severity-badge.critical { color: var(--rose); border-color: rgba(244,63,94,0.2); background: rgba(244,63,94,0.05); }
+  .severity-badge.high { color: #f97316; border-color: rgba(249,115,22,0.2); background: rgba(249,115,22,0.05); }
+  .severity-badge.medium { color: var(--amber); border-color: rgba(245,158,11,0.2); background: rgba(245,158,11,0.05); }
+  .metric-val { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+  .btn-sm {
+    height: 28px; padding: 0 10px; font-size: 10px; font-weight: 500;
+    border: 1px solid var(--border); border-radius: 6px; background: var(--card);
+    cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+    transition: all .1s; color: var(--text-secondary);
+  }
+  .btn-sm:hover { background: var(--surface); }
+  .btn-sm.ack { color: var(--amber); border-color: rgba(245,158,11,0.25); }
+
+  /* ── Annotations ─────────────────── */
+  .annotation {
+    margin-top: 32px; padding: 16px 20px;
+    background: #fffbeb; border: 1px dashed var(--amber);
+    border-radius: 10px; font-size: 12px; color: #92400e;
+  }
+  .annotation h4 { font-weight: 600; margin-bottom: 8px; font-size: 13px; }
+  .annotation ul { padding-left: 20px; }
+  .annotation li { margin-bottom: 4px; }
+  .annotation code { font-family: var(--font-mono); background: rgba(0,0,0,0.05); padding: 1px 4px; border-radius: 3px; }
+
+  /* ── Variant label ───────────────── */
+  .variant-label {
+    display: inline-block; padding: 4px 12px; margin-bottom: 24px;
+    background: var(--cyan); color: white; border-radius: 6px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+  }
+
+  hr.thick { border: none; height: 3px; background: var(--border); margin: 48px 0; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANT A: WITH FLOOR PLANS (primary view)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="variant-label">VARIANT A — With Floor Plans (primary monitoring view)</div>
+
+<!-- Back link -->
+<a href="#" class="back-link">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  Sitios
+</a>
+
+<!-- Header -->
+<div class="header-row">
+  <div>
+    <h1 class="page-title">CEDIS Norte</h1>
+    <div class="badges">
+      <span class="badge badge-success">Active</span>
+      <span class="badge badge-mono">America/Monterrey</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-sm">⚙ Gestionar ▾</button>
+    <button class="btn-sm" style="background:var(--cyan);color:white;border-color:var(--cyan);">✎ Editar</button>
+  </div>
+</div>
+
+<!-- KPI Strip -->
+<div class="kpi-strip">
+  <div class="kpi-item"><span class="kpi-value">10</span><span class="kpi-label">Dispositivos</span></div>
+  <div class="kpi-item"><span class="kpi-value">2</span><span class="kpi-label">Gateways</span></div>
+  <div class="kpi-item"><span class="kpi-value text-emerald">80<span style="font-size:24px">%</span></span><span class="kpi-label">En Línea</span></div>
+  <div class="kpi-item"><span class="kpi-value text-rose">5</span><span class="kpi-label">Alertas</span></div>
+  <div class="kpi-item"><span class="kpi-value">2</span><span class="kpi-label">Órdenes de Trabajo</span></div>
+  <div class="kpi-item"><span class="kpi-value">4</span><span class="kpi-label">Zonas</span></div>
+</div>
+
+<!-- Health Bar -->
+<div class="health-bar-container">
+  <div class="health-bar-header">
+    <span class="label">Salud de la Flota</span>
+    <span><span class="text-emerald">8 en línea</span> / <span class="text-rose">2 offline</span></span>
+  </div>
+  <div class="health-bar-track">
+    <div class="health-bar-fill-green" style="width:80%"></div>
+    <div class="health-bar-fill-red" style="width:20%"></div>
+  </div>
+</div>
+
+<!-- Details Bar -->
+<div class="details-bar">
+  <span style="display:flex;align-items:center;gap:6px;">🕐 <span class="mono">America/Monterrey</span></span>
+  <span class="sep">|</span>
+  <span class="text-muted">Av. Industrial 100, Monterrey, NL</span>
+  <span class="sep">|</span>
+  <span class="text-muted">Creado</span> <span class="mono">Mar 31, 2026</span>
+</div>
+
+<!-- Tab Selector -->
+<div class="tabs">
+  <button class="tab-btn active">Vista General <span class="count">5</span></button>
+  <button class="tab-btn">Activos <span class="count">10</span></button>
+  <button class="tab-btn">Configuración <span class="dot"></span></button>
+</div>
+
+<!-- ── OVERVIEW TAB CONTENT ──────────────── -->
+
+<!-- Section: Floor Plan -->
+<div class="section-divider">
+  <div class="line"></div>
+  <span class="label">Plano del Sitio</span>
+  <div class="line"></div>
+</div>
+
+<div class="floor-plan-card">
+  <div class="floor-plan-header">
+    <h3>Planta Baja <span class="floor-num">Piso 1</span></h3>
+    <span style="font-family:var(--font-mono);font-size:10px;color:var(--dim)">8 dispositivos · 6 en línea</span>
+  </div>
+  <div class="floor-plan-body">
+    <div class="floor-plan-img">
+      <!-- Rooms -->
+      <div class="room" style="top:10%;left:5%;width:35%;height:38%">COOLER A</div>
+      <div class="room" style="top:10%;left:42%;width:25%;height:38%">COOLER B</div>
+      <div class="room" style="top:10%;left:69%;width:28%;height:38%">FREEZER</div>
+      <div class="room" style="top:55%;left:5%;width:30%;height:38%">KITCHEN</div>
+      <div class="room" style="top:55%;left:37%;width:30%;height:38%">COMPRESSOR</div>
+      <div class="room" style="top:55%;left:69%;width:28%;height:38%">OFFICE</div>
+
+      <!-- Device dots -->
+      <div class="device-dot online" style="top:22%;left:18%"><span class="tooltip">EM300-TH · 4.2°C ✓</span></div>
+      <div class="device-dot online" style="top:30%;left:28%"><span class="tooltip">WS301 · Door OK ✓</span></div>
+      <div class="device-dot online" style="top:24%;left:52%"><span class="tooltip">EM300-TH · 3.8°C ✓</span></div>
+      <div class="device-dot offline" style="top:20%;left:80%"><span class="tooltip">EM300-TH · -27.4°C ⚠</span></div>
+      <div class="device-dot online" style="top:35%;left:75%"><span class="tooltip">WS301 · Door OK ✓</span></div>
+      <div class="device-dot online" style="top:70%;left:15%"><span class="tooltip">GS101 · 14.6°C ⚠</span></div>
+      <div class="device-dot online" style="top:72%;left:50%"><span class="tooltip">CT101 · 1.2 kW ✓</span></div>
+      <div class="device-dot offline" style="top:68%;left:82%"><span class="tooltip">AM307 · Offline</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Zone Summary Strip -->
+<div class="zone-strip">
+  <div class="zone-pill">
+    <div class="zone-health ok"></div>
+    <div style="flex:1">
+      <div class="zone-name">Cooler A</div>
+      <div class="zone-meta">2/2 en línea</div>
+    </div>
+    <div>
+      <div class="zone-temp">4.2<span class="unit">°C</span></div>
+      <div class="zone-meta" style="text-align:right">2 – 5°C</div>
+    </div>
+  </div>
+  <div class="zone-pill">
+    <div class="zone-health ok"></div>
+    <div style="flex:1">
+      <div class="zone-name">Cooler B</div>
+      <div class="zone-meta">1/1 en línea</div>
+    </div>
+    <div>
+      <div class="zone-temp">3.8<span class="unit">°C</span></div>
+      <div class="zone-meta" style="text-align:right">2 – 5°C</div>
+    </div>
+  </div>
+  <div class="zone-pill">
+    <div class="zone-health bad"></div>
+    <div style="flex:1">
+      <div class="zone-name">Freezer</div>
+      <div class="zone-meta">1/2 en línea</div>
+    </div>
+    <div>
+      <div class="zone-temp text-rose">-27<span class="unit">°C</span></div>
+      <div class="zone-meta" style="text-align:right">-22 – -18°C</div>
+    </div>
+  </div>
+  <div class="zone-pill">
+    <div class="zone-health warn"></div>
+    <div style="flex:1">
+      <div class="zone-name">Kitchen</div>
+      <div class="zone-meta">1/1 en línea</div>
+    </div>
+    <div>
+      <div class="zone-temp text-amber">14.6<span class="unit">°C</span></div>
+      <div class="zone-meta" style="text-align:right">2 – 8°C</div>
+    </div>
+  </div>
+</div>
+
+<!-- Alerts Section -->
+<div class="section-divider">
+  <div class="line"></div>
+  <span class="label">Alertas Activas</span>
+  <div class="line"></div>
+</div>
+
+<!-- Alert Filters -->
+<div class="filter-bar">
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input class="search-input" placeholder="Buscar alertas...">
+  </div>
+  <div class="seg-control">
+    <button class="seg-btn active">Todos</button>
+    <button class="seg-btn">Critical</button>
+    <button class="seg-btn">High</button>
+    <button class="seg-btn">Medium</button>
+    <button class="seg-btn">Low</button>
+  </div>
+  <span class="filter-count">5/5</span>
+</div>
+
+<!-- Alert List -->
+<div class="alert-list">
+  <div class="alert-row">
+    <div class="severity-dot high"></div>
+    <div class="alert-info">
+      <div class="name">Door Open Too Long</div>
+      <div class="device">WS301 — Cooler A @ Cooler A</div>
+    </div>
+    <span class="severity-badge high">High</span>
+    <span class="metric-val">door_status: 1</span>
+    <button class="btn-sm">🔧 WO</button>
+    <button class="btn-sm ack">Reconocer</button>
+  </div>
+  <div class="alert-row">
+    <div class="severity-dot critical"></div>
+    <div class="alert-info">
+      <div class="name">Freezer Min Temp</div>
+      <div class="device">EM300-TH — Freezer @ Freezer</div>
+    </div>
+    <span class="severity-badge critical">Critical</span>
+    <span class="metric-val">temperature: -27.4</span>
+    <button class="btn-sm">🔧 WO</button>
+    <button class="btn-sm ack">Reconocer</button>
+  </div>
+  <div class="alert-row">
+    <div class="severity-dot critical"></div>
+    <div class="alert-info">
+      <div class="name">Walk-in Cooler Max Temperature</div>
+      <div class="device">GS101 — Kitchen @ Kitchen</div>
+    </div>
+    <span class="severity-badge critical">Critical</span>
+    <span class="metric-val">temperature: 14.6</span>
+    <button class="btn-sm">🔧 WO</button>
+    <button class="btn-sm ack">Reconocer</button>
+  </div>
+</div>
+
+
+<hr class="thick">
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VARIANT B: WITHOUT FLOOR PLANS (zone cards fallback)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="variant-label">VARIANT B — No Floor Plans (zone cards fallback + CTA)</div>
+
+<div class="section-divider">
+  <div class="line"></div>
+  <span class="label">Zonas</span>
+  <div class="line"></div>
+</div>
+
+<div class="zone-cards-grid">
+  <div class="zone-card">
+    <div class="zone-card-header">
+      <span class="name">Cooler A</span>
+      <span class="count">2/2 dispositivos</span>
+    </div>
+    <div class="big-num">4.2<span class="unit">°C</span></div>
+    <div class="range">Range: 2°C – 5°C</div>
+    <div class="bar-row">
+      <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--emerald)"></div></div>
+      <span class="bar-pct">100%</span>
+    </div>
+  </div>
+  <div class="zone-card">
+    <div class="zone-card-header">
+      <span class="name">Cooler B</span>
+      <span class="count">1/1 dispositivos</span>
+    </div>
+    <div class="big-num">3.8<span class="unit">°C</span></div>
+    <div class="range">Range: 2°C – 5°C</div>
+    <div class="bar-row">
+      <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--emerald)"></div></div>
+      <span class="bar-pct">100%</span>
+    </div>
+  </div>
+  <div class="zone-card">
+    <div class="zone-card-header">
+      <span class="name">Freezer</span>
+      <span class="count" style="color:var(--amber)">1/2 dispositivos</span>
+    </div>
+    <div class="big-num text-rose">-27<span class="unit">°C</span></div>
+    <div class="range">Range: -22°C – -18°C</div>
+    <div class="bar-row">
+      <div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--amber)"></div></div>
+      <span class="bar-pct">50%</span>
+    </div>
+  </div>
+  <div class="zone-card">
+    <div class="zone-card-header">
+      <span class="name">Kitchen</span>
+      <span class="count" style="color:var(--rose)">0/1 dispositivos</span>
+    </div>
+    <div class="big-num" style="color:var(--dim)">—</div>
+    <div class="range" style="color:var(--dim)">Sin lecturas</div>
+    <div class="bar-row">
+      <div class="bar-track"><div class="bar-fill" style="width:0%"></div></div>
+      <span class="bar-pct">0%</span>
+    </div>
+  </div>
+</div>
+
+<!-- Upload CTA -->
+<div style="margin-top:16px;text-align:center;padding:24px;border:2px dashed var(--border);border-radius:10px;color:var(--muted);font-size:12px;">
+  <div style="font-size:24px;margin-bottom:8px;opacity:0.4">🗺️</div>
+  <div style="font-weight:500;margin-bottom:4px;">Sube un plano de piso para monitoreo visual</div>
+  <div style="font-size:11px;color:var(--dim);">Arrastra una imagen o usa el asistente de configuración</div>
+</div>
+
+
+<hr class="thick">
+
+
+<!-- Design Notes -->
+<div class="annotation">
+  <h4>📐 Design Notes</h4>
+  <ul>
+    <li><strong>Floor plan is primary</strong> — Full-width spatial view with interactive device dots. Operators think spatially, not in lists.</li>
+    <li><strong>Zone summary strip</strong> — Compact pills below the floor plan. Each shows: zone name, device count, current temp, range, health bar. Click → navigates to zone detail.</li>
+    <li><strong>Fallback</strong> — When no floor plans exist, show the zone cards grid (current behavior) + dashed CTA to upload.</li>
+    <li><strong>Alert filters</strong> — Search + severity segmented control. Same pattern as Assets tab device filters.</li>
+    <li><strong>Section divider says "Plano del Sitio"</strong> not "Zonas" — because the floor plan IS the zones view, just spatial.</li>
+    <li><strong>Zone pills are clickable</strong> — each navigates to <code>/sites/{id}/zones/{zone}</code>.</li>
+    <li><strong>Device dots on floor plan</strong> — green=online, red=offline. Hover shows tooltip with name + current reading.</li>
+  </ul>
+</div>
+
+</body>
+</html>

@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('zone')->nullable();
             $table->foreignId('floor_id')->nullable()->constrained('floor_plans')->nullOnDelete();
-            $table->integer('floor_x')->nullable();
-            $table->integer('floor_y')->nullable();
+            $table->float('floor_x')->nullable();
+            $table->float('floor_y')->nullable();
             $table->foreignId('recipe_id')->nullable()->constrained('recipes')->nullOnDelete();
             $table->timestamp('installed_at')->nullable();
             $table->integer('battery_pct')->nullable();

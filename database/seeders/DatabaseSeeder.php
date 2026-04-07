@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             DeviceSeeder::class,
             Phase10DemoSeeder::class,
             OperationalDataSeeder::class,
+            SensorReadingSeeder::class,
         ]);
     }
 }

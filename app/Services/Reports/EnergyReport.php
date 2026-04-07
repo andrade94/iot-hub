@@ -287,7 +287,7 @@ class EnergyReport
     }
 
     /**
-     * PostgreSQL compressor correlation using time_bucket for aligned timestamps.
+     * PostgreSQL compressor correlation using 15-min interval bucketing.
      *
      * @return array<int, array{time: string, current: float|null, temperature: float|null}>
      */
@@ -300,7 +300,7 @@ class EnergyReport
                 th.avg_value AS temperature
             FROM (
                 SELECT
-                    time_bucket('15 minutes', time) AS bucket,
+                    to_timestamp(floor(extract(epoch FROM time) / 900) * 900) AS bucket,
                     AVG(value) AS avg_value
                 FROM sensor_readings
                 WHERE device_id = ?
@@ -310,7 +310,7 @@ class EnergyReport
             ) ct
             FULL OUTER JOIN (
                 SELECT
-                    time_bucket('15 minutes', time) AS bucket,
+                    to_timestamp(floor(extract(epoch FROM time) / 900) * 900) AS bucket,
                     AVG(value) AS avg_value
                 FROM sensor_readings
                 WHERE device_id = ?

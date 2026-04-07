@@ -100,6 +100,7 @@ class WorkOrderController extends Controller
             'description' => 'nullable|string',
             'priority' => 'required|string|in:low,medium,high,urgent',
             'device_id' => 'nullable|exists:devices,id',
+            'alert_id' => 'nullable|exists:alerts,id',
             'assigned_to' => 'nullable|exists:users,id',
         ]);
 
@@ -108,8 +109,7 @@ class WorkOrderController extends Controller
 
         WorkOrder::create($validated);
 
-        return redirect()->route('work-orders.index')
-            ->with('success', 'Work order created.');
+        return back()->with('success', 'Work order created.');
     }
 
     public function updateStatus(Request $request, WorkOrder $workOrder)

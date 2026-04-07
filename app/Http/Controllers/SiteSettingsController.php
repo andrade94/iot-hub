@@ -79,12 +79,13 @@ class SiteSettingsController extends Controller
             'status' => 'required|string|in:draft,active,suspended',
         ]);
 
-        Site::create([
+        $site = Site::create([
             ...$validated,
             'org_id' => $org->id,
         ]);
 
-        return back()->with('success', "Site '{$validated['name']}' created.");
+        return back()->with('success', "Site '{$validated['name']}' created.")
+            ->with('created_id', $site->id);
     }
 
     public function update(Request $request, Site $site)
