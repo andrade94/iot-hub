@@ -91,9 +91,11 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
             const result = prev.map((d) => {
                 if (d.floor_id == null || d.floor_x == null || d.floor_y == null) return d;
                 const newZone = getZoneForPosition(d.floor_x, d.floor_y, zones, d.floor_id);
-                if (newZone !== null && newZone !== d.zone) {
+                // Assign zone if inside one, clear if not inside any
+                const resolvedZone = newZone ?? '';
+                if (resolvedZone !== (d.zone ?? '')) {
                     changed = true;
-                    return { ...d, zone: newZone };
+                    return { ...d, zone: resolvedZone };
                 }
                 return d;
             });
