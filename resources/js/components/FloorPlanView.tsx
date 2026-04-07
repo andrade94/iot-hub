@@ -7,7 +7,7 @@ import { useLang } from '@/hooks/use-lang';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { GripVertical, MapPin, Save, X } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -275,6 +275,20 @@ export default function FloorPlanView({
     const [localPositions, setLocalPositions] = useState<Record<number, { x: number; y: number }>>({});
     const [draggingId, setDraggingId] = useState<number | null>(null);
     const [hasChanges, setHasChanges] = useState(false);
+
+    // Clear stale local positions when parent removes a device from floor
+    useEffect(() => {
+        setLocalPositions((prev) => {
+            const unplacedIds = devices.filter((d) => d.floor_x === null || d.floor_y === null).map((d) => d.id);
+            if (unplacedIds.length === 0) return prev;
+            const next = { ...prev };
+            let changed = false;
+            for (const id of unplacedIds) {
+                if (next[id]) { delete next[id]; changed = true; }
+            }
+            return changed ? next : prev;
+        });
+    }, [devices]);
 
     const placedDevices = devices.filter((d) => {
         if (localPositions[d.id]) return true;
