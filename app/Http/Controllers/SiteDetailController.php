@@ -53,11 +53,12 @@ class SiteDetailController extends Controller
 
         $kpis = $chartService->getSiteKPIs($site->id);
 
-        // Group devices by zone
+        // Group devices by zone (skip unassigned devices)
         $zones = $site->devices
-            ->groupBy(fn ($d) => $d->zone ?? 'Unassigned')
+            ->filter(fn ($d) => ! empty($d->zone))
+            ->groupBy(fn ($d) => $d->zone)
             ->map(function ($devices, $zone) use ($chartService, $site) {
-                $summary = $chartService->getZoneSummary($site->id, $zone === 'Unassigned' ? null : $zone);
+                $summary = $chartService->getZoneSummary($site->id, $zone);
 
                 return [
                     'name' => $zone,
