@@ -27,6 +27,7 @@ interface LeftSidebarProps {
     selectedZoneId: number | null;
     onDeviceSelect: (id: number | null) => void;
     onDevicePlace: (id: number) => void;
+    onDeviceRemoveFromFloor: (id: number) => void;
     onZoneSelect: (id: number | null) => void;
     onFloorChange: (id: number) => void;
     onFloorDelete: (id: number) => void;
@@ -36,7 +37,7 @@ interface LeftSidebarProps {
 export function LeftSidebar({
     siteId, devices, zoneBoundaries, floorPlans, activeFloorId,
     selectedDeviceId, selectedZoneId,
-    onDeviceSelect, onDevicePlace, onZoneSelect, onFloorChange, onFloorDelete, onStartDrawZone,
+    onDeviceSelect, onDevicePlace, onDeviceRemoveFromFloor, onZoneSelect, onFloorChange, onFloorDelete, onStartDrawZone,
 }: LeftSidebarProps) {
     const { t } = useLang();
     const [deviceSearch, setDeviceSearch] = useState('');
@@ -95,7 +96,8 @@ export function LeftSidebar({
                         </p>
                         {filteredPlaced.map((d) => (
                             <DeviceCard key={d.id} device={d} selected={selectedDeviceId === d.id}
-                                onClick={() => onDeviceSelect(d.id)} />
+                                onClick={() => onDeviceSelect(d.id)}
+                                onRemove={() => onDeviceRemoveFromFloor(d.id)} />
                         ))}
                     </ScrollArea>
                 </TabsContent>
@@ -146,25 +148,33 @@ export function LeftSidebar({
 
 /* -- Device Card -- */
 
-function DeviceCard({ device, selected, onClick, unplaced }: {
-    device: LayoutDevice; selected: boolean; onClick: () => void; unplaced?: boolean;
+function DeviceCard({ device, selected, onClick, unplaced, onRemove }: {
+    device: LayoutDevice; selected: boolean; onClick: () => void; unplaced?: boolean; onRemove?: () => void;
 }) {
     const online = isDeviceOnline(device.last_reading_at);
     return (
-        <button onClick={onClick}
-            className={cn('flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 mb-1 text-left transition-colors',
-                selected ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/30')}>
-            <span className={cn('h-[7px] w-[7px] shrink-0 rounded-full',
-                unplaced ? 'border-2 border-dashed border-amber-400 bg-transparent'
-                : online ? 'bg-emerald-500' : 'bg-rose-500')} />
-            <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-medium">{device.name}</p>
-                <p className="truncate font-mono text-[9px] text-muted-foreground/60">
-                    {device.zone ?? 'No zone'} · {device.model}
-                </p>
-            </div>
+        <div className={cn('group flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 mb-1 transition-colors',
+            selected ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/30')}>
+            <button onClick={onClick} className="flex flex-1 items-center gap-2 text-left min-w-0">
+                <span className={cn('h-[7px] w-[7px] shrink-0 rounded-full',
+                    unplaced ? 'border-2 border-dashed border-amber-400 bg-transparent'
+                    : online ? 'bg-emerald-500' : 'bg-rose-500')} />
+                <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-medium">{device.name}</p>
+                    <p className="truncate font-mono text-[9px] text-muted-foreground/60">
+                        {device.zone ?? 'No zone'} · {device.model}
+                    </p>
+                </div>
+            </button>
             {unplaced && <span className="font-mono text-[8px] text-amber-500">drag</span>}
-        </button>
+            {!unplaced && onRemove && (
+                <button onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                    className="hidden h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/40 transition-colors hover:bg-destructive/10 hover:text-rose-500 group-hover:flex"
+                    title="Remove from floor">
+                    <X className="h-3 w-3" />
+                </button>
+            )}
+        </div>
     );
 }
 

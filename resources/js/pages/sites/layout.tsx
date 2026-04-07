@@ -246,6 +246,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                             selectedZoneId={selectedZoneId}
                             onDeviceSelect={setSelectedDeviceId}
                             onDevicePlace={(id) => { setPlacingDeviceId(id); setEditorMode('select'); }}
+                            onDeviceRemoveFromFloor={handleDeviceRemoveFromFloor}
                             onZoneSelect={setSelectedZoneId}
                             onFloorChange={setActiveFloorId}
                             onFloorDelete={handleFloorDelete}
