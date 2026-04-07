@@ -30,6 +30,7 @@ export function PropertiesPanel({
 }: PropertiesPanelProps) {
     const { t } = useLang();
     const [confirmDeleteZone, setConfirmDeleteZone] = useState(false);
+    const [confirmRemoveDevice, setConfirmRemoveDevice] = useState(false);
 
     // Nothing selected
     if (!selectedZone && !selectedDevice) {
@@ -188,11 +189,21 @@ export function PropertiesPanel({
                         </Button>
                         {selectedDevice.floor_x != null && (
                             <Button variant="outline" size="sm" className="text-[10px] text-rose-600 dark:text-rose-400"
-                                onClick={() => onDeviceRemoveFromFloor(selectedDevice.id)}>
+                                onClick={() => setConfirmRemoveDevice(true)}>
                                 {t('Remove')}
                             </Button>
                         )}
                     </div>
+                    <ConfirmationDialog
+                        open={confirmRemoveDevice}
+                        onOpenChange={setConfirmRemoveDevice}
+                        title={t('Remove Device from Floor')}
+                        description={t('Are you sure you want to remove this device from the floor plan?')}
+                        itemName={selectedDevice.name}
+                        warningMessage={t('The device will be unplaced but not deleted. You can place it again later.')}
+                        onConfirm={() => { onDeviceRemoveFromFloor(selectedDevice.id); setConfirmRemoveDevice(false); }}
+                        actionLabel={t('Remove')}
+                    />
                 </div>
             </div>
         );
