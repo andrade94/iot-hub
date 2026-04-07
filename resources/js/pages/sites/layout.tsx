@@ -11,6 +11,7 @@ import type { BreadcrumbItem, Site, ZoneBoundary } from '@/types';
 import { isDeviceOnline } from '@/utils/device';
 import { Head, router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Props {
     site: Site;
@@ -133,7 +134,8 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
         setChangedDeviceIds(new Set());
         setSelectedDeviceId(null);
         setSelectedZoneId(null);
-    }, [initialDevices, initialZones]);
+        toast.info(t('Changes reset'), { description: t('All changes have been reverted to the last saved state') });
+    }, [initialDevices, initialZones, t]);
 
     const handleFloorDelete = useCallback((floorPlanId: number) => {
         router.delete(`/sites/${site.id}/floor-plans/${floorPlanId}`, {
@@ -176,6 +178,10 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
             onSuccess: () => {
                 setChangedDeviceIds(new Set());
                 setDeletedZoneIds([]);
+                toast.success(t('Layout saved'), { description: t('All zone and device changes have been saved') });
+            },
+            onError: () => {
+                toast.error(t('Save failed'), { description: t('Something went wrong. Please try again.') });
             },
             onFinish: () => setSaving(false),
         });
