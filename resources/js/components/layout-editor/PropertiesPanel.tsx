@@ -90,11 +90,18 @@ export function PropertiesPanel({
                     <div className="h-px bg-border" />
                     <div>
                         <Label className="text-[9px]">{t('Boundary')}</Label>
-                        <div className="mt-1 grid grid-cols-2 gap-2">
-                            <div><span className="font-mono text-[8px] text-muted-foreground/60">X</span><Input value={`${(selectedZone.x * 100).toFixed(0)}%`} disabled className="h-7 font-mono text-[10px]" /></div>
-                            <div><span className="font-mono text-[8px] text-muted-foreground/60">Y</span><Input value={`${(selectedZone.y * 100).toFixed(0)}%`} disabled className="h-7 font-mono text-[10px]" /></div>
-                            <div><span className="font-mono text-[8px] text-muted-foreground/60">W</span><Input value={`${(selectedZone.width * 100).toFixed(0)}%`} disabled className="h-7 font-mono text-[10px]" /></div>
-                            <div><span className="font-mono text-[8px] text-muted-foreground/60">H</span><Input value={`${(selectedZone.height * 100).toFixed(0)}%`} disabled className="h-7 font-mono text-[10px]" /></div>
+                        <div className="mt-2 grid grid-cols-4 gap-2">
+                            {[
+                                { label: 'X', value: selectedZone.x },
+                                { label: 'Y', value: selectedZone.y },
+                                { label: 'W', value: selectedZone.width },
+                                { label: 'H', value: selectedZone.height },
+                            ].map(({ label, value }) => (
+                                <div key={label} className="rounded-md border border-border bg-muted/30 px-2 py-1.5 text-center">
+                                    <span className="block font-mono text-[9px] font-medium text-muted-foreground/60">{label}</span>
+                                    <span className="block font-mono text-[13px] font-semibold tabular-nums">{(value * 100).toFixed(0)}%</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                     <Button variant="outline" size="sm" className="w-full text-[10px] text-rose-600 dark:text-rose-400 border-rose-200/40 dark:border-rose-800/40"

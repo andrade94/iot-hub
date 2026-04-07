@@ -37,6 +37,8 @@ interface FloorPlanViewProps {
     editable?: boolean;
     onDevicePlaced?: (deviceId: number, x: number, y: number) => void;
     overlayContent?: React.ReactNode;
+    /** Hide built-in sidebar, legend, and status bar — used when wrapped by the layout editor */
+    compact?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -144,7 +146,7 @@ function DeviceDot({ device, editable, isDragging, onMouseDown }: DeviceDotProps
     return (
         <Tooltip>
             <TooltipTrigger asChild>{dot}</TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs space-y-1 text-left">
+            <TooltipContent side="top" className="max-w-xs space-y-1 text-left bg-popover text-popover-foreground border border-border shadow-md [&>svg]:fill-popover [&>svg]:bg-popover">
                 <p className="font-medium">{device.name}</p>
                 {device.zone && (
                     <p className="text-xs text-muted-foreground">
@@ -230,6 +232,7 @@ export default function FloorPlanView({
     editable = false,
     onDevicePlaced,
     overlayContent,
+    compact = false,
 }: FloorPlanViewProps) {
     const { t } = useLang();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -334,11 +337,11 @@ export default function FloorPlanView({
     }
 
     return (
-        <div className="flex flex-col gap-4 lg:flex-row">
+        <div className={compact ? '' : 'flex flex-col gap-4 lg:flex-row'}>
             {/* Floor Plan Image Container */}
-            <div className="flex-1">
+            <div className={compact ? '' : 'flex-1'}>
                 {/* Status bar */}
-                {editable && selectedUnplacedId !== null && (
+                {!compact && editable && selectedUnplacedId !== null && (
                     <div className="mb-2 flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
                         <MapPin className="h-4 w-4 text-primary" />
                         <span>
@@ -392,29 +395,31 @@ export default function FloorPlanView({
                     })}
                 </div>
 
-                {/* Legend */}
-                <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                        {t('Online')}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" />
-                        {t('Warning')}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" />
-                        {t('Alert')}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-400 dark:bg-zinc-500" />
-                        {t('Offline')}
-                    </span>
-                </div>
+                {/* Legend — hidden in compact mode */}
+                {!compact && (
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                            <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                            {t('Online')}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" />
+                            {t('Warning')}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" />
+                            {t('Alert')}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-400 dark:bg-zinc-500" />
+                            {t('Offline')}
+                        </span>
+                    </div>
+                )}
             </div>
 
-            {/* Editable sidebar */}
-            {editable && (
+            {/* Editable sidebar — hidden in compact mode */}
+            {!compact && editable && (
                 <div className="w-full shrink-0 space-y-4 lg:w-64">
                     <UnplacedDeviceList
                         devices={unplacedDevices}

@@ -135,7 +135,7 @@ export function LeftSidebar({
                             <FloorCard key={fp.id} floorPlan={fp} isActive={activeFloorId === fp.id}
                                 onClick={() => onFloorChange(fp.id)} onDelete={() => onFloorDelete(fp.id)} />
                         ))}
-                        <FloorUploadDialog siteId={siteId} />
+                        <FloorUploadDialog siteId={siteId} existingFloors={floorPlans} />
                     </ScrollArea>
                 </TabsContent>
             </Tabs>
@@ -211,17 +211,70 @@ function FloorCard({ floorPlan, isActive, onClick, onDelete }: {
     );
 }
 
+/* -- Floor Stack Visualization -- */
+
+function FloorStack({ existingFloors, newFloorNumber, newFloorName }: {
+    existingFloors: FloorPlanWithDevices[]; newFloorNumber: number; newFloorName: string;
+}) {
+    const { t } = useLang();
+
+    // Build a sorted list of all floors including the new one
+    const allFloors = useMemo(() => {
+        const items: { number: number; name: string; isNew: boolean; devices?: number }[] = [
+            ...existingFloors.map((fp) => ({
+                number: fp.floor_number,
+                name: fp.name,
+                isNew: false,
+                devices: fp.devices?.length ?? 0,
+            })),
+            { number: newFloorNumber, name: newFloorName || t('New floor'), isNew: true },
+        ];
+        return items.sort((a, b) => b.number - a.number); // highest first
+    }, [existingFloors, newFloorNumber, newFloorName, t]);
+
+    return (
+        <div className="mt-1.5 space-y-1">
+            {allFloors.map((floor, i) => (
+                <div key={`${floor.number}-${floor.isNew ? 'new' : i}`}
+                    className={cn(
+                        'flex items-center gap-2 rounded-md px-3 py-1.5',
+                        floor.isNew
+                            ? 'border-2 border-dashed border-primary/40 bg-primary/5'
+                            : 'border border-border bg-muted/20',
+                    )}>
+                    <span className={cn('font-mono text-[11px] font-bold tabular-nums', floor.isNew ? 'text-primary' : 'text-muted-foreground')}>
+                        {floor.number}
+                    </span>
+                    <span className={cn('flex-1 truncate text-[11px]', floor.isNew ? 'font-medium text-primary' : 'text-muted-foreground')}>
+                        {floor.name}
+                    </span>
+                    {floor.isNew ? (
+                        <span className="font-mono text-[9px] text-primary/60">{t('new')}</span>
+                    ) : (
+                        <span className="font-mono text-[9px] text-muted-foreground/50">{floor.devices} {t('devices')}</span>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
 /* -- Floor Upload Dialog -- */
 
-function FloorUploadDialog({ siteId }: { siteId: number }) {
+function FloorUploadDialog({ siteId, existingFloors }: { siteId: number; existingFloors: FloorPlanWithDevices[] }) {
     const { t } = useLang();
     const [open, setOpen] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
     const [dragOver, setDragOver] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const nextFloorNumber = useMemo(() => {
+        if (existingFloors.length === 0) return 1;
+        return Math.max(...existingFloors.map((fp) => fp.floor_number)) + 1;
+    }, [existingFloors]);
+
     const form = useForm<{ name: string; floor_number: string; image: File | null }>({
-        name: '', floor_number: '1', image: null,
+        name: '', floor_number: String(nextFloorNumber), image: null,
     });
 
     const handleFile = useCallback((file: File) => {
@@ -326,18 +379,30 @@ function FloorUploadDialog({ siteId }: { siteId: number }) {
                             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
 
                         {/* Fields */}
-                        <div className="grid grid-cols-3 gap-3">
-                            <div className="col-span-2 space-y-1.5">
+                        <div className="space-y-3">
+                            <div className="space-y-1.5">
                                 <Label className="text-[11px]">{t('Floor Name')}</Label>
                                 <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)}
-                                    placeholder={t('e.g. Ground Floor')} className="text-[12px]" autoFocus />
+                                    placeholder={existingFloors.length === 0 ? t('e.g. Ground Floor') : t('e.g. Floor 2')}
+                                    className="text-[12px]" autoFocus />
                                 {form.errors.name && <p className="text-[10px] text-destructive">{form.errors.name}</p>}
                             </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[11px]">{t('Floor #')}</Label>
-                                <Input type="number" min={0} value={form.data.floor_number}
-                                    onChange={(e) => form.setData('floor_number', e.target.value)}
-                                    className="font-mono text-[12px]" />
+
+                            {/* Floor position — visual stack with new floor interleaved */}
+                            <div>
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-[11px]">{t('Floor Position')}</Label>
+                                    <div className="flex items-center gap-1">
+                                        <button type="button" onClick={() => form.setData('floor_number', String(Number(form.data.floor_number) - 1))}
+                                            className="flex h-6 w-6 items-center justify-center rounded border border-border text-[12px] text-muted-foreground transition-colors hover:bg-accent">−</button>
+                                        <span className="w-8 text-center font-mono text-[12px] font-bold">{form.data.floor_number}</span>
+                                        <button type="button" onClick={() => form.setData('floor_number', String(Number(form.data.floor_number) + 1))}
+                                            className="flex h-6 w-6 items-center justify-center rounded border border-border text-[12px] text-muted-foreground transition-colors hover:bg-accent">+</button>
+                                    </div>
+                                </div>
+                                {existingFloors.length > 0 && (
+                                    <FloorStack existingFloors={existingFloors} newFloorNumber={Number(form.data.floor_number)} newFloorName={form.data.name} />
+                                )}
                             </div>
                         </div>
 

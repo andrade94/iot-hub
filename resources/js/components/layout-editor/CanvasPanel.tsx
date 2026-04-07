@@ -72,6 +72,7 @@ export function CanvasPanel({
                         floorPlan={floorPlan}
                         devices={floorDevices}
                         editable={editorMode === 'select'}
+                        compact
                         onDevicePlaced={editorMode === 'select' ? onDevicePlaced : undefined}
                         overlayContent={
                             <>
