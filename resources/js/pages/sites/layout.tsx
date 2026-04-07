@@ -253,6 +253,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                             selectedZone={selectedZone}
                             selectedDevice={selectedDevice}
                             devicesInZone={devicesInSelectedZone}
+                            editable={editorMode !== 'view'}
                             onZoneUpdate={handleZoneUpdate}
                             onZoneDelete={handleZoneDelete}
                             onDeviceRemoveFromFloor={handleDeviceRemoveFromFloor}

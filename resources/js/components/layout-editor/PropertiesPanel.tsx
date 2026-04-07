@@ -18,6 +18,7 @@ interface PropertiesPanelProps {
     selectedZone: ZoneBoundary | null;
     selectedDevice: LayoutDevice | null;
     devicesInZone: LayoutDevice[];
+    editable: boolean;
     onZoneUpdate: (zone: ZoneBoundary) => void;
     onZoneDelete: (id: number) => void;
     onDeviceRemoveFromFloor: (id: number) => void;
@@ -25,7 +26,7 @@ interface PropertiesPanelProps {
 }
 
 export function PropertiesPanel({
-    selectedZone, selectedDevice, devicesInZone,
+    selectedZone, selectedDevice, devicesInZone, editable,
     onZoneUpdate, onZoneDelete, onDeviceRemoveFromFloor, onDeselect,
 }: PropertiesPanelProps) {
     const { t } = useLang();
@@ -58,20 +59,26 @@ export function PropertiesPanel({
                 <div className="flex-1 overflow-y-auto p-3 space-y-3">
                     <div>
                         <Label className="text-[9px]">{t('Zone Name')}</Label>
-                        <Input value={selectedZone.name} className="mt-1 h-8 text-[12px]"
-                            onChange={(e) => onZoneUpdate({ ...selectedZone, name: e.target.value })} />
+                        {editable ? (
+                            <Input value={selectedZone.name} className="mt-1 h-8 text-[12px]"
+                                onChange={(e) => onZoneUpdate({ ...selectedZone, name: e.target.value })} />
+                        ) : (
+                            <p className="mt-1 text-[13px] font-medium">{selectedZone.name}</p>
+                        )}
                     </div>
-                    <div>
-                        <Label className="text-[9px]">{t('Color')}</Label>
-                        <div className="mt-1 flex gap-1.5">
-                            {ZONE_COLORS.map((c) => (
-                                <button key={c} onClick={() => onZoneUpdate({ ...selectedZone, color: c })}
-                                    className={cn('h-5 w-5 rounded border-2 transition-colors',
-                                        selectedZone.color === c ? 'border-foreground' : 'border-transparent hover:border-muted-foreground/30')}
-                                    style={{ backgroundColor: c }} />
-                            ))}
+                    {editable && (
+                        <div>
+                            <Label className="text-[9px]">{t('Color')}</Label>
+                            <div className="mt-1 flex gap-1.5">
+                                {ZONE_COLORS.map((c) => (
+                                    <button key={c} onClick={() => onZoneUpdate({ ...selectedZone, color: c })}
+                                        className={cn('h-5 w-5 rounded border-2 transition-colors',
+                                            selectedZone.color === c ? 'border-foreground' : 'border-transparent hover:border-muted-foreground/30')}
+                                        style={{ backgroundColor: c }} />
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
                     <div className="h-px bg-border" />
                     <div>
                         <Label className="text-[9px]">{t('Devices in Zone')} ({devicesInZone.length})</Label>
@@ -105,21 +112,25 @@ export function PropertiesPanel({
                             ))}
                         </div>
                     </div>
-                    <Button variant="outline" size="sm" className="w-full text-[10px] text-rose-600 dark:text-rose-400 border-rose-200/40 dark:border-rose-800/40"
-                        onClick={() => setConfirmDeleteZone(true)}>
-                        {t('Delete Zone')}
-                    </Button>
-                    <ConfirmationDialog
-                        open={confirmDeleteZone}
-                        onOpenChange={setConfirmDeleteZone}
-                        title={t('Delete Zone')}
-                        description={t('Are you sure you want to delete this zone boundary?')}
-                        itemName={selectedZone.name}
-                        warningMessage={devicesInZone.length > 0
-                            ? `${devicesInZone.length} ${t('device(s) in this zone will become unassigned')}`
-                            : t('This zone boundary will be removed from the floor plan')}
-                        onConfirm={() => { onZoneDelete(selectedZone.id); setConfirmDeleteZone(false); }}
-                    />
+                    {editable && (
+                        <>
+                            <Button variant="outline" size="sm" className="w-full text-[10px] text-rose-600 dark:text-rose-400 border-rose-200/40 dark:border-rose-800/40"
+                                onClick={() => setConfirmDeleteZone(true)}>
+                                {t('Delete Zone')}
+                            </Button>
+                            <ConfirmationDialog
+                                open={confirmDeleteZone}
+                                onOpenChange={setConfirmDeleteZone}
+                                title={t('Delete Zone')}
+                                description={t('Are you sure you want to delete this zone boundary?')}
+                                itemName={selectedZone.name}
+                                warningMessage={devicesInZone.length > 0
+                                    ? `${devicesInZone.length} ${t('device(s) in this zone will become unassigned')}`
+                                    : t('This zone boundary will be removed from the floor plan')}
+                                onConfirm={() => { onZoneDelete(selectedZone.id); setConfirmDeleteZone(false); }}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
         );
@@ -187,7 +198,7 @@ export function PropertiesPanel({
                         <Button variant="outline" size="sm" className="flex-1 text-[10px]" asChild>
                             <Link href={`/devices/${selectedDevice.id}`}>{t('View Details')} ↗</Link>
                         </Button>
-                        {selectedDevice.floor_x != null && (
+                        {editable && selectedDevice.floor_x != null && (
                             <Button variant="outline" size="sm" className="text-[10px] text-rose-600 dark:text-rose-400"
                                 onClick={() => setConfirmRemoveDevice(true)}>
                                 {t('Remove')}
