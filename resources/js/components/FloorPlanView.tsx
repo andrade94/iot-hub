@@ -43,6 +43,8 @@ interface FloorPlanViewProps {
     externalPlacementId?: number | null;
     /** Clear the external placement after placing */
     onExternalPlacementClear?: () => void;
+    /** Device ID to visually highlight on the canvas (pulsing ring + name label) */
+    highlightedDeviceId?: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -108,10 +110,11 @@ interface DeviceDotProps {
     device: FloorPlanDevice;
     editable: boolean;
     isDragging: boolean;
+    highlighted?: boolean;
     onMouseDown: (e: React.MouseEvent) => void;
 }
 
-function DeviceDot({ device, editable, isDragging, onMouseDown }: DeviceDotProps) {
+function DeviceDot({ device, editable, isDragging, highlighted, onMouseDown }: DeviceDotProps) {
     const { t } = useLang();
 
     if (device.floor_x === null || device.floor_y === null) return null;
@@ -129,23 +132,46 @@ function DeviceDot({ device, editable, isDragging, onMouseDown }: DeviceDotProps
     const dot = (
         <div
             className={cn(
-                'absolute z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/80 dark:border-zinc-900/80',
-                dotColorClass,
-                dotGlowClass,
-                editable && 'cursor-grab',
-                isDragging && 'cursor-grabbing opacity-70',
-                !editable && 'cursor-pointer',
+                'absolute z-10 -translate-x-1/2 -translate-y-1/2',
+                highlighted && 'z-20',
             )}
             style={{
                 left: `${device.floor_x * 100}%`,
                 top: `${device.floor_y * 100}%`,
             }}
-            onMouseDown={editable ? onMouseDown : undefined}
-            onClick={handleClick}
-        />
+        >
+            {/* Pulsing highlight ring */}
+            {highlighted && (
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="h-8 w-8 animate-ping rounded-full bg-primary/30" />
+                    <div className="absolute inset-0 h-8 w-8 rounded-full border-2 border-primary/60" />
+                </div>
+            )}
+            {/* The dot */}
+            <div
+                className={cn(
+                    'h-3 w-3 rounded-full border border-white/80 dark:border-zinc-900/80',
+                    dotColorClass,
+                    dotGlowClass,
+                    highlighted && 'h-4 w-4 ring-2 ring-primary/50',
+                    editable && 'cursor-grab',
+                    isDragging && 'cursor-grabbing opacity-70',
+                    !editable && 'cursor-pointer',
+                )}
+                onMouseDown={editable ? onMouseDown : undefined}
+                onClick={handleClick}
+            />
+            {/* Name label — shown when highlighted */}
+            {highlighted && (
+                <div className="absolute left-1/2 -translate-x-1/2 -top-7 whitespace-nowrap rounded bg-foreground/90 px-2 py-0.5 text-[10px] font-semibold text-background shadow-md">
+                    {device.name}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full h-0 w-0 border-x-[4px] border-t-[4px] border-x-transparent border-t-foreground/90" />
+                </div>
+            )}
+        </div>
     );
 
-    if (editable) return dot;
+    if (editable && !highlighted) return dot;
 
     return (
         <Tooltip>
@@ -239,6 +265,7 @@ export default function FloorPlanView({
     compact = false,
     externalPlacementId,
     onExternalPlacementClear,
+    highlightedDeviceId,
 }: FloorPlanViewProps) {
     const { t } = useLang();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -401,6 +428,7 @@ export default function FloorPlanView({
                                 device={effective}
                                 editable={editable}
                                 isDragging={draggingId === device.id}
+                                highlighted={highlightedDeviceId === device.id}
                                 onMouseDown={handleDotMouseDown(device.id)}
                             />
                         );

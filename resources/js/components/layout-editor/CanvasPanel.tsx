@@ -13,6 +13,7 @@ interface CanvasPanelProps {
     editorMode: EditorMode;
     selectedZoneId: number | null;
     placingDeviceId: number | null;
+    selectedDeviceId: number | null;
     siteId: number;
     onDevicePlaced: (deviceId: number, x: number, y: number) => void;
     onPlacementClear: () => void;
@@ -22,7 +23,7 @@ interface CanvasPanelProps {
 }
 
 export function CanvasPanel({
-    floorPlan, devices, zoneBoundaries, editorMode, selectedZoneId, placingDeviceId, siteId,
+    floorPlan, devices, zoneBoundaries, editorMode, selectedZoneId, placingDeviceId, selectedDeviceId, siteId,
     onDevicePlaced, onPlacementClear, onZoneSelect, onZoneCreated, onZoneResize,
 }: CanvasPanelProps) {
     const { t } = useLang();
@@ -85,6 +86,7 @@ export function CanvasPanel({
                         compact
                         externalPlacementId={editorMode === 'select' ? placingDeviceId : null}
                         onExternalPlacementClear={onPlacementClear}
+                        highlightedDeviceId={selectedDeviceId}
                         onDevicePlaced={editorMode === 'select' ? onDevicePlaced : undefined}
                         overlayContent={
                             <>

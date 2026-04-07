@@ -238,6 +238,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                             editorMode={editorMode}
                             selectedZoneId={selectedZoneId}
                             placingDeviceId={placingDeviceId}
+                            selectedDeviceId={selectedDeviceId}
                             siteId={site.id}
                             onDevicePlaced={handleDevicePlaced}
                             onPlacementClear={() => setPlacingDeviceId(null)}
