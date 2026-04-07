@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import type { ZoneBoundary } from '@/types';
 import { isDeviceOnline } from '@/utils/device';
 import { useForm } from '@inertiajs/react';
-import { ImageIcon, Plus, Search, Upload, X } from 'lucide-react';
+import { ImageIcon, Plus, Search, Unlink, Upload, X } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { FloorPlanWithDevices, LayoutDevice } from './types';
 
@@ -151,6 +151,7 @@ export function LeftSidebar({
 function DeviceCard({ device, selected, onClick, unplaced, onRemove }: {
     device: LayoutDevice; selected: boolean; onClick: () => void; unplaced?: boolean; onRemove?: () => void;
 }) {
+    const { t } = useLang();
     const online = isDeviceOnline(device.last_reading_at);
     return (
         <div className={cn('group flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 mb-1 transition-colors',
@@ -166,12 +167,16 @@ function DeviceCard({ device, selected, onClick, unplaced, onRemove }: {
                     </p>
                 </div>
             </button>
-            {unplaced && <span className="font-mono text-[8px] text-amber-500">drag</span>}
+            {unplaced && (
+                <span className="shrink-0 rounded border border-dashed border-amber-300/60 bg-amber-50/50 px-1.5 py-0.5 font-mono text-[8px] text-amber-600 dark:border-amber-700/40 dark:bg-amber-950/20 dark:text-amber-400">
+                    {t('place')}
+                </span>
+            )}
             {!unplaced && onRemove && (
                 <button onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                    className="hidden h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/40 transition-colors hover:bg-destructive/10 hover:text-rose-500 group-hover:flex"
-                    title="Remove from floor">
-                    <X className="h-3 w-3" />
+                    className="hidden shrink-0 items-center gap-1 rounded-full border border-amber-200/60 bg-amber-50/50 px-2 py-0.5 font-mono text-[8px] text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100/80 group-hover:flex dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-400 dark:hover:border-amber-700 dark:hover:bg-amber-900/40">
+                    <Unlink className="h-2.5 w-2.5" />
+                    {t('unplace')}
                 </button>
             )}
         </div>
