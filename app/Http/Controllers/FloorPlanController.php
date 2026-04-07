@@ -18,7 +18,8 @@ class FloorPlanController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store("floor-plans/{$site->id}", 'public');
+            $storagePath = $request->file('image')->store("floor-plans/{$site->id}", 'public');
+            $path = '/storage/'.$storagePath;
             $imageInfo = getimagesize($request->file('image')->getRealPath());
             $widthPx = $imageInfo[0] ?? null;
             $heightPx = $imageInfo[1] ?? null;
@@ -54,13 +55,14 @@ class FloorPlanController extends Controller
         if ($request->hasFile('image')) {
             // Delete old image (if not a placeholder)
             if ($floorPlan->image_path && ! str_starts_with($floorPlan->image_path, '/images/')) {
-                \Storage::disk('public')->delete($floorPlan->image_path);
+                $oldPath = str_replace('/storage/', '', $floorPlan->image_path);
+                \Storage::disk('public')->delete($oldPath);
             }
 
-            $path = $request->file('image')->store("floor-plans/{$site->id}", 'public');
+            $storagePath = $request->file('image')->store("floor-plans/{$site->id}", 'public');
             $imageInfo = getimagesize($request->file('image')->getRealPath());
 
-            $validated['image_path'] = $path;
+            $validated['image_path'] = '/storage/'.$storagePath;
             $validated['width_px'] = $imageInfo[0] ?? null;
             $validated['height_px'] = $imageInfo[1] ?? null;
         }
@@ -73,9 +75,10 @@ class FloorPlanController extends Controller
 
     public function destroy(Request $request, Site $site, FloorPlan $floorPlan)
     {
-        // Remove image file
-        if ($floorPlan->image_path) {
-            Storage::disk('public')->delete($floorPlan->image_path);
+        // Remove image file (skip placeholders)
+        if ($floorPlan->image_path && ! str_starts_with($floorPlan->image_path, '/images/')) {
+            $storagePath = str_replace('/storage/', '', $floorPlan->image_path);
+            Storage::disk('public')->delete($storagePath);
         }
 
         // Detach devices from this floor plan

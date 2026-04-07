@@ -175,8 +175,20 @@ function FloorCard({ floorPlan, isActive, siteId, onClick, onDelete }: {
 }) {
     const { t } = useLang();
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [editName, setEditName] = useState(floorPlan.name);
     const replaceInputRef = useRef<HTMLInputElement>(null);
+    const nameInputRef = useRef<HTMLInputElement>(null);
     const isBlank = floorPlan.image_path?.includes('blank-floor');
+
+    function handleRename() {
+        if (!editName.trim() || editName === floorPlan.name) { setEditing(false); return; }
+        fetch(`/sites/${siteId}/floor-plans/${floorPlan.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ _method: 'PUT', name: editName.trim() }),
+        }).then(() => { setEditing(false); window.location.reload(); });
+    }
 
     function handleReplaceImage(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -198,8 +210,21 @@ function FloorCard({ floorPlan, isActive, siteId, onClick, onDelete }: {
                 className={cn('group rounded-md border p-3 mb-2 cursor-pointer transition-colors',
                     isActive ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/30')}>
                 <div className="flex items-center justify-between">
-                    <div>
-                        <p className="text-[12px] font-semibold">{floorPlan.name}</p>
+                    <div className="min-w-0 flex-1">
+                        {editing ? (
+                            <input ref={nameInputRef} value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                onBlur={handleRename}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setEditing(false); }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full rounded border border-primary bg-background px-1 py-0.5 text-[12px] font-semibold outline-none"
+                                autoFocus />
+                        ) : (
+                            <p className="truncate text-[12px] font-semibold"
+                                onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}>
+                                {floorPlan.name}
+                            </p>
+                        )}
                         <p className="font-mono text-[9px] text-muted-foreground/60">
                             {t('Floor')} {floorPlan.floor_number} · {floorPlan.devices?.length ?? 0} {t('devices')}
                         </p>

@@ -95,7 +95,7 @@ class SiteLayoutController extends Controller
                 }
             }
 
-            // 3. Update device positions + zones
+            // 3. Update device positions (from explicitly moved devices)
             foreach ($validated['device_positions'] ?? [] as $dp) {
                 Device::where('id', $dp['device_id'])
                     ->where('site_id', $site->id)
@@ -105,6 +105,33 @@ class SiteLayoutController extends Controller
                         'floor_y' => $dp['floor_y'],
                         'zone' => $dp['zone'],
                     ]);
+            }
+
+            // 4. Recalculate zone assignments for all placed devices
+            // This handles zone renames — devices inside a renamed boundary get the new name
+            $allZones = $site->zoneBoundaries()->get();
+            $placedDevices = $site->devices()
+                ->whereNotNull('floor_id')
+                ->whereNotNull('floor_x')
+                ->whereNotNull('floor_y')
+                ->get(['id', 'floor_id', 'floor_x', 'floor_y', 'zone']);
+
+            foreach ($placedDevices as $device) {
+                $matchingZone = $allZones
+                    ->where('floor_plan_id', $device->floor_id)
+                    ->filter(fn ($z) =>
+                        $device->floor_x >= $z->x &&
+                        $device->floor_x <= $z->x + $z->width &&
+                        $device->floor_y >= $z->y &&
+                        $device->floor_y <= $z->y + $z->height
+                    )
+                    ->sortBy(fn ($z) => $z->width * $z->height) // smallest zone wins
+                    ->first();
+
+                $newZone = $matchingZone?->name;
+                if ($newZone !== null && $newZone !== $device->zone) {
+                    $device->update(['zone' => $newZone]);
+                }
             }
         });
 
