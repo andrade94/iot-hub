@@ -70,14 +70,6 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
         setPlacingDeviceId(null);
     }, [activeFloorId, zones]);
 
-    const handleZoneCreated = useCallback((zone: ZoneBoundary) => {
-        const newZones = [...zones, zone];
-        setZones(newZones);
-        setSelectedZoneId(zone.id);
-        setEditorMode('select');
-        recalcDeviceZones(newZones);
-    }, [zones, recalcDeviceZones]);
-
     const recalcDeviceZones = useCallback((updatedZones: ZoneBoundary[]) => {
         setDevices((prev) => {
             let changed = false;
@@ -91,13 +83,20 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                 return d;
             });
             if (!changed) return prev;
-            // Track changed devices for save
             result.forEach((d, i) => {
                 if (d !== prev[i]) setChangedDeviceIds((ids) => new Set([...ids, d.id]));
             });
             return result;
         });
     }, []);
+
+    const handleZoneCreated = useCallback((zone: ZoneBoundary) => {
+        const newZones = [...zones, zone];
+        setZones(newZones);
+        setSelectedZoneId(zone.id);
+        setEditorMode('select');
+        recalcDeviceZones(newZones);
+    }, [zones, recalcDeviceZones]);
 
     const handleZoneResize = useCallback((updated: ZoneBoundary) => {
         const newZones = zones.map((z) => z.id === updated.id ? updated : z);
