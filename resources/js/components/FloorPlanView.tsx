@@ -36,6 +36,7 @@ interface FloorPlanViewProps {
     devices: FloorPlanDevice[];
     editable?: boolean;
     onDevicePlaced?: (deviceId: number, x: number, y: number) => void;
+    overlayContent?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -228,6 +229,7 @@ export default function FloorPlanView({
     devices,
     editable = false,
     onDevicePlaced,
+    overlayContent,
 }: FloorPlanViewProps) {
     const { t } = useLang();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -371,6 +373,9 @@ export default function FloorPlanView({
                         className="block h-auto w-full select-none"
                         draggable={false}
                     />
+
+                    {/* Zone overlays (injected by parent) */}
+                    {overlayContent}
 
                     {/* Device dots */}
                     {placedDevices.map((device) => {

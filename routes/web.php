@@ -228,6 +228,8 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::get('sites/{site}/timeline', \App\Http\Controllers\SiteTimelineController::class)->name('sites.timeline');
         Route::get('sites/{site}/audit', \App\Http\Controllers\AuditModeController::class)->name('sites.audit');
         Route::get('sites/{site}/audit/export', [\App\Http\Controllers\AuditModeController::class, 'exportInsurancePackage'])->name('sites.audit.export');
+        Route::get('sites/{site}/layout', [\App\Http\Controllers\SiteLayoutController::class, 'show'])->middleware('permission:manage devices')->name('sites.layout');
+        Route::post('sites/{site}/layout', [\App\Http\Controllers\SiteLayoutController::class, 'save'])->middleware('permission:manage devices')->name('sites.layout.save');
         Route::get('sites/{site}', [SiteDetailController::class, 'show'])->name('sites.show');
         Route::get('sites/{site}/zones/{zone}', [SiteDetailController::class, 'zone'])->name('sites.zone');
     });

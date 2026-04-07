@@ -57,8 +57,8 @@ class DeviceController extends Controller
             'gateway_id' => 'nullable|exists:gateways,id',
             'recipe_id' => 'nullable|exists:recipes,id',
             'floor_id' => 'nullable|exists:floor_plans,id',
-            'floor_x' => 'nullable|integer',
-            'floor_y' => 'nullable|integer',
+            'floor_x' => 'nullable|numeric',
+            'floor_y' => 'nullable|numeric',
         ]);
 
         $device = $site->devices()->create(array_merge($validated, [
@@ -86,8 +86,8 @@ class DeviceController extends Controller
             'gateway_id' => 'nullable|exists:gateways,id',
             'recipe_id' => 'nullable|exists:recipes,id',
             'floor_id' => 'nullable|exists:floor_plans,id',
-            'floor_x' => 'nullable|integer',
-            'floor_y' => 'nullable|integer',
+            'floor_x' => 'nullable|numeric',
+            'floor_y' => 'nullable|numeric',
         ]);
 
         $device->update($validated);

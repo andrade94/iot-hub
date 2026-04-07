@@ -392,6 +392,18 @@ export interface ZoneMetricSummary {
     unit: string;
 }
 
+export interface ZoneBoundary {
+    id: number;
+    site_id: number;
+    floor_plan_id: number;
+    name: string;
+    color: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 export interface ChartDataPoint {
     time: string;
     value?: number;

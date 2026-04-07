@@ -49,7 +49,7 @@ class SiteDetailController extends Controller
 
     public function show(Request $request, Site $site, ChartDataService $chartService)
     {
-        $site->load(['gateways', 'devices.recipe', 'floorPlans', 'modules']);
+        $site->load(['gateways', 'devices.recipe', 'floorPlans', 'modules', 'zoneBoundaries']);
 
         $kpis = $chartService->getSiteKPIs($site->id);
 
@@ -134,6 +134,7 @@ class SiteDetailController extends Controller
             'timezones' => $timezones,
             'configCounts' => $configCounts,
             'tempExcursions24h' => $tempExcursions24h,
+            'zoneBoundaries' => $site->zoneBoundaries,
         ]);
     }
 

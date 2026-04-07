@@ -5,19 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class FloorPlan extends Model
+class ZoneBoundary extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'site_id',
+        'floor_plan_id',
         'name',
-        'floor_number',
-        'image_path',
-        'width_px',
-        'height_px',
+        'color',
+        'x',
+        'y',
+        'width',
+        'height',
     ];
 
     public function site(): BelongsTo
@@ -25,13 +26,8 @@ class FloorPlan extends Model
         return $this->belongsTo(Site::class);
     }
 
-    public function devices(): HasMany
+    public function floorPlan(): BelongsTo
     {
-        return $this->hasMany(Device::class, 'floor_id');
-    }
-
-    public function zoneBoundaries(): HasMany
-    {
-        return $this->hasMany(ZoneBoundary::class);
+        return $this->belongsTo(FloorPlan::class);
     }
 }

@@ -22,11 +22,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { TimezoneSelect } from '@/components/ui/timezone-select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import FloorPlanView from '@/components/FloorPlanView';
+import { ZoneRect } from '@/components/layout-editor/ZoneRect';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type {
-    Alert, BreadcrumbItem, Device, FloorPlan, SharedData, Site, SiteKPIs, WorkOrder, ZoneSummary,
+    Alert, BreadcrumbItem, Device, FloorPlan, SharedData, Site, SiteKPIs, WorkOrder, ZoneBoundary, ZoneSummary,
 } from '@/types';
 import { formatTimeAgo } from '@/utils/date';
 import { isDeviceOnline } from '@/utils/device';
@@ -59,6 +60,7 @@ interface Props {
     timezones?: string[];
     configCounts?: { alert_rules: number; escalation_chains: number; report_schedules: number; maintenance_windows: number };
     tempExcursions24h?: number;
+    zoneBoundaries?: ZoneBoundary[];
 }
 
 const statusVariants: Record<string, 'success' | 'warning' | 'outline'> = {
@@ -82,7 +84,7 @@ const severityBadge: Record<string, string> = {
 
 /* -- Main Component --------------------------------------------------- */
 
-export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, myRequests = [], onboardingChecklist, timezones = [], configCounts, tempExcursions24h = 0 }: Props) {
+export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, myRequests = [], onboardingChecklist, timezones = [], configCounts, tempExcursions24h = 0, zoneBoundaries = [] }: Props) {
     const { t } = useLang();
     const { auth } = usePage<SharedData>().props;
     const isViewer = auth.roles.includes('client_site_viewer');
@@ -366,14 +368,18 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                                 <span className="font-mono text-[10px] text-amber-600 dark:text-amber-400">{unplacedCount} {t('unplaced')}</span>
                                             )}
                                             <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground" asChild>
-                                                <Link href={`/sites/${site.id}/onboard`}>
-                                                    <Settings2 className="mr-1 h-3 w-3" />{t('Manage')}
+                                                <Link href={`/sites/${site.id}/layout`}>
+                                                    <Settings2 className="mr-1 h-3 w-3" />{t('Edit Layout')}
                                                 </Link>
                                             </Button>
                                         </div>
                                     </div>
                                     <CardContent className="p-4">
-                                        <FloorPlanView floorPlan={floorPlans![activeFloorIdx]} devices={floorPlans![activeFloorIdx].devices ?? []} />
+                                        <FloorPlanView floorPlan={floorPlans![activeFloorIdx]} devices={floorPlans![activeFloorIdx].devices ?? []}
+                                            overlayContent={zoneBoundaries
+                                                .filter((zb) => zb.floor_plan_id === floorPlans![activeFloorIdx].id)
+                                                .map((zb) => <ZoneRect key={zb.id} zone={zb} />)
+                                            } />
                                     </CardContent>
                                 </Card>
                             ) : (
@@ -390,7 +396,7 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                         <Map className="h-6 w-6 text-muted-foreground/30" />
                                         <p className="text-[13px] text-muted-foreground">{t('Upload a floor plan for visual monitoring')}</p>
                                         <Button variant="outline" size="sm" className="text-[11px]" asChild>
-                                            <Link href={`/sites/${site.id}/onboard`}>{t('Setup Wizard')}</Link>
+                                            <Link href={`/sites/${site.id}/layout`}>{t('Open Layout Editor')}</Link>
                                         </Button>
                                     </div>
                                 </>
@@ -723,7 +729,7 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                 <ConfigLink icon={Radio} label={t('Gateways')} count={gatewayCount}
                                     href={`/sites/${site.id}/gateways`} description={t('LoRaWAN infrastructure')} />
                                 <ConfigLink icon={Map} label={t('Floor Plans')} count={floorPlans?.length}
-                                    href={`/sites/${site.id}/onboard`} description={t('Spatial layout')} />
+                                    href={`/sites/${site.id}/layout`} description={t('Spatial layout')} />
                                 <ConfigLink icon={Layers} label={t('Modules')} count={(site as any).modules?.length}
                                     href={`/sites/${site.id}/modules`} description={t('Active capabilities')} />
                                 <ConfigLink icon={Wrench} label={t('Maintenance Windows')} count={configCounts?.maintenance_windows}

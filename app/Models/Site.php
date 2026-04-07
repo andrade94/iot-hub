@@ -97,6 +97,11 @@ class Site extends Model
         return $this->hasMany(EscalationChain::class);
     }
 
+    public function zoneBoundaries(): HasMany
+    {
+        return $this->hasMany(ZoneBoundary::class);
+    }
+
     public function workOrders(): HasMany
     {
         return $this->hasMany(WorkOrder::class);
