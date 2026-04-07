@@ -47,8 +47,8 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     const [zones, setZones] = useState<ZoneBoundary[]>(initialZones);
     const [deletedZoneIds, setDeletedZoneIds] = useState<number[]>([]);
     const [changedDeviceIds, setChangedDeviceIds] = useState<Set<number>>(new Set());
-    const [savedBaseline, setSavedBaseline] = useState<{ devices: LayoutDevice[]; zones: ZoneBoundary[] }>({ devices: initialDevices, zones: initialZones });
-    const hasChanges = changedDeviceIds.size > 0 || zones !== savedBaseline.zones || deletedZoneIds.length > 0;
+    const [zonesModified, setZonesModified] = useState(false);
+    const hasChanges = changedDeviceIds.size > 0 || zonesModified || deletedZoneIds.length > 0;
 
     // ── Derived ──
     const activeFloorPlan = useMemo(() => floorPlans.find((fp) => fp.id === activeFloorId) ?? null, [floorPlans, activeFloorId]);
@@ -78,16 +78,19 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
 
     const handleZoneCreated = useCallback((zone: ZoneBoundary) => {
         setZones((prev) => [...prev, zone]);
+        setZonesModified(true);
         setSelectedZoneId(zone.id);
         setEditorMode('select');
     }, []);
 
     const handleZoneResize = useCallback((updated: ZoneBoundary) => {
         setZones((prev) => prev.map((z) => z.id === updated.id ? updated : z));
+        setZonesModified(true);
     }, []);
 
     const handleZoneUpdate = useCallback((updated: ZoneBoundary) => {
         setZones((prev) => prev.map((z) => z.id === updated.id ? updated : z));
+        setZonesModified(true);
     }, []);
 
     // Recalculate device zones whenever zones change
@@ -133,14 +136,15 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     }, []);
 
     const handleReset = useCallback(() => {
-        setDevices(savedBaseline.devices);
-        setZones(savedBaseline.zones);
+        setDevices(initialDevices);
+        setZones(initialZones);
         setDeletedZoneIds([]);
         setChangedDeviceIds(new Set());
+        setZonesModified(false);
         setSelectedDeviceId(null);
         setSelectedZoneId(null);
         toast.info(t('Changes reset'), { description: t('All changes have been reverted to the last saved state') });
-    }, [savedBaseline, t]);
+    }, [initialDevices, initialZones, t]);
 
     const handleFloorDelete = useCallback((floorPlanId: number) => {
         router.delete(`/sites/${site.id}/floor-plans/${floorPlanId}`, {
@@ -149,6 +153,14 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     }, [site.id]);
 
     const handleSave = useCallback(() => {
+        // Validate zone names before saving
+        const emptyNameZone = zones.find((z) => !z.name.trim());
+        if (emptyNameZone) {
+            toast.error(t('Zone name required'), { description: t('All zones must have a name before saving') });
+            setSelectedZoneId(emptyNameZone.id);
+            return;
+        }
+
         setSaving(true);
 
         // Split changed devices into placed (with position) and unplaced (nulled)
@@ -164,7 +176,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                     floor_id: d.floor_id,
                     floor_x: d.floor_x,
                     floor_y: d.floor_y,
-                    zone: d.zone,
+                    zone: d.zone ?? '',
                 });
             } else {
                 unplacedDeviceIds.push(d.id);
@@ -190,10 +202,9 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
         }, {
             preserveScroll: true,
             onSuccess: () => {
-                // Update baseline so hasChanges becomes false
-                setSavedBaseline({ devices: [...devices], zones: [...zones] });
                 setChangedDeviceIds(new Set());
                 setDeletedZoneIds([]);
+                setZonesModified(false);
                 toast.success(t('Layout saved'), { description: t('All zone and device changes have been saved') });
             },
             onError: () => {
@@ -231,12 +242,20 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [editorMode, isEditing, selectedZoneId, selectedDeviceId, hasChanges, handleDeselect, handleZoneDelete, handleSave]);
 
-    // ── Unsaved changes warning ──
+    // ── Unsaved changes warning (browser + Inertia navigation) ──
     useEffect(() => {
         const handler = (e: BeforeUnloadEvent) => { if (hasChanges) e.preventDefault(); };
         window.addEventListener('beforeunload', handler);
         return () => window.removeEventListener('beforeunload', handler);
     }, [hasChanges]);
+
+    useEffect(() => {
+        return router.on('before', () => {
+            if (hasChanges && !confirm(t('You have unsaved layout changes. Leave anyway?'))) {
+                return false;
+            }
+        });
+    }, [hasChanges, t]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

@@ -383,6 +383,7 @@ function FloorUploadDialog({ siteId, existingFloors }: { siteId: number; existin
     function handleClose() {
         setOpen(false);
         form.reset();
+        form.setData('floor_number', String(nextFloorNumber));
         setPreview(null);
     }
 

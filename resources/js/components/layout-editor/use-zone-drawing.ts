@@ -7,12 +7,11 @@ interface UseZoneDrawingOptions {
     onZoneCreated: (zone: ZoneBoundary) => void;
 }
 
-let tempIdCounter = -1;
-
 export function useZoneDrawing({ floorPlanId, siteId, onZoneCreated }: UseZoneDrawingOptions) {
     const [drawingZone, setDrawingZone] = useState<ZoneBoundary | null>(null);
     const startRef = useRef<{ x: number; y: number } | null>(null);
     const containerRef = useRef<HTMLElement | null>(null);
+    const tempIdRef = useRef(-1);
     const drawingRef = useRef<ZoneBoundary | null>(null);
 
     // Cache the img element after first find — clear on floor change
@@ -52,7 +51,7 @@ export function useZoneDrawing({ floorPlanId, siteId, onZoneCreated }: UseZoneDr
 
         startRef.current = pos;
         const newZone: ZoneBoundary = {
-            id: tempIdCounter--,
+            id: tempIdRef.current--,
             site_id: siteId,
             floor_plan_id: floorPlanId,
             name: '',

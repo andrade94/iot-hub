@@ -143,8 +143,8 @@ class SiteLayoutController extends Controller
                     ->sortBy(fn ($z) => $z->width * $z->height) // smallest zone wins
                     ->first();
 
-                $newZone = $matchingZone?->name;
-                if ($newZone !== null && $newZone !== $device->zone) {
+                $newZone = $matchingZone?->name ?? '';
+                if ($newZone !== ($device->zone ?? '')) {
                     $device->update(['zone' => $newZone]);
                 }
             }
