@@ -31,7 +31,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
 
     // ── Editor State ──
     const [activeFloorId, setActiveFloorId] = useState<number | null>(floorPlans[0]?.id ?? null);
-    const [editorMode, setEditorMode] = useState<EditorMode>('select');
+    const [editorMode, setEditorMode] = useState<EditorMode>('view');
     const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
     const [selectedZoneId, setSelectedZoneId] = useState<number | null>(null);
     const [saving, setSaving] = useState(false);
@@ -110,6 +110,12 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
         setSelectedZoneId(null);
     }, [initialDevices, initialZones]);
 
+    const handleFloorDelete = useCallback((floorPlanId: number) => {
+        router.delete(`/sites/${site.id}/floor-plans/${floorPlanId}`, {
+            preserveScroll: true,
+        });
+    }, [site.id]);
+
     const handleSave = useCallback(() => {
         setSaving(true);
 
@@ -151,10 +157,22 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     }, [site.id, devices, zones, deletedZoneIds, changedDeviceIds]);
 
     // ── Keyboard Shortcuts ──
+    const isEditing = editorMode !== 'view';
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-            if (e.key === 'Escape') { handleDeselect(); setEditorMode('select'); }
+            // Toggle edit mode
+            if (e.key === 'e' && !e.metaKey && !e.ctrlKey) {
+                setEditorMode((prev) => prev === 'view' ? 'select' : 'view');
+                return;
+            }
+            if (e.key === 'Escape') {
+                if (editorMode === 'draw-zone') { setEditorMode('select'); return; }
+                if (selectedZoneId || selectedDeviceId) { handleDeselect(); return; }
+                if (isEditing) { setEditorMode('view'); return; }
+            }
+            // Edit-mode-only shortcuts
+            if (!isEditing) return;
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 if (selectedZoneId) handleZoneDelete(selectedZoneId);
             }
@@ -164,7 +182,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
         }
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedZoneId, hasChanges, handleDeselect, handleZoneDelete, handleSave]);
+    }, [editorMode, isEditing, selectedZoneId, selectedDeviceId, hasChanges, handleDeselect, handleZoneDelete, handleSave]);
 
     // ── Unsaved changes warning ──
     useEffect(() => {
@@ -194,6 +212,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                 <ResizablePanelGroup direction="horizontal" className="flex-1">
                     <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
                         <LeftSidebar
+                            siteId={site.id}
                             devices={devices}
                             zoneBoundaries={zones}
                             floorPlans={floorPlans}
@@ -202,6 +221,8 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                             selectedZoneId={selectedZoneId}
                             onDeviceSelect={setSelectedDeviceId}
                             onZoneSelect={setSelectedZoneId}
+                            onFloorChange={setActiveFloorId}
+                            onFloorDelete={handleFloorDelete}
                             onStartDrawZone={() => setEditorMode('draw-zone')}
                         />
                     </ResizablePanel>

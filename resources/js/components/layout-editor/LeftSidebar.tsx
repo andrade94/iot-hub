@@ -1,17 +1,24 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import {
+    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLang } from '@/hooks/use-lang';
 import { cn } from '@/lib/utils';
 import type { ZoneBoundary } from '@/types';
 import { isDeviceOnline } from '@/utils/device';
-import { Plus, Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useForm } from '@inertiajs/react';
+import { ImageIcon, Plus, Search, Upload, X } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { FloorPlanWithDevices, LayoutDevice } from './types';
 
 interface LeftSidebarProps {
+    siteId: number;
     devices: LayoutDevice[];
     zoneBoundaries: ZoneBoundary[];
     floorPlans: FloorPlanWithDevices[];
@@ -20,13 +27,15 @@ interface LeftSidebarProps {
     selectedZoneId: number | null;
     onDeviceSelect: (id: number | null) => void;
     onZoneSelect: (id: number | null) => void;
+    onFloorChange: (id: number) => void;
+    onFloorDelete: (id: number) => void;
     onStartDrawZone: () => void;
 }
 
 export function LeftSidebar({
-    devices, zoneBoundaries, floorPlans, activeFloorId,
+    siteId, devices, zoneBoundaries, floorPlans, activeFloorId,
     selectedDeviceId, selectedZoneId,
-    onDeviceSelect, onZoneSelect, onStartDrawZone,
+    onDeviceSelect, onZoneSelect, onFloorChange, onFloorDelete, onStartDrawZone,
 }: LeftSidebarProps) {
     const { t } = useLang();
     const [deviceSearch, setDeviceSearch] = useState('');
@@ -123,21 +132,10 @@ export function LeftSidebar({
                 <TabsContent value="floors" className="mt-0 flex-1 overflow-hidden">
                     <ScrollArea className="flex-1 p-2">
                         {floorPlans.map((fp) => (
-                            <div key={fp.id} className={cn('rounded-md border p-3 mb-2 cursor-pointer transition-colors',
-                                activeFloorId === fp.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/30')}>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[12px] font-semibold">{fp.name}</p>
-                                        <p className="font-mono text-[9px] text-muted-foreground/60">
-                                            {t('Floor')} {fp.floor_number} · {fp.devices?.length ?? 0} {t('devices')}
-                                        </p>
-                                    </div>
-                                    {activeFloorId === fp.id && (
-                                        <Badge variant="outline" className="text-[8px] text-emerald-600 dark:text-emerald-400">{t('Active')}</Badge>
-                                    )}
-                                </div>
-                            </div>
+                            <FloorCard key={fp.id} floorPlan={fp} isActive={activeFloorId === fp.id}
+                                onClick={() => onFloorChange(fp.id)} onDelete={() => onFloorDelete(fp.id)} />
                         ))}
+                        <FloorUploadDialog siteId={siteId} />
                     </ScrollArea>
                 </TabsContent>
             </Tabs>
@@ -166,5 +164,193 @@ function DeviceCard({ device, selected, onClick, unplaced }: {
             </div>
             {unplaced && <span className="font-mono text-[8px] text-amber-500">drag</span>}
         </button>
+    );
+}
+
+/* -- Floor Card with Delete -- */
+
+function FloorCard({ floorPlan, isActive, onClick, onDelete }: {
+    floorPlan: FloorPlanWithDevices; isActive: boolean; onClick: () => void; onDelete: () => void;
+}) {
+    const { t } = useLang();
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
+    return (
+        <>
+            <div onClick={onClick}
+                className={cn('group rounded-md border p-3 mb-2 cursor-pointer transition-colors',
+                    isActive ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/30')}>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-[12px] font-semibold">{floorPlan.name}</p>
+                        <p className="font-mono text-[9px] text-muted-foreground/60">
+                            {t('Floor')} {floorPlan.floor_number} · {floorPlan.devices?.length ?? 0} {t('devices')}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        {isActive && (
+                            <Badge variant="outline" className="text-[8px] text-emerald-600 dark:text-emerald-400">{t('Active')}</Badge>
+                        )}
+                        <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+                            className="hidden h-6 w-6 items-center justify-center rounded text-muted-foreground/40 transition-colors hover:bg-destructive/10 hover:text-rose-500 group-hover:flex">
+                            <X className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <ConfirmationDialog
+                open={confirmDelete}
+                onOpenChange={setConfirmDelete}
+                title={t('Delete Floor Plan')}
+                description={t('Are you sure you want to delete this floor plan?')}
+                itemName={floorPlan.name}
+                warningMessage={`${floorPlan.devices?.length ?? 0} ${t('device(s) will be unplaced from this floor')}`}
+                onConfirm={() => { onDelete(); setConfirmDelete(false); }}
+            />
+        </>
+    );
+}
+
+/* -- Floor Upload Dialog -- */
+
+function FloorUploadDialog({ siteId }: { siteId: number }) {
+    const { t } = useLang();
+    const [open, setOpen] = useState(false);
+    const [preview, setPreview] = useState<string | null>(null);
+    const [dragOver, setDragOver] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const form = useForm<{ name: string; floor_number: string; image: File | null }>({
+        name: '', floor_number: '1', image: null,
+    });
+
+    const handleFile = useCallback((file: File) => {
+        if (!file.type.startsWith('image/')) return;
+        form.setData('image', file);
+        // Auto-fill name from filename if empty
+        if (!form.data.name) {
+            const nameFromFile = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+            form.setData('name', nameFromFile.charAt(0).toUpperCase() + nameFromFile.slice(1));
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => setPreview(e.target?.result as string);
+        reader.readAsDataURL(file);
+    }, [form]);
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        setDragOver(false);
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+    }, [handleFile]);
+
+    const clearImage = useCallback(() => {
+        form.setData('image', null);
+        setPreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }, [form]);
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        if (!form.data.image || !form.data.name) return;
+        form.post(`/sites/${siteId}/floor-plans`, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                setPreview(null);
+                setOpen(false);
+            },
+        });
+    }
+
+    function handleClose() {
+        setOpen(false);
+        form.reset();
+        setPreview(null);
+    }
+
+    return (
+        <>
+            <button onClick={() => setOpen(true)}
+                className="flex w-full flex-col items-center gap-2 rounded-md border-2 border-dashed border-border py-6 text-center transition-colors hover:border-primary/30 hover:bg-accent/20">
+                <Plus className="h-5 w-5 text-muted-foreground/40" />
+                <span className="text-[11px] font-medium text-muted-foreground">{t('Add Floor Plan')}</span>
+            </button>
+
+            <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>{t('Upload Floor Plan')}</DialogTitle>
+                        <DialogDescription>{t('Upload an image of your floor plan to place devices and define zones')}</DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Drop zone / Preview */}
+                        {!preview ? (
+                            <div
+                                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                                onDragLeave={() => setDragOver(false)}
+                                onDrop={handleDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                                className={cn(
+                                    'flex cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed py-12 transition-colors',
+                                    dragOver
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-border hover:border-primary/30 hover:bg-accent/10',
+                                )}
+                            >
+                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted/50">
+                                    <ImageIcon className="h-7 w-7 text-muted-foreground/50" />
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-[13px] font-medium">{t('Drag & drop your floor plan image')}</p>
+                                    <p className="mt-1 text-[11px] text-muted-foreground">{t('or click to browse')}</p>
+                                </div>
+                                <p className="font-mono text-[9px] text-muted-foreground/50">PNG, JPG, SVG — Max 10MB</p>
+                            </div>
+                        ) : (
+                            <div className="relative overflow-hidden rounded-lg border border-border">
+                                <img src={preview} alt="Preview" className="h-auto max-h-[240px] w-full object-contain bg-muted/20" />
+                                <button type="button" onClick={clearImage}
+                                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 border border-border shadow-sm transition-colors hover:bg-background">
+                                    <X className="h-3.5 w-3.5" />
+                                </button>
+                                <div className="border-t border-border bg-card/50 px-3 py-1.5">
+                                    <p className="truncate font-mono text-[10px] text-muted-foreground">{form.data.image?.name}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+
+                        {/* Fields */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="col-span-2 space-y-1.5">
+                                <Label className="text-[11px]">{t('Floor Name')}</Label>
+                                <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)}
+                                    placeholder={t('e.g. Ground Floor')} className="text-[12px]" autoFocus />
+                                {form.errors.name && <p className="text-[10px] text-destructive">{form.errors.name}</p>}
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[11px]">{t('Floor #')}</Label>
+                                <Input type="number" min={0} value={form.data.floor_number}
+                                    onChange={(e) => form.setData('floor_number', e.target.value)}
+                                    className="font-mono text-[12px]" />
+                            </div>
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={handleClose}>{t('Cancel')}</Button>
+                            <Button type="submit" disabled={form.processing || !form.data.image || !form.data.name.trim()}>
+                                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                                {form.processing ? t('Uploading...') : t('Upload Floor Plan')}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }

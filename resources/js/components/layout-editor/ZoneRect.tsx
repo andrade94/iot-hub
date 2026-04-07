@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import type { ZoneBoundary } from '@/types';
+import { useCallback } from 'react';
 
 interface ZoneRectProps {
     zone: ZoneBoundary;
@@ -9,19 +10,63 @@ interface ZoneRectProps {
     onResize?: (zone: ZoneBoundary) => void;
 }
 
+function findImg(el: HTMLElement): HTMLImageElement | null {
+    // Walk up to find the container with the floor plan image
+    let node: HTMLElement | null = el;
+    while (node) {
+        const img = node.querySelector('img');
+        if (img) return img;
+        node = node.parentElement;
+    }
+    return null;
+}
+
 export function ZoneRect({ zone, selected = false, editable = false, onClick, onResize }: ZoneRectProps) {
-    const handleResizeStart = (corner: string) => (e: React.MouseEvent) => {
+
+    const handleDragStart = useCallback((e: React.MouseEvent) => {
+        if (!editable || !selected || !onResize) return;
+        // Only drag from zone body, not from resize handles
+        if ((e.target as HTMLElement).dataset.handle) return;
+        e.stopPropagation();
+        e.preventDefault();
+
+        const img = findImg(e.currentTarget as HTMLElement);
+        if (!img) return;
+
+        const rect = img.getBoundingClientRect();
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const origZone = { ...zone };
+
+        function onMouseMove(ev: MouseEvent) {
+            const dx = (ev.clientX - startX) / rect.width;
+            const dy = (ev.clientY - startY) / rect.height;
+            const updated = { ...origZone };
+            updated.x = Math.max(0, Math.min(1 - updated.width, origZone.x + dx));
+            updated.y = Math.max(0, Math.min(1 - updated.height, origZone.y + dy));
+            onResize?.(updated);
+        }
+
+        function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }, [editable, selected, zone, onResize]);
+
+    const handleResizeStart = useCallback((corner: string) => (e: React.MouseEvent) => {
         if (!editable || !onResize) return;
         e.stopPropagation();
         e.preventDefault();
 
+        const img = findImg(e.currentTarget as HTMLElement);
+        if (!img) return;
+
+        const rect = img.getBoundingClientRect();
         const startX = e.clientX;
         const startY = e.clientY;
-        const container = (e.target as HTMLElement).closest('[data-slot="resizable-panel"]')?.querySelector('img')
-            ?? (e.target as HTMLElement).closest('.relative')?.querySelector('img');
-        if (!container) return;
-
-        const rect = container.getBoundingClientRect();
         const origZone = { ...zone };
 
         function onMouseMove(ev: MouseEvent) {
@@ -34,7 +79,6 @@ export function ZoneRect({ zone, selected = false, editable = false, onClick, on
             if (corner.includes('s')) { updated.height = Math.max(0.02, origZone.height + dy); }
             if (corner.includes('n')) { updated.y = origZone.y + dy; updated.height = Math.max(0.02, origZone.height - dy); }
 
-            // Clamp to 0-1
             updated.x = Math.max(0, Math.min(1 - updated.width, updated.x));
             updated.y = Math.max(0, Math.min(1 - updated.height, updated.y));
 
@@ -48,27 +92,28 @@ export function ZoneRect({ zone, selected = false, editable = false, onClick, on
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
-    };
+    }, [editable, zone, onResize]);
 
     return (
         <div
             className={cn(
-                'absolute z-[5] flex flex-col items-center justify-center rounded transition-shadow cursor-pointer',
-                selected && 'z-[6] ring-2 ring-cyan-500/30',
+                'absolute z-[5] flex flex-col items-center justify-center rounded transition-shadow',
+                selected && editable ? 'z-[6] cursor-move ring-2 ring-cyan-500/30' : 'cursor-pointer',
             )}
             style={{
                 left: `${zone.x * 100}%`,
                 top: `${zone.y * 100}%`,
                 width: `${zone.width * 100}%`,
                 height: `${zone.height * 100}%`,
-                border: `2px solid ${zone.color}40`,
-                backgroundColor: `${zone.color}12`,
+                border: `2px solid ${zone.color}${selected ? 'aa' : '40'}`,
+                backgroundColor: `${zone.color}${selected ? '18' : '0a'}`,
             }}
             onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+            onMouseDown={selected ? handleDragStart : undefined}
         >
             {/* Zone label */}
-            <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.06em]"
-                style={{ color: `${zone.color}99` }}>
+            <span className="pointer-events-none font-mono text-[8px] font-semibold uppercase tracking-[0.06em]"
+                style={{ color: `${zone.color}${selected ? 'dd' : '99'}` }}>
                 {zone.name}
             </span>
 
@@ -77,12 +122,13 @@ export function ZoneRect({ zone, selected = false, editable = false, onClick, on
                 <>
                     {['nw', 'ne', 'sw', 'se'].map((corner) => (
                         <div key={corner}
-                            className="absolute h-2 w-2 rounded-sm border border-white bg-cyan-500"
+                            data-handle="true"
+                            className="absolute h-2.5 w-2.5 rounded-sm border-2 border-white bg-cyan-500 shadow-sm"
                             style={{
-                                top: corner.includes('n') ? -4 : undefined,
-                                bottom: corner.includes('s') ? -4 : undefined,
-                                left: corner.includes('w') ? -4 : undefined,
-                                right: corner.includes('e') ? -4 : undefined,
+                                top: corner.includes('n') ? -5 : undefined,
+                                bottom: corner.includes('s') ? -5 : undefined,
+                                left: corner.includes('w') ? -5 : undefined,
+                                right: corner.includes('e') ? -5 : undefined,
                                 cursor: `${corner}-resize`,
                             }}
                             onMouseDown={handleResizeStart(corner)}

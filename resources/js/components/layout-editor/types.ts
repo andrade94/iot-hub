@@ -1,6 +1,6 @@
 import type { Device, FloorPlan, ZoneBoundary } from '@/types';
 
-export type EditorMode = 'select' | 'draw-zone';
+export type EditorMode = 'view' | 'select' | 'draw-zone';
 
 export interface FloorPlanWithDevices extends FloorPlan {
     devices: Device[];

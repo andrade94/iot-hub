@@ -13,6 +13,7 @@ export function useZoneDrawing({ floorPlanId, siteId, onZoneCreated }: UseZoneDr
     const [drawingZone, setDrawingZone] = useState<ZoneBoundary | null>(null);
     const startRef = useRef<{ x: number; y: number } | null>(null);
     const containerRef = useRef<HTMLElement | null>(null);
+    const drawingRef = useRef<ZoneBoundary | null>(null);
 
     const getNormalized = useCallback((e: MouseEvent | React.MouseEvent): { x: number; y: number } | null => {
         const container = containerRef.current;
@@ -27,10 +28,12 @@ export function useZoneDrawing({ floorPlanId, siteId, onZoneCreated }: UseZoneDr
     }, []);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
         const pos = getNormalized(e);
         if (!pos) return;
+
         startRef.current = pos;
-        setDrawingZone({
+        const newZone: ZoneBoundary = {
             id: tempIdCounter--,
             site_id: siteId,
             floor_plan_id: floorPlanId,
@@ -40,43 +43,52 @@ export function useZoneDrawing({ floorPlanId, siteId, onZoneCreated }: UseZoneDr
             y: pos.y,
             width: 0,
             height: 0,
-        });
-    }, [floorPlanId, siteId, getNormalized]);
+        };
+        drawingRef.current = newZone;
+        setDrawingZone(newZone);
 
-    const handleMouseMove = useCallback((e: React.MouseEvent) => {
-        if (!startRef.current || !drawingZone) return;
-        const pos = getNormalized(e);
-        if (!pos) return;
+        function handleMouseMove(ev: MouseEvent) {
+            if (!startRef.current) return;
+            const movePos = getNormalized(ev);
+            if (!movePos) return;
 
-        const x = Math.min(startRef.current.x, pos.x);
-        const y = Math.min(startRef.current.y, pos.y);
-        const width = Math.abs(pos.x - startRef.current.x);
-        const height = Math.abs(pos.y - startRef.current.y);
+            const x = Math.min(startRef.current.x, movePos.x);
+            const y = Math.min(startRef.current.y, movePos.y);
+            const width = Math.abs(movePos.x - startRef.current.x);
+            const height = Math.abs(movePos.y - startRef.current.y);
 
-        setDrawingZone((prev) => prev ? { ...prev, x, y, width, height } : null);
-    }, [drawingZone, getNormalized]);
-
-    const handleMouseUp = useCallback(() => {
-        if (!drawingZone || drawingZone.width < 0.02 || drawingZone.height < 0.02) {
-            // Too small — cancel
-            setDrawingZone(null);
-            startRef.current = null;
-            return;
+            const updated = { ...drawingRef.current!, x, y, width, height };
+            drawingRef.current = updated;
+            setDrawingZone(updated);
         }
 
-        const finalZone = { ...drawingZone, name: `Zone ${Math.abs(drawingZone.id)}` };
-        onZoneCreated(finalZone);
-        setDrawingZone(null);
-        startRef.current = null;
-    }, [drawingZone, onZoneCreated]);
+        function handleMouseUp() {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            const zone = drawingRef.current;
+            if (!zone || zone.width < 0.02 || zone.height < 0.02) {
+                // Too small — cancel
+                setDrawingZone(null);
+                drawingRef.current = null;
+                startRef.current = null;
+                return;
+            }
+
+            const finalZone = { ...zone, name: `Zone ${Math.abs(zone.id)}` };
+            onZoneCreated(finalZone);
+            setDrawingZone(null);
+            drawingRef.current = null;
+            startRef.current = null;
+        }
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    }, [floorPlanId, siteId, getNormalized, onZoneCreated]);
 
     return {
         drawingZone,
         containerRef,
-        handlers: {
-            onMouseDown: handleMouseDown,
-            onMouseMove: handleMouseMove,
-            onMouseUp: handleMouseUp,
-        },
+        handleMouseDown,
     };
 }

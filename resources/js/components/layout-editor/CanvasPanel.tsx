@@ -25,7 +25,7 @@ export function CanvasPanel({
 }: CanvasPanelProps) {
     const { t } = useLang();
 
-    const { drawingZone, containerRef, handlers } = useZoneDrawing({
+    const { drawingZone, containerRef, handleMouseDown } = useZoneDrawing({
         floorPlanId: floorPlan?.id ?? 0,
         siteId,
         onZoneCreated,
@@ -68,23 +68,14 @@ export function CanvasPanel({
 
             <div className="flex flex-1 items-center justify-center p-6">
                 <div className="relative w-full max-w-[1000px]" ref={(el) => { containerRef.current = el; }}>
-                    {/* Zone drawing overlay — captures mouse events in draw mode */}
-                    {editorMode === 'draw-zone' && (
-                        <div
-                            className="absolute inset-0 z-[15] cursor-crosshair"
-                            onMouseDown={handlers.onMouseDown}
-                            onMouseMove={handlers.onMouseMove}
-                            onMouseUp={handlers.onMouseUp}
-                        />
-                    )}
-
                     <FloorPlanView
                         floorPlan={floorPlan}
                         devices={floorDevices}
                         editable={editorMode === 'select'}
-                        onDevicePlaced={onDevicePlaced}
+                        onDevicePlaced={editorMode === 'select' ? onDevicePlaced : undefined}
                         overlayContent={
                             <>
+                                {/* Zone rectangles */}
                                 {zonesOnFloor.map((zone) => (
                                     <ZoneRect
                                         key={zone.id}
@@ -92,20 +83,21 @@ export function CanvasPanel({
                                         selected={selectedZoneId === zone.id}
                                         editable={editorMode === 'select'}
                                         onClick={() => onZoneSelect(zone.id)}
-                                        onResize={onZoneResize}
+                                        onResize={editorMode === 'select' ? onZoneResize : undefined}
                                     />
                                 ))}
                                 {drawingZone && <ZoneRect zone={drawingZone} selected />}
+                                {/* Draw overlay — only in draw-zone mode */}
+                                {editorMode === 'draw-zone' && (
+                                    <div
+                                        className="absolute inset-0 z-[15] cursor-crosshair"
+                                        onMouseDown={handleMouseDown}
+                                    />
+                                )}
                             </>
                         }
                     />
 
-                    {/* Legend */}
-                    <div className="absolute bottom-2 left-2 z-20 flex gap-3 rounded bg-card/90 px-2.5 py-1 text-[9px] text-muted-foreground border border-border/50">
-                        <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t('Online')}</span>
-                        <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />{t('Warning')}</span>
-                        <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />{t('Offline')}</span>
-                    </div>
                 </div>
             </div>
 
@@ -118,8 +110,13 @@ export function CanvasPanel({
                 <span>{zonesOnFloor.length} {t('zones')}</span>
                 <span className="flex-1" />
                 <span>
-                    <kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">Del</kbd> {t('delete')} ·{' '}
-                    <kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">Esc</kbd> {t('deselect')}
+                    <kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">E</kbd> {t('toggle edit')} ·{' '}
+                    {editorMode !== 'view' && (
+                        <>
+                            <kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">Del</kbd> {t('delete')} ·{' '}
+                        </>
+                    )}
+                    <kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">Esc</kbd> {editorMode === 'view' ? '' : t('deselect')}
                 </span>
             </div>
         </div>

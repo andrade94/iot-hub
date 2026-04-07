@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLang } from '@/hooks/use-lang';
@@ -8,6 +9,7 @@ import { isDeviceOnline } from '@/utils/device';
 import { formatTimeAgo } from '@/utils/date';
 import { Link } from '@inertiajs/react';
 import { X } from 'lucide-react';
+import { useState } from 'react';
 import type { LayoutDevice } from './types';
 
 const ZONE_COLORS = ['#06b6d4', '#22c55e', '#f59e0b', '#f43f5e', '#8b5cf6', '#3b82f6', '#94a3b8', '#ec4899'];
@@ -27,6 +29,7 @@ export function PropertiesPanel({
     onZoneUpdate, onZoneDelete, onDeviceRemoveFromFloor, onDeselect,
 }: PropertiesPanelProps) {
     const { t } = useLang();
+    const [confirmDeleteZone, setConfirmDeleteZone] = useState(false);
 
     // Nothing selected
     if (!selectedZone && !selectedDevice) {
@@ -95,9 +98,20 @@ export function PropertiesPanel({
                         </div>
                     </div>
                     <Button variant="outline" size="sm" className="w-full text-[10px] text-rose-600 dark:text-rose-400 border-rose-200/40 dark:border-rose-800/40"
-                        onClick={() => onZoneDelete(selectedZone.id)}>
+                        onClick={() => setConfirmDeleteZone(true)}>
                         {t('Delete Zone')}
                     </Button>
+                    <ConfirmationDialog
+                        open={confirmDeleteZone}
+                        onOpenChange={setConfirmDeleteZone}
+                        title={t('Delete Zone')}
+                        description={t('Are you sure you want to delete this zone boundary?')}
+                        itemName={selectedZone.name}
+                        warningMessage={devicesInZone.length > 0
+                            ? `${devicesInZone.length} ${t('device(s) in this zone will become unassigned')}`
+                            : t('This zone boundary will be removed from the floor plan')}
+                        onConfirm={() => { onZoneDelete(selectedZone.id); setConfirmDeleteZone(false); }}
+                    />
                 </div>
             </div>
         );
