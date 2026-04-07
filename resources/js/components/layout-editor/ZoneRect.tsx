@@ -79,8 +79,11 @@ export function ZoneRect({ zone, selected = false, editable = false, onClick, on
             if (corner.includes('s')) { updated.height = Math.max(0.02, origZone.height + dy); }
             if (corner.includes('n')) { updated.y = origZone.y + dy; updated.height = Math.max(0.02, origZone.height - dy); }
 
-            updated.x = Math.max(0, Math.min(1 - updated.width, updated.x));
-            updated.y = Math.max(0, Math.min(1 - updated.height, updated.y));
+            // Clamp all values to 0-1 range and ensure zone stays within bounds
+            updated.x = Math.max(0, updated.x);
+            updated.y = Math.max(0, updated.y);
+            updated.width = Math.max(0.02, Math.min(1 - updated.x, updated.width));
+            updated.height = Math.max(0.02, Math.min(1 - updated.y, updated.height));
 
             onResize?.(updated);
         }

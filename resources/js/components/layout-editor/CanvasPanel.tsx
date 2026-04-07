@@ -125,13 +125,13 @@ export function CanvasPanel({
                 <span>{zonesOnFloor.length} {t('zones')}</span>
                 <span className="flex-1" />
                 <span>
-                    <kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">E</kbd> {t('toggle edit')} ·{' '}
+                    <kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">E</kbd> {t('toggle edit')}
                     {editorMode !== 'view' && (
                         <>
-                            <kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">Del</kbd> {t('delete')} ·{' '}
+                            {' · '}<kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">Del</kbd> {t('delete')}
+                            {' · '}<kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">Esc</kbd> {t('deselect')}
                         </>
                     )}
-                    <kbd className="rounded border border-border bg-muted/50 px-1 text-[8px]">Esc</kbd> {editorMode === 'view' ? '' : t('deselect')}
                 </span>
             </div>
         </div>

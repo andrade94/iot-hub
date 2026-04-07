@@ -71,7 +71,10 @@ class SiteLayoutController extends Controller
             'zone_boundaries.*.height' => 'required|numeric|min:0.01|max:1',
 
             'deleted_zone_ids' => 'nullable|array',
-            'deleted_zone_ids.*' => 'integer|exists:zone_boundaries,id',
+            'deleted_zone_ids.*' => 'integer',
+
+            'unplaced_device_ids' => 'nullable|array',
+            'unplaced_device_ids.*' => 'integer|exists:devices,id',
         ]);
 
         DB::transaction(function () use ($validated, $site) {
@@ -107,7 +110,19 @@ class SiteLayoutController extends Controller
                     ]);
             }
 
-            // 4. Recalculate zone assignments for all placed devices
+            // 4. Unplace devices (clear floor assignment)
+            if (! empty($validated['unplaced_device_ids'])) {
+                Device::where('site_id', $site->id)
+                    ->whereIn('id', $validated['unplaced_device_ids'])
+                    ->update([
+                        'floor_id' => null,
+                        'floor_x' => null,
+                        'floor_y' => null,
+                        'zone' => '',
+                    ]);
+            }
+
+            // 5. Recalculate zone assignments for all placed devices
             // This handles zone renames — devices inside a renamed boundary get the new name
             $allZones = $site->zoneBoundaries()->get();
             $placedDevices = $site->devices()

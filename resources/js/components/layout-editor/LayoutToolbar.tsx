@@ -14,13 +14,12 @@ interface LayoutToolbarProps {
     saving: boolean;
     onSave: () => void;
     onReset: () => void;
-    onUndo: () => void;
     stats: { online: number; offline: number; alerts: number };
 }
 
 export function LayoutToolbar({
     floorPlans, activeFloorId, onFloorChange, editorMode, onModeChange,
-    hasChanges, saving, onSave, onReset, onUndo, stats,
+    hasChanges, saving, onSave, onReset, stats,
 }: LayoutToolbarProps) {
     const { t } = useLang();
     const isEditing = editorMode !== 'view';
@@ -95,11 +94,8 @@ export function LayoutToolbar({
             {isEditing && (
                 <>
                     <div className="mx-1 h-5 w-px bg-border" />
-                    <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground" onClick={onUndo} disabled={!hasChanges}>
-                        {t('Undo')}
-                    </Button>
                     <Button variant="outline" size="sm" className="h-7 text-[10px]" onClick={onReset} disabled={!hasChanges}>
-                        {t('Reset')}
+                        {t('Revert All')}
                     </Button>
                     <Button size="sm" className="h-7 text-[10px]" onClick={onSave} disabled={!hasChanges || saving}>
                         {saving ? t('Saving...') : `✓ ${t('Save')}`}

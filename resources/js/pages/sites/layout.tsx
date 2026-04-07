@@ -31,7 +31,11 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     ];
 
     // ── Editor State ──
-    const [activeFloorId, setActiveFloorId] = useState<number | null>(floorPlans[0]?.id ?? null);
+    const [activeFloorId, setActiveFloorIdRaw] = useState<number | null>(floorPlans[0]?.id ?? null);
+    const setActiveFloorId = useCallback((id: number) => {
+        setActiveFloorIdRaw(id);
+        setPlacingDeviceId(null); // Clear placement when switching floors
+    }, []);
     const [editorMode, setEditorMode] = useState<EditorMode>('view');
     const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
     const [selectedZoneId, setSelectedZoneId] = useState<number | null>(null);
@@ -43,7 +47,8 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     const [zones, setZones] = useState<ZoneBoundary[]>(initialZones);
     const [deletedZoneIds, setDeletedZoneIds] = useState<number[]>([]);
     const [changedDeviceIds, setChangedDeviceIds] = useState<Set<number>>(new Set());
-    const hasChanges = changedDeviceIds.size > 0 || zones !== initialZones || deletedZoneIds.length > 0;
+    const [savedBaseline, setSavedBaseline] = useState<{ devices: LayoutDevice[]; zones: ZoneBoundary[] }>({ devices: initialDevices, zones: initialZones });
+    const hasChanges = changedDeviceIds.size > 0 || zones !== savedBaseline.zones || deletedZoneIds.length > 0;
 
     // ── Derived ──
     const activeFloorPlan = useMemo(() => floorPlans.find((fp) => fp.id === activeFloorId) ?? null, [floorPlans, activeFloorId]);
@@ -128,14 +133,14 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     }, []);
 
     const handleReset = useCallback(() => {
-        setDevices(initialDevices);
-        setZones(initialZones);
+        setDevices(savedBaseline.devices);
+        setZones(savedBaseline.zones);
         setDeletedZoneIds([]);
         setChangedDeviceIds(new Set());
         setSelectedDeviceId(null);
         setSelectedZoneId(null);
         toast.info(t('Changes reset'), { description: t('All changes have been reverted to the last saved state') });
-    }, [initialDevices, initialZones, t]);
+    }, [savedBaseline, t]);
 
     const handleFloorDelete = useCallback((floorPlanId: number) => {
         router.delete(`/sites/${site.id}/floor-plans/${floorPlanId}`, {
@@ -146,36 +151,47 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     const handleSave = useCallback(() => {
         setSaving(true);
 
-        const devicePositions = [...changedDeviceIds].map((id) => {
+        // Split changed devices into placed (with position) and unplaced (nulled)
+        const devicePositions: { device_id: number; floor_id: number; floor_x: number; floor_y: number; zone: string }[] = [];
+        const unplacedDeviceIds: number[] = [];
+
+        for (const id of changedDeviceIds) {
             const d = devices.find((dev) => dev.id === id);
-            if (!d) return null;
-            return {
-                device_id: d.id,
-                floor_id: d.floor_id,
-                floor_x: d.floor_x,
-                floor_y: d.floor_y,
-                zone: d.zone,
-            };
-        }).filter(Boolean);
+            if (!d) continue;
+            if (d.floor_id != null && d.floor_x != null && d.floor_y != null) {
+                devicePositions.push({
+                    device_id: d.id,
+                    floor_id: d.floor_id,
+                    floor_x: d.floor_x,
+                    floor_y: d.floor_y,
+                    zone: d.zone,
+                });
+            } else {
+                unplacedDeviceIds.push(d.id);
+            }
+        }
 
         const zoneBoundaries = zones.map((z) => ({
             id: z.id > 0 ? z.id : null,
             floor_plan_id: z.floor_plan_id,
             name: z.name,
             color: z.color,
-            x: z.x,
-            y: z.y,
-            width: z.width,
-            height: z.height,
+            x: Math.max(0, Math.min(1, z.x)),
+            y: Math.max(0, Math.min(1, z.y)),
+            width: Math.max(0.01, Math.min(1, z.width)),
+            height: Math.max(0.01, Math.min(1, z.height)),
         }));
 
         router.post(`/sites/${site.id}/layout`, {
             device_positions: devicePositions,
             zone_boundaries: zoneBoundaries,
             deleted_zone_ids: deletedZoneIds,
+            unplaced_device_ids: unplacedDeviceIds,
         }, {
             preserveScroll: true,
             onSuccess: () => {
+                // Update baseline so hasChanges becomes false
+                setSavedBaseline({ devices: [...devices], zones: [...zones] });
                 setChangedDeviceIds(new Set());
                 setDeletedZoneIds([]);
                 toast.success(t('Layout saved'), { description: t('All zone and device changes have been saved') });
@@ -185,7 +201,7 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
             },
             onFinish: () => setSaving(false),
         });
-    }, [site.id, devices, zones, deletedZoneIds, changedDeviceIds]);
+    }, [site.id, devices, zones, deletedZoneIds, changedDeviceIds, t]);
 
     // ── Keyboard Shortcuts ──
     const isEditing = editorMode !== 'view';
@@ -236,7 +252,6 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
                     saving={saving}
                     onSave={handleSave}
                     onReset={handleReset}
-                    onUndo={handleReset}
                     stats={stats}
                 />
 

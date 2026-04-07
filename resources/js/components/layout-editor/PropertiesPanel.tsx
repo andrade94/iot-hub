@@ -196,7 +196,7 @@ export function PropertiesPanel({
                     <div className="h-px bg-border" />
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" className="flex-1 text-[10px]" asChild>
-                            <Link href={`/devices/${selectedDevice.id}`}>{t('View Details')} ↗</Link>
+                            <a href={`/devices/${selectedDevice.id}`} target="_blank" rel="noopener">{t('View Details')} ↗</a>
                         </Button>
                         {editable && selectedDevice.floor_x != null && (
                             <Button variant="outline" size="sm" className="text-[10px] text-rose-600 dark:text-rose-400"

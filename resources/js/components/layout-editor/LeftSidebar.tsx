@@ -12,7 +12,7 @@ import { useLang } from '@/hooks/use-lang';
 import { cn } from '@/lib/utils';
 import type { ZoneBoundary } from '@/types';
 import { isDeviceOnline } from '@/utils/device';
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { ImageIcon, Plus, Search, Unlink, Upload, X } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { FloorPlanWithDevices, LayoutDevice } from './types';
@@ -45,11 +45,14 @@ export function LeftSidebar({
     const unplaced = useMemo(() => devices.filter((d) => d.floor_x == null), [devices]);
     const placed = useMemo(() => devices.filter((d) => d.floor_x != null), [devices]);
 
-    const filteredPlaced = useMemo(() => {
-        if (!deviceSearch.trim()) return placed;
+    const filterBySearch = useCallback((list: LayoutDevice[]) => {
+        if (!deviceSearch.trim()) return list;
         const q = deviceSearch.toLowerCase();
-        return placed.filter((d) => d.name.toLowerCase().includes(q) || d.model.toLowerCase().includes(q));
-    }, [placed, deviceSearch]);
+        return list.filter((d) => d.name.toLowerCase().includes(q) || d.model.toLowerCase().includes(q));
+    }, [deviceSearch]);
+
+    const filteredUnplaced = useMemo(() => filterBySearch(unplaced), [unplaced, filterBySearch]);
+    const filteredPlaced = useMemo(() => filterBySearch(placed), [placed, filterBySearch]);
 
     const zonesOnFloor = useMemo(() =>
         zoneBoundaries.filter((z) => z.floor_plan_id === activeFloorId),
@@ -80,12 +83,12 @@ export function LeftSidebar({
                         </div>
                     </div>
                     <ScrollArea className="flex-1 p-2">
-                        {unplaced.length > 0 && (
+                        {filteredUnplaced.length > 0 && (
                             <>
                                 <p className="mb-1.5 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">
-                                    {t('Unplaced')} ({unplaced.length})
+                                    {t('Unplaced')} ({filteredUnplaced.length})
                                 </p>
-                                {unplaced.map((d) => (
+                                {filteredUnplaced.map((d) => (
                                     <DeviceCard key={d.id} device={d} selected={selectedDeviceId === d.id}
                                         onClick={() => onDevicePlace(d.id)} unplaced />
                                 ))}
@@ -198,24 +201,19 @@ function FloorCard({ floorPlan, isActive, siteId, onClick, onDelete }: {
 
     function handleRename() {
         if (!editName.trim() || editName === floorPlan.name) { setEditing(false); return; }
-        fetch(`/sites/${siteId}/floor-plans/${floorPlan.id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ _method: 'PUT', name: editName.trim() }),
-        }).then(() => { setEditing(false); window.location.reload(); });
+        router.put(`/sites/${siteId}/floor-plans/${floorPlan.id}`, { name: editName.trim() }, {
+            preserveScroll: true,
+            onSuccess: () => setEditing(false),
+        });
     }
 
     function handleReplaceImage(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
         if (!file) return;
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('_method', 'PUT');
-        fetch(`/sites/${siteId}/floor-plans/${floorPlan.id}`, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        }).then(() => window.location.reload());
+        router.post(`/sites/${siteId}/floor-plans/${floorPlan.id}`, { _method: 'PUT', image: file }, {
+            preserveScroll: true,
+            forceFormData: true,
+        });
     }
 
     return (
