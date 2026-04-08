@@ -59,6 +59,83 @@ class RecipeSeeder extends Seeder
                     ['metric' => 'humidity', 'condition' => 'above', 'threshold' => 60, 'duration_minutes' => 30, 'severity' => 'medium'],
                 ],
             ],
+            [
+                'module_id' => $coldChain->id,
+                'sensor_model' => 'EM300-TH',
+                'name' => 'Meat Refrigerator',
+                'description' => 'Meat cold storage per COFEPRIS/FDA (0-4°C)',
+                'default_rules' => [
+                    ['metric' => 'temperature', 'condition' => 'above', 'threshold' => 4, 'duration_minutes' => 10, 'severity' => 'critical'],
+                    ['metric' => 'temperature', 'condition' => 'below', 'threshold' => -2, 'duration_minutes' => 10, 'severity' => 'high'],
+                    ['metric' => 'humidity', 'condition' => 'above', 'threshold' => 90, 'duration_minutes' => 30, 'severity' => 'medium'],
+                ],
+            ],
+            [
+                'module_id' => $coldChain->id,
+                'sensor_model' => 'EM300-TH',
+                'name' => 'Dairy Refrigerator',
+                'description' => 'Dairy products cold storage (2-4°C)',
+                'default_rules' => [
+                    ['metric' => 'temperature', 'condition' => 'above', 'threshold' => 4, 'duration_minutes' => 10, 'severity' => 'critical'],
+                    ['metric' => 'temperature', 'condition' => 'below', 'threshold' => 0, 'duration_minutes' => 10, 'severity' => 'high'],
+                ],
+            ],
+            [
+                'module_id' => $coldChain->id,
+                'sensor_model' => 'EM300-TH',
+                'name' => 'Produce Refrigerator',
+                'description' => 'Fruits and vegetables storage (7-10°C)',
+                'default_rules' => [
+                    ['metric' => 'temperature', 'condition' => 'above', 'threshold' => 10, 'duration_minutes' => 15, 'severity' => 'high'],
+                    ['metric' => 'temperature', 'condition' => 'below', 'threshold' => 2, 'duration_minutes' => 15, 'severity' => 'medium'],
+                    ['metric' => 'humidity', 'condition' => 'above', 'threshold' => 95, 'duration_minutes' => 30, 'severity' => 'low'],
+                ],
+            ],
+            [
+                'module_id' => $coldChain->id,
+                'sensor_model' => 'EM300-TH',
+                'name' => 'Pharmacy Refrigerator',
+                'description' => 'Vaccine and medicine storage per NOM-059 (2-8°C)',
+                'default_rules' => [
+                    ['metric' => 'temperature', 'condition' => 'above', 'threshold' => 8, 'duration_minutes' => 5, 'severity' => 'critical'],
+                    ['metric' => 'temperature', 'condition' => 'below', 'threshold' => 2, 'duration_minutes' => 5, 'severity' => 'critical'],
+                    ['metric' => 'humidity', 'condition' => 'above', 'threshold' => 80, 'duration_minutes' => 15, 'severity' => 'high'],
+                ],
+            ],
+            [
+                'module_id' => $coldChain->id,
+                'sensor_model' => 'EM300-TH',
+                'name' => 'Kitchen / Prep Area',
+                'description' => 'Food preparation area (15-21°C)',
+                'default_rules' => [
+                    ['metric' => 'temperature', 'condition' => 'above', 'threshold' => 25, 'duration_minutes' => 30, 'severity' => 'medium'],
+                    ['metric' => 'humidity', 'condition' => 'above', 'threshold' => 80, 'duration_minutes' => 30, 'severity' => 'low'],
+                ],
+            ],
+            [
+                'module_id' => $coldChain->id,
+                'sensor_model' => 'EM300-TH',
+                'name' => 'Warehouse',
+                'description' => 'General warehouse ambient monitoring (10-30°C)',
+                'default_rules' => [
+                    ['metric' => 'temperature', 'condition' => 'above', 'threshold' => 35, 'duration_minutes' => 30, 'severity' => 'medium'],
+                    ['metric' => 'humidity', 'condition' => 'above', 'threshold' => 70, 'duration_minutes' => 60, 'severity' => 'low'],
+                ],
+            ],
+
+            // IAQ — additional
+            [
+                'module_id' => $iaq->id,
+                'sensor_model' => 'AM307',
+                'name' => 'Server Room',
+                'description' => 'IT equipment room (18-27°C, humidity 40-60%)',
+                'default_rules' => [
+                    ['metric' => 'temperature', 'condition' => 'above', 'threshold' => 27, 'duration_minutes' => 5, 'severity' => 'critical'],
+                    ['metric' => 'temperature', 'condition' => 'below', 'threshold' => 18, 'duration_minutes' => 10, 'severity' => 'high'],
+                    ['metric' => 'humidity', 'condition' => 'above', 'threshold' => 60, 'duration_minutes' => 15, 'severity' => 'high'],
+                    ['metric' => 'humidity', 'condition' => 'below', 'threshold' => 40, 'duration_minutes' => 15, 'severity' => 'medium'],
+                ],
+            ],
 
             // Energy recipes
             [
@@ -164,6 +241,6 @@ class RecipeSeeder extends Seeder
             );
         }
 
-        $this->command->info('Created 14 default recipes');
+        $this->command->info('Created ' . Recipe::count() . ' default recipes');
     }
 }
