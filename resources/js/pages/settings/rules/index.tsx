@@ -6,6 +6,7 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -32,6 +33,9 @@ export default function AlertRuleIndex({ site, rules }: Props) {
     const [deleteRule, setDeleteRule] = useState<AlertRule | null>(null);
     const [search, setSearch] = useState('');
     const [severityFilter, setSeverityFilter] = useState('all');
+    const [sortBy, setSortBy] = useState<'name' | 'severity' | 'cooldown'>('name');
+
+    const severityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
 
     const filtered = useMemo(() => {
         let result = rules;
@@ -40,8 +44,13 @@ export default function AlertRuleIndex({ site, rules }: Props) {
             const q = search.toLowerCase();
             result = result.filter((r) => r.name.toLowerCase().includes(q) || r.conditions.some((c) => c.metric.toLowerCase().includes(q)));
         }
+        result = [...result].sort((a, b) => {
+            if (sortBy === 'severity') return (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9);
+            if (sortBy === 'cooldown') return a.cooldown_minutes - b.cooldown_minutes;
+            return a.name.localeCompare(b.name);
+        });
         return result;
-    }, [rules, search, severityFilter]);
+    }, [rules, search, severityFilter, sortBy]);
 
     const activeCount = rules.filter((r) => r.active).length;
 
@@ -80,12 +89,10 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                         </div>
                         <Can permission="manage alert rules">
                             <div className="flex gap-2">
-                                {rules.length === 0 && (
-                                    <Button variant="outline" size="sm" className="text-[11px]"
-                                        onClick={() => router.post(`/sites/${site.id}/rules/generate`, {}, { preserveScroll: true })}>
-                                        {t('Generate from Recipes')}
-                                    </Button>
-                                )}
+                                <Button variant="outline" size="sm" className="text-[11px]"
+                                    onClick={() => router.post(`/sites/${site.id}/rules/generate`, {}, { preserveScroll: true })}>
+                                    {t('Generate from Recipes')}
+                                </Button>
                                 <Button size="sm" className="text-[11px]" asChild>
                                     <Link href={`/sites/${site.id}/rules/create`}>
                                         <Plus className="mr-1.5 h-3.5 w-3.5" />{t('New Rule')}
@@ -114,6 +121,16 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                                     </button>
                                 ))}
                             </div>
+                            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                                <SelectTrigger className="h-8 w-auto min-w-[110px] text-[11px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="name">{t('Sort: Name')}</SelectItem>
+                                    <SelectItem value="severity">{t('Sort: Severity')}</SelectItem>
+                                    <SelectItem value="cooldown">{t('Sort: Cooldown')}</SelectItem>
+                                </SelectContent>
+                            </Select>
                             <span className="font-mono text-[10px] text-muted-foreground/60">{filtered.length}/{rules.length}</span>
                         </div>
                     </FadeIn>
