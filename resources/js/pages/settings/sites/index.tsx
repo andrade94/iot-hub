@@ -11,23 +11,24 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
-import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
 import { useValidatedForm } from '@/hooks/use-validated-form';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
+import type { BreadcrumbItem } from '@/types';
 import { TimeInput } from '@/components/ui/time-input';
 import { formatTimeAgo } from '@/utils/date';
 import { siteSchema } from '@/utils/schemas';
-import { Head, router } from '@inertiajs/react';
-import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import { FileSpreadsheet, MapPin, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface SiteRecord {
     id: number;
     name: string;
     address: string | null;
-    latitude: number | null;
-    longitude: number | null;
-    status: 'draft' | 'active' | 'suspended';
+    lat: number | null;
+    lng: number | null;
+    status: 'draft' | 'active' | 'suspended' | 'onboarding';
     timezone: string | null;
     opening_hour: string | null;
     device_count: number;
@@ -47,24 +48,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Sites', href: '#' },
 ];
 
-const statusBadgeVariant: Record<string, 'success' | 'outline' | 'warning'> = {
+const statusBadgeVariant: Record<string, 'success' | 'outline' | 'warning' | 'info'> = {
     active: 'success',
     draft: 'outline',
+    onboarding: 'info',
     suspended: 'warning',
 };
 
-/* ── Section Divider ──────────────────────────────── */
-
-function SectionDivider({ label }: { label: string }) {
-    return (
-        <div className="flex items-center gap-3">
-            <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
-                {label}
-            </span>
-            <div className="h-px flex-1 bg-border" />
-        </div>
-    );
-}
 
 export default function SitesIndex({ sites, timezones, allOrgsMode = false }: Props) {
     const { t } = useLang();
@@ -72,6 +62,18 @@ export default function SitesIndex({ sites, timezones, allOrgsMode = false }: Pr
     const [editSite, setEditSite] = useState<SiteRecord | null>(null);
     const [deleteSite, setDeleteSite] = useState<SiteRecord | null>(null);
     const [deleting, setDeleting] = useState(false);
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+
+    const filtered = useMemo(() => {
+        let result = sites;
+        if (statusFilter !== 'all') result = result.filter((s) => s.status === statusFilter);
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            result = result.filter((s) => s.name.toLowerCase().includes(q) || (s.address ?? '').toLowerCase().includes(q));
+        }
+        return result;
+    }, [sites, search, statusFilter]);
 
     function handleDelete() {
         if (!deleteSite) return;
@@ -85,51 +87,66 @@ export default function SitesIndex({ sites, timezones, allOrgsMode = false }: Pr
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Sites')} />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-                {/* ── Header ──────────────────────────────── */}
+            <div className="obsidian flex h-full flex-1 flex-col bg-background p-5 md:p-8">
+                {/* ━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
                 <FadeIn direction="down" duration={400}>
-                    <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
-                        <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
-                        <div className="relative flex items-center justify-between p-6 md:p-8">
-                            <div>
-                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
-                                    {t('Site Management')}
-                                </p>
-                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
-                                    {t('Sites')}
-                                </h1>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    <span className="font-mono tabular-nums font-medium text-foreground">{sites.length}</span>{' '}
-                                    {t('site(s) configured')}
-                                </p>
-                            </div>
-                            <Can permission="manage sites">
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h1 className="font-display text-[28px] font-bold tracking-tight text-foreground md:text-[32px]">
+                                {t('Site Management')}
+                            </h1>
+                            <p className="mt-1 text-[13px] text-muted-foreground">
+                                <span className="font-mono tabular-nums font-medium text-foreground">{sites.length}</span>{' '}
+                                {t('site(s) configured')}
+                            </p>
+                        </div>
+                        <Can permission="manage sites">
+                            <div className="flex gap-2">
+                                <Button variant="outline" size="sm" className="text-[11px]" asChild>
+                                    <Link href="/settings/sites/batch-import">
+                                        <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />{t('Batch Import')}
+                                    </Link>
+                                </Button>
                                 <Dialog open={showCreate} onOpenChange={setShowCreate}>
                                     <DialogTrigger asChild>
-                                        <Button><Plus className="mr-2 h-4 w-4" />{t('Create Site')}</Button>
+                                        <Button size="sm" className="text-[11px]"><Plus className="mr-1.5 h-3.5 w-3.5" />{t('Create Site')}</Button>
                                     </DialogTrigger>
                                     <DialogContent className="max-w-lg">
                                         <DialogHeader>
                                             <DialogTitle>{t('Create Site')}</DialogTitle>
                                         </DialogHeader>
-                                        <SiteForm
-                                            timezones={timezones}
-                                            onSuccess={() => setShowCreate(false)}
-                                        />
+                                        <SiteForm timezones={timezones} onSuccess={() => setShowCreate(false)} />
                                     </DialogContent>
                                 </Dialog>
-                            </Can>
-                        </div>
+                            </div>
+                        </Can>
                     </div>
                 </FadeIn>
 
-                {/* ── Table Section ────────────────────────── */}
-                <FadeIn delay={75} duration={400}>
-                    <SectionDivider label={t('All Sites')} />
+                {/* ━━ FILTERS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                <FadeIn delay={50} duration={400}>
+                    <div className="mt-6 flex flex-wrap items-center gap-2">
+                        <div className="relative flex-1 min-w-[200px]">
+                            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+                            <Input value={search} onChange={(e) => setSearch(e.target.value)}
+                                placeholder={t('Search sites...')} className="h-8 pl-9 text-[12px]" />
+                        </div>
+                        <div className="flex overflow-hidden rounded-md border border-border">
+                            {['all', 'active', 'draft', 'onboarding', 'suspended'].map((s) => (
+                                <button key={s} onClick={() => setStatusFilter(s)}
+                                    className={cn('px-3 py-1.5 font-mono text-[10px] font-medium transition-colors border-r border-border last:border-r-0',
+                                        statusFilter === s ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/30')}>
+                                    {s === 'all' ? t('All') : <span className="capitalize">{s}</span>}
+                                </button>
+                            ))}
+                        </div>
+                        <span className="font-mono text-[10px] text-muted-foreground/60">{filtered.length}/{sites.length}</span>
+                    </div>
                 </FadeIn>
 
-                <FadeIn delay={150} duration={400}>
-                    <Card className="shadow-elevation-1">
+                {/* ━━ TABLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                <FadeIn delay={100} duration={400}>
+                    <Card className="mt-4 border-border shadow-none overflow-hidden">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -137,7 +154,6 @@ export default function SitesIndex({ sites, timezones, allOrgsMode = false }: Pr
                                     {allOrgsMode && <TableHead>{t('Organization')}</TableHead>}
                                     <TableHead>{t('Status')}</TableHead>
                                     <TableHead>{t('Timezone')}</TableHead>
-                                    <TableHead>{t('Opening Hour')}</TableHead>
                                     <TableHead>{t('Devices')}</TableHead>
                                     <TableHead>{t('Gateways')}</TableHead>
                                     <TableHead>{t('Created')}</TableHead>
@@ -145,40 +161,43 @@ export default function SitesIndex({ sites, timezones, allOrgsMode = false }: Pr
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {sites.length === 0 ? (
+                                {filtered.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={allOrgsMode ? 9 : 8} className="py-12 text-center">
+                                        <TableCell colSpan={allOrgsMode ? 8 : 7} className="py-12 text-center">
                                             <div className="flex flex-col items-center gap-2">
-                                                <MapPin className="h-8 w-8 text-muted-foreground/50" />
-                                                <p className="text-sm text-muted-foreground">{t('No sites configured')}</p>
+                                                <MapPin className="h-6 w-6 text-muted-foreground/30" />
+                                                <p className="text-[13px] text-muted-foreground">{search ? t('No sites match your search') : t('No sites configured')}</p>
                                             </div>
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    sites.map((site) => (
-                                        <TableRow key={site.id}>
-                                            <TableCell className="font-medium">{site.name}</TableCell>
+                                    filtered.map((site) => (
+                                        <TableRow key={site.id} className="group">
+                                            <TableCell>
+                                                <Link href={`/sites/${site.id}`} className="font-medium text-foreground hover:text-primary transition-colors">
+                                                    {site.name}
+                                                </Link>
+                                                {site.address && <p className="truncate text-[10px] text-muted-foreground/60 max-w-[200px]">{site.address}</p>}
+                                            </TableCell>
                                             {allOrgsMode && (
-                                                <TableCell className="text-muted-foreground">{site.organization_name ?? '-'}</TableCell>
+                                                <TableCell className="text-[12px] text-muted-foreground">{site.organization_name ?? '-'}</TableCell>
                                             )}
                                             <TableCell>
-                                                <Badge variant={statusBadgeVariant[site.status] ?? 'outline'}>
+                                                <Badge variant={statusBadgeVariant[site.status] ?? 'outline'} className="text-[9px] capitalize">
                                                     {site.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground">{site.timezone ?? '-'}</TableCell>
-                                            <TableCell className="font-mono tabular-nums text-muted-foreground">{site.opening_hour ?? '-'}</TableCell>
-                                            <TableCell className="font-mono tabular-nums text-muted-foreground">{site.device_count}</TableCell>
-                                            <TableCell className="font-mono tabular-nums text-muted-foreground">{site.gateway_count}</TableCell>
-                                            <TableCell className="font-mono tabular-nums text-muted-foreground">
-                                                {formatTimeAgo(site.created_at)}
-                                            </TableCell>
+                                            <TableCell className="font-mono text-[11px] text-muted-foreground">{site.timezone ?? '-'}</TableCell>
+                                            <TableCell className="font-mono text-[11px] tabular-nums text-muted-foreground">{site.device_count}</TableCell>
+                                            <TableCell className="font-mono text-[11px] tabular-nums text-muted-foreground">{site.gateway_count}</TableCell>
+                                            <TableCell className="font-mono text-[10px] tabular-nums text-muted-foreground">{formatTimeAgo(site.created_at)}</TableCell>
                                             <TableCell>
                                                 <Can permission="manage sites">
-                                                    <div className="flex gap-1">
-                                                        {site.status === 'onboarding' && (
-                                                            <Button variant="outline" size="sm" onClick={() => router.get(`/sites/${site.id}/onboard`)}>
-                                                                {t('Onboard')}
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {(site.status === 'onboarding' || site.status === 'draft') && (
+                                                            <Button variant="outline" size="sm" className="h-7 text-[10px]"
+                                                                onClick={() => router.get(`/sites/${site.id}/onboard`)}>
+                                                                {t('Setup')}
                                                             </Button>
                                                         )}
                                                         <Dialog open={editSite?.id === site.id} onOpenChange={(open) => !open && setEditSite(null)}>
@@ -191,19 +210,10 @@ export default function SitesIndex({ sites, timezones, allOrgsMode = false }: Pr
                                                                 <DialogHeader>
                                                                     <DialogTitle>{t('Edit Site')}</DialogTitle>
                                                                 </DialogHeader>
-                                                                <SiteForm
-                                                                    site={site}
-                                                                    timezones={timezones}
-                                                                    onSuccess={() => setEditSite(null)}
-                                                                />
+                                                                <SiteForm site={site} timezones={timezones} onSuccess={() => setEditSite(null)} />
                                                             </DialogContent>
                                                         </Dialog>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon-sm"
-                                                            className="text-destructive"
-                                                            onClick={() => setDeleteSite(site)}
-                                                        >
+                                                        <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleteSite(site)}>
                                                             <Trash2 className="h-3.5 w-3.5" />
                                                         </Button>
                                                     </div>
@@ -247,8 +257,8 @@ function SiteForm({
     const form = useValidatedForm(siteSchema, {
         name: site?.name ?? '',
         address: site?.address ?? '',
-        latitude: site?.latitude ?? '',
-        longitude: site?.longitude ?? '',
+        lat: site?.lat ?? '',
+        lng: site?.lng ?? '',
         timezone: site?.timezone ?? '',
         opening_hour: site?.opening_hour ?? '',
         status: site?.status ?? 'draft',
@@ -292,12 +302,12 @@ function SiteForm({
                         step="any"
                         min={-90}
                         max={90}
-                        value={form.data.latitude}
-                        onChange={(e) => form.setData('latitude', e.target.value)}
+                        value={form.data.lat}
+                        onChange={(e) => form.setData('lat', e.target.value)}
                         placeholder="-90 to 90"
                         className="font-mono tabular-nums"
                     />
-                    <InputError message={form.errors.latitude} />
+                    <InputError message={form.errors.lat} />
                 </div>
                 <div className="grid gap-2">
                     <Label>{t('Longitude')}</Label>
@@ -306,12 +316,12 @@ function SiteForm({
                         step="any"
                         min={-180}
                         max={180}
-                        value={form.data.longitude}
-                        onChange={(e) => form.setData('longitude', e.target.value)}
+                        value={form.data.lng}
+                        onChange={(e) => form.setData('lng', e.target.value)}
                         placeholder="-180 to 180"
                         className="font-mono tabular-nums"
                     />
-                    <InputError message={form.errors.longitude} />
+                    <InputError message={form.errors.lng} />
                 </div>
             </div>
 

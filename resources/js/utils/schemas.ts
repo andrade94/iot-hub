@@ -14,9 +14,9 @@ import { z } from 'zod';
 export const siteSchema = z.object({
     name: z.string().min(1, 'Required').max(255),
     address: z.string().max(500).optional(),
-    latitude: z.union([z.literal(''), z.coerce.number().min(-90).max(90)]).optional(),
-    longitude: z.union([z.literal(''), z.coerce.number().min(-180).max(180)]).optional(),
-    timezone: z.string().min(1, 'Required'),
+    lat: z.union([z.literal(''), z.coerce.number().min(-90).max(90)]).optional(),
+    lng: z.union([z.literal(''), z.coerce.number().min(-180).max(180)]).optional(),
+    timezone: z.string().optional(),
     opening_hour: z.string().optional(),
     status: z.string().optional(),
 });

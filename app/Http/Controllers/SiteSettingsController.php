@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Organization;
 use App\Models\Site;
 use App\Models\SiteTemplate;
+use App\Services\Sites\SiteTemplateService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,6 +27,8 @@ class SiteSettingsController extends Controller
                     'id' => $site->id,
                     'name' => $site->name,
                     'address' => $site->address,
+                    'lat' => $site->lat,
+                    'lng' => $site->lng,
                     'status' => $site->status,
                     'timezone' => $site->timezone,
                     'opening_hour' => $site->opening_hour?->format('H:i'),
@@ -43,6 +46,8 @@ class SiteSettingsController extends Controller
                     'id' => $site->id,
                     'name' => $site->name,
                     'address' => $site->address,
+                    'lat' => $site->lat,
+                    'lng' => $site->lng,
                     'status' => $site->status,
                     'timezone' => $site->timezone,
                     'opening_hour' => $site->opening_hour?->format('H:i'),
@@ -72,8 +77,8 @@ class SiteSettingsController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'timezone' => 'nullable|string|timezone',
             'opening_hour' => 'nullable|date_format:H:i',
             'status' => 'required|string|in:draft,active,suspended',
@@ -93,8 +98,8 @@ class SiteSettingsController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'timezone' => 'nullable|string|timezone',
             'opening_hour' => 'nullable|date_format:H:i',
             'status' => 'required|string|in:draft,active,suspended',
@@ -144,14 +149,27 @@ class SiteSettingsController extends Controller
 
         $created = 0;
 
+        $templateService = app(SiteTemplateService::class);
+
         foreach ($request->input('sites') as $siteData) {
-            Site::create([
+            $site = Site::create([
                 'org_id' => $org->id,
                 'name' => $siteData['name'],
                 'address' => $siteData['address'] ?? null,
                 'timezone' => $siteData['timezone'] ?? null,
                 'status' => 'draft',
             ]);
+
+            // Apply template if specified
+            if (! empty($siteData['template_name'])) {
+                $template = SiteTemplate::where('org_id', $org->id)
+                    ->where('name', $siteData['template_name'])
+                    ->first();
+                if ($template) {
+                    $templateService->applyToSite($site, $template);
+                }
+            }
+
             $created++;
         }
 
