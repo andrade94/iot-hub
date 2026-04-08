@@ -1,306 +1,236 @@
 import { Can } from '@/components/Can';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FadeIn } from '@/components/ui/fade-in';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import type { AlertRule, BreadcrumbItem, Site } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    Bell,
-    Plus,
-    Settings2,
-    ShieldAlert,
-    Trash2,
-} from 'lucide-react';
-import { useState } from 'react';
+import { Pencil, Plus, Search, Settings2, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface Props {
     site: Site;
     rules: AlertRule[];
 }
 
+const severityVariant: Record<string, 'destructive' | 'warning' | 'info' | 'outline'> = {
+    critical: 'destructive',
+    high: 'warning',
+    medium: 'info',
+    low: 'outline',
+};
+
 export default function AlertRuleIndex({ site, rules }: Props) {
     const { t } = useLang();
     const [deleteRule, setDeleteRule] = useState<AlertRule | null>(null);
+    const [search, setSearch] = useState('');
+    const [severityFilter, setSeverityFilter] = useState('all');
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Sites', href: '/settings/sites' },
-        { title: site.name, href: `/sites/${site.id}` },
-        { title: 'Alert Rules', href: '#' },
-    ];
+    const filtered = useMemo(() => {
+        let result = rules;
+        if (severityFilter !== 'all') result = result.filter((r) => r.severity === severityFilter);
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            result = result.filter((r) => r.name.toLowerCase().includes(q) || r.conditions.some((c) => c.metric.toLowerCase().includes(q)));
+        }
+        return result;
+    }, [rules, search, severityFilter]);
 
     const activeCount = rules.filter((r) => r.active).length;
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: '/dashboard' },
+        { title: site.name, href: `/sites/${site.id}` },
+        { title: t('Alert Rules'), href: '#' },
+    ];
+
+    function toggleActive(rule: AlertRule) {
+        router.put(`/sites/${site.id}/rules/${rule.id}`, { active: !rule.active }, { preserveScroll: true });
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${t('Alert Rules')} — ${site.name}`} />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-                {/* ── Header card with bg-dots ── */}
-                <FadeIn>
-                    <Card className="shadow-elevation-1 overflow-hidden">
-                        <div className="bg-dots relative border-b px-6 py-5">
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                                        {t('Alert Rules')}
-                                    </p>
-                                    <h1 className="font-display mt-1 text-2xl font-bold tracking-tight">
-                                        {site.name}
-                                    </h1>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        <span className="font-mono tabular-nums">{rules.length}</span>{' '}
-                                        {t('rule(s)')},{' '}
-                                        <span className="font-mono tabular-nums">{activeCount}</span>{' '}
-                                        {t('active')}
-                                    </p>
-                                </div>
-                                <Can permission="manage alert rules">
-                                    <Button asChild>
-                                        <Link href={`/sites/${site.id}/rules/create`}>
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            {t('New Rule')}
-                                        </Link>
-                                    </Button>
-                                </Can>
-                            </div>
+            <div className="obsidian flex h-full flex-1 flex-col bg-background p-5 md:p-8">
+                {/* ━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                <FadeIn direction="down" duration={400}>
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <button onClick={() => router.get(`/sites/${site.id}?tab=setup`)}
+                                className="mb-2 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
+                                ← {site.name}
+                            </button>
+                            <h1 className="font-display text-[28px] font-bold tracking-tight text-foreground md:text-[32px]">
+                                {t('Alert Rules')}
+                            </h1>
+                            <p className="mt-1 text-[13px] text-muted-foreground">
+                                <span className="font-mono tabular-nums font-medium text-foreground">{rules.length}</span>{' '}
+                                {t('rules')} · <span className="text-emerald-600 dark:text-emerald-400">{activeCount} {t('active')}</span>
+                                {rules.length - activeCount > 0 && (
+                                    <> · <span className="text-muted-foreground">{rules.length - activeCount} {t('inactive')}</span></>
+                                )}
+                            </p>
                         </div>
-                    </Card>
+                        <Can permission="manage alert rules">
+                            <Button size="sm" className="text-[11px]" asChild>
+                                <Link href={`/sites/${site.id}/rules/create`}>
+                                    <Plus className="mr-1.5 h-3.5 w-3.5" />{t('New Rule')}
+                                </Link>
+                            </Button>
+                        </Can>
+                    </div>
                 </FadeIn>
 
-                {/* ── Rules list ── */}
-                {rules.length === 0 ? (
-                    <FadeIn delay={100}>
-                        <EmptyState
-                            icon={<Settings2 className="h-6 w-6 text-muted-foreground" />}
-                            title={t('No alert rules configured')}
-                            description={t(
-                                'Create rules to automatically detect and alert on sensor anomalies',
-                            )}
-                            action={
-                                <Can permission="manage alert rules">
-                                    <Button asChild>
-                                        <Link href={`/sites/${site.id}/rules/create`}>
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            {t('Create First Rule')}
-                                        </Link>
-                                    </Button>
-                                </Can>
-                            }
-                        />
-                    </FadeIn>
-                ) : (
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {rules.map((rule, idx) => (
-                            <FadeIn key={rule.id} delay={80 + idx * 60}>
-                                <RuleCard
-                                    rule={rule}
-                                    siteId={site.id}
-                                    onDelete={setDeleteRule}
-                                />
-                            </FadeIn>
-                        ))}
-                    </div>
-                )}
-
-                <ConfirmationDialog
-                    open={!!deleteRule}
-                    onOpenChange={(open) => !open && setDeleteRule(null)}
-                    title={t('Delete Alert Rule')}
-                    description={`Delete "${deleteRule?.name}"? This cannot be undone.`}
-                    warningMessage={t(
-                        'Active alerts using this rule will not be affected, but no new alerts will be created.',
-                    )}
-                    onConfirm={() => {
-                        if (deleteRule) {
-                            router.delete(`/sites/${site.id}/rules/${deleteRule.id}`, {
-                                preserveScroll: true,
-                                onSuccess: () => setDeleteRule(null),
-                            });
-                        }
-                    }}
-                    actionLabel={t('Delete')}
-                />
-            </div>
-        </AppLayout>
-    );
-}
-
-/* ── Rule Card ───────────────────────────────────── */
-
-function RuleCard({
-    rule,
-    siteId,
-    onDelete,
-}: {
-    rule: AlertRule;
-    siteId: number;
-    onDelete: (rule: AlertRule) => void;
-}) {
-    const { t } = useLang();
-
-    function toggleActive() {
-        router.put(
-            `/sites/${siteId}/rules/${rule.id}`,
-            { active: !rule.active },
-            { preserveScroll: true },
-        );
-    }
-
-    const severityIcons: Record<string, typeof ShieldAlert> = {
-        critical: ShieldAlert,
-        high: AlertTriangle,
-        medium: Bell,
-        low: Bell,
-    };
-    const Icon = severityIcons[rule.severity] ?? Bell;
-
-    return (
-        <Card
-            className={`shadow-elevation-1 transition-opacity ${!rule.active ? 'opacity-60' : ''}`}
-        >
-            <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4" />
-                        <CardTitle className="text-sm">{rule.name}</CardTitle>
-                    </div>
-                    <Can permission="manage alert rules">
-                        <Switch checked={rule.active} onCheckedChange={toggleActive} />
-                    </Can>
-                </div>
-                <CardDescription className="flex items-center gap-2">
-                    <SeverityBadge severity={rule.severity} />
-                    <Badge variant="outline" className="text-xs">
-                        {rule.type}
-                    </Badge>
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                {/* Conditions preview */}
-                <div className="space-y-1.5">
-                    {rule.conditions.slice(0, 3).map((cond, idx) => (
-                        <div
-                            key={idx}
-                            className="flex items-center gap-2 rounded bg-muted/50 px-2 py-1 text-xs"
-                        >
-                            <span className="font-mono font-medium">{cond.metric}</span>
-                            <span className="text-muted-foreground">{cond.condition}</span>
-                            <span className="font-mono font-medium tabular-nums">
-                                {cond.threshold}
-                            </span>
-                            {cond.duration_minutes > 0 && (
-                                <span className="font-mono tabular-nums text-muted-foreground">
-                                    for {cond.duration_minutes}m
-                                </span>
-                            )}
-                        </div>
-                    ))}
-                    {rule.conditions.length > 3 && (
-                        <p className="text-xs text-muted-foreground">
-                            +<span className="font-mono tabular-nums">{rule.conditions.length - 3}</span>{' '}
-                            {t('more')}
-                        </p>
-                    )}
-                </div>
-
-                {rule.device && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                        {t('Device')}: {rule.device.name}
-                    </p>
-                )}
-
-                <p className="mt-2 text-xs text-muted-foreground">
-                    {t('Cooldown')}:{' '}
-                    <span className="font-mono tabular-nums">{rule.cooldown_minutes}</span>m
-                </p>
-
-                {/* Actions */}
-                <Can permission="manage alert rules">
-                    <div className="mt-3 flex justify-end gap-1">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.get(`/sites/${siteId}/rules/${rule.id}`)}
-                        >
-                            {t('Edit')}
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-destructive"
-                            onClick={() => onDelete(rule)}
-                        >
-                            <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                    </div>
-                </Can>
-            </CardContent>
-        </Card>
-    );
-}
-
-/* ── Sub-components ──────────────────────────────── */
-
-export function AlertRulesIndexSkeleton() {
-    return (
-        <div className="flex flex-col gap-6 p-4 md:p-6">
-            {/* Header */}
-            <div className="rounded-xl border overflow-hidden">
-                <div className="border-b px-6 py-5">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <Skeleton className="h-3 w-20" />
-                            <Skeleton className="mt-2 h-7 w-36" />
-                            <Skeleton className="mt-2 h-4 w-28" />
-                        </div>
-                        <Skeleton className="h-9 w-28" />
-                    </div>
-                </div>
-            </div>
-            {/* Rules Grid */}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="rounded-xl border p-4 space-y-3">
-                        <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-2">
-                                <Skeleton className="h-4 w-4" />
-                                <Skeleton className="h-4 w-28" />
+                {/* ━━ FILTERS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                {rules.length > 0 && (
+                    <FadeIn delay={50} duration={400}>
+                        <div className="mt-6 flex flex-wrap items-center gap-2">
+                            <div className="relative flex-1 min-w-[200px]">
+                                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+                                <Input value={search} onChange={(e) => setSearch(e.target.value)}
+                                    placeholder={t('Search rules...')} className="h-8 pl-9 text-[12px]" />
                             </div>
-                            <Skeleton className="h-5 w-9 rounded-full" />
+                            <div className="flex overflow-hidden rounded-md border border-border">
+                                {['all', 'critical', 'high', 'medium', 'low'].map((s) => (
+                                    <button key={s} onClick={() => setSeverityFilter(s)}
+                                        className={cn('px-3 py-1.5 font-mono text-[10px] font-medium transition-colors border-r border-border last:border-r-0',
+                                            severityFilter === s ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/30')}>
+                                        {s === 'all' ? t('All') : <span className="capitalize">{s}</span>}
+                                    </button>
+                                ))}
+                            </div>
+                            <span className="font-mono text-[10px] text-muted-foreground/60">{filtered.length}/{rules.length}</span>
                         </div>
-                        <div className="flex gap-2">
-                            <Skeleton className="h-5 w-16 rounded-full" />
-                            <Skeleton className="h-5 w-14 rounded-full" />
-                        </div>
-                        <div className="space-y-1.5">
-                            {Array.from({ length: 2 }).map((_, j) => (
-                                <Skeleton key={j} className="h-6 w-full rounded" />
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
+                    </FadeIn>
+                )}
 
-function SeverityBadge({ severity }: { severity: string }) {
-    const variants: Record<string, 'destructive' | 'warning' | 'info' | 'outline'> = {
-        critical: 'destructive',
-        high: 'warning',
-        medium: 'info',
-        low: 'outline',
-    };
-    return (
-        <Badge variant={variants[severity] ?? 'outline'} className="text-xs">
-            {severity}
-        </Badge>
+                {/* ━━ TABLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+                <FadeIn delay={100} duration={400}>
+                    {rules.length === 0 ? (
+                        <div className="mt-6">
+                            <EmptyState
+                                icon={<Settings2 className="h-5 w-5 text-muted-foreground" />}
+                                title={t('No alert rules configured')}
+                                description={t('Create rules to automatically detect and alert on sensor anomalies')}
+                                action={
+                                    <Can permission="manage alert rules">
+                                        <Button size="sm" asChild>
+                                            <Link href={`/sites/${site.id}/rules/create`}>
+                                                <Plus className="mr-1.5 h-3.5 w-3.5" />{t('Create First Rule')}
+                                            </Link>
+                                        </Button>
+                                    </Can>
+                                }
+                            />
+                        </div>
+                    ) : (
+                        <Card className="mt-4 border-border shadow-none overflow-hidden">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-border/30">
+                                        <th className="text-left px-4 py-2.5 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('Rule')}</th>
+                                        <th className="text-left px-3 py-2.5 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('Severity')}</th>
+                                        <th className="text-left px-3 py-2.5 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('Conditions')}</th>
+                                        <th className="text-left px-3 py-2.5 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('Scope')}</th>
+                                        <th className="text-left px-3 py-2.5 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('Cooldown')}</th>
+                                        <th className="text-center px-3 py-2.5 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('Active')}</th>
+                                        <th className="w-[80px]"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={7} className="py-12 text-center">
+                                                <p className="text-[13px] text-muted-foreground">{t('No rules match your search')}</p>
+                                            </td>
+                                        </tr>
+                                    ) : filtered.map((rule) => (
+                                        <tr key={rule.id} className="group border-b border-border/20 cursor-pointer transition-colors hover:bg-accent/30"
+                                            onClick={() => router.get(`/sites/${site.id}/rules/${rule.id}`)}>
+                                            <td className="px-4 py-3.5">
+                                                <div className="flex items-center gap-3">
+                                                    <span className={cn('h-2 w-2 shrink-0 rounded-full',
+                                                        rule.severity === 'critical' ? 'bg-rose-500' :
+                                                        rule.severity === 'high' ? 'bg-orange-500' :
+                                                        rule.severity === 'medium' ? 'bg-amber-400' : 'bg-blue-400')} />
+                                                    <div className={cn(!rule.active && 'opacity-50')}>
+                                                        <p className="text-[13px] font-medium">{rule.name}</p>
+                                                        <p className="font-mono text-[9px] text-muted-foreground/60">
+                                                            {rule.conditions[0]?.metric} {rule.conditions[0]?.condition} {rule.conditions[0]?.threshold}
+                                                            {rule.conditions.length > 1 && ` +${rule.conditions.length - 1}`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3.5">
+                                                <Badge variant={severityVariant[rule.severity] ?? 'outline'} className="text-[9px] capitalize">{rule.severity}</Badge>
+                                            </td>
+                                            <td className="px-3 py-3.5">
+                                                {rule.conditions.slice(0, 2).map((c, i) => (
+                                                    <span key={i} className="mr-1">
+                                                        <span className="font-mono text-[11px]">{c.metric}</span>{' '}
+                                                        <span className="text-[10px] text-muted-foreground">{c.condition} {c.threshold}</span>
+                                                        {i < Math.min(rule.conditions.length, 2) - 1 && <span className="mx-1 text-[9px] text-primary/60">AND</span>}
+                                                    </span>
+                                                ))}
+                                            </td>
+                                            <td className="px-3 py-3.5 text-[12px] text-muted-foreground">
+                                                {rule.device ? rule.device.name : t('All devices')}
+                                            </td>
+                                            <td className="px-3 py-3.5">
+                                                <span className="font-mono text-[11px] text-muted-foreground">{rule.cooldown_minutes}m</span>
+                                            </td>
+                                            <td className="px-3 py-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                                                <Can permission="manage alert rules">
+                                                    <Switch checked={rule.active} onCheckedChange={() => toggleActive(rule)} />
+                                                </Can>
+                                            </td>
+                                            <td className="px-3 py-3.5" onClick={(e) => e.stopPropagation()}>
+                                                <Can permission="manage alert rules">
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button variant="ghost" size="icon-sm"
+                                                            onClick={() => router.get(`/sites/${site.id}/rules/${rule.id}/edit`)}>
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon-sm" className="text-destructive"
+                                                            onClick={() => setDeleteRule(rule)}>
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </Can>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </Card>
+                    )}
+                </FadeIn>
+            </div>
+
+            <ConfirmationDialog
+                open={!!deleteRule}
+                onOpenChange={(open) => !open && setDeleteRule(null)}
+                title={t('Delete Alert Rule')}
+                description={`${t('Delete')} "${deleteRule?.name}"?`}
+                warningMessage={t('Active alerts using this rule will not be affected, but no new alerts will be created.')}
+                onConfirm={() => {
+                    if (deleteRule) {
+                        router.delete(`/sites/${site.id}/rules/${deleteRule.id}`, {
+                            preserveScroll: true,
+                            onSuccess: () => setDeleteRule(null),
+                        });
+                    }
+                }}
+                actionLabel={t('Delete')}
+            />
+        </AppLayout>
     );
 }
