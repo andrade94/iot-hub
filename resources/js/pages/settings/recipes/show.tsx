@@ -484,7 +484,7 @@ function RecipeEditDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+            <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
                 <DialogHeader>
                     <DialogTitle>{t('Edit Recipe')}</DialogTitle>
                     <DialogDescription>
