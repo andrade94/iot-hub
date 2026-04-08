@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AlertRule;
+use App\Models\Device;
 use App\Models\Module;
 use App\Models\Recipe;
 use App\Models\Site;
@@ -14,6 +16,8 @@ class RecipeController extends Controller
     public function index(Request $request)
     {
         $recipes = Recipe::with('module')
+            ->withCount('devices')
+            ->withCount('overrides')
             ->orderBy('module_id')
             ->orderBy('name')
             ->get();
@@ -33,10 +37,52 @@ class RecipeController extends Controller
         $user = $request->user();
         $sites = $user->accessibleSites()->map(fn ($s) => ['id' => $s->id, 'name' => $s->name]);
 
+        // Devices using this recipe (with site info)
+        $devices = Device::where('recipe_id', $recipe->id)
+            ->with('site:id,name')
+            ->select('id', 'name', 'model', 'zone', 'site_id', 'last_reading_at', 'status')
+            ->get();
+
+        // Alert rules sync status per site
+        $sitesWithDevices = $devices->groupBy('site_id');
+        $syncStatus = [];
+
+        foreach ($sitesWithDevices as $siteId => $siteDevices) {
+            $site = $siteDevices->first()->site;
+            $rulesFromRecipe = AlertRule::where('site_id', $siteId)
+                ->where('recipe_id', $recipe->id)
+                ->get();
+
+            $outdatedCount = 0;
+            foreach ($rulesFromRecipe as $rule) {
+                // Compare rule conditions against recipe defaults
+                $cond = $rule->conditions[0] ?? null;
+                if (! $cond) continue;
+                $matchingDefault = collect($recipe->default_rules)->first(fn ($dr) =>
+                    $dr['metric'] === $cond['metric'] && $dr['condition'] === $cond['condition']
+                );
+                if ($matchingDefault && (float) $matchingDefault['threshold'] !== (float) $cond['threshold']) {
+                    $outdatedCount++;
+                }
+            }
+
+            $syncStatus[] = [
+                'site_id' => $siteId,
+                'site_name' => $site->name,
+                'rule_count' => $rulesFromRecipe->count(),
+                'outdated_count' => $outdatedCount,
+                'status' => $rulesFromRecipe->count() === 0
+                    ? 'not_generated'
+                    : ($outdatedCount > 0 ? 'outdated' : 'synced'),
+            ];
+        }
+
         return Inertia::render('settings/recipes/show', [
             'recipe' => $recipe,
             'sites' => $sites,
             'overrides' => $recipe->overrides,
+            'devices' => $devices,
+            'syncStatus' => $syncStatus,
         ]);
     }
 
@@ -88,31 +134,98 @@ class RecipeController extends Controller
 
     public function destroy(Request $request, Recipe $recipe)
     {
-        // Block deletion if sites have overrides referencing this recipe
-        if ($recipe->overrides()->exists()) {
-            return back()->with('error', 'Cannot delete recipe — sites have overrides referencing it. Remove overrides first.');
-        }
+        $deviceCount = Device::where('recipe_id', $recipe->id)->count();
+
+        // Clear recipe_id from devices (don't delete the devices)
+        Device::where('recipe_id', $recipe->id)->update(['recipe_id' => null]);
+
+        // Delete overrides
+        $recipe->overrides()->delete();
 
         $recipe->delete();
 
-        return redirect()->route('recipes.index')->with('success', 'Recipe deleted successfully.');
+        return redirect()->route('recipes.index')->with('success', "Recipe deleted. {$deviceCount} device(s) unlinked.");
     }
 
     public function storeOverride(Request $request, Recipe $recipe)
     {
         $validated = $request->validate([
             'site_id' => 'required|exists:sites,id',
-            'overrides' => 'required|array',
-            'overrides.*.metric' => 'required|string',
-            'overrides.*.threshold' => 'required|numeric',
-            'overrides.*.duration_minutes' => 'required|integer|min:0',
+            'rules' => 'required|array',
+            'rules.*.metric' => 'required|string',
+            'rules.*.condition' => 'required|string|in:above,below,equals',
+            'rules.*.threshold' => 'required|numeric',
+            'rules.*.duration_minutes' => 'required|integer|min:0',
+            'rules.*.severity' => 'required|string|in:low,medium,high,critical',
         ]);
 
         SiteRecipeOverride::updateOrCreate(
             ['site_id' => $validated['site_id'], 'recipe_id' => $recipe->id],
-            ['overrides' => $validated['overrides']],
+            [
+                'overridden_rules' => $validated['rules'],
+                'overridden_by' => $request->user()->id,
+            ],
         );
 
         return back()->with('success', 'Recipe overrides saved.');
+    }
+
+    public function destroyOverride(Request $request, Recipe $recipe, SiteRecipeOverride $override)
+    {
+        $override->delete();
+
+        return back()->with('success', 'Override removed. Site will use default recipe thresholds.');
+    }
+
+    public function syncRules(Request $request, Recipe $recipe, Site $site)
+    {
+        $rules = AlertRule::where('site_id', $site->id)
+            ->where('recipe_id', $recipe->id)
+            ->get();
+
+        $updated = 0;
+        foreach ($rules as $rule) {
+            $cond = $rule->conditions[0] ?? null;
+            if (! $cond) continue;
+
+            // Find matching default rule
+            $matchingDefault = collect($recipe->default_rules)->first(fn ($dr) =>
+                $dr['metric'] === $cond['metric'] && $dr['condition'] === $cond['condition']
+            );
+
+            if ($matchingDefault) {
+                // Apply override if exists for this site
+                $override = SiteRecipeOverride::where('site_id', $site->id)
+                    ->where('recipe_id', $recipe->id)
+                    ->first();
+
+                $threshold = $matchingDefault['threshold'];
+                $duration = $matchingDefault['duration_minutes'] ?? 0;
+
+                if ($override) {
+                    $overrideRule = collect($override->overridden_rules)->first(fn ($or) =>
+                        $or['metric'] === $cond['metric'] && $or['condition'] === $cond['condition']
+                    );
+                    if ($overrideRule) {
+                        $threshold = $overrideRule['threshold'];
+                        $duration = $overrideRule['duration_minutes'] ?? $duration;
+                    }
+                }
+
+                $rule->update([
+                    'conditions' => [[
+                        ...$cond,
+                        'threshold' => $threshold,
+                        'duration_minutes' => $duration,
+                        'severity' => $matchingDefault['severity'] ?? $cond['severity'],
+                    ]],
+                    'severity' => $matchingDefault['severity'] ?? $rule->severity,
+                ]);
+
+                $updated++;
+            }
+        }
+
+        return back()->with('success', "{$updated} alert rule(s) synced with recipe defaults.");
     }
 }

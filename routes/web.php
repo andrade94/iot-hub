@@ -448,8 +448,10 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::delete('{escalationChain}', [EscalationChainController::class, 'destroy'])->name('destroy');
     });
 
-    // Recipe Overrides
+    // Recipe Overrides & Sync
     Route::post('recipes/{recipe}/overrides', [RecipeController::class, 'storeOverride'])->name('recipes.overrides.store');
+    Route::delete('recipes/{recipe}/overrides/{override}', [RecipeController::class, 'destroyOverride'])->name('recipes.overrides.destroy');
+    Route::post('recipes/{recipe}/sync/{site}', [RecipeController::class, 'syncRules'])->name('recipes.sync');
 
     // Organization Catalog (super_admin)
     // Organization catalog — super_admin only (list, lifecycle, notes)
