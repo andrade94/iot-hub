@@ -28,10 +28,31 @@ import { useCallback, useState } from 'react';
 
 /* ── Types ────────────────────────────────────────────────────────── */
 
+interface SyncStatusItem {
+    site_id: number;
+    site_name: string;
+    rule_count: number;
+    outdated_count: number;
+    status: 'synced' | 'outdated' | 'not_generated';
+}
+
+interface DeviceItem {
+    id: number;
+    name: string;
+    model: string;
+    zone: string | null;
+    site_id: number;
+    last_reading_at: string | null;
+    status: string;
+    site?: { id: number; name: string };
+}
+
 interface Props {
     recipe: Recipe;
     sites: Pick<Site, 'id' | 'name'>[];
     overrides: SiteRecipeOverride[];
+    devices?: DeviceItem[];
+    syncStatus?: SyncStatusItem[];
 }
 
 interface ConditionRow {
@@ -52,7 +73,7 @@ const EMPTY_CONDITION: ConditionRow = {
 
 /* ── Main Component ───────────────────────────────────────────────── */
 
-export default function RecipeShow({ recipe, sites, overrides }: Props) {
+export default function RecipeShow({ recipe, sites, overrides, devices = [], syncStatus = [] }: Props) {
     const { t } = useLang();
     const { auth } = usePage<{ auth: { roles: string[] } }>().props;
     const isSuperAdmin = auth.roles?.includes('super_admin');
@@ -227,6 +248,82 @@ export default function RecipeShow({ recipe, sites, overrides }: Props) {
                         )}
                     </div>
 
+                    {/* ── DEVICES USING THIS RECIPE ────────────────── */}
+                    {devices.length > 0 && (
+                        <FadeIn delay={120} duration={400}>
+                            <div className="mb-3 flex items-center gap-3">
+                                <div className="h-px flex-1 bg-border" />
+                                <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/70">{t('DEVICES')}</span>
+                                <div className="h-px flex-1 bg-border" />
+                                <span className="font-mono text-[10px] text-muted-foreground/50">{devices.length}</span>
+                            </div>
+                            <Card className="border-border shadow-none overflow-hidden">
+                                <div className="divide-y divide-border/20">
+                                    {devices.slice(0, 5).map((d) => (
+                                        <div key={d.id} className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-accent/30"
+                                            onClick={() => router.get(`/devices/${d.id}`)}>
+                                            <span className={`h-[7px] w-[7px] shrink-0 rounded-full ${d.last_reading_at && new Date(d.last_reading_at) > new Date(Date.now() - 15 * 60000) ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-[12px] font-medium">{d.name}</p>
+                                                <p className="font-mono text-[9px] text-muted-foreground/60">{d.site?.name}{d.zone ? ` · ${d.zone}` : ''}</p>
+                                            </div>
+                                            <span className="font-mono text-[10px] text-muted-foreground">{d.model}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                {devices.length > 5 && (
+                                    <div className="border-t border-border/20 px-4 py-2 text-center">
+                                        <span className="text-[11px] text-muted-foreground">+{devices.length - 5} {t('more devices')}</span>
+                                    </div>
+                                )}
+                            </Card>
+                        </FadeIn>
+                    )}
+
+                    {/* ── ALERT RULES SYNC STATUS ─────────────────── */}
+                    {syncStatus.length > 0 && (
+                        <FadeIn delay={150} duration={400}>
+                            <div className="mb-3 mt-6 flex items-center gap-3">
+                                <div className="h-px flex-1 bg-border" />
+                                <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/70">{t('ALERT RULES STATUS')}</span>
+                                <div className="h-px flex-1 bg-border" />
+                            </div>
+                            <div className="space-y-2">
+                                {syncStatus.map((s) => (
+                                    <Card key={s.site_id} className={`border-border shadow-none ${s.status === 'outdated' ? 'border-amber-200/30 dark:border-amber-800/20' : ''}`}>
+                                        <div className="flex items-center gap-3 px-4 py-3">
+                                            <span className={`h-2 w-2 shrink-0 rounded-full ${
+                                                s.status === 'synced' ? 'bg-emerald-500' :
+                                                s.status === 'outdated' ? 'bg-amber-400' : 'bg-muted-foreground/30'
+                                            }`} />
+                                            <div className="min-w-0 flex-1">
+                                                <span className="text-[12px] font-medium">{s.site_name}</span>
+                                                <span className="ml-2 font-mono text-[9px] text-muted-foreground/60">
+                                                    {s.rule_count} {t('rules')}
+                                                    {s.status === 'outdated' && ` · ${s.outdated_count} ${t('outdated')}`}
+                                                    {s.status === 'not_generated' && ` · ${t('not generated')}`}
+                                                </span>
+                                            </div>
+                                            {s.status === 'synced' && <Badge variant="success" className="text-[8px]">{t('synced')}</Badge>}
+                                            {s.status === 'outdated' && (
+                                                <Button variant="outline" size="sm" className="h-7 text-[10px] text-amber-600 dark:text-amber-400 border-amber-200/40 dark:border-amber-800/40"
+                                                    onClick={() => router.post(`/recipes/${recipe.id}/sync/${s.site_id}`, {}, { preserveScroll: true })}>
+                                                    {t('Sync')}
+                                                </Button>
+                                            )}
+                                            {s.status === 'not_generated' && (
+                                                <Button variant="outline" size="sm" className="h-7 text-[10px]"
+                                                    onClick={() => router.post(`/sites/${s.site_id}/rules/generate`, {}, { preserveScroll: true })}>
+                                                    {t('Generate')}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        </FadeIn>
+                    )}
+
                     {/* ── DETAILS sidebar ─────────────────────────── */}
                     <FadeIn delay={150} duration={500}>
                         <div className="space-y-6">
@@ -246,6 +343,7 @@ export default function RecipeShow({ recipe, sites, overrides }: Props) {
                                         { label: t('Sensor Model'), value: <span className="font-mono tabular-nums">{recipe.sensor_model}</span> },
                                         { label: t('Editable'), value: recipe.editable ? t('Yes') : t('No') },
                                         { label: t('Default Rules'), value: <span className="font-mono tabular-nums">{recipe.default_rules.length}</span> },
+                                        { label: t('Devices'), value: <span className="font-mono tabular-nums font-semibold">{devices.length}</span> },
                                         { label: t('Overrides'), value: <span className="font-mono tabular-nums">{overrides.length}</span> },
                                         { label: t('Created'), value: <span className="font-mono tabular-nums">{new Date(recipe.created_at).toLocaleDateString()}</span> },
                                     ]}

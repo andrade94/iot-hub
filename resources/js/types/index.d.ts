@@ -180,6 +180,8 @@ export interface Recipe {
     created_at: string;
     updated_at: string;
     module?: Module;
+    devices_count?: number;
+    overrides_count?: number;
 }
 
 export interface AlertRuleCondition {

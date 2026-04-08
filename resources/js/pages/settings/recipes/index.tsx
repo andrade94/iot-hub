@@ -214,6 +214,24 @@ export default function RecipeIndex({ recipes, modules }: Props) {
             ),
         },
         {
+            id: 'devices_count',
+            header: t('Devices'),
+            cell: ({ row }) => (
+                <span className={`font-mono tabular-nums text-xs ${(row.original.devices_count ?? 0) > 0 ? 'font-semibold' : 'text-muted-foreground'}`}>
+                    {row.original.devices_count ?? 0}
+                </span>
+            ),
+        },
+        {
+            id: 'overrides_count',
+            header: t('Overrides'),
+            cell: ({ row }) => (
+                <span className="font-mono tabular-nums text-xs text-muted-foreground">
+                    {row.original.overrides_count ?? 0}
+                </span>
+            ),
+        },
+        {
             accessorKey: 'description',
             header: t('Description'),
             cell: ({ row }) => (
