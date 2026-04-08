@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger,
@@ -90,6 +91,7 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
     const isViewer = auth.roles.includes('client_site_viewer');
     const canManage = auth.permissions?.includes('manage devices') || auth.roles.includes('super_admin') || auth.roles.includes('client_org_admin') || auth.roles.includes('client_site_manager');
     const [showEdit, setShowEdit] = useState(false);
+    const [showSuspend, setShowSuspend] = useState(false);
     const [woAlertId, setWoAlertId] = useState<number | null>(null);
     const woAlert = woAlertId ? activeAlerts.find((a) => a.id === woAlertId) : null;
 
@@ -243,7 +245,7 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                         <DropdownMenuItem onClick={() => router.get(`/sites/${site.id}/modules`)}>
                                             <Cpu className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />{t('Modules')}
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => router.get(`/sites/${site.id}/users`)}>
+                                        <DropdownMenuItem onClick={() => router.get('/settings/users')}>
                                             <Users className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />{t('Manage Users')}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => router.get(`/settings/maintenance-windows`)}>
@@ -734,7 +736,7 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                     href={`/sites/${site.id}/modules`} description={t('Active capabilities')} />
                                 <ConfigLink icon={Wrench} label={t('Maintenance Windows')} count={configCounts?.maintenance_windows}
                                     href="/settings/maintenance-windows" description={t('Alert suppression')} />
-                                <ConfigLink icon={Users} label={t('Users')} href={`/sites/${site.id}/users`}
+                                <ConfigLink icon={Users} label={t('Users')} href="/settings/users"
                                     description={t('Access management')} />
                             </div>
                         </FadeIn>
@@ -803,14 +805,43 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                     <div className="rounded-lg border border-rose-200/60 bg-rose-50/30 p-4 dark:border-rose-800/30 dark:bg-rose-950/10">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <p className="text-[13px] font-medium text-rose-700 dark:text-rose-400">{t('Suspend Site')}</p>
-                                                <p className="text-[11px] text-rose-600/70 dark:text-rose-400/70">{t('Disable monitoring and alert notifications for this site')}</p>
+                                                <p className="text-[13px] font-medium text-rose-700 dark:text-rose-400">
+                                                    {site.status === 'suspended' ? t('Reactivate Site') : t('Suspend Site')}
+                                                </p>
+                                                <p className="text-[11px] text-rose-600/70 dark:text-rose-400/70">
+                                                    {site.status === 'suspended'
+                                                        ? t('Resume monitoring and alert notifications for this site')
+                                                        : t('Disable monitoring and alert notifications for this site')}
+                                                </p>
                                             </div>
-                                            <Button variant="outline" size="sm" className="text-[11px] text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40 hover:bg-rose-50 dark:hover:bg-rose-950/30">
-                                                <ShieldAlert className="mr-1 h-3 w-3" />{t('Suspend')}
+                                            <Button variant="outline" size="sm"
+                                                className="text-[11px] text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                                onClick={() => setShowSuspend(true)}>
+                                                <ShieldAlert className="mr-1 h-3 w-3" />
+                                                {site.status === 'suspended' ? t('Reactivate') : t('Suspend')}
                                             </Button>
                                         </div>
                                     </div>
+                                    <ConfirmationDialog
+                                        open={showSuspend}
+                                        onOpenChange={setShowSuspend}
+                                        title={site.status === 'suspended' ? t('Reactivate Site') : t('Suspend Site')}
+                                        description={site.status === 'suspended'
+                                            ? t('Are you sure you want to reactivate this site?')
+                                            : t('Are you sure you want to suspend this site?')}
+                                        itemName={site.name}
+                                        warningMessage={site.status === 'suspended'
+                                            ? t('The site will return to active monitoring.')
+                                            : t('Monitoring will continue but users will see a suspension warning.')}
+                                        onConfirm={() => {
+                                            router.put(`/settings/sites/${site.id}`, {
+                                                name: site.name,
+                                                status: site.status === 'suspended' ? 'active' : 'suspended',
+                                            }, { preserveScroll: true });
+                                            setShowSuspend(false);
+                                        }}
+                                        actionLabel={site.status === 'suspended' ? t('Reactivate') : t('Suspend')}
+                                    />
                                 </FadeIn>
                             </>
                         )}
