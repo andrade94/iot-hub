@@ -79,11 +79,19 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                             </p>
                         </div>
                         <Can permission="manage alert rules">
-                            <Button size="sm" className="text-[11px]" asChild>
-                                <Link href={`/sites/${site.id}/rules/create`}>
-                                    <Plus className="mr-1.5 h-3.5 w-3.5" />{t('New Rule')}
-                                </Link>
-                            </Button>
+                            <div className="flex gap-2">
+                                {rules.length === 0 && (
+                                    <Button variant="outline" size="sm" className="text-[11px]"
+                                        onClick={() => router.post(`/sites/${site.id}/rules/generate`, {}, { preserveScroll: true })}>
+                                        {t('Generate from Recipes')}
+                                    </Button>
+                                )}
+                                <Button size="sm" className="text-[11px]" asChild>
+                                    <Link href={`/sites/${site.id}/rules/create`}>
+                                        <Plus className="mr-1.5 h-3.5 w-3.5" />{t('New Rule')}
+                                    </Link>
+                                </Button>
+                            </div>
                         </Can>
                     </div>
                 </FadeIn>
@@ -121,11 +129,17 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                                 description={t('Create rules to automatically detect and alert on sensor anomalies')}
                                 action={
                                     <Can permission="manage alert rules">
-                                        <Button size="sm" asChild>
-                                            <Link href={`/sites/${site.id}/rules/create`}>
-                                                <Plus className="mr-1.5 h-3.5 w-3.5" />{t('Create First Rule')}
-                                            </Link>
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button variant="outline" size="sm" className="text-[11px]"
+                                                onClick={() => router.post(`/sites/${site.id}/rules/generate`, {}, { preserveScroll: true })}>
+                                                {t('Generate from Recipes')}
+                                            </Button>
+                                            <Button size="sm" asChild>
+                                                <Link href={`/sites/${site.id}/rules/create`}>
+                                                    <Plus className="mr-1.5 h-3.5 w-3.5" />{t('Create First Rule')}
+                                                </Link>
+                                            </Button>
+                                        </div>
                                     </Can>
                                 }
                             />
