@@ -40,7 +40,7 @@ class AlertRuleSeeder extends Seeder
                 ->toArray();
 
             foreach ($recipe->default_rules as $defaultRule) {
-                $ruleName = $recipe->name.' — '.ucfirst($defaultRule['metric']).' '.ucfirst($defaultRule['condition']);
+                $ruleName = $recipe->name.' — '.ucfirst($defaultRule['metric']).' '.ucfirst($defaultRule['condition']).' '.$defaultRule['threshold'];
 
                 if (in_array(strtolower($ruleName), $existingNames)) {
                     continue; // Skip if already exists
