@@ -140,6 +140,13 @@ class AlertRuleController extends Controller
         return back()->with('success', 'Alert rule deleted.');
     }
 
+    public function previewGenerateFromRecipes(Request $request, Site $site)
+    {
+        $preview = \Database\Seeders\AlertRuleSeeder::previewForSite($site);
+
+        return response()->json($preview);
+    }
+
     public function generateFromRecipes(Request $request, Site $site)
     {
         $created = \Database\Seeders\AlertRuleSeeder::generateRulesForSite($site);

@@ -339,6 +339,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::get('sites/{site}/rules', [AlertRuleController::class, 'index'])->name('rules.index');
         Route::get('sites/{site}/rules/create', [AlertRuleController::class, 'create'])->name('rules.create');
         Route::post('sites/{site}/rules', [AlertRuleController::class, 'store'])->name('rules.store');
+        Route::get('sites/{site}/rules/generate/preview', [AlertRuleController::class, 'previewGenerateFromRecipes'])->name('rules.generate.preview');
         Route::post('sites/{site}/rules/generate', [AlertRuleController::class, 'generateFromRecipes'])->name('rules.generate');
         Route::get('sites/{site}/rules/{rule}', [AlertRuleController::class, 'show'])->name('rules.show');
         Route::get('sites/{site}/rules/{rule}/edit', [AlertRuleController::class, 'edit'])->name('rules.edit');

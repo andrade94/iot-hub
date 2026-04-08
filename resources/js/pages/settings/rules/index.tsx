@@ -3,9 +3,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useLang } from '@/hooks/use-lang';
@@ -13,8 +15,8 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { AlertRule, BreadcrumbItem, Site } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Pencil, Plus, Search, Settings2, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Check, Pencil, Plus, Search, Settings2, Sparkles, Trash2 } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 
 interface Props {
     site: Site;
@@ -28,12 +30,46 @@ const severityVariant: Record<string, 'destructive' | 'warning' | 'info' | 'outl
     low: 'outline',
 };
 
+interface PreviewRule {
+    name: string;
+    recipe: string;
+    severity: string;
+    metric: string;
+    condition: string;
+    threshold: number;
+    duration_minutes: number;
+    exists: boolean;
+}
+
 export default function AlertRuleIndex({ site, rules }: Props) {
     const { t } = useLang();
     const [deleteRule, setDeleteRule] = useState<AlertRule | null>(null);
     const [search, setSearch] = useState('');
     const [severityFilter, setSeverityFilter] = useState('all');
     const [sortBy, setSortBy] = useState<'name' | 'severity' | 'cooldown'>('name');
+    const [showGenerate, setShowGenerate] = useState(false);
+    const [previewRules, setPreviewRules] = useState<PreviewRule[]>([]);
+    const [loadingPreview, setLoadingPreview] = useState(false);
+    const [generating, setGenerating] = useState(false);
+
+    const openGenerateDialog = useCallback(() => {
+        setLoadingPreview(true);
+        setShowGenerate(true);
+        fetch(`/sites/${site.id}/rules/generate/preview`, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        })
+            .then((r) => r.json())
+            .then((data) => setPreviewRules(data))
+            .finally(() => setLoadingPreview(false));
+    }, [site.id]);
+
+    const handleGenerate = useCallback(() => {
+        setGenerating(true);
+        router.post(`/sites/${site.id}/rules/generate`, {}, {
+            preserveScroll: true,
+            onFinish: () => { setGenerating(false); setShowGenerate(false); },
+        });
+    }, [site.id]);
 
     const severityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
 
@@ -90,7 +126,7 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                         <Can permission="manage alert rules">
                             <div className="flex gap-2">
                                 <Button variant="outline" size="sm" className="text-[11px]"
-                                    onClick={() => router.post(`/sites/${site.id}/rules/generate`, {}, { preserveScroll: true })}>
+                                    onClick={openGenerateDialog}>
                                     {t('Generate from Recipes')}
                                 </Button>
                                 <Button size="sm" className="text-[11px]" asChild>
@@ -148,7 +184,7 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                                     <Can permission="manage alert rules">
                                         <div className="flex gap-2">
                                             <Button variant="outline" size="sm" className="text-[11px]"
-                                                onClick={() => router.post(`/sites/${site.id}/rules/generate`, {}, { preserveScroll: true })}>
+                                                onClick={openGenerateDialog}>
                                                 {t('Generate from Recipes')}
                                             </Button>
                                             <Button size="sm" asChild>
@@ -262,6 +298,96 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                 }}
                 actionLabel={t('Delete')}
             />
+
+            {/* Generate from Recipes Dialog */}
+            <Dialog open={showGenerate} onOpenChange={setShowGenerate}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-primary" />
+                            {t('Generate from Recipes')}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t('Preview the alert rules that will be created based on your device recipes')}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {loadingPreview ? (
+                        <div className="flex items-center justify-center py-12">
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        </div>
+                    ) : previewRules.length === 0 ? (
+                        <div className="flex flex-col items-center gap-2 py-12 text-center">
+                            <Settings2 className="h-6 w-6 text-muted-foreground/30" />
+                            <p className="text-[13px] text-muted-foreground">{t('No recipes found for devices at this site')}</p>
+                            <p className="text-[11px] text-muted-foreground/60">{t('Assign recipes to devices during onboarding to enable this feature')}</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 px-4 py-2.5">
+                                <span className="font-mono text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                    {previewRules.filter((r) => !r.exists).length}
+                                </span>
+                                <span className="text-[12px] text-muted-foreground">{t('new rules will be created')}</span>
+                                {previewRules.some((r) => r.exists) && (
+                                    <>
+                                        <span className="text-border">·</span>
+                                        <span className="font-mono text-[11px] text-muted-foreground/60">
+                                            {previewRules.filter((r) => r.exists).length}
+                                        </span>
+                                        <span className="text-[12px] text-muted-foreground/60">{t('already exist')}</span>
+                                    </>
+                                )}
+                            </div>
+
+                            <ScrollArea className="max-h-[400px]">
+                                <div className="space-y-1">
+                                    {previewRules.map((rule, i) => (
+                                        <div key={i} className={cn(
+                                            'flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors',
+                                            rule.exists ? 'opacity-40' : 'bg-card',
+                                        )}>
+                                            {rule.exists ? (
+                                                <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                                            ) : (
+                                                <span className={cn('h-2 w-2 shrink-0 rounded-full',
+                                                    rule.severity === 'critical' ? 'bg-rose-500' :
+                                                    rule.severity === 'high' ? 'bg-orange-500' :
+                                                    rule.severity === 'medium' ? 'bg-amber-400' : 'bg-blue-400')} />
+                                            )}
+                                            <div className="min-w-0 flex-1">
+                                                <p className={cn('text-[12px] font-medium', rule.exists && 'line-through')}>
+                                                    {rule.name}
+                                                </p>
+                                                <p className="font-mono text-[9px] text-muted-foreground/60">
+                                                    {rule.metric} {rule.condition} {rule.threshold}
+                                                    {rule.duration_minutes > 0 && ` · ${rule.duration_minutes}min`}
+                                                </p>
+                                            </div>
+                                            <Badge variant={severityVariant[rule.severity] ?? 'outline'} className="text-[8px] capitalize shrink-0">
+                                                {rule.severity}
+                                            </Badge>
+                                            <span className="text-[9px] text-muted-foreground/50 shrink-0">{rule.recipe}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </>
+                    )}
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowGenerate(false)}>{t('Cancel')}</Button>
+                        <Button onClick={handleGenerate}
+                            disabled={generating || previewRules.filter((r) => !r.exists).length === 0}>
+                            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                            {generating
+                                ? t('Generating...')
+                                : `${t('Generate')} ${previewRules.filter((r) => !r.exists).length} ${t('rules')}`
+                            }
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

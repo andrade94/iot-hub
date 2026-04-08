@@ -92,4 +92,58 @@ class AlertRuleSeeder extends Seeder
 
         return $created;
     }
+
+    /**
+     * Preview what rules would be generated (without creating them).
+     */
+    public static function previewForSite(Site $site): array
+    {
+        $devices = $site->devices()->with('recipe')->whereNotNull('recipe_id')->get();
+        $preview = [];
+
+        $existingNames = AlertRule::where('site_id', $site->id)
+            ->pluck('name')
+            ->map(fn ($n) => strtolower($n))
+            ->toArray();
+
+        $byRecipe = $devices->groupBy('recipe_id');
+
+        foreach ($byRecipe as $recipeId => $recipeDevices) {
+            $recipe = $recipeDevices->first()->recipe;
+            if (! $recipe || empty($recipe->default_rules)) {
+                continue;
+            }
+
+            foreach ($recipe->default_rules as $defaultRule) {
+                $ruleName = $recipe->name.' — '.ucfirst($defaultRule['metric']).' '.ucfirst($defaultRule['condition']).' '.$defaultRule['threshold'];
+                $exists = in_array(strtolower($ruleName), $existingNames);
+
+                $preview[] = [
+                    'name' => $ruleName,
+                    'recipe' => $recipe->name,
+                    'severity' => $defaultRule['severity'] ?? 'medium',
+                    'metric' => $defaultRule['metric'],
+                    'condition' => $defaultRule['condition'],
+                    'threshold' => $defaultRule['threshold'],
+                    'duration_minutes' => $defaultRule['duration_minutes'] ?? 0,
+                    'exists' => $exists,
+                ];
+            }
+        }
+
+        // Battery low
+        $batteryExists = in_array('battery low', $existingNames);
+        $preview[] = [
+            'name' => 'Battery Low',
+            'recipe' => 'System',
+            'severity' => 'low',
+            'metric' => 'battery_pct',
+            'condition' => 'below',
+            'threshold' => 15,
+            'duration_minutes' => 0,
+            'exists' => $batteryExists,
+        ];
+
+        return $preview;
+    }
 }
