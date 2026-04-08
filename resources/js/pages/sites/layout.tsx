@@ -250,7 +250,10 @@ export default function SiteLayout({ site, floorPlans, allDevices: initialDevice
     }, [hasChanges]);
 
     useEffect(() => {
-        return router.on('before', () => {
+        return router.on('before', (event) => {
+            // Allow save/delete requests to this page's endpoints
+            const url = (event as any).detail?.visit?.url?.toString() ?? '';
+            if (url.includes('/layout') || url.includes('/floor-plans')) return;
             if (hasChanges && !confirm(t('You have unsaved layout changes. Leave anyway?'))) {
                 return false;
             }
