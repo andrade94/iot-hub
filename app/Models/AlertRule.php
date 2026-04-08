@@ -17,6 +17,7 @@ class AlertRule extends Model
     protected $fillable = [
         'site_id',
         'device_id',
+        'recipe_id',
         'name',
         'type',
         'conditions',
@@ -41,6 +42,11 @@ class AlertRule extends Model
     public function device(): BelongsTo
     {
         return $this->belongsTo(Device::class);
+    }
+
+    public function recipe(): BelongsTo
+    {
+        return $this->belongsTo(Recipe::class);
     }
 
     public function alerts(): HasMany

@@ -182,6 +182,9 @@ export default function AlertRuleShow({ site, rule, recentAlerts = [], alertsTri
                                     { label: t('Status'), value: <Badge variant={rule.active ? 'success' : 'outline'} className="text-[8px]">{rule.active ? t('Active') : t('Inactive')}</Badge> },
                                     { label: t('Site'), value: site.name },
                                     { label: t('Device'), value: rule.device ? rule.device.name : t('All devices') },
+                                    { label: t('Source'), value: rule.recipe
+                                        ? <Link href={`/recipes/${rule.recipe.id}`} className="text-primary hover:underline">{rule.recipe.name}</Link>
+                                        : <span className="text-muted-foreground">{t('Manual')}</span> },
                                     { label: t('Conditions'), value: <span className="font-mono">{rule.conditions.length}</span> },
                                     { label: t('Alerts triggered'), value: <span className={cn('font-mono font-semibold', alertsTriggeredCount > 0 && 'text-rose-500')}>{alertsTriggeredCount}</span> },
                                     { label: t('Created'), value: <span className="font-mono">{new Date(rule.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span> },

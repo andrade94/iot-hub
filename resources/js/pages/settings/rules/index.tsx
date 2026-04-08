@@ -250,6 +250,9 @@ export default function AlertRuleIndex({ site, rules }: Props) {
                                             </td>
                                             <td className="px-3 py-3.5 text-[12px] text-muted-foreground">
                                                 {rule.device ? rule.device.name : t('All devices')}
+                                                {rule.recipe && (
+                                                    <p className="font-mono text-[8px] text-primary/60 mt-0.5">← {rule.recipe.name}</p>
+                                                )}
                                             </td>
                                             <td className="px-3 py-3.5">
                                                 <span className="font-mono text-[11px] text-muted-foreground">{rule.cooldown_minutes}m</span>

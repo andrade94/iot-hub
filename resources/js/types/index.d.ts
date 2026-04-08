@@ -275,6 +275,7 @@ export interface AlertRule {
     id: number;
     site_id: number;
     device_id: number | null;
+    recipe_id: number | null;
     name: string;
     type: 'simple' | 'correlation' | 'baseline';
     conditions: AlertRuleCondition[];
@@ -284,6 +285,7 @@ export interface AlertRule {
     created_at: string;
     updated_at: string;
     device?: Device;
+    recipe?: Recipe;
 }
 
 export interface Alert {

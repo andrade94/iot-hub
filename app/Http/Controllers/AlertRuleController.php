@@ -12,7 +12,7 @@ class AlertRuleController extends Controller
     public function index(Request $request, Site $site)
     {
         $rules = $site->alertRules()
-            ->with('device')
+            ->with(['device', 'recipe:id,name'])
             ->latest()
             ->get();
 
@@ -92,7 +92,7 @@ class AlertRuleController extends Controller
 
     public function show(Request $request, Site $site, AlertRule $rule)
     {
-        $rule->load('device');
+        $rule->load(['device', 'recipe:id,name']);
 
         // Recent alerts triggered by this rule
         $recentAlerts = $site->alerts()

@@ -48,6 +48,7 @@ class AlertRuleSeeder extends Seeder
 
                 AlertRule::create([
                     'site_id' => $site->id,
+                    'recipe_id' => $recipe->id,
                     'name' => $ruleName,
                     'type' => 'simple',
                     'severity' => $defaultRule['severity'] ?? 'medium',
@@ -121,6 +122,7 @@ class AlertRuleSeeder extends Seeder
                 $preview[] = [
                     'name' => $ruleName,
                     'recipe' => $recipe->name,
+                    'recipe_id' => $recipe->id,
                     'severity' => $defaultRule['severity'] ?? 'medium',
                     'metric' => $defaultRule['metric'],
                     'condition' => $defaultRule['condition'],
