@@ -164,9 +164,17 @@ export interface Module {
     slug: string;
     name: string;
     description: string | null;
+    monthly_fee: string | null;
+    required_sensor_models: string[];
+    report_types: string[];
+    icon: string | null;
+    color: string | null;
+    active: boolean;
+    sort_order: number;
     created_at: string;
     updated_at: string;
     recipes?: Recipe[];
+    sites_count?: number;
 }
 
 export interface Recipe {

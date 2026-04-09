@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Module;
+use App\Models\SensorModel;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -31,8 +32,11 @@ class ModuleCatalogController extends Controller
                 'updated_at' => $module->updated_at->toIso8601String(),
             ]);
 
+        $sensorModels = SensorModel::orderBy('name')->pluck('name');
+
         return Inertia::render('settings/modules/catalog', [
             'modules' => $modules,
+            'sensorModels' => $sensorModels,
         ]);
     }
 

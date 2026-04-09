@@ -45,6 +45,7 @@ interface ModuleRow {
 
 interface Props {
     modules: ModuleRow[];
+    sensorModels?: string[];
 }
 
 /* -- Constants -------------------------------------------------------- */
@@ -189,7 +190,7 @@ function getModuleColumns(
 
 /* -- Main Component --------------------------------------------------- */
 
-export default function ModuleCatalog({ modules }: Props) {
+export default function ModuleCatalog({ modules, sensorModels = [] }: Props) {
     const { t } = useLang();
     const [showCreate, setShowCreate] = useState(false);
     const [editModule, setEditModule] = useState<ModuleRow | null>(null);
@@ -391,11 +392,11 @@ export default function ModuleCatalog({ modules }: Props) {
                                         {t('Create Module')}
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="max-w-lg">
+                                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
                                     <DialogHeader>
                                         <DialogTitle>{t('Create Module')}</DialogTitle>
                                     </DialogHeader>
-                                    <ModuleForm onSuccess={() => setShowCreate(false)} />
+                                    <ModuleForm onSuccess={() => setShowCreate(false)} sensorModels={sensorModels} />
                                 </DialogContent>
                             </Dialog>
                         </div>
@@ -429,11 +430,11 @@ export default function ModuleCatalog({ modules }: Props) {
 
             {/* -- Edit Dialog ------------------------------------------------- */}
             <Dialog open={!!editModule} onOpenChange={(open) => !open && setEditModule(null)}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
                     <DialogHeader>
                         <DialogTitle>{t('Edit Module')}</DialogTitle>
                     </DialogHeader>
-                    {editModule && <ModuleForm module={editModule} onSuccess={() => setEditModule(null)} />}
+                    {editModule && <ModuleForm module={editModule} onSuccess={() => setEditModule(null)} sensorModels={sensorModels} />}
                 </DialogContent>
             </Dialog>
 
@@ -470,7 +471,7 @@ const moduleSchema = z.object({
     sort_order: z.string().optional().or(z.literal('')),
 });
 
-function ModuleForm({ module, onSuccess }: { module?: ModuleRow; onSuccess: () => void }) {
+function ModuleForm({ module, onSuccess, sensorModels = [] }: { module?: ModuleRow; onSuccess: () => void; sensorModels?: string[] }) {
     const { t } = useLang();
     const isEdit = !!module;
 
@@ -620,14 +621,31 @@ function ModuleForm({ module, onSuccess }: { module?: ModuleRow; onSuccess: () =
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="mod-sensors">{t('Required Sensor Models')}</Label>
-                <Input
-                    id="mod-sensors"
-                    value={form.data.required_sensor_models}
-                    onChange={(e) => form.setData('required_sensor_models', e.target.value)}
-                    placeholder={t('e.g. EM300-TH, WS301')}
-                />
-                <p className="text-xs text-muted-foreground">{t('Comma-separated sensor model names')}</p>
+                <Label>{t('Required Sensor Models')}</Label>
+                {sensorModels.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 rounded-md border border-border p-3">
+                        {sensorModels.map((sm) => {
+                            const selected = form.data.required_sensor_models.split(',').map((s: string) => s.trim()).filter(Boolean);
+                            const isChecked = selected.includes(sm);
+                            return (
+                                <label key={sm} className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-[11px] font-mono transition-colors ${isChecked ? 'border-primary bg-primary/5 text-foreground' : 'border-border text-muted-foreground hover:bg-accent/30'}`}>
+                                    <input type="checkbox" className="sr-only" checked={isChecked}
+                                        onChange={() => {
+                                            const next = isChecked ? selected.filter((s: string) => s !== sm) : [...selected, sm];
+                                            form.setData('required_sensor_models', next.join(', '));
+                                        }} />
+                                    <span className={`h-3 w-3 shrink-0 rounded border-2 flex items-center justify-center ${isChecked ? 'border-primary bg-primary' : 'border-muted-foreground/30'}`}>
+                                        {isChecked && <span className="text-[8px] text-primary-foreground font-bold">✓</span>}
+                                    </span>
+                                    {sm}
+                                </label>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <Input value={form.data.required_sensor_models} onChange={(e) => form.setData('required_sensor_models', e.target.value)}
+                        placeholder={t('e.g. EM300-TH, WS301')} />
+                )}
                 <InputError message={form.errors.required_sensor_models} />
             </div>
 
