@@ -600,26 +600,14 @@ function RecipeEditDialog({
                                     <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
                                         <div>
                                             <Label className="text-xs">{t('Metric')}</Label>
-                                            {availableMetrics.length > 0 ? (
-                                                <Select value={cond.metric} onValueChange={(v) => updateCondition(idx, 'metric', v)}>
-                                                    <SelectTrigger className="mt-1"><SelectValue placeholder={t('Select metric')} /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {availableMetrics.map((m) => (
-                                                            <SelectItem key={m} value={m}>
-                                                                <span className="font-mono">{m}</span>
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            ) : (
-                                                <Input
-                                                    className="mt-1"
-                                                    value={cond.metric}
-                                                    onChange={(e) => updateCondition(idx, 'metric', e.target.value)}
-                                                    placeholder="temperature"
-                                                    required
-                                                />
-                                            )}
+                                            <Select value={cond.metric} onValueChange={(v) => updateCondition(idx, 'metric', v)}>
+                                                <SelectTrigger className="mt-1 font-mono text-[11px]"><SelectValue placeholder={t('Select...')} /></SelectTrigger>
+                                                <SelectContent>
+                                                    {availableMetrics.map((m) => (
+                                                        <SelectItem key={m} value={m}><span className="font-mono">{m}</span></SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         <div>
                                             <Label className="text-xs">{t('Condition')}</Label>

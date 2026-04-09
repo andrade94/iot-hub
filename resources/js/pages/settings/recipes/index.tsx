@@ -464,10 +464,15 @@ function RecipeFormDialog({
     const [editable, setEditable] = useState(true);
     const [conditions, setConditions] = useState<ConditionRow[]>([{ ...EMPTY_CONDITION }]);
 
-    // Available metrics based on selected sensor model
+    // Available metrics based on selected sensor model (or all if none selected)
     const availableMetrics = useMemo(() => {
-        const sm = sensorModels.find((s) => s.model === sensorModel);
-        return sm?.supported_metrics ?? [];
+        if (sensorModel) {
+            const sm = sensorModels.find((s) => s.model === sensorModel);
+            if (sm?.supported_metrics?.length) return sm.supported_metrics;
+        }
+        // Fallback: show all unique metrics across all sensor models
+        const all = sensorModels.flatMap((s) => s.supported_metrics ?? []);
+        return [...new Set(all)].sort();
     }, [sensorModel, sensorModels]);
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -698,20 +703,14 @@ function RecipeFormDialog({
                                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_0.8fr_0.8fr_1fr_auto] items-end">
                                         <div>
                                             <Label className="text-[10px] text-muted-foreground/60">{t('Metric')}</Label>
-                                            {availableMetrics.length > 0 ? (
-                                                <Select value={cond.metric} onValueChange={(v) => updateCondition(idx, 'metric', v)}>
-                                                    <SelectTrigger className="mt-1 font-mono text-[11px]"><SelectValue placeholder={t('Select...')} /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {availableMetrics.map((m) => (
-                                                            <SelectItem key={m} value={m}><span className="font-mono">{m}</span></SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            ) : (
-                                                <Input className="mt-1 font-mono text-[11px]" value={cond.metric}
-                                                    onChange={(e) => updateCondition(idx, 'metric', e.target.value)}
-                                                    placeholder="temperature" required />
-                                            )}
+                                            <Select value={cond.metric} onValueChange={(v) => updateCondition(idx, 'metric', v)}>
+                                                <SelectTrigger className="mt-1 font-mono text-[11px]"><SelectValue placeholder={t('Select...')} /></SelectTrigger>
+                                                <SelectContent>
+                                                    {availableMetrics.map((m) => (
+                                                        <SelectItem key={m} value={m}><span className="font-mono">{m}</span></SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                             {errors[`default_rules.${idx}.metric`] && (
                                                 <p className="mt-1 text-[10px] text-destructive">{errors[`default_rules.${idx}.metric`]}</p>
                                             )}
