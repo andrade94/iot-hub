@@ -468,7 +468,6 @@ const moduleSchema = z.object({
     icon: z.string().optional().or(z.literal('')),
     color: z.string().optional().or(z.literal('')),
     active: z.boolean(),
-    sort_order: z.string().optional().or(z.literal('')),
 });
 
 function ModuleForm({ module, onSuccess, sensorModels = [] }: { module?: ModuleRow; onSuccess: () => void; sensorModels?: string[] }) {
@@ -485,7 +484,6 @@ function ModuleForm({ module, onSuccess, sensorModels = [] }: { module?: ModuleR
         icon: module?.icon ?? '',
         color: module?.color ?? '',
         active: module?.active ?? true,
-        sort_order: module?.sort_order != null ? String(module.sort_order) : '0',
     });
 
     function handleSlugChange(value: string): void {
@@ -531,7 +529,7 @@ function ModuleForm({ module, onSuccess, sensorModels = [] }: { module?: ModuleR
             icon: form.data.icon || null,
             color: form.data.color || null,
             active: form.data.active,
-            sort_order: form.data.sort_order ? parseInt(form.data.sort_order, 10) : 0,
+            sort_order: module?.sort_order ?? 99,
         };
 
         if (isEdit && module) {
@@ -589,42 +587,26 @@ function ModuleForm({ module, onSuccess, sensorModels = [] }: { module?: ModuleR
                 <InputError message={form.errors.description} />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label>{t('Monthly Fee (MXN)')}</Label>
-                    <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-[12px] text-muted-foreground/60">$</span>
-                        <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={form.data.monthly_fee}
-                            onChange={(e) => form.setData('monthly_fee', e.target.value)}
-                            placeholder="0.00"
-                            className="pl-7 font-mono text-[13px] font-semibold tabular-nums"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] text-muted-foreground/40">MXN</span>
-                    </div>
-                    <InputError message={form.errors.monthly_fee} />
+            <div className="space-y-2">
+                <Label>{t('Monthly Fee (MXN)')}</Label>
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-[13px] font-semibold text-muted-foreground/50">$</span>
+                    <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={form.data.monthly_fee}
+                        onChange={(e) => form.setData('monthly_fee', e.target.value)}
+                        onBlur={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val)) form.setData('monthly_fee', val.toFixed(2));
+                        }}
+                        placeholder="0.00"
+                        className="pl-8 pr-14 font-mono text-[14px] font-bold tabular-nums"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] text-muted-foreground/40">MXN/mo</span>
                 </div>
-
-                <div className="space-y-2">
-                    <Label>{t('Sort Order')}</Label>
-                    <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => form.setData('sort_order', String(Math.max(0, Number(form.data.sort_order) - 1)))}
-                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-[14px] text-muted-foreground transition-colors hover:bg-accent">−</button>
-                        <Input
-                            type="number"
-                            min="0"
-                            value={form.data.sort_order}
-                            onChange={(e) => form.setData('sort_order', e.target.value)}
-                            className="text-center font-mono text-[13px] font-semibold"
-                        />
-                        <button type="button" onClick={() => form.setData('sort_order', String(Number(form.data.sort_order) + 1))}
-                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-[14px] text-muted-foreground transition-colors hover:bg-accent">+</button>
-                    </div>
-                    <InputError message={form.errors.sort_order} />
-                </div>
+                <InputError message={form.errors.monthly_fee} />
             </div>
 
             <div className="space-y-2">
@@ -683,29 +665,41 @@ function ModuleForm({ module, onSuccess, sensorModels = [] }: { module?: ModuleR
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>{t('Icon')}</Label>
-                    <div className="flex flex-wrap gap-2 rounded-md border border-border p-3">
-                        {['🧊', '⚡', '📋', '🏭', '🌬️', '🛡️', '👥', '🌡️', '💧', '📡', '🔋', '⚙️'].map((emoji) => (
-                            <button key={emoji} type="button" onClick={() => form.setData('icon', emoji)}
-                                className={`flex h-9 w-9 items-center justify-center rounded-md text-lg transition-all ${form.data.icon === emoji ? 'bg-primary/10 ring-2 ring-primary scale-110' : 'bg-muted/20 hover:bg-accent/30'}`}>
-                                {emoji}
-                            </button>
-                        ))}
+                    <div className="flex items-center gap-2">
+                        {/* Selected icon display */}
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/20 text-xl">
+                            {form.data.icon || '📡'}
+                        </div>
+                        {/* Compact emoji row */}
+                        <div className="flex flex-wrap gap-1">
+                            {['🧊', '⚡', '📋', '🏭', '🌬️', '🛡️', '👥', '🌡️', '💧', '📡', '🔋', '⚙️'].map((emoji) => (
+                                <button key={emoji} type="button" onClick={() => form.setData('icon', emoji)}
+                                    className={`flex h-7 w-7 items-center justify-center rounded text-sm transition-all ${form.data.icon === emoji ? 'bg-primary/15 ring-1 ring-primary' : 'hover:bg-accent/40'}`}>
+                                    {emoji}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                     <InputError message={form.errors.icon} />
                 </div>
 
                 <div className="space-y-2">
                     <Label>{t('Color')}</Label>
-                    <div className="flex flex-wrap gap-2 rounded-md border border-border p-3">
-                        {['#06b6d4', '#22c55e', '#f59e0b', '#f43f5e', '#8b5cf6', '#3b82f6', '#ec4899', '#94a3b8', '#fb923c', '#14b8a6'].map((c) => (
-                            <button key={c} type="button" onClick={() => form.setData('color', c)}
-                                className={`h-8 w-8 rounded-md border-2 transition-all ${form.data.color === c ? 'border-foreground scale-110 ring-1 ring-foreground/20' : 'border-transparent hover:scale-105'}`}
-                                style={{ backgroundColor: c }} />
-                        ))}
+                    <div className="flex items-center gap-3">
+                        {/* Native color picker for full hue control */}
+                        <input type="color" value={form.data.color || '#06b6d4'}
+                            onChange={(e) => form.setData('color', e.target.value)}
+                            className="h-10 w-10 shrink-0 cursor-pointer appearance-none rounded-lg border border-border bg-transparent p-0.5 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none" />
+                        {/* Quick presets */}
+                        <div className="flex flex-wrap gap-1">
+                            {['#06b6d4', '#22c55e', '#f59e0b', '#f43f5e', '#8b5cf6', '#3b82f6', '#fb923c', '#14b8a6'].map((c) => (
+                                <button key={c} type="button" onClick={() => form.setData('color', c)}
+                                    className={`h-6 w-6 rounded-full border-2 transition-all ${form.data.color === c ? 'border-foreground scale-110' : 'border-transparent hover:scale-110'}`}
+                                    style={{ backgroundColor: c }} />
+                            ))}
+                        </div>
                     </div>
-                    {form.data.color && (
-                        <p className="font-mono text-[10px] text-muted-foreground/60">{form.data.color}</p>
-                    )}
+                    <p className="font-mono text-[10px] text-muted-foreground/50">{form.data.color || '#06b6d4'}</p>
                     <InputError message={form.errors.color} />
                 </div>
             </div>
