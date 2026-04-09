@@ -601,10 +601,17 @@ function RecipeEditDialog({
                                         <div>
                                             <Label className="text-xs">{t('Metric')}</Label>
                                             <Select value={cond.metric} onValueChange={(v) => updateCondition(idx, 'metric', v)}>
-                                                <SelectTrigger className="mt-1 font-mono text-[11px]"><SelectValue placeholder={t('Select...')} /></SelectTrigger>
+                                                <SelectTrigger className="mt-1 text-[11px]">
+                                                    <SelectValue placeholder={t('Select...')}>
+                                                        {cond.metric && t(`metric_${cond.metric}`)}
+                                                    </SelectValue>
+                                                </SelectTrigger>
                                                 <SelectContent>
                                                     {availableMetrics.map((m) => (
-                                                        <SelectItem key={m} value={m}><span className="font-mono">{m}</span></SelectItem>
+                                                        <SelectItem key={m} value={m}>
+                                                            {t(`metric_${m}`)}
+                                                            <span className="ml-2 font-mono text-[9px] text-muted-foreground">{m}</span>
+                                                        </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
