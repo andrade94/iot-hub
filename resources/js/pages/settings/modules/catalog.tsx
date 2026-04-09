@@ -563,14 +563,10 @@ function ModuleForm({ module, onSuccess, sensorModels = [] }: { module?: ModuleR
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="mod-slug">{t('Slug')}</Label>
-                    <Input
-                        id="mod-slug"
-                        value={form.data.slug}
-                        onChange={(e) => handleSlugChange(e.target.value)}
-                        placeholder={t('e.g. cold_chain')}
-                        className="font-mono text-sm"
-                    />
+                    <Label>{t('Slug')}</Label>
+                    <div className="flex h-9 items-center rounded-md border border-border bg-muted/30 px-3">
+                        <span className="font-mono text-[12px] text-muted-foreground">{form.data.slug || t('auto-generated from name')}</span>
+                    </div>
                     <InputError message={form.errors.slug} />
                 </div>
             </div>
