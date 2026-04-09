@@ -24,7 +24,7 @@ class RecipeController extends Controller
             ->get();
 
         $modules = Module::orderBy('name')->get(['id', 'name']);
-        $sensorModels = SensorModel::orderBy('model')->get(['model', 'supported_metrics']);
+        $sensorModels = SensorModel::orderBy('name')->get(['name as model', 'supported_metrics']);
 
         return Inertia::render('settings/recipes/index', [
             'recipes' => $recipes,
@@ -80,7 +80,7 @@ class RecipeController extends Controller
             ];
         }
 
-        $sensorModel = SensorModel::where('model', $recipe->sensor_model)->first();
+        $sensorModel = SensorModel::where('name', $recipe->sensor_model)->first();
         $availableMetrics = $sensorModel?->supported_metrics ?? [];
 
         return Inertia::render('settings/recipes/show', [
