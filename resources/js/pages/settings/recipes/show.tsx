@@ -53,6 +53,7 @@ interface Props {
     overrides: SiteRecipeOverride[];
     devices?: DeviceItem[];
     syncStatus?: SyncStatusItem[];
+    availableMetrics?: string[];
 }
 
 interface ConditionRow {
@@ -73,7 +74,7 @@ const EMPTY_CONDITION: ConditionRow = {
 
 /* ── Main Component ───────────────────────────────────────────────── */
 
-export default function RecipeShow({ recipe, sites, overrides, devices = [], syncStatus = [] }: Props) {
+export default function RecipeShow({ recipe, sites, overrides, devices = [], syncStatus = [], availableMetrics = [] }: Props) {
     const { t } = useLang();
     const { auth } = usePage<{ auth: { roles: string[] } }>().props;
     const isSuperAdmin = auth.roles?.includes('super_admin');
@@ -360,6 +361,7 @@ export default function RecipeShow({ recipe, sites, overrides, devices = [], syn
                     open={editOpen}
                     onOpenChange={setEditOpen}
                     recipe={recipe}
+                    availableMetrics={availableMetrics ?? []}
                 />
             )}
 
@@ -384,10 +386,12 @@ function RecipeEditDialog({
     open,
     onOpenChange,
     recipe,
+    availableMetrics = [],
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     recipe: Recipe;
+    availableMetrics?: string[];
 }) {
     const { t } = useLang();
 
@@ -596,15 +600,26 @@ function RecipeEditDialog({
                                     <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
                                         <div>
                                             <Label className="text-xs">{t('Metric')}</Label>
-                                            <Input
-                                                className="mt-1"
-                                                value={cond.metric}
-                                                onChange={(e) =>
-                                                    updateCondition(idx, 'metric', e.target.value)
-                                                }
-                                                placeholder="temperature"
-                                                required
-                                            />
+                                            {availableMetrics.length > 0 ? (
+                                                <Select value={cond.metric} onValueChange={(v) => updateCondition(idx, 'metric', v)}>
+                                                    <SelectTrigger className="mt-1"><SelectValue placeholder={t('Select metric')} /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {availableMetrics.map((m) => (
+                                                            <SelectItem key={m} value={m}>
+                                                                <span className="font-mono">{m}</span>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : (
+                                                <Input
+                                                    className="mt-1"
+                                                    value={cond.metric}
+                                                    onChange={(e) => updateCondition(idx, 'metric', e.target.value)}
+                                                    placeholder="temperature"
+                                                    required
+                                                />
+                                            )}
                                         </div>
                                         <div>
                                             <Label className="text-xs">{t('Condition')}</Label>

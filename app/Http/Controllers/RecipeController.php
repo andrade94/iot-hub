@@ -6,6 +6,7 @@ use App\Models\AlertRule;
 use App\Models\Device;
 use App\Models\Module;
 use App\Models\Recipe;
+use App\Models\SensorModel;
 use App\Models\Site;
 use App\Models\SiteRecipeOverride;
 use Illuminate\Http\Request;
@@ -23,10 +24,12 @@ class RecipeController extends Controller
             ->get();
 
         $modules = Module::orderBy('name')->get(['id', 'name']);
+        $sensorModels = SensorModel::orderBy('model')->get(['model', 'supported_metrics']);
 
         return Inertia::render('settings/recipes/index', [
             'recipes' => $recipes,
             'modules' => $modules,
+            'sensorModels' => $sensorModels,
         ]);
     }
 
@@ -77,12 +80,16 @@ class RecipeController extends Controller
             ];
         }
 
+        $sensorModel = SensorModel::where('model', $recipe->sensor_model)->first();
+        $availableMetrics = $sensorModel?->supported_metrics ?? [];
+
         return Inertia::render('settings/recipes/show', [
             'recipe' => $recipe,
             'sites' => $sites,
             'overrides' => $recipe->overrides,
             'devices' => $devices,
             'syncStatus' => $syncStatus,
+            'availableMetrics' => $availableMetrics,
         ]);
     }
 

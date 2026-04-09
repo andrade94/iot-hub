@@ -33,9 +33,15 @@ import { useCallback, useMemo, useState } from 'react';
 
 /* ── Types ────────────────────────────────────────────────────────── */
 
+interface SensorModelInfo {
+    model: string;
+    supported_metrics: string[];
+}
+
 interface Props {
     recipes: Recipe[];
     modules: Pick<Module, 'id' | 'name'>[];
+    sensorModels?: SensorModelInfo[];
 }
 
 interface ConditionRow {
@@ -63,7 +69,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 /* ── Main Component ───────────────────────────────────────────────── */
 
-export default function RecipeIndex({ recipes, modules }: Props) {
+export default function RecipeIndex({ recipes, modules, sensorModels = [] }: Props) {
     const { t } = useLang();
     const { auth } = usePage<{ auth: { roles: string[] } }>().props;
     const isSuperAdmin = auth.roles?.includes('super_admin');
@@ -414,6 +420,7 @@ export default function RecipeIndex({ recipes, modules }: Props) {
                 onOpenChange={setDialogOpen}
                 recipe={editingRecipe}
                 modules={modules}
+                sensorModels={sensorModels}
             />
 
             {/* -- Delete Confirmation ------------------------------------- */}
@@ -438,11 +445,13 @@ function RecipeFormDialog({
     onOpenChange,
     recipe,
     modules,
+    sensorModels = [],
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     recipe: Recipe | null;
     modules: Pick<Module, 'id' | 'name'>[];
+    sensorModels?: SensorModelInfo[];
 }) {
     const { t } = useLang();
     const isEditing = !!recipe;
@@ -454,6 +463,12 @@ function RecipeFormDialog({
     const [description, setDescription] = useState('');
     const [editable, setEditable] = useState(true);
     const [conditions, setConditions] = useState<ConditionRow[]>([{ ...EMPTY_CONDITION }]);
+
+    // Available metrics based on selected sensor model
+    const availableMetrics = useMemo(() => {
+        const sm = sensorModels.find((s) => s.model === sensorModel);
+        return sm?.supported_metrics ?? [];
+    }, [sensorModel, sensorModels]);
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -684,15 +699,26 @@ function RecipeFormDialog({
                                     <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
                                         <div>
                                             <Label className="text-xs">{t('Metric')}</Label>
-                                            <Input
-                                                className="mt-1"
-                                                value={cond.metric}
-                                                onChange={(e) =>
-                                                    updateCondition(idx, 'metric', e.target.value)
-                                                }
-                                                placeholder="temperature"
-                                                required
-                                            />
+                                            {availableMetrics.length > 0 ? (
+                                                <Select value={cond.metric} onValueChange={(v) => updateCondition(idx, 'metric', v)}>
+                                                    <SelectTrigger className="mt-1"><SelectValue placeholder={t('Select metric')} /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {availableMetrics.map((m) => (
+                                                            <SelectItem key={m} value={m}>
+                                                                <span className="font-mono">{m}</span>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : (
+                                                <Input
+                                                    className="mt-1"
+                                                    value={cond.metric}
+                                                    onChange={(e) => updateCondition(idx, 'metric', e.target.value)}
+                                                    placeholder="temperature"
+                                                    required
+                                                />
+                                            )}
                                             {errors[`default_rules.${idx}.metric`] && (
                                                 <p className="mt-1 text-xs text-destructive">
                                                     {errors[`default_rules.${idx}.metric`]}
