@@ -27,6 +27,11 @@ class Module extends Model
         'sort_order',
     ];
 
+    public function setNameAttribute(string $value): void
+    {
+        $this->attributes['name'] = ucwords(trim($value));
+    }
+
     protected function casts(): array
     {
         return [

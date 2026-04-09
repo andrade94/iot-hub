@@ -40,6 +40,11 @@ class Device extends Model
         'replaced_device_id',
     ];
 
+    public function setNameAttribute(string $value): void
+    {
+        $this->attributes['name'] = ucwords(trim($value));
+    }
+
     protected function casts(): array
     {
         return [

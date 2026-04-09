@@ -20,6 +20,11 @@ class Recipe extends Model
         'editable',
     ];
 
+    public function setNameAttribute(string $value): void
+    {
+        $this->attributes['name'] = ucwords(trim($value));
+    }
+
     protected function casts(): array
     {
         return [

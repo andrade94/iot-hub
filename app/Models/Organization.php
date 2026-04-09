@@ -73,6 +73,11 @@ class Organization extends Model
         return $this;
     }
 
+    public function setNameAttribute(string $value): void
+    {
+        $this->attributes['name'] = ucwords(trim($value));
+    }
+
     protected function casts(): array
     {
         return [
