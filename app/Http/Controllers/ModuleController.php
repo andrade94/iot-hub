@@ -12,13 +12,34 @@ class ModuleController extends Controller
 {
     public function index(Request $request, Site $site)
     {
-        $modules = Module::with('recipes')->get();
+        // Only show active modules (Bug fix #2)
+        $modules = Module::active()
+            ->with('recipes')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
         $activatedIds = $site->modules()->pluck('modules.id')->toArray();
+
+        // Count matching devices per module for this site
+        $siteDeviceModels = $site->devices()->distinct()->pluck('model')->toArray();
+        $moduleDeviceCounts = [];
+        foreach ($modules as $mod) {
+            $required = $mod->required_sensor_models ?? [];
+            $matching = $site->devices()->whereIn('model', $required)->count();
+            $moduleDeviceCounts[$mod->id] = $matching;
+        }
+
+        // Monthly total for active modules
+        $monthlyTotal = $modules->filter(fn ($m) => in_array($m->id, $activatedIds))
+            ->sum(fn ($m) => (float) ($m->monthly_fee ?? 0));
 
         return Inertia::render('settings/modules', [
             'site' => $site,
             'modules' => $modules,
             'activatedModuleIds' => $activatedIds,
+            'moduleDeviceCounts' => $moduleDeviceCounts,
+            'monthlyTotal' => number_format($monthlyTotal, 2),
         ]);
     }
 
