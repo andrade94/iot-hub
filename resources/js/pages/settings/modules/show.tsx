@@ -139,20 +139,23 @@ export default function ModuleShow({ module, sites, monthlyRevenue, deviceCount 
                                             <div key={recipe.id} className="flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors hover:bg-accent/30"
                                                 onClick={() => router.get(`/recipes/${recipe.id}`)}>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-[13px] font-medium">{recipe.name}</p>
-                                                    <p className="text-[10px] text-muted-foreground/60">
-                                                        <span className="font-mono">{recipe.sensor_model}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-[13px] font-medium">{recipe.name}</p>
+                                                        <Badge variant="outline" className="font-mono text-[8px]">{recipe.sensor_model}</Badge>
+                                                    </div>
+                                                    <p className="mt-0.5 text-[10px] text-muted-foreground/60">
+                                                        {recipe.default_rules.length} {t('rules')} · {(recipe as any).devices_count ?? 0} {t('devices')}
                                                         {recipe.description && ` · ${recipe.description}`}
                                                     </p>
                                                 </div>
-                                                <div className="flex gap-1 flex-wrap justify-end">
-                                                    {recipe.default_rules.slice(0, 3).map((rule, i) => (
+                                                <div className="flex gap-1 flex-wrap justify-end max-w-[200px]">
+                                                    {recipe.default_rules.slice(0, 2).map((rule, i) => (
                                                         <Badge key={i} variant={severityVariant[rule.severity] ?? 'outline'} className="text-[8px]">
                                                             {t(`metric_${rule.metric}`)} {rule.condition} {rule.threshold}
                                                         </Badge>
                                                     ))}
-                                                    {recipe.default_rules.length > 3 && (
-                                                        <Badge variant="outline" className="text-[8px]">+{recipe.default_rules.length - 3}</Badge>
+                                                    {recipe.default_rules.length > 2 && (
+                                                        <Badge variant="outline" className="text-[8px]">+{recipe.default_rules.length - 2}</Badge>
                                                     )}
                                                 </div>
                                             </div>
@@ -215,34 +218,33 @@ export default function ModuleShow({ module, sites, monthlyRevenue, deviceCount 
                             <Card className="border-border shadow-none overflow-hidden">
                                 {[
                                     { label: t('Module ID'), value: <span className="font-mono font-medium">#{module.id}</span> },
-                                    { label: t('Name'), value: <span className="font-medium">{module.name}</span> },
                                     { label: t('Slug'), value: <span className="font-mono text-muted-foreground">{module.slug}</span> },
                                     { label: t('Status'), value: <Badge variant={module.active ? 'success' : 'outline'} className="text-[8px]">{module.active ? t('Active') : t('Inactive')}</Badge> },
                                     { label: t('Monthly Fee'), value: <span className="font-mono font-semibold">${Number(module.monthly_fee ?? 0).toFixed(2)}</span> },
                                     { label: t('Required Sensors'), value: (
                                         <div className="flex flex-wrap gap-1 justify-end">
-                                            {(module.required_sensor_models ?? []).map((s) => (
-                                                <Badge key={s} variant="outline" className="font-mono text-[8px]">{s}</Badge>
-                                            ))}
+                                            {(module.required_sensor_models ?? []).length > 0
+                                                ? (module.required_sensor_models ?? []).map((s) => (
+                                                    <Badge key={s} variant="outline" className="font-mono text-[8px]">{s}</Badge>
+                                                ))
+                                                : <span className="text-muted-foreground">—</span>}
                                         </div>
                                     ) },
                                     { label: t('Report Types'), value: (
                                         <div className="flex flex-wrap gap-1 justify-end">
-                                            {(module.report_types ?? []).map((r) => (
-                                                <Badge key={r} variant="outline" className="text-[8px]">{t(`report_${r}`)}</Badge>
-                                            ))}
+                                            {(module.report_types ?? []).length > 0
+                                                ? (module.report_types ?? []).map((r) => (
+                                                    <Badge key={r} variant="outline" className="text-[8px]">{t(`report_${r}`)}</Badge>
+                                                ))
+                                                : <span className="text-muted-foreground">—</span>}
                                         </div>
                                     ) },
-                                    { label: t('Icon'), value: <span className="text-lg">{emoji}</span> },
                                     { label: t('Color'), value: module.color ? (
                                         <div className="flex items-center gap-2">
                                             <span className="h-4 w-4 rounded" style={{ backgroundColor: module.color }} />
                                             <span className="font-mono text-[10px] text-muted-foreground">{module.color}</span>
                                         </div>
                                     ) : <span className="text-muted-foreground">—</span> },
-                                    { label: t('Recipes'), value: <span className="font-mono">{recipes.length}</span> },
-                                    { label: t('Sites'), value: <span className="font-mono font-semibold">{sites.length}</span> },
-                                    { label: t('Devices'), value: <span className="font-mono">{deviceCount}</span> },
                                     { label: t('Created'), value: <span className="font-mono">{new Date(module.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span> },
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-border/20 last:border-b-0">

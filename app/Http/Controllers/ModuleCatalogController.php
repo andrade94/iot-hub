@@ -44,6 +44,11 @@ class ModuleCatalogController extends Controller
     {
         $module->load('recipes');
 
+        // Add device count per recipe
+        $module->recipes->each(function ($recipe) {
+            $recipe->devices_count = \App\Models\Device::where('recipe_id', $recipe->id)->count();
+        });
+
         // Sites using this module
         $sites = $module->sites()
             ->select('sites.id', 'sites.name', 'sites.status')
