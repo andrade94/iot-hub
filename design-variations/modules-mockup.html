@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modules — Mockup | Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --card: #161820; --border: #23262f; --border-subtle: #1c1f27;
+    --fg: #e8eaed; --muted: #7a7f8a; --muted2: #4a4f5a;
+    --primary: #06b6d4; --primary-dim: #0891b2;
+    --rose: #f43f5e; --amber: #f59e0b; --emerald: #22c55e; --blue: #3b82f6; --violet: #8b5cf6;
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+  }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--fg); font-size: 13px; line-height: 1.5; }
+  h1, h2, h3 { font-family: var(--font-display); }
+  .mono { font-family: var(--font-mono); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid; }
+  .badge-success { color: var(--emerald); border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
+  .badge-outline { color: var(--muted); border-color: var(--border); background: transparent; }
+
+  .card { border: 1px solid var(--border); border-radius: 8px; background: var(--card); overflow: hidden; }
+  .divider { display: flex; align-items: center; gap: 16px; margin: 28px 0; }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.15em; color: var(--muted2); }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--fg); cursor: pointer; font-family: var(--font-body); }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #000; font-weight: 600; }
+
+  .toggle { width: 36px; height: 20px; border-radius: 10px; background: var(--border); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+  .toggle.on { background: var(--primary); }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: white; transition: transform 0.2s; }
+  .toggle.on::after { transform: translateX(16px); }
+
+  .scenario { background: linear-gradient(135deg, var(--primary), var(--blue)); color: #000; font-weight: 700; font-size: 13px; padding: 12px 20px; border-radius: 8px; margin: 48px 0 24px; font-family: var(--font-display); }
+  .scenario:first-child { margin-top: 0; }
+
+  .module-card { border: 1px solid var(--border); border-radius: 10px; background: var(--card); padding: 0; transition: border-color 0.2s; }
+  .module-card.active { border-color: rgba(6,182,212,0.3); }
+  .module-card:hover { border-color: var(--muted2); }
+
+  .module-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">1 — PER-SITE MODULES: Toggle + Info</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div style="margin-bottom: 24px;">
+  <a href="#" style="color: var(--muted); text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">← CEDIS Norte</a>
+  <h1 style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">Modules</h1>
+  <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+    <span class="mono" style="color: var(--fg); font-weight: 500;">4</span> of <span class="mono">7</span> modules active ·
+    CEDIS Norte
+  </p>
+</div>
+
+<!-- Summary strip -->
+<div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 120px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);">
+    <p class="mono" style="font-size: 9px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted2);">ACTIVE</p>
+    <p class="mono" style="font-size: 24px; font-weight: 700; color: var(--emerald); margin-top: 2px;">4</p>
+  </div>
+  <div style="flex: 1; min-width: 120px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);">
+    <p class="mono" style="font-size: 9px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted2);">AVAILABLE</p>
+    <p class="mono" style="font-size: 24px; font-weight: 700; margin-top: 2px;">7</p>
+  </div>
+  <div style="flex: 1; min-width: 120px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);">
+    <p class="mono" style="font-size: 9px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted2);">RECIPES</p>
+    <p class="mono" style="font-size: 24px; font-weight: 700; margin-top: 2px;">20</p>
+  </div>
+  <div style="flex: 1; min-width: 120px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);">
+    <p class="mono" style="font-size: 9px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted2);">MONTHLY</p>
+    <p class="mono" style="font-size: 24px; font-weight: 700; margin-top: 2px;">$675</p>
+  </div>
+</div>
+
+<!-- Active Modules -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <span class="divider-label">ACTIVE MODULES</span>
+  <div class="divider-line"></div>
+  <span class="mono" style="font-size: 10px; color: var(--muted2);">4</span>
+</div>
+
+<div style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+  <!-- Cold Chain — Active -->
+  <div class="module-card active">
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        <div class="module-icon" style="background: rgba(6,182,212,0.1); color: var(--primary);">🧊</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size: 15px; font-weight: 700;">Cold Chain</h3>
+            <div class="toggle on"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4;">Temperature monitoring, compliance tracking, and automated alerts for refrigerated storage.</p>
+        </div>
+      </div>
+
+      <!-- Module details -->
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px;">
+          <div>
+            <span style="color: var(--muted2);">Sensors:</span>
+            <span class="mono" style="margin-left: 4px;">EM300-TH, WS301</span>
+          </div>
+          <div>
+            <span style="color: var(--muted2);">Recipes:</span>
+            <span class="mono" style="margin-left: 4px; color: var(--fg); font-weight: 500;">9</span>
+          </div>
+          <div>
+            <span style="color: var(--muted2);">Matching devices:</span>
+            <span class="mono" style="margin-left: 4px; color: var(--emerald); font-weight: 500;">6</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <span class="mono" style="font-size: 11px; color: var(--muted2);">$200/mo</span>
+          <div style="display: flex; gap: 6px;">
+            <span class="badge badge-success">active</span>
+            <a href="#" style="font-size: 10px; color: var(--primary); text-decoration: none;">Reports →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Energy — Active -->
+  <div class="module-card active">
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        <div class="module-icon" style="background: rgba(245,158,11,0.1); color: var(--amber);">⚡</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size: 15px; font-weight: 700;">Energy</h3>
+            <div class="toggle on"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4;">Current monitoring, power consumption tracking, and compressor efficiency analysis.</p>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px;">
+          <div><span style="color: var(--muted2);">Sensors:</span> <span class="mono">CT101</span></div>
+          <div><span style="color: var(--muted2);">Recipes:</span> <span class="mono" style="font-weight: 500;">3</span></div>
+          <div><span style="color: var(--muted2);">Matching:</span> <span class="mono" style="color: var(--emerald); font-weight: 500;">2</span></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <span class="mono" style="font-size: 11px; color: var(--muted2);">$150/mo</span>
+          <div style="display: flex; gap: 6px;">
+            <span class="badge badge-success">active</span>
+            <a href="#" style="font-size: 10px; color: var(--primary); text-decoration: none;">Reports →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Safety — Active -->
+  <div class="module-card active">
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        <div class="module-icon" style="background: rgba(34,197,94,0.1); color: var(--emerald);">🛡️</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size: 15px; font-weight: 700;">Safety</h3>
+            <div class="toggle on"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4;">Door monitoring, gas leak detection, and security entrance alerts.</p>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px;">
+          <div><span style="color: var(--muted2);">Sensors:</span> <span class="mono">GS101, WS301</span></div>
+          <div><span style="color: var(--muted2);">Recipes:</span> <span class="mono" style="font-weight: 500;">3</span></div>
+          <div><span style="color: var(--muted2);">Matching:</span> <span class="mono" style="color: var(--emerald); font-weight: 500;">3</span></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <span class="mono" style="font-size: 11px; color: var(--muted2);">$125/mo</span>
+          <span class="badge badge-success">active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compliance — Active -->
+  <div class="module-card active">
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        <div class="module-icon" style="background: rgba(59,130,246,0.1); color: var(--blue);">📋</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size: 15px; font-weight: 700;">Compliance</h3>
+            <div class="toggle on"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4;">COFEPRIS/FDA compliance automation, audit packages, and verification logs.</p>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px;">
+          <div><span style="color: var(--muted2);">Sensors:</span> <span class="mono">EM300-TH</span></div>
+          <div><span style="color: var(--muted2);">Recipes:</span> <span class="mono" style="font-weight: 500;">1</span></div>
+          <div><span style="color: var(--muted2);">Matching:</span> <span class="mono" style="color: var(--emerald); font-weight: 500;">4</span></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <span class="mono" style="font-size: 11px; color: var(--muted2);">$100/mo</span>
+          <span class="badge badge-success">active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Available (Inactive) Modules -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <span class="divider-label">AVAILABLE MODULES</span>
+  <div class="divider-line"></div>
+  <span class="mono" style="font-size: 10px; color: var(--muted2);">3</span>
+</div>
+
+<div style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+  <!-- IAQ — Not active -->
+  <div class="module-card" style="opacity: 0.7;">
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        <div class="module-icon" style="background: rgba(139,92,246,0.08); color: var(--muted);">🌬️</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size: 15px; font-weight: 700; color: var(--muted);">Indoor Air Quality</h3>
+            <div class="toggle"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--muted2); margin-top: 4px; line-height: 1.4;">CO₂, PM2.5, temperature, and humidity monitoring for office and workspace environments.</p>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px;">
+          <div><span style="color: var(--muted2);">Sensors:</span> <span class="mono" style="color: var(--muted2);">AM307</span></div>
+          <div><span style="color: var(--muted2);">Recipes:</span> <span class="mono" style="color: var(--muted2);">2</span></div>
+          <div><span style="color: var(--muted2);">Matching:</span> <span class="mono" style="color: var(--amber); font-weight: 500;">1</span> <span style="font-size: 9px; color: var(--muted2);">device ready</span></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <span class="mono" style="font-size: 11px; color: var(--muted2);">$175/mo</span>
+          <span class="badge badge-outline">not active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Industrial — Not active -->
+  <div class="module-card" style="opacity: 0.7;">
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        <div class="module-icon" style="background: rgba(139,92,246,0.08); color: var(--muted);">🏭</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size: 15px; font-weight: 700; color: var(--muted);">Industrial</h3>
+            <div class="toggle"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--muted2); margin-top: 4px; line-height: 1.4;">Compressor health, pressure monitoring, and predictive maintenance for industrial equipment.</p>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px;">
+          <div><span style="color: var(--muted2);">Sensors:</span> <span class="mono" style="color: var(--muted2);">CT101, EM310-UDL</span></div>
+          <div><span style="color: var(--muted2);">Recipes:</span> <span class="mono" style="color: var(--muted2);">2</span></div>
+          <div><span style="color: var(--muted2);">Matching:</span> <span class="mono" style="color: var(--amber); font-weight: 500;">2</span></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <span class="mono" style="font-size: 11px; color: var(--muted2);">$250/mo</span>
+          <span class="badge badge-outline">not active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- People — Not active, no matching devices -->
+  <div class="module-card" style="opacity: 0.5;">
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        <div class="module-icon" style="background: rgba(139,92,246,0.05); color: var(--muted2);">👥</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size: 15px; font-weight: 700; color: var(--muted2);">People & Flow</h3>
+            <div class="toggle"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--muted2); margin-top: 4px; line-height: 1.4;">People counting, occupancy tracking, and foot traffic analytics.</p>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px;">
+          <div><span style="color: var(--muted2);">Sensors:</span> <span class="mono" style="color: var(--muted2);">VS121</span></div>
+          <div><span style="color: var(--muted2);">Recipes:</span> <span class="mono" style="color: var(--muted2);">0</span></div>
+          <div><span style="color: var(--rose);">No matching devices</span></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <span class="mono" style="font-size: 11px; color: var(--muted2);">$150/mo</span>
+          <span class="badge badge-outline">not active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">2 — ACTIVATION PREVIEW (Dialog)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">This dialog appears when toggling a module ON. Shows what will happen before confirming.</p>
+
+<div class="card" style="max-width: 500px; padding: 0;">
+  <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="module-icon" style="background: rgba(139,92,246,0.1); color: var(--violet); width: 36px; height: 36px; font-size: 16px;">🌬️</div>
+      <div>
+        <h2 style="font-size: 16px; font-weight: 700;">Activate Indoor Air Quality</h2>
+        <p style="font-size: 11px; color: var(--muted);">CEDIS Norte</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 20px 24px;">
+    <p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Activating this module will:</p>
+
+    <!-- What will happen -->
+    <div style="space-y: 8px;">
+      <div style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span style="color: var(--emerald); font-size: 14px; margin-top: 1px;">✓</span>
+        <div>
+          <p style="font-size: 12px; font-weight: 500;">Create <span class="mono" style="color: var(--primary); font-weight: 700;">4</span> alert rules</p>
+          <p style="font-size: 10px; color: var(--muted2);">From 2 recipes: Office Space (3 rules), Server Room (1 rule)</p>
+        </div>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span style="color: var(--emerald); font-size: 14px; margin-top: 1px;">✓</span>
+        <div>
+          <p style="font-size: 12px; font-weight: 500;">Apply to <span class="mono" style="color: var(--primary); font-weight: 700;">1</span> device</p>
+          <p style="font-size: 10px; color: var(--muted2);">AM307 - Office (AM307)</p>
+        </div>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span style="color: var(--primary); font-size: 14px; margin-top: 1px;">→</span>
+        <div>
+          <p style="font-size: 12px; font-weight: 500;">Unlock IAQ Dashboard</p>
+          <p style="font-size: 10px; color: var(--muted2);">Zone air quality scores, CO₂ trends, recommendations</p>
+        </div>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 0;">
+        <span style="color: var(--amber); font-size: 14px; margin-top: 1px;">$</span>
+        <div>
+          <p style="font-size: 12px; font-weight: 500;">Add <span class="mono" style="font-weight: 700;">$175/mo</span> to billing</p>
+          <p style="font-size: 10px; color: var(--muted2);">New total: $850/mo</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
+    <button class="btn">Cancel</button>
+    <button class="btn btn-primary">Activate Module</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">3 — DEACTIVATION WARNING (Dialog)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">This dialog appears when toggling a module OFF.</p>
+
+<div class="card" style="max-width: 500px; padding: 0;">
+  <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle);">
+    <h2 style="font-size: 16px; font-weight: 700;">Deactivate Cold Chain</h2>
+    <p style="font-size: 11px; color: var(--muted); margin-top: 4px;">CEDIS Norte</p>
+  </div>
+
+  <div style="padding: 20px 24px;">
+    <div style="padding: 12px 14px; border: 1px solid rgba(244,63,94,0.2); border-radius: 6px; background: rgba(244,63,94,0.04); margin-bottom: 16px;">
+      <p style="font-size: 12px; color: var(--rose); font-weight: 500; margin-bottom: 4px;">⚠️ This will remove active monitoring</p>
+      <ul style="font-size: 11px; color: var(--muted); list-style: none; padding: 0;">
+        <li style="padding: 3px 0;">• <strong>14 alert rules</strong> from this module will be deleted</li>
+        <li style="padding: 3px 0;">• <strong>6 devices</strong> will stop being monitored by this module's recipes</li>
+        <li style="padding: 3px 0;">• Temperature compliance reports will no longer update</li>
+        <li style="padding: 3px 0;">• Monthly bill reduced by <strong>$200/mo</strong></li>
+      </ul>
+    </div>
+
+    <p style="font-size: 11px; color: var(--muted);">Existing alerts and historical data will be preserved. You can reactivate at any time.</p>
+  </div>
+
+  <div style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
+    <button class="btn">Cancel</button>
+    <button class="btn" style="background: var(--rose); border-color: var(--rose); color: white;">Deactivate Module</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">Design Notes</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="card" style="padding: 24px;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; width: 30%; color: var(--primary);">Card layout vs table</td>
+      <td style="padding: 8px 0; color: var(--muted);">Cards work better here than a table — each module is a "product" with icon, description, pricing. Cards give visual hierarchy and room for the toggle.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Active vs Available split</td>
+      <td style="padding: 8px 0; color: var(--muted);">Active modules at full opacity on top. Available modules at reduced opacity below. Modules with no matching devices at lowest opacity — can still be activated but won't do anything until devices are deployed.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Matching devices count</td>
+      <td style="padding: 8px 0; color: var(--muted);">Each card shows how many devices at this site would be affected. Green = has matching devices. Amber = has some devices ready. Red "No matching devices" = module would be inactive even if toggled on.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Activation preview</td>
+      <td style="padding: 8px 0; color: var(--muted);">Before activating, show exactly what will happen: alert rules created, devices affected, dashboard unlocked, billing impact. Same preview pattern as "Generate from Recipes".</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Deactivation warning</td>
+      <td style="padding: 8px 0; color: var(--muted);">Red warning showing what will be removed: alert rules deleted, devices unmonitored, reports stop, billing reduction.</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Reports link</td>
+      <td style="padding: 8px 0; color: var(--muted);">Active modules with dashboards show a "Reports →" link to their module dashboard (IAQ, Industrial). Modules without dashboards don't show this link.</td>
+    </tr>
+  </table>
+</div>
+
+</div>
+</body>
+</html>
