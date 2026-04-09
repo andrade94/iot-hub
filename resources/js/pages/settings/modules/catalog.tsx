@@ -591,31 +591,38 @@ function ModuleForm({ module, onSuccess, sensorModels = [] }: { module?: ModuleR
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="mod-fee">{t('Monthly Fee (MXN)')}</Label>
-                    <Input
-                        id="mod-fee"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={form.data.monthly_fee}
-                        onChange={(e) => form.setData('monthly_fee', e.target.value)}
-                        placeholder={t('e.g. 200.00')}
-                        className="font-mono"
-                    />
+                    <Label>{t('Monthly Fee (MXN)')}</Label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-[12px] text-muted-foreground/60">$</span>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={form.data.monthly_fee}
+                            onChange={(e) => form.setData('monthly_fee', e.target.value)}
+                            placeholder="0.00"
+                            className="pl-7 font-mono text-[13px] font-semibold tabular-nums"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] text-muted-foreground/40">MXN</span>
+                    </div>
                     <InputError message={form.errors.monthly_fee} />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="mod-sort">{t('Sort Order')}</Label>
-                    <Input
-                        id="mod-sort"
-                        type="number"
-                        min="0"
-                        value={form.data.sort_order}
-                        onChange={(e) => form.setData('sort_order', e.target.value)}
-                        placeholder="0"
-                        className="font-mono"
-                    />
+                    <Label>{t('Sort Order')}</Label>
+                    <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => form.setData('sort_order', String(Math.max(0, Number(form.data.sort_order) - 1)))}
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-[14px] text-muted-foreground transition-colors hover:bg-accent">−</button>
+                        <Input
+                            type="number"
+                            min="0"
+                            value={form.data.sort_order}
+                            onChange={(e) => form.setData('sort_order', e.target.value)}
+                            className="text-center font-mono text-[13px] font-semibold"
+                        />
+                        <button type="button" onClick={() => form.setData('sort_order', String(Number(form.data.sort_order) + 1))}
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-[14px] text-muted-foreground transition-colors hover:bg-accent">+</button>
+                    </div>
                     <InputError message={form.errors.sort_order} />
                 </div>
             </div>
@@ -650,46 +657,55 @@ function ModuleForm({ module, onSuccess, sensorModels = [] }: { module?: ModuleR
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="mod-reports">{t('Report Types')}</Label>
-                <Input
-                    id="mod-reports"
-                    value={form.data.report_types}
-                    onChange={(e) => form.setData('report_types', e.target.value)}
-                    placeholder={t('e.g. temperature, energy')}
-                />
-                <p className="text-xs text-muted-foreground">{t('Comma-separated report type slugs')}</p>
+                <Label>{t('Report Types')}</Label>
+                <div className="flex flex-wrap gap-2 rounded-md border border-border p-3">
+                    {['temperature', 'energy', 'compliance', 'inventory', 'summary', 'iaq', 'industrial'].map((rt) => {
+                        const selected = form.data.report_types.split(',').map((s: string) => s.trim()).filter(Boolean);
+                        const isChecked = selected.includes(rt);
+                        return (
+                            <label key={rt} className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-[11px] transition-colors ${isChecked ? 'border-primary bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:bg-accent/30'}`}>
+                                <input type="checkbox" className="sr-only" checked={isChecked}
+                                    onChange={() => {
+                                        const next = isChecked ? selected.filter((s: string) => s !== rt) : [...selected, rt];
+                                        form.setData('report_types', next.join(', '));
+                                    }} />
+                                <span className={`h-3 w-3 shrink-0 rounded border-2 flex items-center justify-center ${isChecked ? 'border-primary bg-primary' : 'border-muted-foreground/30'}`}>
+                                    {isChecked && <span className="text-[8px] text-primary-foreground font-bold">✓</span>}
+                                </span>
+                                {t(`report_${rt}`)}
+                            </label>
+                        );
+                    })}
+                </div>
                 <InputError message={form.errors.report_types} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="mod-icon">{t('Icon')}</Label>
-                    <Input
-                        id="mod-icon"
-                        value={form.data.icon}
-                        onChange={(e) => form.setData('icon', e.target.value)}
-                        placeholder={t('e.g. Thermometer')}
-                    />
+                    <Label>{t('Icon')}</Label>
+                    <div className="flex flex-wrap gap-2 rounded-md border border-border p-3">
+                        {['🧊', '⚡', '📋', '🏭', '🌬️', '🛡️', '👥', '🌡️', '💧', '📡', '🔋', '⚙️'].map((emoji) => (
+                            <button key={emoji} type="button" onClick={() => form.setData('icon', emoji)}
+                                className={`flex h-9 w-9 items-center justify-center rounded-md text-lg transition-all ${form.data.icon === emoji ? 'bg-primary/10 ring-2 ring-primary scale-110' : 'bg-muted/20 hover:bg-accent/30'}`}>
+                                {emoji}
+                            </button>
+                        ))}
+                    </div>
                     <InputError message={form.errors.icon} />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="mod-color">{t('Color')}</Label>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            id="mod-color"
-                            value={form.data.color}
-                            onChange={(e) => form.setData('color', e.target.value)}
-                            placeholder={t('e.g. #0891b2')}
-                            className="font-mono text-sm"
-                        />
-                        {form.data.color && (
-                            <span
-                                className="inline-block h-8 w-8 shrink-0 rounded-md border"
-                                style={{ backgroundColor: form.data.color }}
-                            />
-                        )}
+                    <Label>{t('Color')}</Label>
+                    <div className="flex flex-wrap gap-2 rounded-md border border-border p-3">
+                        {['#06b6d4', '#22c55e', '#f59e0b', '#f43f5e', '#8b5cf6', '#3b82f6', '#ec4899', '#94a3b8', '#fb923c', '#14b8a6'].map((c) => (
+                            <button key={c} type="button" onClick={() => form.setData('color', c)}
+                                className={`h-8 w-8 rounded-md border-2 transition-all ${form.data.color === c ? 'border-foreground scale-110 ring-1 ring-foreground/20' : 'border-transparent hover:scale-105'}`}
+                                style={{ backgroundColor: c }} />
+                        ))}
                     </div>
+                    {form.data.color && (
+                        <p className="font-mono text-[10px] text-muted-foreground/60">{form.data.color}</p>
+                    )}
                     <InputError message={form.errors.color} />
                 </div>
             </div>
