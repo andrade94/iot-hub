@@ -685,130 +685,91 @@ function RecipeFormDialog({
                             <p className="mb-2 text-xs text-destructive">{errors.default_rules}</p>
                         )}
 
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             {conditions.map((cond, idx) => (
-                                <Card key={idx} className="shadow-sm">
-                                    <CardHeader className="flex flex-row items-center justify-between px-4 py-3">
-                                        <CardTitle className="text-sm">
-                                            {t('Rule')} {idx + 1}
-                                        </CardTitle>
-                                        {conditions.length > 1 && (
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                onClick={() => removeCondition(idx)}
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                                            </Button>
-                                        )}
-                                    </CardHeader>
-                                    <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-5">
+                                <div key={idx}>
+                                    {idx > 0 && (
+                                        <div className="flex items-center justify-center py-1">
+                                            <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-0.5 font-mono text-[9px] font-semibold tracking-[0.1em] text-primary">AND</span>
+                                        </div>
+                                    )}
+                                    <Card className="border-border shadow-none">
+                                        <CardContent className="p-4">
+                                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_0.8fr_0.8fr_1fr_auto] items-end">
                                         <div>
-                                            <Label className="text-xs">{t('Metric')}</Label>
+                                            <Label className="text-[10px] text-muted-foreground/60">{t('Metric')}</Label>
                                             {availableMetrics.length > 0 ? (
                                                 <Select value={cond.metric} onValueChange={(v) => updateCondition(idx, 'metric', v)}>
-                                                    <SelectTrigger className="mt-1"><SelectValue placeholder={t('Select metric')} /></SelectTrigger>
+                                                    <SelectTrigger className="mt-1 font-mono text-[11px]"><SelectValue placeholder={t('Select...')} /></SelectTrigger>
                                                     <SelectContent>
                                                         {availableMetrics.map((m) => (
-                                                            <SelectItem key={m} value={m}>
-                                                                <span className="font-mono">{m}</span>
-                                                            </SelectItem>
+                                                            <SelectItem key={m} value={m}><span className="font-mono">{m}</span></SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
                                             ) : (
-                                                <Input
-                                                    className="mt-1"
-                                                    value={cond.metric}
+                                                <Input className="mt-1 font-mono text-[11px]" value={cond.metric}
                                                     onChange={(e) => updateCondition(idx, 'metric', e.target.value)}
-                                                    placeholder="temperature"
-                                                    required
-                                                />
+                                                    placeholder="temperature" required />
                                             )}
                                             {errors[`default_rules.${idx}.metric`] && (
-                                                <p className="mt-1 text-xs text-destructive">
-                                                    {errors[`default_rules.${idx}.metric`]}
-                                                </p>
+                                                <p className="mt-1 text-[10px] text-destructive">{errors[`default_rules.${idx}.metric`]}</p>
                                             )}
                                         </div>
                                         <div>
-                                            <Label className="text-xs">{t('Condition')}</Label>
-                                            <Select
-                                                value={cond.condition}
-                                                onValueChange={(v) =>
-                                                    updateCondition(idx, 'condition', v)
-                                                }
-                                            >
-                                                <SelectTrigger className="mt-1">
-                                                    <SelectValue />
-                                                </SelectTrigger>
+                                            <Label className="text-[10px] text-muted-foreground/60">{t('Condition')}</Label>
+                                            <Select value={cond.condition} onValueChange={(v) => updateCondition(idx, 'condition', v)}>
+                                                <SelectTrigger className="mt-1 text-[11px]"><SelectValue /></SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="above">{t('Above')}</SelectItem>
-                                                    <SelectItem value="below">{t('Below')}</SelectItem>
-                                                    <SelectItem value="equals">{t('Equals')}</SelectItem>
+                                                    <SelectItem value="above">↑ {t('Above')}</SelectItem>
+                                                    <SelectItem value="below">↓ {t('Below')}</SelectItem>
+                                                    <SelectItem value="equals">= {t('Equals')}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
                                         <div>
-                                            <Label className="text-xs">{t('Threshold')}</Label>
-                                            <Input
-                                                type="number"
-                                                step="any"
-                                                className="mt-1 font-mono"
-                                                value={cond.threshold}
-                                                onChange={(e) =>
-                                                    updateCondition(idx, 'threshold', e.target.value)
-                                                }
-                                                placeholder="8"
-                                                required
-                                            />
+                                            <Label className="text-[10px] text-muted-foreground/60">{t('Threshold')}</Label>
+                                            <Input type="number" step="any" className="mt-1 font-mono text-[13px] font-bold" value={cond.threshold}
+                                                onChange={(e) => updateCondition(idx, 'threshold', e.target.value)} placeholder="8" required />
                                         </div>
                                         <div>
-                                            <Label className="text-xs">{t('Duration (min)')}</Label>
-                                            <Input
-                                                type="number"
-                                                className="mt-1 font-mono"
-                                                min={0}
-                                                value={cond.duration_minutes}
-                                                onChange={(e) =>
-                                                    updateCondition(idx, 'duration_minutes', e.target.value)
-                                                }
-                                                placeholder="0"
-                                            />
+                                            <Label className="text-[10px] text-muted-foreground/60">{t('Duration')}</Label>
+                                            <div className="mt-1 flex items-center gap-1">
+                                                <Input type="number" className="font-mono text-[12px]" min={0} value={cond.duration_minutes}
+                                                    onChange={(e) => updateCondition(idx, 'duration_minutes', e.target.value)} placeholder="0" />
+                                                <span className="text-[9px] text-muted-foreground/50 shrink-0">min</span>
+                                            </div>
                                         </div>
                                         <div>
-                                            <Label className="text-xs">{t('Severity')}</Label>
-                                            <Select
-                                                value={cond.severity}
-                                                onValueChange={(v) =>
-                                                    updateCondition(idx, 'severity', v)
-                                                }
-                                            >
-                                                <SelectTrigger className="mt-1">
-                                                    <SelectValue />
-                                                </SelectTrigger>
+                                            <Label className="text-[10px] text-muted-foreground/60">{t('Severity')}</Label>
+                                            <Select value={cond.severity} onValueChange={(v) => updateCondition(idx, 'severity', v)}>
+                                                <SelectTrigger className="mt-1 text-[11px]"><SelectValue /></SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="critical">{t('Critical')}</SelectItem>
-                                                    <SelectItem value="high">{t('High')}</SelectItem>
-                                                    <SelectItem value="medium">{t('Medium')}</SelectItem>
-                                                    <SelectItem value="low">{t('Low')}</SelectItem>
+                                                    <SelectItem value="critical"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-rose-500" />{t('Critical')}</span></SelectItem>
+                                                    <SelectItem value="high"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-orange-500" />{t('High')}</span></SelectItem>
+                                                    <SelectItem value="medium"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-amber-400" />{t('Medium')}</span></SelectItem>
+                                                    <SelectItem value="low"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-blue-400" />{t('Low')}</span></SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                        <div className="flex items-end">
+                                            {conditions.length > 1 && (
+                                                <button type="button" onClick={() => removeCondition(idx)}
+                                                    className="flex h-9 w-9 items-center justify-center rounded border border-transparent text-muted-foreground/30 transition-colors hover:text-rose-500">
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
                             ))}
 
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full border-dashed"
-                                onClick={addCondition}
-                            >
-                                <Plus className="mr-2 h-4 w-4" />
-                                {t('Add Rule')}
-                            </Button>
+                            <button type="button" onClick={addCondition}
+                                className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-3 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground">
+                                <Plus className="h-3 w-3" />{t('Add Rule')}
+                            </button>
                         </div>
                     </div>
 
