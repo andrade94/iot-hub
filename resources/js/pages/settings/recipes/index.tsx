@@ -621,15 +621,22 @@ function RecipeFormDialog({
                         </div>
 
                         <div>
-                            <Label htmlFor="sensor-model">{t('Sensor Model')} *</Label>
-                            <Input
-                                id="sensor-model"
-                                className="mt-1.5 font-mono"
-                                value={sensorModel}
-                                onChange={(e) => setSensorModel(e.target.value)}
-                                placeholder={t('e.g., LHT65N')}
-                                required
-                            />
+                            <Label>{t('Sensor Model')} *</Label>
+                            <Select value={sensorModel} onValueChange={setSensorModel}>
+                                <SelectTrigger className="mt-1.5 font-mono">
+                                    <SelectValue placeholder={t('Select sensor model')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {sensorModels.map((sm) => (
+                                        <SelectItem key={sm.model} value={sm.model}>
+                                            <span className="font-mono">{sm.model}</span>
+                                            <span className="ml-2 text-muted-foreground text-xs">
+                                                ({sm.supported_metrics.join(', ')})
+                                            </span>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             {errors.sensor_model && (
                                 <p className="mt-1 text-xs text-destructive">{errors.sensor_model}</p>
                             )}
