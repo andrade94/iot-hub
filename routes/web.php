@@ -478,6 +478,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::middleware('role:super_admin')->prefix('settings/modules-catalog')->name('modules-catalog.')->group(function () {
         Route::get('/', [ModuleCatalogController::class, 'index'])->name('index');
         Route::post('/', [ModuleCatalogController::class, 'store'])->name('store');
+        Route::get('{module}', [ModuleCatalogController::class, 'show'])->name('show');
         Route::put('{module}', [ModuleCatalogController::class, 'update'])->name('update');
         Route::delete('{module}', [ModuleCatalogController::class, 'destroy'])->name('destroy');
     });

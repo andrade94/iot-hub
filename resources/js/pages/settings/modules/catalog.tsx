@@ -422,6 +422,7 @@ export default function ModuleCatalog({ modules, sensorModels = [] }: Props) {
                                 getRowId={(row) => String(row.id)}
                                 bordered={false}
                                 emptyState={emptyStateNode}
+                                onRowClick={(row) => router.get(`/settings/modules-catalog/${row.id}`)}
                             />
                         </Card>
                     </ContentWithSidebar>

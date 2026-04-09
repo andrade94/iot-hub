@@ -40,6 +40,38 @@ class ModuleCatalogController extends Controller
         ]);
     }
 
+    public function show(Module $module)
+    {
+        $module->load('recipes');
+
+        // Sites using this module
+        $sites = $module->sites()
+            ->select('sites.id', 'sites.name', 'sites.status')
+            ->withPivot('activated_at')
+            ->get()
+            ->map(fn ($site) => [
+                'id' => $site->id,
+                'name' => $site->name,
+                'status' => $site->status,
+                'activated_at' => $site->pivot->activated_at,
+            ]);
+
+        // Revenue
+        $monthlyRevenue = $sites->count() * (float) ($module->monthly_fee ?? 0);
+
+        // Device count across all sites using this module
+        $deviceCount = \App\Models\Device::whereIn('site_id', $sites->pluck('id'))
+            ->whereIn('model', $module->required_sensor_models ?? [])
+            ->count();
+
+        return Inertia::render('settings/modules/show', [
+            'module' => $module,
+            'sites' => $sites,
+            'monthlyRevenue' => number_format($monthlyRevenue, 2),
+            'deviceCount' => $deviceCount,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
