@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Segments — Mockup | Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --card: #161820; --border: #23262f; --border-subtle: #1c1f27;
+    --fg: #e8eaed; --muted: #7a7f8a; --muted2: #4a4f5a;
+    --primary: #06b6d4; --rose: #f43f5e; --amber: #f59e0b; --emerald: #22c55e; --blue: #3b82f6; --violet: #8b5cf6;
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+  }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--fg); font-size: 13px; line-height: 1.5; }
+  h1, h2, h3 { font-family: var(--font-display); }
+  .mono { font-family: var(--font-mono); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid; }
+  .badge-outline { color: var(--muted); border-color: var(--border); background: transparent; }
+  .badge-success { color: var(--emerald); border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
+  .badge-module { color: var(--violet); border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.08); }
+  .card { border: 1px solid var(--border); border-radius: 8px; background: var(--card); overflow: hidden; }
+  .divider { display: flex; align-items: center; gap: 16px; margin: 28px 0; }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.15em; color: var(--muted2); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--fg); cursor: pointer; font-family: var(--font-body); }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #000; font-weight: 600; }
+  .scenario { background: linear-gradient(135deg, var(--primary), var(--blue)); color: #000; font-weight: 700; font-size: 13px; padding: 12px 20px; border-radius: 8px; margin: 48px 0 24px; font-family: var(--font-display); }
+  .scenario:first-child { margin-top: 0; }
+  .row-hover:hover { background: rgba(255,255,255,0.02); }
+  .th { text-align: left; padding: 10px 16px; font-family: var(--font-mono); font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted2); }
+  .td { padding: 14px 16px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">1 — INDEX: Segment Catalog</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">Industry Segments</h1>
+    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+      <span class="mono" style="color: var(--fg); font-weight: 500;">6</span> segments ·
+      <span class="mono">2</span> organizations assigned
+    </p>
+  </div>
+  <button class="btn btn-primary">+ New Segment</button>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid var(--border-subtle);">
+        <th class="th">Segment</th>
+        <th class="th">Suggested Modules</th>
+        <th class="th">Organizations</th>
+        <th class="th">Status</th>
+        <th style="width: 60px;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+        <td class="td">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: rgba(6,182,212,0.1);">🏪</div>
+            <div>
+              <p style="font-weight: 600; font-size: 13px;">Retail</p>
+              <p style="font-size: 10px; color: var(--muted2);">Supermarkets, convenience stores, cold chain</p>
+            </div>
+          </div>
+        </td>
+        <td class="td">
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <span class="badge badge-module">🧊 Cold Chain</span>
+            <span class="badge badge-module">⚡ Energy</span>
+            <span class="badge badge-module">🛡️ Safety</span>
+          </div>
+        </td>
+        <td class="td"><span class="mono" style="font-size: 12px; font-weight: 600;">1</span></td>
+        <td class="td"><span class="badge badge-success">active</span></td>
+        <td class="td"><div style="display: flex; gap: 4px; opacity: 0.3;"><span style="cursor: pointer;">✎</span> <span style="cursor: pointer; color: var(--rose);">🗑</span></div></td>
+      </tr>
+      <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+        <td class="td">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: rgba(139,92,246,0.1);">🏭</div>
+            <div>
+              <p style="font-weight: 600; font-size: 13px;">Industrial</p>
+              <p style="font-size: 10px; color: var(--muted2);">Factories, warehouses, manufacturing</p>
+            </div>
+          </div>
+        </td>
+        <td class="td">
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <span class="badge badge-module">🏭 Industrial</span>
+            <span class="badge badge-module">⚡ Energy</span>
+            <span class="badge badge-module">🛡️ Safety</span>
+          </div>
+        </td>
+        <td class="td"><span class="mono" style="font-size: 12px; font-weight: 600;">1</span></td>
+        <td class="td"><span class="badge badge-success">active</span></td>
+        <td class="td"><div style="display: flex; gap: 4px; opacity: 0.3;"><span style="cursor: pointer;">✎</span> <span style="cursor: pointer; color: var(--rose);">🗑</span></div></td>
+      </tr>
+      <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+        <td class="td">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: rgba(59,130,246,0.1);">💊</div>
+            <div>
+              <p style="font-weight: 600; font-size: 13px;">Pharma</p>
+              <p style="font-size: 10px; color: var(--muted2);">Pharmacies, hospitals, vaccine storage</p>
+            </div>
+          </div>
+        </td>
+        <td class="td">
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <span class="badge badge-module">🧊 Cold Chain</span>
+            <span class="badge badge-module">📋 Compliance</span>
+          </div>
+        </td>
+        <td class="td"><span class="mono" style="font-size: 12px; color: var(--muted2);">0</span></td>
+        <td class="td"><span class="badge badge-success">active</span></td>
+        <td class="td"><div style="display: flex; gap: 4px; opacity: 0.3;"><span style="cursor: pointer;">✎</span> <span style="cursor: pointer; color: var(--rose);">🗑</span></div></td>
+      </tr>
+      <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+        <td class="td">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: rgba(245,158,11,0.1);">🏨</div>
+            <div>
+              <p style="font-weight: 600; font-size: 13px;">Hospitality</p>
+              <p style="font-size: 10px; color: var(--muted2);">Hotels, restaurants, catering</p>
+            </div>
+          </div>
+        </td>
+        <td class="td">
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <span class="badge badge-module">🧊 Cold Chain</span>
+            <span class="badge badge-module">📋 Compliance</span>
+            <span class="badge badge-module">🛡️ Safety</span>
+            <span class="badge badge-module">⚡ Energy</span>
+          </div>
+        </td>
+        <td class="td"><span class="mono" style="font-size: 12px; color: var(--muted2);">0</span></td>
+        <td class="td"><span class="badge badge-success">active</span></td>
+        <td class="td"><div style="display: flex; gap: 4px; opacity: 0.3;"><span style="cursor: pointer;">✎</span> <span style="cursor: pointer; color: var(--rose);">🗑</span></div></td>
+      </tr>
+      <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+        <td class="td">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: rgba(34,197,94,0.1);">🏢</div>
+            <div>
+              <p style="font-weight: 600; font-size: 13px;">Commercial</p>
+              <p style="font-size: 10px; color: var(--muted2);">Offices, co-working spaces, corporate</p>
+            </div>
+          </div>
+        </td>
+        <td class="td">
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <span class="badge badge-module">🌬️ IAQ</span>
+            <span class="badge badge-module">⚡ Energy</span>
+            <span class="badge badge-module">👥 People</span>
+          </div>
+        </td>
+        <td class="td"><span class="mono" style="font-size: 12px; color: var(--muted2);">0</span></td>
+        <td class="td"><span class="badge badge-success">active</span></td>
+        <td class="td"><div style="display: flex; gap: 4px; opacity: 0.3;"><span style="cursor: pointer;">✎</span> <span style="cursor: pointer; color: var(--rose);">🗑</span></div></td>
+      </tr>
+      <tr class="row-hover" style="cursor: pointer;">
+        <td class="td">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: rgba(244,63,94,0.1);">🚛</div>
+            <div>
+              <p style="font-weight: 600; font-size: 13px;">Logistics</p>
+              <p style="font-size: 10px; color: var(--muted2);">Distribution, transport, cold chain logistics</p>
+            </div>
+          </div>
+        </td>
+        <td class="td">
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <span class="badge badge-module">🧊 Cold Chain</span>
+            <span class="badge badge-module">📋 Compliance</span>
+          </div>
+        </td>
+        <td class="td"><span class="mono" style="font-size: 12px; color: var(--muted2);">0</span></td>
+        <td class="td"><span class="badge badge-success">active</span></td>
+        <td class="td"><div style="display: flex; gap: 4px; opacity: 0.3;"><span style="cursor: pointer;">✎</span> <span style="cursor: pointer; color: var(--rose);">🗑</span></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">2 — CREATE / EDIT: Segment Form (Dialog)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="card" style="max-width: 520px; padding: 0;">
+  <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle);">
+    <h2 style="font-size: 16px; font-weight: 700;">Create Segment</h2>
+    <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">Define an industry vertical with recommended modules.</p>
+  </div>
+
+  <div style="padding: 20px 24px;">
+    <!-- Name + Icon -->
+    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+      <div style="flex: 1;">
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Name</label>
+        <input type="text" value="Pharma" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-size: 13px; font-weight: 500; outline: none; font-family: var(--font-body);">
+      </div>
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Icon</label>
+        <div style="display: flex; gap: 3px;">
+          <button style="height: 36px; width: 36px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 2px solid var(--primary); background: rgba(6,182,212,0.1); font-size: 16px; cursor: pointer;">💊</button>
+          <button style="height: 36px; width: 36px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--border); background: transparent; font-size: 16px; cursor: pointer;">🏪</button>
+          <button style="height: 36px; width: 36px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--border); background: transparent; font-size: 16px; cursor: pointer;">🏭</button>
+          <button style="height: 36px; width: 36px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--border); background: transparent; font-size: 16px; cursor: pointer;">🏨</button>
+          <button style="height: 36px; width: 36px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--border); background: transparent; font-size: 16px; cursor: pointer;">🏢</button>
+          <button style="height: 36px; width: 36px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--border); background: transparent; font-size: 16px; cursor: pointer;">🚛</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Description</label>
+      <input type="text" value="Pharmacies, hospitals, vaccine storage" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-size: 12px; outline: none; font-family: var(--font-body);">
+    </div>
+
+    <!-- Suggested Modules — the key field -->
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Suggested Modules</label>
+      <p style="font-size: 10px; color: var(--muted2); margin-bottom: 8px;">These modules will be pre-selected when creating a site for an organization in this segment.</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;">
+        <!-- Selected -->
+        <label style="display: flex; cursor: pointer; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 2px solid var(--primary); background: rgba(6,182,212,0.05); font-size: 11px; font-weight: 500;">
+          <span style="width: 14px; height: 14px; border-radius: 3px; border: 2px solid var(--primary); background: var(--primary); display: flex; align-items: center; justify-content: center;"><span style="color: #000; font-size: 9px; font-weight: 800;">✓</span></span>
+          🧊 Cold Chain
+        </label>
+        <label style="display: flex; cursor: pointer; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 2px solid var(--primary); background: rgba(6,182,212,0.05); font-size: 11px; font-weight: 500;">
+          <span style="width: 14px; height: 14px; border-radius: 3px; border: 2px solid var(--primary); background: var(--primary); display: flex; align-items: center; justify-content: center;"><span style="color: #000; font-size: 9px; font-weight: 800;">✓</span></span>
+          📋 Compliance
+        </label>
+        <!-- Not selected -->
+        <label style="display: flex; cursor: pointer; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 11px; color: var(--muted);">
+          <span style="width: 14px; height: 14px; border-radius: 3px; border: 2px solid var(--muted2);"></span>
+          ⚡ Energy
+        </label>
+        <label style="display: flex; cursor: pointer; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 11px; color: var(--muted);">
+          <span style="width: 14px; height: 14px; border-radius: 3px; border: 2px solid var(--muted2);"></span>
+          🛡️ Safety
+        </label>
+        <label style="display: flex; cursor: pointer; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 11px; color: var(--muted);">
+          <span style="width: 14px; height: 14px; border-radius: 3px; border: 2px solid var(--muted2);"></span>
+          🏭 Industrial
+        </label>
+        <label style="display: flex; cursor: pointer; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 11px; color: var(--muted);">
+          <span style="width: 14px; height: 14px; border-radius: 3px; border: 2px solid var(--muted2);"></span>
+          🌬️ IAQ
+        </label>
+        <label style="display: flex; cursor: pointer; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 11px; color: var(--muted);">
+          <span style="width: 14px; height: 14px; border-radius: 3px; border: 2px solid var(--muted2);"></span>
+          👥 People
+        </label>
+      </div>
+    </div>
+
+    <!-- Color -->
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Color</label>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <input type="color" value="#3b82f6" style="height: 36px; width: 36px; cursor: pointer; appearance: none; border-radius: 6px; border: 1px solid var(--border); background: transparent; padding: 2px;">
+        <div style="display: flex; gap: 4px;">
+          <button style="height: 24px; width: 24px; border-radius: 50%; border: 2px solid var(--fg); background: #3b82f6; cursor: pointer;"></button>
+          <button style="height: 24px; width: 24px; border-radius: 50%; border: 2px solid transparent; background: #06b6d4; cursor: pointer;"></button>
+          <button style="height: 24px; width: 24px; border-radius: 50%; border: 2px solid transparent; background: #8b5cf6; cursor: pointer;"></button>
+          <button style="height: 24px; width: 24px; border-radius: 50%; border: 2px solid transparent; background: #f59e0b; cursor: pointer;"></button>
+          <button style="height: 24px; width: 24px; border-radius: 50%; border: 2px solid transparent; background: #22c55e; cursor: pointer;"></button>
+          <button style="height: 24px; width: 24px; border-radius: 50%; border: 2px solid transparent; background: #f43f5e; cursor: pointer;"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active toggle -->
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="width: 36px; height: 20px; border-radius: 10px; background: var(--primary); position: relative; cursor: pointer;"><div style="position: absolute; top: 2px; left: 18px; width: 16px; height: 16px; border-radius: 50%; background: white;"></div></div>
+      <span style="font-size: 12px;">Active</span>
+    </div>
+  </div>
+
+  <div style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
+    <button class="btn">Cancel</button>
+    <button class="btn btn-primary">Create Segment</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">3 — How Segments Connect to the Workflow</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="card" style="padding: 24px;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; width: 30%; color: var(--primary);">1. Create Organization</td>
+      <td style="padding: 8px 0; color: var(--muted);">Admin picks a segment: "This org is Retail." The segment is stored on the organization record.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">2. Onboard a Site</td>
+      <td style="padding: 8px 0; color: var(--muted);">In the Modules step, the segment's suggested modules are pre-selected: Cold Chain ✓, Energy ✓, Safety ✓. Admin can add/remove before activating.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">3. Activate Modules</td>
+      <td style="padding: 8px 0; color: var(--muted);">Each activated module creates alert rules from its recipes for matching devices. The segment just pre-selects — it doesn't force anything.</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">No sensor field needed</td>
+      <td style="padding: 8px 0; color: var(--muted);">Segments don't define sensors directly. Sensors come from the modules → each module has required_sensor_models. When you pick modules, the sensors are implied.</td>
+    </tr>
+  </table>
+</div>
+
+</div>
+</body>
+</html>
