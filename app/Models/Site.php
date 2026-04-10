@@ -19,6 +19,8 @@ class Site extends Model
     protected $fillable = [
         'org_id',
         'name',
+        'template_id',
+        'template_applied_at',
         'address',
         'lat',
         'lng',
@@ -42,7 +44,13 @@ class Site extends Model
             'lng' => 'float',
             'opening_hour' => 'datetime:H:i',
             'install_date' => 'date',
+            'template_applied_at' => 'datetime',
         ];
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(SiteTemplate::class, 'template_id');
     }
 
     public function organization(): BelongsTo

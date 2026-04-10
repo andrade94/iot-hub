@@ -17,26 +17,40 @@ class SiteTemplateController extends Controller
 
         $templates = SiteTemplate::forOrg($user->org_id)
             ->with('createdByUser:id,name')
+            ->withCount('sites as usage_count')
+            ->withMax('sites as last_applied_at', 'template_applied_at')
             ->latest()
             ->get()
             ->map(fn ($t) => [
                 'id' => $t->id,
                 'name' => $t->name,
                 'description' => $t->description,
+                'segment' => $t->segment,
                 'modules' => $t->modules ?? [],
                 'zone_config' => $t->zone_config ?? [],
                 'recipe_assignments' => $t->recipe_assignments ?? [],
                 'alert_rules' => $t->alert_rules ?? [],
                 'maintenance_windows' => $t->maintenance_windows ?? [],
                 'escalation_structure' => $t->escalation_structure,
+                'usage_count' => (int) $t->usage_count,
+                'last_applied_at' => $t->last_applied_at,
                 'created_at' => $t->created_at,
                 'created_by_user' => $t->createdByUser ? ['id' => $t->createdByUser->id, 'name' => $t->createdByUser->name] : null,
             ]);
 
-        // Sites with an indicator for existing escalation chains (for conflict warning)
+        // Sites with conflict indicators for the Apply dialog
         $accessibleSites = $user->accessibleSites()->filter(fn ($s) => $s->status === 'active');
         $siteIds = $accessibleSites->pluck('id');
+
         $sitesWithChains = \App\Models\EscalationChain::whereIn('site_id', $siteIds)
+            ->pluck('site_id')
+            ->unique()
+            ->flip();
+        $sitesWithRules = \App\Models\AlertRule::whereIn('site_id', $siteIds)
+            ->pluck('site_id')
+            ->unique()
+            ->flip();
+        $sitesWithWindows = \App\Models\MaintenanceWindow::whereIn('site_id', $siteIds)
             ->pluck('site_id')
             ->unique()
             ->flip();
@@ -46,12 +60,43 @@ class SiteTemplateController extends Controller
                 'id' => $s->id,
                 'name' => $s->name,
                 'has_escalation_chain' => $sitesWithChains->has($s->id),
+                'has_rules' => $sitesWithRules->has($s->id),
+                'has_windows' => $sitesWithWindows->has($s->id),
+                'template_id' => $s->template_id,
             ])
             ->values();
+
+        // Stats bar
+        $allSites = Site::where('org_id', $user->org_id)->whereNotNull('template_id')->count();
+        $mostUsed = $templates->sortByDesc('usage_count')->first();
+        $lastAppliedTemplate = $templates
+            ->filter(fn ($t) => $t['last_applied_at'] !== null)
+            ->sortByDesc('last_applied_at')
+            ->first();
+
+        $stats = [
+            'total_templates' => $templates->count(),
+            'sites_using' => $allSites,
+            'total_sites' => Site::where('org_id', $user->org_id)->count(),
+            'most_used' => $mostUsed && $mostUsed['usage_count'] > 0
+                ? ['name' => $mostUsed['name'], 'usage_count' => $mostUsed['usage_count']]
+                : null,
+            'last_applied' => $lastAppliedTemplate
+                ? [
+                    'template_name' => $lastAppliedTemplate['name'],
+                    'at' => $lastAppliedTemplate['last_applied_at'],
+                ]
+                : null,
+            'by_segment' => $templates
+                ->groupBy(fn ($t) => $t['segment'] ?? 'unclassified')
+                ->map(fn ($group) => $group->count())
+                ->toArray(),
+        ];
 
         return Inertia::render('settings/site-templates/index', [
             'templates' => $templates,
             'sites' => $sites,
+            'stats' => $stats,
         ]);
     }
 

@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Templates — Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  /* ============================================================
+     X4 EDITORIAL COOL — FOUNDATIONS
+     ============================================================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0d10;
+    --card: #111318;
+    --surface: #161a20;
+    --surface-2: #1a1f26;
+    --border: #1e2228;
+    --border-subtle: #171b21;
+    --text: #e0e4ea;
+    --text-secondary: #b0b8c4;
+    --muted: #6b7280;
+    --dim: #374151;
+    --emerald: #10b981;
+    --emerald-dim: rgba(16, 185, 129, 0.12);
+    --cyan: #06b6d4;
+    --cyan-dim: rgba(6, 182, 212, 0.12);
+    --coral: #f43f5e;
+    --coral-dim: rgba(244, 63, 94, 0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --gold: #06b6d4;
+    --violet: #8b5cf6;
+    --violet-dim: rgba(139, 92, 246, 0.12);
+
+    --font-display: 'Bricolage Grotesque', serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+
+    --sidebar-w: 220px;
+  }
+
+  html {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  body { display: flex; min-height: 100vh; }
+
+  .variant-label {
+    position: fixed; top: 12px; right: 16px; z-index: 999;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.08em; color: var(--gold);
+    background: rgba(15, 14, 12, 0.85); backdrop-filter: blur(12px);
+    border: 1px solid var(--border); padding: 5px 12px; border-radius: 4px;
+  }
+
+  /* Sidebar (abbreviated) */
+  .sidebar {
+    width: var(--sidebar-w); min-height: 100vh;
+    background: var(--card); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 20px 20px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--gold), var(--amber));
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--bg);
+  }
+  .logo-text {
+    font-family: var(--font-display); font-weight: 700; font-size: 17px;
+    color: var(--text); letter-spacing: -0.02em;
+  }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-section-label {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim);
+    padding: 12px 20px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 20px; font-size: 13px; color: var(--muted);
+    cursor: pointer; transition: all 0.15s; text-decoration: none;
+    position: relative;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255, 0.02); }
+  .nav-item.active { color: var(--text); background: var(--cyan-dim); }
+  .nav-item.active::before {
+    content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+    width: 2px; background: var(--gold); border-radius: 0 2px 2px 0;
+  }
+  .nav-icon { width: 16px; height: 16px; opacity: 0.55; flex-shrink: 0; }
+  .nav-item.active .nav-icon { opacity: 0.95; }
+
+  .sidebar-footer {
+    padding: 14px 16px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--amber));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 11px;
+    color: var(--bg); flex-shrink: 0;
+  }
+  .user-info { overflow: hidden; flex: 1; }
+  .user-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .user-role { font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+
+  /* Main shell */
+  main.shell {
+    margin-left: var(--sidebar-w);
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+  }
+  .breadcrumb-bar {
+    height: 44px;
+    display: flex; align-items: center; padding: 0 32px; gap: 6px;
+    font-size: 12px; color: var(--muted);
+    background: var(--card); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .breadcrumb-bar a { color: var(--muted); text-decoration: none; }
+  .breadcrumb-bar a:hover { color: var(--text); }
+  .breadcrumb-bar .sep { color: var(--dim); margin: 0 2px; }
+  .breadcrumb-bar .current { color: var(--text-secondary); font-weight: 500; }
+
+  .content { padding: 32px; max-width: 1600px; }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
+    background-size: 24px 24px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    position: relative;
+  }
+  .hero-kicker {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin-top: 8px;
+  }
+  .hero-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-weight: 300;
+    max-width: 560px;
+  }
+  .hero-subtitle strong { color: var(--text); font-weight: 500; }
+
+  .hero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn:hover { background: var(--surface-2); border-color: var(--dim); }
+  .btn svg { width: 13px; height: 13px; }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--bg);
+    border-color: var(--gold);
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: var(--amber); border-color: var(--amber); transform: translateY(-1px); }
+
+  /* ============================================================
+     FILTER BAR
+     ============================================================ */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .filter-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .filter-pill {
+    padding: 5px 12px;
+    font-size: 11px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+  }
+  .filter-pill:hover { color: var(--text); border-color: var(--dim); }
+  .filter-pill.active {
+    color: var(--gold);
+    background: var(--cyan-dim);
+    border-color: rgba(6, 182, 212, 0.3);
+  }
+
+  .search-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    min-width: 220px;
+    margin-left: auto;
+  }
+  .search-input svg { color: var(--muted); width: 13px; height: 13px; }
+  .search-input input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 11px;
+  }
+  .search-input input::placeholder { color: var(--dim); }
+
+  /* ============================================================
+     STATS BAR
+     ============================================================ */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-bottom: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .stat-cell {
+    padding: 18px 22px;
+    position: relative;
+  }
+  .stat-cell + .stat-cell::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 25%;
+    bottom: 25%;
+    width: 1px;
+    background: var(--border);
+  }
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-top: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 300;
+  }
+
+  /* ============================================================
+     TEMPLATE CARDS
+     ============================================================ */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 20px 0 16px;
+  }
+  .section-divider-line {
+    flex: 1; height: 1px;
+    background: var(--border);
+  }
+  .section-divider-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .section-divider-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+
+  .tmpl-card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    transition: all 0.2s;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .tmpl-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--cyan), transparent);
+  }
+  .tmpl-card.segment-cold_chain::before { background: linear-gradient(180deg, var(--cyan), transparent); }
+  .tmpl-card.segment-retail::before { background: linear-gradient(180deg, var(--violet), transparent); }
+  .tmpl-card.segment-pharmacy::before { background: linear-gradient(180deg, var(--emerald), transparent); }
+  .tmpl-card.segment-industrial::before { background: linear-gradient(180deg, var(--amber), transparent); }
+
+  .tmpl-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--dim);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+
+  .tmpl-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .tmpl-name {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .tmpl-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+    font-weight: 300;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .tmpl-segment {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tmpl-segment.cold_chain { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(6,182,212,0.25); }
+  .tmpl-segment.retail { background: var(--violet-dim); color: var(--violet); border: 1px solid rgba(139,92,246,0.25); }
+  .tmpl-segment.pharmacy { background: var(--emerald-dim); color: var(--emerald); border: 1px solid rgba(16,185,129,0.25); }
+  .tmpl-segment.industrial { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+
+  /* Module icons row */
+  .tmpl-modules {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .tmpl-module {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 5px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-secondary);
+    text-transform: lowercase;
+  }
+  .tmpl-module svg { width: 10px; height: 10px; opacity: 0.6; }
+
+  /* Zone preview */
+  .tmpl-zones {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .tmpl-zones-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 6px;
+  }
+  .tmpl-zones-list {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .tmpl-zones-list .zone {
+    display: inline-block;
+    margin-right: 6px;
+  }
+  .tmpl-zones-more { color: var(--muted); font-style: italic; }
+
+  /* Stat row */
+  .tmpl-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .tmpl-stat {
+    text-align: center;
+    position: relative;
+  }
+  .tmpl-stat + .tmpl-stat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    bottom: 15%;
+    width: 1px;
+    background: var(--border-subtle);
+  }
+  .tmpl-stat-value {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .tmpl-stat-value.muted { color: var(--dim); }
+  .tmpl-stat-label {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Usage badge */
+  .tmpl-usage {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border-radius: 6px;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+  .tmpl-usage .count {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--emerald);
+  }
+  .tmpl-usage .sep { color: var(--dim); }
+  .tmpl-usage svg { width: 11px; height: 11px; color: var(--emerald); }
+
+  /* Footer meta + actions */
+  .tmpl-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .tmpl-meta {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .tmpl-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+  }
+  .btn-sm:hover { background: var(--surface-2); color: var(--text); border-color: var(--dim); }
+  .btn-sm svg { width: 10px; height: 10px; }
+  .btn-sm.primary {
+    background: var(--gold);
+    color: var(--bg);
+    border-color: var(--gold);
+    font-weight: 600;
+  }
+  .btn-sm.primary:hover { background: var(--amber); border-color: var(--amber); }
+  .btn-sm.danger { color: var(--coral); }
+  .btn-sm.danger:hover { background: var(--coral-dim); border-color: rgba(244,63,94,0.25); }
+
+  /* ============================================================
+     TEMPLATE PREVIEW SHEET (slide-in from right)
+     ============================================================ */
+  .preview-sheet-section {
+    margin: 80px 0 24px;
+    padding: 14px 18px;
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+  }
+  .preview-sheet-section strong { color: var(--text); font-weight: 600; }
+  .preview-sheet-section small { color: var(--muted); display: block; margin-top: 4px; font-weight: 300; }
+
+  .preview-sheet {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 640px;
+  }
+  .preview-sheet-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-sheet-header .sheet-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .preview-sheet-header .sheet-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .preview-sheet-header .sheet-close {
+    width: 28px; height: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .preview-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 18px;
+  }
+  .preview-tab {
+    flex: 1;
+    padding: 8px 12px;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .preview-tab:hover { color: var(--text); }
+  .preview-tab.active {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .preview-tab .count {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-left: 4px;
+  }
+  .preview-tab.active .count { color: var(--gold); }
+
+  .preview-section-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* Modules list */
+  .modules-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .module-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+  }
+  .module-item .icon {
+    width: 28px; height: 28px;
+    background: var(--cyan-dim);
+    color: var(--cyan);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .module-item .icon svg { width: 14px; height: 14px; }
+  .module-item .name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .module-item .desc {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Zones list */
+  .zones-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .zone-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+  }
+  .zone-item .icon {
+    width: 24px; height: 24px;
+    background: var(--emerald-dim);
+    color: var(--emerald);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .zone-item .icon svg { width: 11px; height: 11px; }
+  .zone-item .body { flex: 1; }
+  .zone-item .name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .zone-item .recipe {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Rules list */
+  .rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rule-item {
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+  }
+  .rule-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .rule-severity {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .rule-severity.critical { background: var(--coral-dim); color: var(--coral); }
+  .rule-severity.high { background: var(--amber-dim); color: var(--amber); }
+  .rule-severity.medium { background: var(--cyan-dim); color: var(--cyan); }
+  .rule-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .rule-condition {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    padding: 6px 10px;
+    background: var(--bg);
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+  }
+  .rule-condition .op { color: var(--gold); font-weight: 500; }
+  .rule-condition .val { color: var(--text); }
+
+  /* Escalation chain */
+  .escalation-levels {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+  }
+  .escalation-level {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    position: relative;
+  }
+  .escalation-level .level-num {
+    width: 28px; height: 28px;
+    background: var(--cyan);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .escalation-level .body { flex: 1; }
+  .escalation-level .delay {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .escalation-level .recipients {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .escalation-level .channels {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .channel-chip {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    padding: 2px 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Sheet footer with apply / delete */
+  .preview-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .preview-footer .meta {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  /* ============================================================
+     APPLY DIALOG — shown as a variation
+     ============================================================ */
+  .dialog-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 520px;
+  }
+  .dialog-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .dialog-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .dialog-desc strong { color: var(--text); }
+
+  .dialog-preview-box {
+    margin-top: 18px;
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+  }
+  .dialog-preview-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .dialog-preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dialog-preview-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    list-style: none;
+  }
+  .dialog-preview-list .num {
+    font-family: var(--font-mono);
+    color: var(--text);
+    font-weight: 600;
+    min-width: 20px;
+  }
+  .dialog-preview-list .muted { color: var(--muted); font-size: 10px; }
+  .dialog-preview-list .ok { color: var(--emerald); }
+  .dialog-preview-list .warn { color: var(--amber); }
+
+  .dialog-conflict {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(245, 158, 11, 0.06);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-left: 3px solid var(--amber);
+    border-radius: 6px;
+  }
+  .dialog-conflict-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+  .dialog-conflict-body {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .select {
+    display: block;
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    margin-top: 6px;
+  }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 22px;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .anim-1 { animation: fadeUp 0.4s ease-out 0.05s both; }
+  .anim-2 { animation: fadeUp 0.4s ease-out 0.12s both; }
+  .anim-3 { animation: fadeUp 0.4s ease-out 0.18s both; }
+  .anim-4 { animation: fadeUp 0.4s ease-out 0.24s both; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="variant-label">Site Templates — Mockup v1</div>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">A</div>
+    <div class="logo-text">Astrea</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div>
+      <div class="nav-section-label">Overview</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="1.5" width="5" height="5" rx="1"/><rect x="9.5" y="1.5" width="5" height="5" rx="1"/><rect x="1.5" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/></svg>
+        Dashboard
+      </a>
+    </div>
+    <div>
+      <div class="nav-section-label">Administration</div>
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="10" height="10" rx="1"/><rect x="1" y="1" width="10" height="10" rx="1" stroke-dasharray="2 2"/></svg>
+        Site Templates
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-avatar">MR</div>
+    <div class="user-info">
+      <div class="user-name">Maria Rodríguez</div>
+      <div class="user-role">org_admin</div>
+    </div>
+  </div>
+</aside>
+
+<main class="shell">
+  <div class="breadcrumb-bar">
+    <a href="#">Home</a>
+    <span class="sep">/</span>
+    <a href="#">Settings</a>
+    <span class="sep">/</span>
+    <span class="current">Site Templates</span>
+  </div>
+
+  <div class="content">
+
+    <!-- ============================================================
+         [A] HERO
+         ============================================================ -->
+    <div class="hero anim-1">
+      <div class="hero-top">
+        <div>
+          <div class="hero-kicker">Configuration Blueprints</div>
+          <h1 class="hero-title">Site Templates</h1>
+          <p class="hero-subtitle">
+            Save a configured site as a reusable template — modules, zones, recipes, alert rules,
+            maintenance windows, and escalation chains. Apply to a new site to get a production-ready
+            configuration in seconds instead of hours.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h8M8 4v8"/></svg>
+            Capture from site
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [B] STATS BAR
+         ============================================================ -->
+    <div class="stats-bar anim-2">
+      <div class="stat-cell">
+        <div class="stat-label">Templates</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub">across 4 segments</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">Sites using templates</div>
+        <div class="stat-value">38</div>
+        <div class="stat-sub">of 87 total sites</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">Most-used template</div>
+        <div class="stat-value" style="font-size: 16px; margin-top: 10px;">Cold Chain Store</div>
+        <div class="stat-sub">applied to 18 sites</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">Last applied</div>
+        <div class="stat-value" style="font-size: 16px; margin-top: 10px;">4 hours ago</div>
+        <div class="stat-sub">FreshCo Monterrey #04</div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [C] FILTER BAR
+         ============================================================ -->
+    <div class="filter-bar">
+      <span class="filter-label">Segment:</span>
+      <button class="filter-pill active">All <span style="color:var(--dim)">· 12</span></button>
+      <button class="filter-pill">Cold chain <span style="color:var(--dim)">· 4</span></button>
+      <button class="filter-pill">Retail <span style="color:var(--dim)">· 3</span></button>
+      <button class="filter-pill">Pharmacy <span style="color:var(--dim)">· 3</span></button>
+      <button class="filter-pill">Industrial <span style="color:var(--dim)">· 2</span></button>
+      <div class="search-input">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+        <input placeholder="Search templates...">
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [D] TEMPLATES GRID
+         ============================================================ -->
+    <div class="templates-grid">
+
+      <!-- Card 1: Cold chain (most-used, pharmacy) -->
+      <div class="tmpl-card segment-cold_chain anim-3">
+        <div class="tmpl-head">
+          <div>
+            <h3 class="tmpl-name">Cold Chain Store</h3>
+            <p class="tmpl-desc">Standard FreshCo configuration with walk-in cooler, freezer bay, display case monitoring, and HACCP-compliant temperature rules.</p>
+          </div>
+          <span class="tmpl-segment cold_chain">Cold Chain</span>
+        </div>
+        <div class="tmpl-modules">
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h8v8H4z"/><path d="M6 8h4"/></svg>
+            temperature
+          </span>
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v4M4 8a4 4 0 108 0"/></svg>
+            humidity
+          </span>
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="10" height="8"/><path d="M6 5V3h4v2"/></svg>
+            door
+          </span>
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12v-8M8 12v-6M12 12v-4"/></svg>
+            compressor
+          </span>
+        </div>
+        <div class="tmpl-zones">
+          <div class="tmpl-zones-label">Zones (6)</div>
+          <div class="tmpl-zones-list">
+            <span class="zone">cooler-a ·</span>
+            <span class="zone">cooler-b ·</span>
+            <span class="zone">freezer-1 ·</span>
+            <span class="zone">freezer-2 ·</span>
+            <span class="zone">display-1</span>
+            <span class="tmpl-zones-more">+ 1 more</span>
+          </div>
+        </div>
+        <div class="tmpl-stats">
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">6</div>
+            <div class="tmpl-stat-label">Zones</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">14</div>
+            <div class="tmpl-stat-label">Rules</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">3</div>
+            <div class="tmpl-stat-label">Windows</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value" style="color:var(--cyan)">3</div>
+            <div class="tmpl-stat-label">Chain</div>
+          </div>
+        </div>
+        <div class="tmpl-usage">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 6l6-4 6 4v6l-6 4-6-4z"/></svg>
+          <span>Used by <span class="count">18 sites</span></span>
+          <span class="sep">·</span>
+          <span>most-used template</span>
+        </div>
+        <div class="tmpl-footer">
+          <span class="tmpl-meta">Created Feb 14 by Juan P.</span>
+          <div class="tmpl-actions">
+            <button class="btn-sm">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="3"/><path d="M1 8a7 7 0 0114 0 7 7 0 01-14 0z"/></svg>
+              Preview
+            </button>
+            <button class="btn-sm primary">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 6-6"/></svg>
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Retail -->
+      <div class="tmpl-card segment-retail anim-3">
+        <div class="tmpl-head">
+          <div>
+            <h3 class="tmpl-name">Retail HQ Monitoring</h3>
+            <p class="tmpl-desc">Indoor air quality + people-counting for retail flagship stores with customer comfort and occupancy tracking.</p>
+          </div>
+          <span class="tmpl-segment retail">Retail</span>
+        </div>
+        <div class="tmpl-modules">
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5"/></svg>
+            co2
+          </span>
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="6" r="2"/><path d="M4 13c0-3 2-4 4-4s4 1 4 4"/></svg>
+            people
+          </span>
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h8v8H4z"/></svg>
+            iaq
+          </span>
+        </div>
+        <div class="tmpl-zones">
+          <div class="tmpl-zones-label">Zones (4)</div>
+          <div class="tmpl-zones-list">
+            <span class="zone">entry ·</span>
+            <span class="zone">floor ·</span>
+            <span class="zone">checkout ·</span>
+            <span class="zone">stockroom</span>
+          </div>
+        </div>
+        <div class="tmpl-stats">
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">4</div>
+            <div class="tmpl-stat-label">Zones</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">8</div>
+            <div class="tmpl-stat-label">Rules</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value muted">0</div>
+            <div class="tmpl-stat-label">Windows</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value" style="color:var(--cyan)">2</div>
+            <div class="tmpl-stat-label">Chain</div>
+          </div>
+        </div>
+        <div class="tmpl-usage">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 6l6-4 6 4v6l-6 4-6-4z"/></svg>
+          <span>Used by <span class="count">9 sites</span></span>
+        </div>
+        <div class="tmpl-footer">
+          <span class="tmpl-meta">Created Jan 28 by Maria R.</span>
+          <div class="tmpl-actions">
+            <button class="btn-sm">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="3"/><path d="M1 8a7 7 0 0114 0 7 7 0 01-14 0z"/></svg>
+              Preview
+            </button>
+            <button class="btn-sm primary">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 6-6"/></svg>
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Pharmacy -->
+      <div class="tmpl-card segment-pharmacy anim-3">
+        <div class="tmpl-head">
+          <div>
+            <h3 class="tmpl-name">Pharmacy Cold Room</h3>
+            <p class="tmpl-desc">Strict cold-chain for vaccine and biological storage with dual redundancy, 2-8°C range, and full audit trail.</p>
+          </div>
+          <span class="tmpl-segment pharmacy">Pharmacy</span>
+        </div>
+        <div class="tmpl-modules">
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h8v8H4z"/></svg>
+            temperature
+          </span>
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v4"/></svg>
+            humidity
+          </span>
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="10" height="8"/></svg>
+            access
+          </span>
+        </div>
+        <div class="tmpl-zones">
+          <div class="tmpl-zones-label">Zones (3)</div>
+          <div class="tmpl-zones-list">
+            <span class="zone">cold-room-a ·</span>
+            <span class="zone">cold-room-b ·</span>
+            <span class="zone">secure-cabinet</span>
+          </div>
+        </div>
+        <div class="tmpl-stats">
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">3</div>
+            <div class="tmpl-stat-label">Zones</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">12</div>
+            <div class="tmpl-stat-label">Rules</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">2</div>
+            <div class="tmpl-stat-label">Windows</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value" style="color:var(--cyan)">4</div>
+            <div class="tmpl-stat-label">Chain</div>
+          </div>
+        </div>
+        <div class="tmpl-usage">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 6l6-4 6 4v6l-6 4-6-4z"/></svg>
+          <span>Used by <span class="count">6 sites</span></span>
+        </div>
+        <div class="tmpl-footer">
+          <span class="tmpl-meta">Created Mar 3 by Juan P.</span>
+          <div class="tmpl-actions">
+            <button class="btn-sm">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="3"/><path d="M1 8a7 7 0 0114 0 7 7 0 01-14 0z"/></svg>
+              Preview
+            </button>
+            <button class="btn-sm primary">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 6-6"/></svg>
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Industrial -->
+      <div class="tmpl-card segment-industrial anim-4">
+        <div class="tmpl-head">
+          <div>
+            <h3 class="tmpl-name">Compressor Room</h3>
+            <p class="tmpl-desc">Industrial refrigeration with current sensing, vibration monitoring, and predictive maintenance scheduling.</p>
+          </div>
+          <span class="tmpl-segment industrial">Industrial</span>
+        </div>
+        <div class="tmpl-modules">
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12v-8"/></svg>
+            current
+          </span>
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 8h12M4 6v4M6 4v8M8 6v4"/></svg>
+            vibration
+          </span>
+          <span class="tmpl-module">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v12"/></svg>
+            pressure
+          </span>
+        </div>
+        <div class="tmpl-zones">
+          <div class="tmpl-zones-label">Zones (2)</div>
+          <div class="tmpl-zones-list">
+            <span class="zone">compressor-1 ·</span>
+            <span class="zone">compressor-2</span>
+          </div>
+        </div>
+        <div class="tmpl-stats">
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">2</div>
+            <div class="tmpl-stat-label">Zones</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">6</div>
+            <div class="tmpl-stat-label">Rules</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value">4</div>
+            <div class="tmpl-stat-label">Windows</div>
+          </div>
+          <div class="tmpl-stat">
+            <div class="tmpl-stat-value" style="color:var(--cyan)">3</div>
+            <div class="tmpl-stat-label">Chain</div>
+          </div>
+        </div>
+        <div class="tmpl-usage">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 6l6-4 6 4v6l-6 4-6-4z"/></svg>
+          <span>Used by <span class="count">3 sites</span></span>
+        </div>
+        <div class="tmpl-footer">
+          <span class="tmpl-meta">Created Mar 12 by Carlos V.</span>
+          <div class="tmpl-actions">
+            <button class="btn-sm">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="3"/><path d="M1 8a7 7 0 0114 0 7 7 0 01-14 0z"/></svg>
+              Preview
+            </button>
+            <button class="btn-sm primary">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 6-6"/></svg>
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================
+         [E] TEMPLATE PREVIEW SHEET
+         ============================================================ -->
+    <div class="preview-sheet-section">
+      <strong>PREVIEW SHEET · Click a card's Preview button to open this</strong>
+      <small>Full template contents with tabs. Shown as a slide-in sheet from the right; here it's rendered inline for the mockup.</small>
+    </div>
+
+    <div class="preview-sheet">
+      <div class="preview-sheet-header">
+        <div>
+          <h2 class="sheet-title">Cold Chain Store</h2>
+          <p class="sheet-desc">
+            Standard FreshCo configuration with walk-in cooler, freezer bay, display case monitoring,
+            and HACCP-compliant temperature rules.
+          </p>
+          <div style="display: flex; gap: 8px; margin-top: 12px; align-items: center;">
+            <span class="tmpl-segment cold_chain">Cold Chain</span>
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--muted);">
+              Created Feb 14 by Juan P. · Used by 18 sites
+            </span>
+          </div>
+        </div>
+        <div class="sheet-close">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="preview-tabs">
+        <button class="preview-tab active">Modules <span class="count">4</span></button>
+        <button class="preview-tab">Zones <span class="count">6</span></button>
+        <button class="preview-tab">Rules <span class="count">14</span></button>
+        <button class="preview-tab">Windows <span class="count">3</span></button>
+        <button class="preview-tab">Chain <span class="count">3</span></button>
+      </div>
+
+      <!-- Modules tab content -->
+      <div class="preview-section-title">Activated modules</div>
+      <div class="modules-list">
+        <div class="module-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h8v8H4z"/></svg>
+          </div>
+          <div>
+            <div class="name">Temperature monitoring</div>
+            <div class="desc">EM300-TH sensors</div>
+          </div>
+        </div>
+        <div class="module-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 2v4M4 8a4 4 0 108 0"/></svg>
+          </div>
+          <div>
+            <div class="name">Humidity monitoring</div>
+            <div class="desc">EM300-TH sensors</div>
+          </div>
+        </div>
+        <div class="module-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="10" height="8"/></svg>
+          </div>
+          <div>
+            <div class="name">Door state</div>
+            <div class="desc">WS301 sensors</div>
+          </div>
+        </div>
+        <div class="module-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12v-8M8 12v-6M12 12v-4"/></svg>
+          </div>
+          <div>
+            <div class="name">Compressor current</div>
+            <div class="desc">CT101 sensors</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 28px;"></div>
+
+      <!-- Zones section -->
+      <div class="preview-section-title">Zones (6) with recipes</div>
+      <div class="zones-list">
+        <div class="zone-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="1"/></svg>
+          </div>
+          <div class="body">
+            <div class="name">cooler-a</div>
+            <div class="recipe">recipe: walk-in-cooler (2-8°C)</div>
+          </div>
+        </div>
+        <div class="zone-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="1"/></svg>
+          </div>
+          <div class="body">
+            <div class="name">cooler-b</div>
+            <div class="recipe">recipe: walk-in-cooler (2-8°C)</div>
+          </div>
+        </div>
+        <div class="zone-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="1"/></svg>
+          </div>
+          <div class="body">
+            <div class="name">freezer-1</div>
+            <div class="recipe">recipe: freezer-industrial (-18 to -22°C)</div>
+          </div>
+        </div>
+        <div class="zone-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="1"/></svg>
+          </div>
+          <div class="body">
+            <div class="name">freezer-2</div>
+            <div class="recipe">recipe: freezer-industrial (-18 to -22°C)</div>
+          </div>
+        </div>
+        <div class="zone-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="1"/></svg>
+          </div>
+          <div class="body">
+            <div class="name">display-1</div>
+            <div class="recipe">recipe: display-case (3-6°C)</div>
+          </div>
+        </div>
+        <div class="zone-item">
+          <div class="icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="1"/></svg>
+          </div>
+          <div class="body">
+            <div class="name">display-2</div>
+            <div class="recipe">recipe: display-case (3-6°C)</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 28px;"></div>
+
+      <!-- Rules preview -->
+      <div class="preview-section-title">Alert rules (showing 4 of 14)</div>
+      <div class="rules-list">
+        <div class="rule-item">
+          <div class="rule-head">
+            <span class="rule-severity critical">Critical</span>
+            <span class="rule-name">Walk-in Cooler Max Temp</span>
+          </div>
+          <div class="rule-condition">
+            temperature <span class="op">&gt;</span> <span class="val">8°C</span> for <span class="val">5 min</span> · cooldown <span class="val">15 min</span>
+          </div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-head">
+            <span class="rule-severity critical">Critical</span>
+            <span class="rule-name">Freezer Max Temp</span>
+          </div>
+          <div class="rule-condition">
+            temperature <span class="op">&gt;</span> <span class="val">-15°C</span> for <span class="val">5 min</span> · cooldown <span class="val">15 min</span>
+          </div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-head">
+            <span class="rule-severity high">High</span>
+            <span class="rule-name">Door Open Too Long</span>
+          </div>
+          <div class="rule-condition">
+            door_state <span class="op">=</span> <span class="val">open</span> for <span class="val">5 min</span> · cooldown <span class="val">10 min</span>
+          </div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-head">
+            <span class="rule-severity high">High</span>
+            <span class="rule-name">High Humidity</span>
+          </div>
+          <div class="rule-condition">
+            humidity <span class="op">&gt;</span> <span class="val">85%</span> for <span class="val">15 min</span> · cooldown <span class="val">30 min</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 28px;"></div>
+
+      <!-- Escalation chain preview -->
+      <div class="preview-section-title">Escalation chain (3 levels)</div>
+      <div class="escalation-levels">
+        <div class="escalation-level">
+          <div class="level-num">1</div>
+          <div class="body">
+            <div class="delay">Immediate</div>
+            <div class="recipients">Site manager on duty · 1 recipient</div>
+            <div class="channels">
+              <span class="channel-chip">Push</span>
+              <span class="channel-chip">SMS</span>
+            </div>
+          </div>
+        </div>
+        <div class="escalation-level">
+          <div class="level-num">2</div>
+          <div class="body">
+            <div class="delay">After 10 minutes</div>
+            <div class="recipients">Regional manager + shift supervisor · 2 recipients</div>
+            <div class="channels">
+              <span class="channel-chip">Push</span>
+              <span class="channel-chip">Email</span>
+              <span class="channel-chip">SMS</span>
+            </div>
+          </div>
+        </div>
+        <div class="escalation-level">
+          <div class="level-num">3</div>
+          <div class="body">
+            <div class="delay">After 25 minutes</div>
+            <div class="recipients">Ops director · 1 recipient</div>
+            <div class="channels">
+              <span class="channel-chip">Push</span>
+              <span class="channel-chip">Email</span>
+              <span class="channel-chip">SMS</span>
+              <span class="channel-chip">Phone</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-footer">
+        <div class="meta">template id: 4 · last updated Apr 2</div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-sm danger">Delete</button>
+          <button class="btn-sm">Edit</button>
+          <button class="btn-sm primary">Apply to site</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [F] APPLY DIALOG — shown inline as a variation
+         ============================================================ -->
+    <div class="preview-sheet-section">
+      <strong>APPLY DIALOG · opens from the "Apply" button</strong>
+      <small>Enhanced with conflict preview: if the target site already has an escalation chain or rules, show a warning before blindly overwriting.</small>
+    </div>
+
+    <div class="dialog-card">
+      <div class="dialog-title">Apply Template</div>
+      <div class="dialog-desc">
+        Apply <strong>Cold Chain Store</strong> to a target site. Review what will be created or replaced before confirming.
+      </div>
+
+      <div style="margin-top: 20px;">
+        <div class="label">Target site</div>
+        <select class="select">
+          <option>FreshCo Puebla #07 (new, no config)</option>
+          <option>FreshCo Monterrey #04 · has escalation chain</option>
+          <option>FreshCo Guadalajara #02 · has rules</option>
+        </select>
+      </div>
+
+      <div class="dialog-preview-box">
+        <div class="dialog-preview-label">What will be applied</div>
+        <ul class="dialog-preview-list">
+          <li><span class="num">4</span> <span>modules activated</span> <span class="muted">· none exist</span></li>
+          <li><span class="num">6</span> <span>zones configured</span> <span class="muted">· none exist</span></li>
+          <li><span class="num">14</span> <span>alert rules created</span> <span class="muted">· skipped if same name</span></li>
+          <li><span class="num">3</span> <span>maintenance windows added</span></li>
+          <li><span class="num ok">✓</span> <span>Escalation chain applied</span> <span class="muted">· 3 levels</span></li>
+        </ul>
+      </div>
+
+      <div class="dialog-conflict">
+        <div class="dialog-conflict-title">⚠ 1 conflict detected</div>
+        <div class="dialog-conflict-body">
+          Target site already has an escalation chain with <strong>2 levels</strong>. Applying this template
+          will <strong>replace</strong> it with the template's 3-level chain. Rules with matching names will be skipped to avoid duplicates.
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn">Cancel</button>
+        <button class="btn btn-primary">Apply template</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

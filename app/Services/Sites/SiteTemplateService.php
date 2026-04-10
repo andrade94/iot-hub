@@ -82,6 +82,8 @@ class SiteTemplateService
             'alert_rules' => $alertRules,
             'maintenance_windows' => $maintenanceWindows,
             'escalation_structure' => $escalation,
+            // Inferred segment from the source site's org — used to classify the template
+            'segment' => $sourceSite->organization?->segment,
         ];
     }
 
@@ -167,6 +169,26 @@ class SiteTemplateService
             $summary['escalation_chain'] = true;
         }
 
+        // Stamp the target site with template_id so we can track usage
+        $targetSite->update([
+            'template_id' => $template->id,
+            'template_applied_at' => now(),
+        ]);
+
         return $summary;
+    }
+
+    /**
+     * Detect which pieces of config already exist on the target site,
+     * used by the Apply dialog to warn about conflicts before applying.
+     */
+    public function detectConflicts(Site $targetSite): array
+    {
+        return [
+            'has_escalation_chain' => EscalationChain::where('site_id', $targetSite->id)->exists(),
+            'existing_rules_count' => AlertRule::where('site_id', $targetSite->id)->count(),
+            'existing_windows_count' => MaintenanceWindow::where('site_id', $targetSite->id)->count(),
+            'existing_modules_count' => SiteModule::where('site_id', $targetSite->id)->where('active', true)->count(),
+        ];
     }
 }

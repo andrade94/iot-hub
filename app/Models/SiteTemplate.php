@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SiteTemplate extends Model
 {
@@ -14,6 +15,7 @@ class SiteTemplate extends Model
         'org_id',
         'name',
         'description',
+        'segment',
         'modules',
         'zone_config',
         'recipe_assignments',
@@ -45,6 +47,12 @@ class SiteTemplate extends Model
     public function createdByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** Sites that were created or configured from this template. */
+    public function sites(): HasMany
+    {
+        return $this->hasMany(Site::class, 'template_id');
     }
 
     // --- Scopes ---
