@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devices — Mockup | Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --card: #161820; --border: #23262f; --border-subtle: #1c1f27;
+    --fg: #e8eaed; --muted: #7a7f8a; --muted2: #4a4f5a;
+    --primary: #06b6d4; --emerald: #22c55e; --amber: #f59e0b; --rose: #f43f5e; --blue: #3b82f6;
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+  }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--fg); font-size: 13px; line-height: 1.5; }
+  h1, h2, h3 { font-family: var(--font-display); }
+  .mono { font-family: var(--font-mono); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid; }
+  .badge-outline { color: var(--muted); border-color: var(--border); background: transparent; }
+  .badge-success { color: var(--emerald); border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
+  .badge-destructive { color: var(--rose); border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); }
+  .badge-warning { color: var(--amber); border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
+  .card { border: 1px solid var(--border); border-radius: 8px; background: var(--card); overflow: hidden; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--fg); cursor: pointer; font-family: var(--font-body); }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #000; font-weight: 600; }
+  .scenario { background: linear-gradient(135deg, var(--primary), var(--blue)); color: #000; font-weight: 700; font-size: 13px; padding: 12px 20px; border-radius: 8px; margin: 48px 0 24px; font-family: var(--font-display); }
+  .scenario:first-child { margin-top: 0; }
+  .row-hover:hover { background: rgba(255,255,255,0.02); }
+  .th { text-align: left; padding: 10px 16px; font-family: var(--font-mono); font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted2); }
+  .td { padding: 14px 16px; }
+  .divider { display: flex; align-items: center; gap: 16px; margin: 28px 0; }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.15em; color: var(--muted2); }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">1 — DEVICE LIST (Global: /devices)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">Devices</h1>
+    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+      <span class="mono" style="color: var(--fg); font-weight: 500;">30</span> devices across
+      <span class="mono">3</span> sites
+    </p>
+  </div>
+</div>
+
+<!-- Filters -->
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px;">
+  <div style="flex: 1; min-width: 200px; position: relative;">
+    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted2); font-size: 12px;">⌕</span>
+    <input type="text" placeholder="Search by name, DevEUI, or model..." style="width: 100%; height: 32px; padding-left: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-size: 12px; outline: none;">
+  </div>
+  <!-- Status filter -->
+  <div style="display: flex; overflow: hidden; border-radius: 6px; border: 1px solid var(--border);">
+    <button style="padding: 6px 12px; background: rgba(255,255,255,0.06); color: var(--fg); border: none; font-size: 10px; font-family: var(--font-mono); font-weight: 500; cursor: pointer;">All</button>
+    <button style="padding: 6px 12px; background: transparent; color: var(--muted2); border: none; border-left: 1px solid var(--border); font-size: 10px; cursor: pointer;">Online</button>
+    <button style="padding: 6px 12px; background: transparent; color: var(--muted2); border: none; border-left: 1px solid var(--border); font-size: 10px; cursor: pointer;">Offline</button>
+    <button style="padding: 6px 12px; background: transparent; color: var(--muted2); border: none; border-left: 1px solid var(--border); font-size: 10px; cursor: pointer;">Low Battery</button>
+  </div>
+  <!-- Site filter -->
+  <div style="height: 32px; padding: 0 12px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); cursor: pointer;">
+    All Sites <span style="color: var(--muted2);">▾</span>
+  </div>
+  <span class="mono" style="font-size: 10px; color: var(--muted2);">30/30</span>
+</div>
+
+<!-- Device Table -->
+<div class="card">
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid var(--border-subtle);">
+        <th class="th">Device</th>
+        <th class="th">Model</th>
+        <th class="th">Site</th>
+        <th class="th">Zone</th>
+        <th class="th">Recipe</th>
+        <th class="th">Status</th>
+        <th class="th">Battery</th>
+        <th class="th">Last Reading</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+        <td class="td">
+          <div>
+            <p style="font-weight: 600; font-size: 13px;">Astrea Temp-01</p>
+            <p style="font-size: 10px; color: var(--muted2);">Left wall, top shelf</p>
+          </div>
+        </td>
+        <td class="td"><span class="badge badge-outline" style="font-family: var(--font-mono);">EM300-TH</span></td>
+        <td class="td" style="font-size: 12px;">CEDIS Norte</td>
+        <td class="td" style="font-size: 12px; color: var(--muted);">Cooler A</td>
+        <td class="td" style="font-size: 11px; color: var(--muted);">Walk-in Cooler</td>
+        <td class="td"><span class="badge badge-success">online</span></td>
+        <td class="td">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 40px; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden;">
+              <div style="width: 95%; height: 100%; background: var(--emerald); border-radius: 2px;"></div>
+            </div>
+            <span class="mono" style="font-size: 10px; color: var(--muted);">95%</span>
+          </div>
+        </td>
+        <td class="td"><span class="mono" style="font-size: 10px; color: var(--emerald);">2m ago</span></td>
+      </tr>
+      <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+        <td class="td">
+          <div>
+            <p style="font-weight: 600; font-size: 13px;">Astrea Temp-02</p>
+            <p style="font-size: 10px; color: var(--muted2);">Near compressor</p>
+          </div>
+        </td>
+        <td class="td"><span class="badge badge-outline" style="font-family: var(--font-mono);">EM300-TH</span></td>
+        <td class="td" style="font-size: 12px;">CEDIS Norte</td>
+        <td class="td" style="font-size: 12px; color: var(--muted);">Cooler B</td>
+        <td class="td" style="font-size: 11px; color: var(--muted);">Walk-in Cooler</td>
+        <td class="td"><span class="badge badge-success">online</span></td>
+        <td class="td">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 40px; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden;">
+              <div style="width: 82%; height: 100%; background: var(--emerald); border-radius: 2px;"></div>
+            </div>
+            <span class="mono" style="font-size: 10px; color: var(--muted);">82%</span>
+          </div>
+        </td>
+        <td class="td"><span class="mono" style="font-size: 10px; color: var(--emerald);">3m ago</span></td>
+      </tr>
+      <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+        <td class="td">
+          <div>
+            <p style="font-weight: 600; font-size: 13px;">Astrea Door-01</p>
+          </div>
+        </td>
+        <td class="td"><span class="badge badge-outline" style="font-family: var(--font-mono);">WS301</span></td>
+        <td class="td" style="font-size: 12px;">CEDIS Norte</td>
+        <td class="td" style="font-size: 12px; color: var(--muted);">Freezer</td>
+        <td class="td" style="font-size: 11px; color: var(--muted);">Cold Room Door</td>
+        <td class="td"><span class="badge badge-destructive">offline</span></td>
+        <td class="td">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 40px; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden;">
+              <div style="width: 12%; height: 100%; background: var(--rose); border-radius: 2px;"></div>
+            </div>
+            <span class="mono" style="font-size: 10px; color: var(--rose);">12%</span>
+          </div>
+        </td>
+        <td class="td"><span class="mono" style="font-size: 10px; color: var(--rose);">2h ago</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">2 — DEVICE DETAIL (Monitoring: /devices/{id})</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;">
+  <div>
+    <a href="#" style="color: var(--muted); text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">← CEDIS Norte · Cooler A</a>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <h1 style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">Astrea Temp-01</h1>
+      <span class="badge badge-outline" style="font-family: var(--font-mono);">EM300-TH</span>
+      <span class="badge badge-success">online</span>
+    </div>
+    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+      Left wall, top shelf · Walk-in Cooler · Cooler A · CEDIS Norte
+    </p>
+  </div>
+  <div style="display: flex; gap: 8px;">
+    <button class="btn">✎ Edit</button>
+    <button class="btn">↻ Replace</button>
+  </div>
+</div>
+
+<!-- KPI Strip — Latest Readings -->
+<div style="display: flex; gap: 3px; overflow: hidden; rounded-lg; margin-bottom: 24px;">
+  <div style="flex: 1; padding: 16px 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);">
+    <p class="mono" style="font-size: 9px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted2);">TEMPERATURE</p>
+    <div style="display: flex; align-items: baseline; gap: 4px; margin-top: 6px;">
+      <span style="font-family: var(--font-display); font-size: 32px; font-weight: 800; letter-spacing: -0.02em;">4.2</span>
+      <span class="mono" style="font-size: 12px; color: var(--muted);">°C</span>
+    </div>
+    <p class="mono" style="font-size: 9px; color: var(--muted2); margin-top: 4px;">min 3.1 · avg 4.0 · max 5.8</p>
+  </div>
+  <div style="flex: 1; padding: 16px 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);">
+    <p class="mono" style="font-size: 9px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted2);">HUMIDITY</p>
+    <div style="display: flex; align-items: baseline; gap: 4px; margin-top: 6px;">
+      <span style="font-family: var(--font-display); font-size: 32px; font-weight: 800;">65</span>
+      <span class="mono" style="font-size: 12px; color: var(--muted);">%</span>
+    </div>
+    <p class="mono" style="font-size: 9px; color: var(--muted2); margin-top: 4px;">min 58 · avg 63 · max 72</p>
+  </div>
+  <div style="flex: 1; padding: 16px 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);">
+    <p class="mono" style="font-size: 9px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted2);">BATTERY</p>
+    <div style="display: flex; align-items: baseline; gap: 4px; margin-top: 6px;">
+      <span style="font-family: var(--font-display); font-size: 32px; font-weight: 800; color: var(--emerald);">95</span>
+      <span class="mono" style="font-size: 12px; color: var(--muted);">%</span>
+    </div>
+    <div style="margin-top: 6px; width: 100%; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden;">
+      <div style="width: 95%; height: 100%; background: var(--emerald); border-radius: 2px;"></div>
+    </div>
+  </div>
+  <div style="flex: 1; padding: 16px 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);">
+    <p class="mono" style="font-size: 9px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted2);">SIGNAL</p>
+    <div style="display: flex; align-items: baseline; gap: 4px; margin-top: 6px;">
+      <span style="font-family: var(--font-display); font-size: 32px; font-weight: 800;">-75</span>
+      <span class="mono" style="font-size: 12px; color: var(--muted);">dBm</span>
+    </div>
+    <p class="mono" style="font-size: 9px; color: var(--emerald); margin-top: 4px;">Good signal</p>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 280px; gap: 24px;">
+  <!-- Left -->
+  <div>
+    <!-- Chart -->
+    <div class="divider" style="margin-top: 0;">
+      <div class="divider-line"></div>
+      <span class="divider-label">READINGS</span>
+      <div class="divider-line"></div>
+      <!-- Period selector -->
+      <div style="display: flex; overflow: hidden; border-radius: 6px; border: 1px solid var(--border);">
+        <button style="padding: 4px 10px; background: rgba(255,255,255,0.06); color: var(--fg); border: none; font-size: 9px; font-family: var(--font-mono); cursor: pointer;">24h</button>
+        <button style="padding: 4px 10px; background: transparent; color: var(--muted2); border: none; border-left: 1px solid var(--border); font-size: 9px; cursor: pointer;">7d</button>
+        <button style="padding: 4px 10px; background: transparent; color: var(--muted2); border: none; border-left: 1px solid var(--border); font-size: 9px; cursor: pointer;">30d</button>
+      </div>
+    </div>
+
+    <!-- Chart placeholder -->
+    <div class="card" style="height: 220px; display: flex; align-items: center; justify-content: center; color: var(--muted2);">
+      <div style="text-align: center;">
+        <p style="font-size: 12px;">📈 Time series chart</p>
+        <p style="font-size: 10px; color: var(--muted2); margin-top: 4px;">Temperature readings over selected period</p>
+        <p style="font-size: 9px; color: var(--muted2); margin-top: 2px;">Metric selector: Temperature | Humidity</p>
+      </div>
+    </div>
+
+    <!-- Recent Alerts -->
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span class="divider-label">RECENT ALERTS</span>
+      <div class="divider-line"></div>
+      <span class="mono" style="font-size: 10px; color: var(--muted2);">3</span>
+    </div>
+
+    <div class="card">
+      <div class="row-hover" style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--rose); flex-shrink: 0;"></span>
+        <div style="flex: 1;">
+          <p style="font-size: 12px; font-weight: 500;"><span class="mono" style="color: var(--rose);">12.4°C</span> — Walk-in Cooler Max Temp</p>
+          <p class="mono" style="font-size: 9px; color: var(--muted2);">2h ago · Acknowledged</p>
+        </div>
+        <span class="badge badge-outline">acknowledged</span>
+      </div>
+      <div class="row-hover" style="padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex-shrink: 0;"></span>
+        <div style="flex: 1;">
+          <p style="font-size: 12px; font-weight: 500;"><span class="mono" style="color: var(--amber);">87%</span> — High Humidity Alert</p>
+          <p class="mono" style="font-size: 9px; color: var(--muted2);">1d ago · Auto-resolved</p>
+        </div>
+        <span class="badge badge-success">resolved</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Details -->
+  <div>
+    <div class="divider" style="margin-top: 0;">
+      <div class="divider-line"></div>
+      <span class="divider-label">DETAILS</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="card" style="padding: 0;">
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Name</span>
+        <span style="font-size: 11px; font-weight: 500;">Astrea Temp-01</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Label</span>
+        <span style="font-size: 11px;">Left wall, top shelf</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Model</span>
+        <span class="mono" style="font-size: 11px; font-weight: 700;">EM300-TH</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Serial</span>
+        <span class="mono" style="font-size: 10px;">SN-24E124743C00</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">DevEUI</span>
+        <span class="mono" style="font-size: 10px; color: var(--muted);">A81758FFFE04B2</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Recipe</span>
+        <a href="#" style="font-size: 11px; color: var(--primary); text-decoration: none;">Walk-in Cooler →</a>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Zone</span>
+        <span style="font-size: 11px;">Cooler A</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Gateway</span>
+        <span class="mono" style="font-size: 11px;">UG65 (GW-1-001)</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Site</span>
+        <a href="#" style="font-size: 11px; color: var(--primary); text-decoration: none;">CEDIS Norte →</a>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Floor</span>
+        <span style="font-size: 11px;">Planta Baja</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Installed</span>
+        <span class="mono" style="font-size: 11px;">Jan 25, 2026</span>
+      </div>
+      <div style="padding: 12px 16px; display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Status</span>
+        <span class="badge badge-success">online</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">3 — REGISTER DEVICE (Dialog)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="card" style="max-width: 520px; padding: 0;">
+  <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle);">
+    <h2 style="font-size: 16px; font-weight: 700;">Register Device</h2>
+    <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">Add a new sensor to this site.</p>
+  </div>
+
+  <div style="padding: 20px 24px;">
+    <!-- Name + Label -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Device Name</label>
+        <input type="text" value="Astrea Temp-05" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-size: 13px; font-weight: 500; outline: none; font-family: var(--font-body);">
+      </div>
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Label <span style="color: var(--muted2);">(optional)</span></label>
+        <input type="text" placeholder="e.g. Left wall, top shelf" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-size: 12px; outline: none; font-family: var(--font-body);">
+      </div>
+    </div>
+
+    <!-- Model + Serial -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Sensor Model</label>
+        <div style="height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; font-size: 12px; cursor: pointer;">
+          <span class="mono">EM300-TH</span>
+          <span style="margin-left: 8px; font-size: 10px; color: var(--muted2);">Temp & Humidity</span>
+          <span style="margin-left: auto; color: var(--muted2);">▾</span>
+        </div>
+      </div>
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Serial Number <span style="color: var(--muted2);">(optional)</span></label>
+        <input type="text" placeholder="SN-24E124743C00" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-family: var(--font-mono); font-size: 12px; outline: none;">
+      </div>
+    </div>
+
+    <!-- DevEUI + AppKey -->
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; margin-bottom: 16px;">
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">DevEUI *</label>
+        <input type="text" value="A81758FFFE04B2" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-family: var(--font-mono); font-size: 13px; font-weight: 600; outline: none; letter-spacing: 0.05em;">
+        <p style="font-size: 10px; color: var(--muted2); margin-top: 4px;">LoRaWAN device identifier — found on device label</p>
+      </div>
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">AppKey</label>
+        <input type="text" placeholder="Auto-generated" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-family: var(--font-mono); font-size: 11px; outline: none;">
+      </div>
+    </div>
+
+    <!-- Zone + Gateway + Recipe -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Zone</label>
+        <div style="height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; font-size: 12px; color: var(--muted); cursor: pointer;">
+          Cooler A <span style="margin-left: auto; color: var(--muted2);">▾</span>
+        </div>
+      </div>
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Gateway</label>
+        <div style="height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; font-size: 12px; color: var(--muted); cursor: pointer;">
+          UG65 (GW-1-001) <span style="margin-left: auto; color: var(--muted2);">▾</span>
+        </div>
+      </div>
+      <div>
+        <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Recipe</label>
+        <div style="height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; font-size: 12px; color: var(--muted); cursor: pointer;">
+          Walk-in Cooler <span style="margin-left: auto; color: var(--muted2);">▾</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
+    <button class="btn">Cancel</button>
+    <button class="btn btn-primary">Register Device</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">4 — REPLACE DEVICE (Dialog)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">When hardware fails, swap the physical sensor. Config (name, zone, recipe, floor position) transfers to the new device.</p>
+
+<div class="card" style="max-width: 450px; padding: 0;">
+  <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle);">
+    <h2 style="font-size: 16px; font-weight: 700;">Replace Device</h2>
+    <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">Swap <strong>Astrea Temp-01</strong> with a new sensor.</p>
+  </div>
+
+  <div style="padding: 20px 24px;">
+    <!-- Current device info -->
+    <div style="padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; background: rgba(6,182,212,0.03);">
+      <p style="font-size: 10px; color: var(--primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;">Current Device</p>
+      <p style="font-size: 12px; font-weight: 500;">Astrea Temp-01</p>
+      <p class="mono" style="font-size: 10px; color: var(--muted2);">EM300-TH · A81758FFFE04B2</p>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">New DevEUI *</label>
+      <input type="text" placeholder="A81758FFFE..." style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-family: var(--font-mono); font-size: 13px; font-weight: 600; outline: none;">
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">New AppKey *</label>
+      <input type="text" placeholder="Required for LoRaWAN join" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-family: var(--font-mono); font-size: 11px; outline: none;">
+    </div>
+
+    <div style="padding: 10px 12px; border: 1px solid rgba(6,182,212,0.15); border-radius: 6px; background: rgba(6,182,212,0.03);">
+      <p style="font-size: 10px; color: var(--primary); margin-bottom: 4px;">What transfers to the new device:</p>
+      <p style="font-size: 10px; color: var(--muted);">Name, zone, recipe, gateway, floor plan position, alert rules</p>
+    </div>
+  </div>
+
+  <div style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
+    <button class="btn">Cancel</button>
+    <button class="btn btn-primary">Replace Device</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">Design Notes</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="card" style="padding: 24px;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; width: 30%; color: var(--primary);">Device naming convention</td>
+      <td style="padding: 8px 0; color: var(--muted);">Name = asset tag (Astrea Temp-01). Label = position (Left wall, top shelf). Model = hardware (EM300-TH). Zone = location (Cooler A). Recipe = profile (Walk-in Cooler). All shown in the subtitle.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">KPI strip with live readings</td>
+      <td style="padding: 8px 0; color: var(--muted);">Shows latest value for each metric the sensor measures + battery + signal. Large display numbers with units. Min/avg/max shown below for context. Battery has progress bar.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">New fields: label + serial</td>
+      <td style="padding: 8px 0; color: var(--muted);">Label is freetext position descriptor within zone. Serial is physical hardware serial number. Both in the register form and detail sidebar.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Register form with all relationships</td>
+      <td style="padding: 8px 0; color: var(--muted);">Name + Label, Model (from sensor models catalog) + Serial, DevEUI + AppKey, Zone + Gateway + Recipe — all as selects from existing data.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Replace device workflow</td>
+      <td style="padding: 8px 0; color: var(--muted);">When hardware fails, admin enters new DevEUI + AppKey. All config transfers — name, zone, recipe, gateway, floor position, alert rules. Old device marked as replaced.</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Detail sidebar links</td>
+      <td style="padding: 8px 0; color: var(--muted);">Recipe name links to recipe detail. Site name links to site. Gateway links to gateway show. Floor links to layout editor. Everything connected.</td>
+    </tr>
+  </table>
+</div>
+
+</div>
+</body>
+</html>
