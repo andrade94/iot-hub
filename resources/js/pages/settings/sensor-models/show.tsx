@@ -2,12 +2,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FadeIn } from '@/components/ui/fade-in';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -81,7 +85,7 @@ export default function SensorModelShow({ sensorModel, deviceCount, recipes, met
                                     ...sensorModel, active, sort_order: 0,
                                 }, { preserveScroll: true })} />
                             <Button variant="outline" size="sm" className="text-[11px]"
-                                onClick={() => router.get('/settings/sensor-models')}>
+                                onClick={() => setEditOpen(true)}>
                                 <Pencil className="mr-1 h-3 w-3" />{t('Edit')}
                             </Button>
                             <Button variant="outline" size="sm" className="text-[11px] text-rose-600 dark:text-rose-400 border-rose-200/40 dark:border-rose-800/40"
@@ -246,6 +250,187 @@ export default function SensorModelShow({ sensorModel, deviceCount, recipes, met
                 }}
                 actionLabel={t('Delete')}
             />
+
+            <SensorModelEditDialog
+                open={editOpen}
+                onOpenChange={setEditOpen}
+                sensorModel={sensorModel}
+                metricUnits={metricUnits}
+            />
         </AppLayout>
+    );
+}
+
+/* -- Edit Dialog --------------------------------------------------------- */
+
+const ALL_METRICS = ['temperature', 'humidity', 'co2', 'pm2_5', 'current', 'door_status', 'gas_level', 'gas_alarm', 'distance', 'pressure', 'people_count', 'battery_pct'];
+
+function SensorModelEditDialog({ open, onOpenChange, sensorModel, metricUnits }: {
+    open: boolean; onOpenChange: (open: boolean) => void; sensorModel: SensorModelData; metricUnits: Record<string, string>;
+}) {
+    const { t } = useLang();
+    const form = useForm({
+        name: sensorModel.name,
+        label: sensorModel.label,
+        manufacturer: sensorModel.manufacturer ?? 'Milesight',
+        description: sensorModel.description ?? '',
+        supported_metrics: sensorModel.supported_metrics,
+        valid_ranges: sensorModel.valid_ranges ?? {} as Record<string, [number, number]>,
+        monthly_fee: sensorModel.monthly_fee ?? '0.00',
+        decoder_class: sensorModel.decoder_class ?? '',
+        active: sensorModel.active,
+        sort_order: 0,
+    });
+
+    function toggleMetric(metric: string) {
+        const current = form.data.supported_metrics;
+        if (current.includes(metric)) {
+            form.setData('supported_metrics', current.filter((m) => m !== metric));
+            const ranges = { ...form.data.valid_ranges };
+            delete ranges[metric];
+            form.setData('valid_ranges', ranges);
+        } else {
+            form.setData('supported_metrics', [...current, metric]);
+        }
+    }
+
+    function setRange(metric: string, idx: 0 | 1, value: string) {
+        const ranges = { ...form.data.valid_ranges };
+        if (!ranges[metric]) ranges[metric] = [0, 100] as [number, number];
+        ranges[metric] = [...ranges[metric]] as [number, number];
+        ranges[metric][idx] = Number(value);
+        form.setData('valid_ranges', ranges);
+    }
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        router.put(`/settings/sensor-models/${sensorModel.id}`, {
+            ...form.data,
+            description: form.data.description || null,
+            monthly_fee: form.data.monthly_fee ? parseFloat(String(form.data.monthly_fee)) : null,
+            decoder_class: form.data.decoder_class || null,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => onOpenChange(false),
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+                <DialogHeader>
+                    <DialogTitle>{t('Edit Sensor Model')}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Name + Label */}
+                    <div className="grid grid-cols-[1fr_1.5fr] gap-3">
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Model (SKU)')}</Label>
+                            <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)}
+                                className="font-mono text-[13px] font-bold" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Label')}</Label>
+                            <Input value={form.data.label} onChange={(e) => form.setData('label', e.target.value)} />
+                        </div>
+                    </div>
+
+                    {/* Manufacturer + Fee */}
+                    <div className="grid grid-cols-[1.5fr_1fr] gap-3">
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Manufacturer')}</Label>
+                            <Input value={form.data.manufacturer} onChange={(e) => form.setData('manufacturer', e.target.value)} />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Monthly Fee')}</Label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-[13px] font-semibold text-muted-foreground/50">$</span>
+                                <Input type="number" step="0.01" min="0" value={form.data.monthly_fee}
+                                    onChange={(e) => form.setData('monthly_fee', e.target.value)}
+                                    onBlur={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) form.setData('monthly_fee', v.toFixed(2)); }}
+                                    className="pl-8 font-mono text-[13px] font-bold tabular-nums" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Description */}
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px]">{t('Description')}</Label>
+                        <Input value={form.data.description} onChange={(e) => form.setData('description', e.target.value)} />
+                    </div>
+
+                    {/* Supported Metrics */}
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px]">{t('Supported Metrics')}</Label>
+                        <div className="flex flex-wrap gap-2 rounded-md border border-border p-3">
+                            {ALL_METRICS.map((m) => {
+                                const isChecked = form.data.supported_metrics.includes(m);
+                                return (
+                                    <label key={m} className={cn('flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-[11px] transition-colors',
+                                        isChecked ? 'border-primary bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:bg-accent/30')}>
+                                        <input type="checkbox" className="sr-only" checked={isChecked} onChange={() => toggleMetric(m)} />
+                                        <span className={cn('h-3 w-3 shrink-0 rounded border-2 flex items-center justify-center',
+                                            isChecked ? 'border-primary bg-primary' : 'border-muted-foreground/30')}>
+                                            {isChecked && <span className="text-[8px] text-primary-foreground font-bold">✓</span>}
+                                        </span>
+                                        {t(`metric_${m}`)}
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Valid Ranges — dynamic per selected metric */}
+                    {form.data.supported_metrics.length > 0 && (
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Valid Ranges')}</Label>
+                            <div className="rounded-md border border-border overflow-hidden">
+                                <div className="grid grid-cols-[1.2fr_1fr_1fr] border-b border-border/30">
+                                    <div className="px-3 py-2 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('Metric')}</div>
+                                    <div className="px-3 py-2 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('Min')}</div>
+                                    <div className="px-3 py-2 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60">{t('Max')}</div>
+                                </div>
+                                {form.data.supported_metrics.map((metric) => {
+                                    const range = form.data.valid_ranges[metric] ?? [0, 100];
+                                    return (
+                                        <div key={metric} className="grid grid-cols-[1.2fr_1fr_1fr] border-b border-border/20 last:border-b-0 items-center">
+                                            <div className="px-3 py-2 text-[11px]">
+                                                {t(`metric_${metric}`)} <span className="text-[9px] text-muted-foreground/50">{metricUnits[metric] ?? ''}</span>
+                                            </div>
+                                            <div className="px-2 py-1.5">
+                                                <Input type="number" value={range[0]} onChange={(e) => setRange(metric, 0, e.target.value)}
+                                                    className="h-7 text-center font-mono text-[12px] font-semibold" />
+                                            </div>
+                                            <div className="px-2 py-1.5">
+                                                <Input type="number" value={range[1]} onChange={(e) => setRange(metric, 1, e.target.value)}
+                                                    className="h-7 text-center font-mono text-[12px] font-semibold" />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Decoder + Active */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Decoder')}</Label>
+                            <Input value={form.data.decoder_class} onChange={(e) => form.setData('decoder_class', e.target.value)}
+                                className="font-mono text-[11px]" placeholder="MilesightDecoder" />
+                        </div>
+                        <div className="flex items-end gap-3 pb-1">
+                            <Switch checked={form.data.active} onCheckedChange={(v) => form.setData('active', v)} />
+                            <Label className="text-[11px]">{t('Active')}</Label>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('Cancel')}</Button>
+                        <Button type="submit" disabled={form.processing}>{t('Save Changes')}</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
