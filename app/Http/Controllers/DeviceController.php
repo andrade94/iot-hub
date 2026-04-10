@@ -51,8 +51,10 @@ class DeviceController extends Controller
         $validated = $request->validate([
             'model' => 'required|string|max:255',
             'dev_eui' => 'required|string|max:32|unique:devices,dev_eui',
+            'serial' => 'nullable|string|max:255',
             'app_key' => 'nullable|string|max:64',
             'name' => 'required|string|max:255',
+            'label' => 'nullable|string|max:255',
             'zone' => 'nullable|string|max:255',
             'gateway_id' => 'nullable|exists:gateways,id',
             'recipe_id' => 'nullable|exists:recipes,id',
@@ -82,6 +84,8 @@ class DeviceController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
+            'label' => 'nullable|string|max:255',
+            'serial' => 'nullable|string|max:255',
             'zone' => 'nullable|string|max:255',
             'gateway_id' => 'nullable|exists:gateways,id',
             'recipe_id' => 'nullable|exists:recipes,id',

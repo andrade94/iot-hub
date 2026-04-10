@@ -221,7 +221,9 @@ export interface Device {
     gateway_id: number | null;
     model: string;
     dev_eui: string;
+    serial: string | null;
     name: string;
+    label: string | null;
     zone: string | null;
     floor_id: number | null;
     floor_x: number | null;
