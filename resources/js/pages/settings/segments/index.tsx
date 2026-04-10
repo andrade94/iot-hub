@@ -41,8 +41,16 @@ interface SegmentRow {
     updated_at: string;
 }
 
+interface ModuleOption {
+    id: number;
+    slug: string;
+    name: string;
+    icon: string | null;
+}
+
 interface Props {
     segments: SegmentRow[];
+    modules?: ModuleOption[];
 }
 
 /* -- Constants -------------------------------------------------------- */
@@ -187,7 +195,7 @@ function getSegmentColumns(
 
 /* -- Main Component --------------------------------------------------- */
 
-export default function SegmentsIndex({ segments }: Props) {
+export default function SegmentsIndex({ segments, modules = [] }: Props) {
     const { t } = useLang();
     const [showCreate, setShowCreate] = useState(false);
     const [editSegment, setEditSegment] = useState<SegmentRow | null>(null);
@@ -390,11 +398,11 @@ export default function SegmentsIndex({ segments }: Props) {
                                         {t('Create Segment')}
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="max-w-lg">
+                                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
                                     <DialogHeader>
                                         <DialogTitle>{t('Create Segment')}</DialogTitle>
                                     </DialogHeader>
-                                    <SegmentForm onSuccess={() => setShowCreate(false)} />
+                                    <SegmentForm onSuccess={() => setShowCreate(false)} modules={modules} />
                                 </DialogContent>
                             </Dialog>
                         </div>
@@ -431,7 +439,7 @@ export default function SegmentsIndex({ segments }: Props) {
 
             {/* -- Edit Dialog ------------------------------------------------- */}
             <Dialog open={!!editSegment} onOpenChange={(open) => !open && setEditSegment(null)}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
                     <DialogHeader>
                         <DialogTitle>{t('Edit Segment')}</DialogTitle>
                     </DialogHeader>
@@ -439,6 +447,7 @@ export default function SegmentsIndex({ segments }: Props) {
                         <SegmentForm
                             segment={editSegment}
                             onSuccess={() => setEditSegment(null)}
+                            modules={modules}
                         />
                     )}
                 </DialogContent>
@@ -472,187 +481,152 @@ const segmentSchema = z.object({
     active: z.boolean(),
 });
 
-function SegmentForm({ segment, onSuccess }: { segment?: SegmentRow; onSuccess: () => void }) {
+function SegmentForm({ segment, onSuccess, modules = [] }: { segment?: SegmentRow; onSuccess: () => void; modules?: ModuleOption[] }) {
     const { t } = useLang();
     const isEdit = !!segment;
+
+    const moduleEmojis: Record<string, string> = {
+        cold_chain: '🧊', energy: '⚡', compliance: '📋', industrial: '🏭',
+        iaq: '🌬️', safety: '🛡️', people: '👥',
+    };
 
     const form = useValidatedForm(segmentSchema, {
         name: segment?.name ?? '',
         label: segment?.label ?? '',
         description: segment?.description ?? '',
         suggested_modules: (segment?.suggested_modules ?? []).join(', '),
-        suggested_sensor_models: (segment?.suggested_sensor_models ?? []).join(', '),
+        suggested_sensor_models: '',
         icon: segment?.icon ?? '',
         color: segment?.color ?? '',
         active: segment?.active ?? true,
     });
 
-    function handleNameChange(value: string): void {
-        const slug = value
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9\s_]/g, '')
-            .replace(/[\s]+/g, '_')
-            .replace(/_+/g, '_');
-        form.setData('name', slug);
-    }
-
     function handleLabelChange(value: string): void {
         form.setData('label', value);
         if (!isEdit) {
-            // Auto-generate name from label
-            const slug = value
-                .toLowerCase()
-                .trim()
-                .replace(/[^a-z0-9\s_]/g, '')
-                .replace(/[\s]+/g, '_')
-                .replace(/_+/g, '_');
+            const slug = value.toLowerCase().trim().replace(/[^a-z0-9\s_]/g, '').replace(/[\s]+/g, '_').replace(/_+/g, '_');
             form.setData('name', slug);
         }
     }
 
-    function parseCommaSeparated(value: string): string[] {
-        return value
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean);
-    }
-
     function handleSubmit(e: React.FormEvent): void {
         e.preventDefault();
-
-        // Build the actual payload with arrays
+        const selected = form.data.suggested_modules.split(',').map((s: string) => s.trim()).filter(Boolean);
         const payload = {
             name: form.data.name,
             label: form.data.label,
             description: form.data.description || null,
-            suggested_modules: parseCommaSeparated(form.data.suggested_modules),
-            suggested_sensor_models: parseCommaSeparated(form.data.suggested_sensor_models),
+            suggested_modules: selected,
+            suggested_sensor_models: [],
             icon: form.data.icon || null,
             color: form.data.color || null,
             active: form.data.active,
         };
 
         if (isEdit && segment) {
-            router.put(`/settings/segments/${segment.id}`, payload, {
-                preserveScroll: true,
-                onSuccess: () => onSuccess(),
-            });
+            router.put(`/settings/segments/${segment.id}`, payload, { preserveScroll: true, onSuccess });
         } else {
-            router.post('/settings/segments', payload, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    form.reset();
-                    onSuccess();
-                },
-            });
+            router.post('/settings/segments', payload, { preserveScroll: true, onSuccess: () => { form.reset(); onSuccess(); } });
         }
     }
 
+    const selectedModules = form.data.suggested_modules.split(',').map((s: string) => s.trim()).filter(Boolean);
+
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Label + Slug */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="seg-label">{t('Label')}</Label>
-                    <Input
-                        id="seg-label"
-                        value={form.data.label}
-                        onChange={(e) => handleLabelChange(e.target.value)}
-                        placeholder={t('e.g. Cold Chain')}
-                    />
+                    <Label>{t('Name')}</Label>
+                    <Input value={form.data.label} onChange={(e) => handleLabelChange(e.target.value)}
+                        placeholder={t('e.g. Retail')} />
                     <InputError message={form.errors.label} />
                 </div>
-
                 <div className="space-y-2">
-                    <Label htmlFor="seg-name">{t('Name (slug)')}</Label>
-                    <Input
-                        id="seg-name"
-                        value={form.data.name}
-                        onChange={(e) => handleNameChange(e.target.value)}
-                        placeholder={t('e.g. cold_chain')}
-                        className="font-mono text-sm"
-                    />
-                    <InputError message={form.errors.name} />
+                    <Label>{t('Slug')}</Label>
+                    <div className="flex h-9 items-center rounded-md border border-border bg-muted/30 px-3">
+                        <span className="font-mono text-[12px] text-muted-foreground">{form.data.name || t('auto-generated from name')}</span>
+                    </div>
                 </div>
             </div>
 
+            {/* Description */}
             <div className="space-y-2">
-                <Label htmlFor="seg-description">{t('Description')}</Label>
-                <Textarea
-                    id="seg-description"
-                    value={form.data.description}
-                    onChange={(e) => form.setData('description', e.target.value)}
-                    placeholder={t('What this segment is for...')}
-                    rows={2}
-                />
+                <Label>{t('Description')}</Label>
+                <Textarea value={form.data.description} onChange={(e) => form.setData('description', e.target.value)}
+                    placeholder={t('What this segment is for...')} rows={2} />
                 <InputError message={form.errors.description} />
             </div>
 
+            {/* Suggested Modules — checkbox group */}
             <div className="space-y-2">
-                <Label htmlFor="seg-modules">{t('Suggested Modules')}</Label>
-                <Input
-                    id="seg-modules"
-                    value={form.data.suggested_modules}
-                    onChange={(e) => form.setData('suggested_modules', e.target.value)}
-                    placeholder={t('e.g. cold_chain, compliance, safety')}
-                />
-                <p className="text-xs text-muted-foreground">{t('Comma-separated module slugs')}</p>
+                <Label>{t('Suggested Modules')}</Label>
+                <p className="text-[10px] text-muted-foreground/60">{t('Pre-selected when onboarding sites for organizations in this segment')}</p>
+                <div className="flex flex-wrap gap-2 rounded-md border border-border p-3">
+                    {modules.map((mod) => {
+                        const isChecked = selectedModules.includes(mod.slug);
+                        const emoji = moduleEmojis[mod.slug] ?? '📡';
+                        return (
+                            <label key={mod.id} className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-[11px] transition-colors ${isChecked ? 'border-primary bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:bg-accent/30'}`}>
+                                <input type="checkbox" className="sr-only" checked={isChecked}
+                                    onChange={() => {
+                                        const next = isChecked ? selectedModules.filter((s: string) => s !== mod.slug) : [...selectedModules, mod.slug];
+                                        form.setData('suggested_modules', next.join(', '));
+                                    }} />
+                                <span className={`h-3 w-3 shrink-0 rounded border-2 flex items-center justify-center ${isChecked ? 'border-primary bg-primary' : 'border-muted-foreground/30'}`}>
+                                    {isChecked && <span className="text-[8px] text-primary-foreground font-bold">✓</span>}
+                                </span>
+                                {emoji} {mod.name}
+                            </label>
+                        );
+                    })}
+                </div>
                 <InputError message={form.errors.suggested_modules} />
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="seg-sensors">{t('Suggested Sensor Models')}</Label>
-                <Input
-                    id="seg-sensors"
-                    value={form.data.suggested_sensor_models}
-                    onChange={(e) => form.setData('suggested_sensor_models', e.target.value)}
-                    placeholder={t('e.g. EM300-TH, WS301')}
-                />
-                <p className="text-xs text-muted-foreground">{t('Comma-separated sensor model names')}</p>
-                <InputError message={form.errors.suggested_sensor_models} />
-            </div>
-
+            {/* Icon + Color */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="seg-icon">{t('Icon')}</Label>
-                    <Input
-                        id="seg-icon"
-                        value={form.data.icon}
-                        onChange={(e) => form.setData('icon', e.target.value)}
-                        placeholder={t('e.g. Thermometer')}
-                    />
+                    <Label>{t('Icon')}</Label>
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/20 text-xl">
+                            {form.data.icon || '📡'}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                            {['🏪', '🏭', '💊', '🏨', '🏢', '🚛', '🧊', '⚡', '🛡️', '🌡️'].map((emoji) => (
+                                <button key={emoji} type="button" onClick={() => form.setData('icon', emoji)}
+                                    className={`flex h-7 w-7 items-center justify-center rounded text-sm transition-all ${form.data.icon === emoji ? 'bg-primary/15 ring-1 ring-primary' : 'hover:bg-accent/40'}`}>
+                                    {emoji}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                     <InputError message={form.errors.icon} />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="seg-color">{t('Badge Color')}</Label>
-                    <div className="flex flex-wrap gap-1.5">
-                        {COLOR_OPTIONS.map((opt) => (
-                            <button
-                                key={opt.value}
-                                type="button"
-                                onClick={() => form.setData('color', form.data.color === opt.value ? '' : opt.value)}
-                                className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
-                                    form.data.color === opt.value
-                                        ? 'border-primary bg-primary/10 font-medium text-primary'
-                                        : 'border-border text-muted-foreground hover:bg-muted'
-                                }`}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
+                    <Label>{t('Color')}</Label>
+                    <div className="flex items-center gap-3">
+                        <input type="color" value={form.data.color || '#06b6d4'}
+                            onChange={(e) => form.setData('color', e.target.value)}
+                            className="h-10 w-10 shrink-0 cursor-pointer appearance-none rounded-lg border border-border bg-transparent p-0.5 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none" />
+                        <div className="flex flex-wrap gap-1">
+                            {['#06b6d4', '#22c55e', '#f59e0b', '#f43f5e', '#8b5cf6', '#3b82f6', '#fb923c', '#14b8a6'].map((c) => (
+                                <button key={c} type="button" onClick={() => form.setData('color', c)}
+                                    className={`h-6 w-6 rounded-full border-2 transition-all ${form.data.color === c ? 'border-foreground scale-110' : 'border-transparent hover:scale-110'}`}
+                                    style={{ backgroundColor: c }} />
+                            ))}
+                        </div>
                     </div>
+                    <p className="font-mono text-[10px] text-muted-foreground/50">{form.data.color || '#06b6d4'}</p>
                     <InputError message={form.errors.color} />
                 </div>
             </div>
 
+            {/* Active */}
             <div className="flex items-center gap-3">
-                <Switch
-                    id="seg-active"
-                    checked={form.data.active}
-                    onCheckedChange={(checked) => form.setData('active', checked)}
-                />
-                <Label htmlFor="seg-active">{t('Active')}</Label>
+                <Switch checked={form.data.active} onCheckedChange={(checked) => form.setData('active', checked)} />
+                <Label>{t('Active')}</Label>
             </div>
 
             <Button type="submit" className="w-full" disabled={form.processing}>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Module;
 use App\Models\Organization;
 use App\Models\Segment;
 use Illuminate\Http\Request;
@@ -29,8 +30,11 @@ class SegmentController extends Controller
                 'updated_at' => $segment->updated_at->toIso8601String(),
             ]);
 
+        $modules = Module::active()->orderBy('sort_order')->get(['id', 'slug', 'name', 'icon']);
+
         return Inertia::render('settings/segments/index', [
             'segments' => $segments,
+            'modules' => $modules,
         ]);
     }
 
