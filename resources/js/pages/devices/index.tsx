@@ -32,7 +32,8 @@ interface PaginatedDevices {
 interface Props {
     devices: PaginatedDevices;
     sites: Pick<Site, 'id' | 'name'>[];
-    filters: { status?: string; site_id?: string; search?: string };
+    models?: string[];
+    filters: { status?: string; site_id?: string; model?: string; search?: string; sort?: string };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -45,7 +46,7 @@ const STATUS_LABELS: Record<string, string> = {
     inactive: 'Inactive',
 };
 
-export default function DeviceIndex({ devices, sites, filters }: Props) {
+export default function DeviceIndex({ devices, sites, models = [], filters }: Props) {
     const { t } = useLang();
     const [search, setSearch] = useState(filters.search ?? '');
     const [showFilters, setShowFilters] = useState(() => {
@@ -87,7 +88,7 @@ export default function DeviceIndex({ devices, sites, filters }: Props) {
     }
 
     const columns = useMemo(() => getDeviceColumns(), []);
-    const hasFilters = !!(filters.status || filters.site_id || filters.search);
+    const hasFilters = !!(filters.status || filters.site_id || filters.model || filters.search);
 
     // Build filter pills
     const filterPills = useMemo<FilterPill[]>(() => {
@@ -105,6 +106,13 @@ export default function DeviceIndex({ devices, sites, filters }: Props) {
                 key: 'status',
                 label: `Status: ${STATUS_LABELS[filters.status] ?? filters.status}`,
                 onRemove: () => applyFilter('status', undefined),
+            });
+        }
+        if (filters.model) {
+            pills.push({
+                key: 'model',
+                label: `Model: ${filters.model}`,
+                onRemove: () => applyFilter('model', undefined),
             });
         }
         if (filters.search) {
@@ -183,7 +191,26 @@ export default function DeviceIndex({ devices, sites, filters }: Props) {
                         <SelectContent>
                             <SelectItem value="all">{t('All Status')}</SelectItem>
                             <SelectItem value="active">{t('Active')}</SelectItem>
-                            <SelectItem value="inactive">{t('Inactive')}</SelectItem>
+                            <SelectItem value="offline">{t('Offline')}</SelectItem>
+                            <SelectItem value="pending">{t('Pending')}</SelectItem>
+                            <SelectItem value="maintenance">{t('Maintenance')}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                        {t('Model')}
+                    </Label>
+                    <Select value={filters.model ?? 'all'} onValueChange={(v) => applyFilter('model', v)}>
+                        <SelectTrigger className="w-full font-mono">
+                            <SelectValue placeholder={t('All Models')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('All Models')}</SelectItem>
+                            {models.map((m) => (
+                                <SelectItem key={m} value={m}><span className="font-mono">{m}</span></SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
