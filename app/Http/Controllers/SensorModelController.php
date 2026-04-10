@@ -31,6 +31,7 @@ class SensorModelController extends Controller
                 'active' => $model->active,
                 'sort_order' => $model->sort_order,
                 'devices_count' => Device::where('model', $model->name)->count(),
+                'recipes_count' => Recipe::where('sensor_model', $model->name)->count(),
                 'created_at' => $model->created_at->toIso8601String(),
                 'updated_at' => $model->updated_at->toIso8601String(),
             ]);

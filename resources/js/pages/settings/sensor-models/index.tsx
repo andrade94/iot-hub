@@ -41,6 +41,7 @@ interface SensorModelRow {
     active: boolean;
     sort_order: number;
     devices_count: number;
+    recipes_count: number;
     created_at: string;
     updated_at: string;
 }
@@ -140,9 +141,16 @@ function getSensorModelColumns(
             accessorKey: 'devices_count',
             header: t('Devices'),
             cell: ({ row }) => (
-                <span className="font-mono tabular-nums text-sm">{row.original.devices_count}</span>
+                <span className={`font-mono tabular-nums text-sm ${row.original.devices_count > 0 ? 'font-semibold' : 'text-muted-foreground'}`}>{row.original.devices_count}</span>
             ),
             enableSorting: true,
+        },
+        {
+            accessorKey: 'recipes_count',
+            header: t('Recipes'),
+            cell: ({ row }) => (
+                <span className="font-mono tabular-nums text-sm text-muted-foreground">{row.original.recipes_count}</span>
+            ),
         },
         {
             id: 'actions',
