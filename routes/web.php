@@ -284,6 +284,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
 
     // Alert management
     Route::get('alerts', [AlertController::class, 'index'])->name('alerts.index');
+    Route::get('alerts/export', [AlertController::class, 'export'])->name('alerts.export');
     Route::get('alerts/{alert}', [AlertController::class, 'show'])->name('alerts.show');
     Route::post('alerts/{alert}/acknowledge', [AlertController::class, 'acknowledge'])->name('alerts.acknowledge');
     Route::post('alerts/{alert}/resolve', [AlertController::class, 'resolve'])->name('alerts.resolve');
@@ -292,6 +293,8 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     // Bulk Operations (Phase 11)
     Route::post('alerts/bulk-acknowledge', [AlertController::class, 'bulkAcknowledge'])->name('alerts.bulk-acknowledge');
     Route::post('alerts/bulk-resolve', [AlertController::class, 'bulkResolve'])->name('alerts.bulk-resolve');
+    Route::post('alerts/bulk-dismiss', [AlertController::class, 'bulkDismiss'])->name('alerts.bulk-dismiss');
+    Route::post('alerts/{alert}/escalate', [AlertController::class, 'escalate'])->name('alerts.escalate');
     Route::post('work-orders/bulk-assign', [WorkOrderController::class, 'bulkAssign'])->name('work-orders.bulk-assign');
 
     // Alert Snooze (Phase 11)
@@ -363,11 +366,15 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
 
     // Work Orders
     Route::get('work-orders', [WorkOrderController::class, 'index'])->name('work-orders.index');
+    Route::get('work-orders/export', [WorkOrderController::class, 'export'])->name('work-orders.export');
     Route::get('work-orders/{workOrder}', [WorkOrderController::class, 'show'])->name('work-orders.show');
     Route::middleware(['site.access'])->group(function () {
         Route::post('sites/{site}/work-orders', [WorkOrderController::class, 'store'])->name('work-orders.store');
     });
+    Route::put('work-orders/{workOrder}', [WorkOrderController::class, 'update'])->name('work-orders.update');
+    Route::delete('work-orders/{workOrder}', [WorkOrderController::class, 'destroy'])->name('work-orders.destroy');
     Route::put('work-orders/{workOrder}/status', [WorkOrderController::class, 'updateStatus'])->name('work-orders.update-status');
+    Route::post('work-orders/{workOrder}/complete', [WorkOrderController::class, 'complete'])->name('work-orders.complete');
     Route::post('work-orders/{workOrder}/photos', [WorkOrderController::class, 'addPhoto'])->name('work-orders.add-photo');
     Route::post('work-orders/{workOrder}/notes', [WorkOrderController::class, 'addNote'])->name('work-orders.add-note');
 

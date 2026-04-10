@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -39,6 +40,9 @@ class WorkOrder extends Model
         'status',
         'priority',
         'assigned_to',
+        'assigned_at',
+        'started_at',
+        'completed_at',
         'created_by',
     ];
 
@@ -47,7 +51,22 @@ class WorkOrder extends Model
         return [
             'assigned_to' => 'integer',
             'created_by' => 'integer',
+            'assigned_at' => 'datetime',
+            'started_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Clean up photo files from disk when the work order is deleted.
+        static::deleting(function (WorkOrder $wo) {
+            foreach ($wo->photos as $photo) {
+                if ($photo->photo_path) {
+                    Storage::disk('public')->delete($photo->photo_path);
+                }
+            }
+        });
     }
 
     // ── Relationships ────────────────────────────────────────────
@@ -72,7 +91,19 @@ class WorkOrder extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    // Alias to serialize as `assigned_user` without clashing with the FK column
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
     public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // Alias to serialize as `created_by_user`
+    public function createdByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
@@ -115,6 +146,7 @@ class WorkOrder extends Model
         $this->update([
             'assigned_to' => $userId,
             'status' => 'assigned',
+            'assigned_at' => now(),
         ]);
 
         return $this;
@@ -126,7 +158,10 @@ class WorkOrder extends Model
             throw new \InvalidArgumentException("Cannot start work order in '{$this->status}' status");
         }
 
-        $this->update(['status' => 'in_progress']);
+        $this->update([
+            'status' => 'in_progress',
+            'started_at' => now(),
+        ]);
 
         return $this;
     }
@@ -137,7 +172,10 @@ class WorkOrder extends Model
             throw new \InvalidArgumentException("Cannot complete work order in '{$this->status}' status");
         }
 
-        $this->update(['status' => 'completed']);
+        $this->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
 
         return $this;
     }

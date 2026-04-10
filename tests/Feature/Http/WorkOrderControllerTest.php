@@ -72,7 +72,9 @@ test('org_admin can view a work order', function () {
 });
 
 test('org_admin can create a work order', function () {
+    // Controller uses back() so we set a referer so it redirects back to the index
     $this->actingAs($this->user)
+        ->from(route('work-orders.index'))
         ->post(route('work-orders.store', $this->site), [
             'type' => 'maintenance',
             'title' => 'Fix compressor',
@@ -125,13 +127,13 @@ test('work order status can be updated to in_progress', function () {
     expect($wo->fresh()->status)->toBe('in_progress');
 });
 
-test('work order status can be updated to completed', function () {
+test('work order can be marked completed via complete endpoint', function () {
     $wo = WorkOrder::create(['site_id' => $this->site->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'medium', 'status' => 'open']);
     $wo->assign($this->user->id);
     $wo->start();
 
     $this->actingAs($this->user)
-        ->put(route('work-orders.update-status', $wo), ['status' => 'completed'])
+        ->post(route('work-orders.complete', $wo), ['completion_notes' => 'Task finished.'])
         ->assertRedirect();
 
     expect($wo->fresh()->status)->toBe('completed');
@@ -158,11 +160,36 @@ test('completing work order auto-resolves linked alert', function () {
     $wo->assign($this->user->id);
     $wo->start();
 
+    // Completion now goes through the dedicated complete endpoint which
+    // captures required completion notes.
+    $this->actingAs($this->user)
+        ->post(route('work-orders.complete', $wo), ['completion_notes' => 'Resolved — sensor recalibrated.'])
+        ->assertRedirect();
+
+    expect($alert->fresh()->status)->toBe('resolved');
+});
+
+test('completing work order requires completion notes', function () {
+    $wo = WorkOrder::create(['site_id' => $this->site->id, 'device_id' => $this->device->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'medium', 'status' => 'open']);
+    $wo->assign($this->user->id);
+    $wo->start();
+
+    $this->actingAs($this->user)
+        ->post(route('work-orders.complete', $wo), [])
+        ->assertSessionHasErrors('completion_notes');
+});
+
+test('updateStatus rejects completed status', function () {
+    $wo = WorkOrder::create(['site_id' => $this->site->id, 'device_id' => $this->device->id, 'type' => 'maintenance', 'title' => 'WO', 'priority' => 'medium', 'status' => 'open']);
+    $wo->assign($this->user->id);
+    $wo->start();
+
+    // The legacy route should not allow completion — forces use of complete()
     $this->actingAs($this->user)
         ->put(route('work-orders.update-status', $wo), ['status' => 'completed'])
         ->assertRedirect();
 
-    expect($alert->fresh()->status)->toBe('resolved');
+    expect($wo->fresh()->status)->toBe('in_progress');
 });
 
 test('photo can be uploaded to a work order', function () {

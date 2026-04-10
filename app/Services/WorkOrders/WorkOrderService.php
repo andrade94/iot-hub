@@ -58,19 +58,32 @@ class WorkOrderService
 
     /**
      * Complete a work order and auto-resolve the linked alert if present.
+     * Resolution failures on terminal alerts are logged and swallowed so the
+     * WO completion itself still succeeds.
      */
     public function complete(WorkOrder $wo, int $userId): void
     {
         $wo->complete();
 
-        if ($wo->alert_id && $wo->alert) {
-            $wo->alert->resolve($userId, 'work_order');
+        $alertResolved = false;
+        if ($wo->alert_id && $wo->alert && in_array($wo->alert->status, ['active', 'acknowledged'])) {
+            try {
+                $wo->alert->resolve($userId, 'work_order');
+                $alertResolved = true;
+            } catch (\InvalidArgumentException $e) {
+                Log::warning('Could not auto-resolve linked alert on WO completion', [
+                    'work_order_id' => $wo->id,
+                    'alert_id' => $wo->alert_id,
+                    'alert_status' => $wo->alert->status,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         Log::info('Work order completed', [
             'work_order_id' => $wo->id,
             'completed_by' => $userId,
-            'alert_resolved' => $wo->alert_id !== null,
+            'alert_resolved' => $alertResolved,
         ]);
     }
 }

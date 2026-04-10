@@ -1,16 +1,12 @@
 import { Can } from '@/components/Can';
-import { getAlertColumns } from '@/components/alerts/columns';
 import { BulkActionBar } from '@/components/ui/bulk-action-bar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ContentWithSidebar } from '@/components/ui/content-with-sidebar';
-import { DataTable } from '@/components/ui/data-table';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FadeIn } from '@/components/ui/fade-in';
-import { FilterToolbar } from '@/components/ui/filter-toolbar';
-import type { FilterPill } from '@/components/ui/filter-toolbar';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -19,27 +15,26 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+import { getEcho } from '@/lib/echo';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
-import type { Alert, BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import type { RowSelectionState } from '@tanstack/react-table';
-import { format } from 'date-fns';
+import type { Alert, BreadcrumbItem, SharedData, Site } from '@/types';
+import { formatTimeAgo } from '@/utils/date';
+import { Head, router, usePage } from '@inertiajs/react';
 import {
+    Bell,
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
-    Eye,
+    CheckCheck,
+    Clock,
+    Download,
+    Search,
+    X,
+    XCircle,
 } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface PaginatedAlerts {
     data: Alert[];
@@ -50,14 +45,25 @@ interface PaginatedAlerts {
     next_page_url: string | null;
 }
 
+interface DeviceOption {
+    id: number;
+    name: string;
+    site_id: number;
+}
+
 interface Props {
     alerts: PaginatedAlerts;
+    sites: Pick<Site, 'id' | 'name'>[];
+    devices: DeviceOption[];
+    counts: { critical: number; high: number; resolved: number; active: number };
     filters: {
         severity?: string;
         status?: string;
         site_id?: string;
-        from?: string;
-        to?: string;
+        device_id?: string;
+        search?: string;
+        range?: string;
+        assigned?: string;
     };
 }
 
@@ -66,333 +72,103 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Alerts', href: '/alerts' },
 ];
 
-const SEVERITY_LABELS: Record<string, string> = {
-    critical: 'Critical',
-    high: 'High',
-    medium: 'Medium',
-    low: 'Low',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-    active: 'Active',
-    acknowledged: 'Acknowledged',
-    resolved: 'Resolved',
-    dismissed: 'Dismissed',
-};
-
-export default function AlertIndex({ alerts, filters }: Props) {
+export default function AlertIndex({ alerts, sites, devices, counts, filters }: Props) {
     const { t } = useLang();
-    const [dateFrom, setDateFrom] = useState(filters.from ?? '');
-    const [dateTo, setDateTo] = useState(filters.to ?? '');
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-    const [showFilters, setShowFilters] = useState(() => {
-        try {
-            const stored = localStorage.getItem('alerts-show-filters');
-            return stored === 'true';
-        } catch {
-            return true;
-        }
-    });
+    const { accessible_sites } = usePage<SharedData>().props;
+    const [search, setSearch] = useState(filters.search ?? '');
+    const [selected, setSelected] = useState<Set<number>>(new Set());
+    const [confirmAction, setConfirmAction] = useState<null | 'resolve' | 'dismiss'>(null);
+    const [liveConnected, setLiveConnected] = useState(false);
 
-    function toggleFilters() {
-        const next = !showFilters;
-        setShowFilters(next);
-        try {
-            localStorage.setItem('alerts-show-filters', String(next));
-        } catch {
-            // ignore
-        }
-    }
+    // Real-time: subscribe to AlertTriggered on each accessible site channel.
+    // On an incoming alert, refresh the alerts + counts props in place.
+    useEffect(() => {
+        const echo = getEcho();
+        if (!echo || !accessible_sites?.length) return;
 
-    // Derive selectedIds from RowSelectionState
-    const selectedIds = useMemo(
-        () =>
-            Object.keys(rowSelection)
-                .filter((key) => rowSelection[key])
-                .map(Number),
-        [rowSelection],
-    );
+        const handler = () => {
+            router.reload({ only: ['alerts', 'counts'] });
+        };
 
-    function clearSelection() {
-        setRowSelection({});
-    }
+        const channels = accessible_sites.map((s) => {
+            const channel = echo.private(`site.${s.id}`);
+            channel.listen('.alert.triggered', handler);
+            channel.subscribed(() => setLiveConnected(true));
+            return s.id;
+        });
 
-    function bulkAcknowledge() {
-        router.post(
-            '/alerts/bulk-acknowledge',
-            { ids: selectedIds },
-            {
-                preserveScroll: true,
-                onSuccess: clearSelection,
-            },
-        );
-    }
-
-    function bulkResolve() {
-        router.post(
-            '/alerts/bulk-resolve',
-            { ids: selectedIds },
-            {
-                preserveScroll: true,
-                onSuccess: clearSelection,
-            },
-        );
-    }
+        return () => {
+            channels.forEach((id) => echo.leave(`site.${id}`));
+            setLiveConnected(false);
+        };
+    }, [accessible_sites]);
 
     function applyFilter(key: string, value: string | undefined) {
         const params: Record<string, string> = { ...filters };
-        if (value && value !== 'all') {
-            params[key] = value;
-        } else {
-            delete params[key];
-        }
+        if (value && value !== 'all') params[key] = value;
+        else delete params[key];
         router.get('/alerts', params, { preserveState: true, replace: true });
     }
 
-    function applyDateFilter() {
+    function submitSearch() {
         const params: Record<string, string> = { ...filters };
-        if (dateFrom) params.from = dateFrom;
-        else delete params.from;
-        if (dateTo) params.to = dateTo;
-        else delete params.to;
+        if (search) params.search = search;
+        else delete params.search;
         router.get('/alerts', params, { preserveState: true, replace: true });
     }
 
-    function clearAllFilters() {
-        setDateFrom('');
-        setDateTo('');
+    function clearAll() {
+        setSearch('');
         router.get('/alerts', {}, { preserveState: true, replace: true });
     }
 
-    // Stats from current page
-    const activeCount = alerts.data.filter((a) => a.status === 'active').length;
-    const criticalCount = alerts.data.filter(
-        (a) => a.severity === 'critical' && a.status === 'active',
-    ).length;
-    const highCount = alerts.data.filter(
-        (a) => a.severity === 'high' && a.status === 'active',
-    ).length;
-    const acknowledgedCount = alerts.data.filter(
-        (a) => a.status === 'acknowledged',
-    ).length;
+    function toggleSelect(id: number) {
+        setSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    }
 
-    const hasFilters = !!(filters.severity || filters.status || filters.from || filters.to);
+    function clearSelection() {
+        setSelected(new Set());
+    }
 
-    // Build filter pills
-    const filterPills = useMemo<FilterPill[]>(() => {
-        const pills: FilterPill[] = [];
-        if (filters.severity) {
-            pills.push({
-                key: 'severity',
-                label: `Severity: ${SEVERITY_LABELS[filters.severity] ?? filters.severity}`,
-                onRemove: () => applyFilter('severity', undefined),
-            });
-        }
-        if (filters.status) {
-            pills.push({
-                key: 'status',
-                label: `Status: ${STATUS_LABELS[filters.status] ?? filters.status}`,
-                onRemove: () => applyFilter('status', undefined),
-            });
-        }
-        if (filters.from) {
-            pills.push({
-                key: 'from',
-                label: `From: ${filters.from}`,
-                onRemove: () => {
-                    setDateFrom('');
-                    const params: Record<string, string> = { ...filters };
-                    delete params.from;
-                    router.get('/alerts', params, { preserveState: true, replace: true });
-                },
-            });
-        }
-        if (filters.to) {
-            pills.push({
-                key: 'to',
-                label: `To: ${filters.to}`,
-                onRemove: () => {
-                    setDateTo('');
-                    const params: Record<string, string> = { ...filters };
-                    delete params.to;
-                    router.get('/alerts', params, { preserveState: true, replace: true });
-                },
-            });
-        }
-        return pills;
-    }, [filters]);
+    function bulkAcknowledge() {
+        router.post('/alerts/bulk-acknowledge', { ids: Array.from(selected) }, {
+            preserveScroll: true,
+            onSuccess: clearSelection,
+        });
+    }
 
-    // Column definitions (memoized to avoid re-creating on every render)
-    const columns = useMemo(
-        () =>
-            getAlertColumns({
-                t,
-                onAcknowledge: (alert) =>
-                    router.post(
-                        `/alerts/${alert.id}/acknowledge`,
-                        {},
-                        { preserveScroll: true },
-                    ),
-                onResolve: (alert) =>
-                    router.post(
-                        `/alerts/${alert.id}/resolve`,
-                        {},
-                        { preserveScroll: true },
-                    ),
-                onDismiss: (alert) =>
-                    router.post(
-                        `/alerts/${alert.id}/dismiss`,
-                        {},
-                        { preserveScroll: true },
-                    ),
-            }),
-        [t],
-    );
+    function bulkResolve() {
+        router.post('/alerts/bulk-resolve', { ids: Array.from(selected) }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                clearSelection();
+                setConfirmAction(null);
+            },
+        });
+    }
 
-    // Row click handler
-    const handleRowClick = useCallback((alert: Alert) => {
-        router.get(`/alerts/${alert.id}`);
-    }, []);
+    function bulkDismiss() {
+        router.post('/alerts/bulk-dismiss', { ids: Array.from(selected) }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                clearSelection();
+                setConfirmAction(null);
+            },
+        });
+    }
 
-    // Row className for critical alert highlighting
-    const getRowClassName = useCallback(
-        (alert: Alert) => {
-            const classes: string[] = ['transition-colors'];
-            if (alert.status === 'active' && alert.severity === 'critical') {
-                classes.push(
-                    'bg-red-50/50 hover:bg-red-50/80 dark:bg-red-950/10 dark:hover:bg-red-950/20',
-                );
-            } else {
-                classes.push('hover:bg-muted/50');
-            }
-            if (rowSelection[String(alert.id)]) {
-                classes.push('bg-accent/50');
-            }
-            return classes.join(' ');
-        },
-        [rowSelection],
-    );
-
-    // Empty state for the DataTable
-    const emptyStateNode = (
-        <EmptyState
-            size="sm"
-            variant="muted"
-            icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
-            title={
-                hasFilters
-                    ? t('No alerts match these filters')
-                    : t('All clear \u2014 no alerts')
-            }
-            description={
-                hasFilters
-                    ? t('Try adjusting your filters to see more results')
-                    : t('Your devices are operating within normal thresholds')
-            }
-            action={
-                hasFilters ? (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            router.get(
-                                '/alerts',
-                                {},
-                                { preserveState: true, replace: true },
-                            )
-                        }
-                    >
-                        {t('Clear filters')}
-                    </Button>
-                ) : undefined
-            }
-        />
-    );
-
-    // Sidebar filter panel
-    const filterSidebar = (
-        <Card className="shadow-elevation-1">
-            <CardContent className="flex flex-col gap-4 p-4">
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">
-                        {t('Severity')}
-                    </Label>
-                    <Select
-                        value={filters.severity ?? 'all'}
-                        onValueChange={(v) => applyFilter('severity', v)}
-                    >
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder={t('Severity')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">{t('All Severity')}</SelectItem>
-                            <SelectItem value="critical">{t('Critical')}</SelectItem>
-                            <SelectItem value="high">{t('High')}</SelectItem>
-                            <SelectItem value="medium">{t('Medium')}</SelectItem>
-                            <SelectItem value="low">{t('Low')}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">
-                        {t('Status')}
-                    </Label>
-                    <Select
-                        value={filters.status ?? 'all'}
-                        onValueChange={(v) => applyFilter('status', v)}
-                    >
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder={t('Status')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">{t('Active + Ack')}</SelectItem>
-                            <SelectItem value="active">{t('Active')}</SelectItem>
-                            <SelectItem value="acknowledged">{t('Acknowledged')}</SelectItem>
-                            <SelectItem value="resolved">{t('Resolved')}</SelectItem>
-                            <SelectItem value="dismissed">{t('Dismissed')}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">
-                        {t('Date Range')}
-                    </Label>
-                    <div className="flex flex-col gap-2">
-                        <DatePicker
-                            date={dateFrom ? new Date(dateFrom + 'T00:00:00') : undefined}
-                            onDateChange={(d) => setDateFrom(d ? format(d, 'yyyy-MM-dd') : '')}
-                            placeholder={t('From')}
-                            className="w-full"
-                        />
-                        <DatePicker
-                            date={dateTo ? new Date(dateTo + 'T00:00:00') : undefined}
-                            onDateChange={(d) => setDateTo(d ? format(d, 'yyyy-MM-dd') : '')}
-                            placeholder={t('To')}
-                            className="w-full"
-                        />
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            className="w-full"
-                            onClick={applyDateFilter}
-                        >
-                            {t('Apply')}
-                        </Button>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
+    const hasFilters = !!(filters.severity || filters.status || filters.site_id || filters.device_id || filters.search || filters.assigned);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Alerts')} />
-            <div
-                className={`flex h-full flex-1 flex-col gap-6 p-4 md:p-6 ${selectedIds.length > 0 ? 'pb-20' : ''}`}
-            >
-                {/* -- Header ------------------------------------------------ */}
+            <div className={cn('flex h-full flex-1 flex-col gap-6 p-4 md:p-6', selected.size > 0 && 'pb-20')}>
+                {/* Header */}
                 <FadeIn direction="down" duration={400}>
                     <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
                         <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
@@ -401,207 +177,432 @@ export default function AlertIndex({ alerts, filters }: Props) {
                                 <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
                                     {t('Alert Monitor')}
                                 </p>
-                                <h1 className="font-display mt-1.5 text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
-                                    {t('Alerts')}
-                                </h1>
+                                <div className="mt-1.5 flex items-center gap-3">
+                                    <h1 className="font-display text-[1.5rem] font-bold tracking-tight md:text-[2.25rem]">
+                                        {t('Active Alerts')}
+                                    </h1>
+                                    <span
+                                        className={cn(
+                                            'inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-mono text-[9px] font-semibold',
+                                            liveConnected
+                                                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
+                                                : 'border-border bg-muted/30 text-muted-foreground',
+                                        )}
+                                        title={liveConnected ? t('Real-time updates enabled') : t('Real-time disconnected — refresh for latest')}
+                                    >
+                                        <span className={cn('h-1.5 w-1.5 rounded-full', liveConnected ? 'animate-pulse bg-emerald-500' : 'bg-muted-foreground/50')} />
+                                        {liveConnected ? t('LIVE') : t('OFFLINE')}
+                                    </span>
+                                </div>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    <span className="font-mono font-medium text-foreground">
-                                        {alerts.total}
-                                    </span>{' '}
-                                    {t('alert(s)')}
-                                    {activeCount > 0 && (
-                                        <span className="ml-2 font-medium text-destructive">
-                                            <span className="font-mono">{activeCount}</span>{' '}
-                                            {t('active')}
+                                    <span className="font-mono font-medium text-foreground">{alerts.total}</span>{' '}
+                                    {t('alerts')}
+                                    {counts.active > 0 && (
+                                        <span className="ml-2 text-rose-500">
+                                            <span className="font-mono font-medium">{counts.active}</span> {t('active')}
                                         </span>
                                     )}
                                 </p>
                             </div>
-
-                            {/* Severity indicators */}
-                            {activeCount > 0 && (
-                                <div className="flex flex-wrap gap-2">
-                                    {criticalCount > 0 && (
-                                        <SeverityPill
-                                            color="red"
-                                            count={criticalCount}
-                                            label={t('critical')}
-                                            pulse
-                                        />
-                                    )}
-                                    {highCount > 0 && (
-                                        <SeverityPill
-                                            color="orange"
-                                            count={highCount}
-                                            label={t('high')}
-                                        />
-                                    )}
-                                    {acknowledgedCount > 0 && (
-                                        <SeverityPill
-                                            color="amber"
-                                            count={acknowledgedCount}
-                                            label={t('acknowledged')}
-                                        />
-                                    )}
-                                </div>
-                            )}
+                            <div className="flex flex-wrap gap-2">
+                                {counts.critical > 0 && (
+                                    <div className="flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1.5">
+                                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
+                                        <span className="font-mono text-xs font-semibold text-rose-500">{counts.critical}</span>
+                                        <span className="text-xs text-rose-400">{t('critical')}</span>
+                                    </div>
+                                )}
+                                {counts.high > 0 && (
+                                    <div className="flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                        <span className="font-mono text-xs font-semibold text-amber-500">{counts.high}</span>
+                                        <span className="text-xs text-amber-400">{t('high')}</span>
+                                    </div>
+                                )}
+                                {counts.resolved > 0 && (
+                                    <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                        <span className="font-mono text-xs font-semibold text-emerald-500">{counts.resolved}</span>
+                                        <span className="text-xs text-emerald-400">{t('resolved')}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </FadeIn>
 
-                {/* -- FilterToolbar + ContentWithSidebar ------------------ */}
+                {/* Toolbar: Search + Site + Range */}
                 <FadeIn delay={75} duration={400}>
-                    <FilterToolbar
-                        showSidebar={showFilters}
-                        onToggleSidebar={toggleFilters}
-                        pills={filterPills}
-                        onClearAll={hasFilters ? clearAllFilters : undefined}
-                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="relative flex-1 min-w-[240px] max-w-[340px]">
+                            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+                            <Input
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && submitSearch()}
+                                placeholder={t('Search rule, device, or zone...')}
+                                className="pl-9"
+                            />
+                        </div>
+                        {sites.length > 1 && (
+                            <Select value={filters.site_id ?? 'all'} onValueChange={(v) => {
+                                // Reset device filter when changing site
+                                const params: Record<string, string> = { ...filters };
+                                if (v && v !== 'all') params.site_id = v;
+                                else delete params.site_id;
+                                delete params.device_id;
+                                router.get('/alerts', params, { preserveState: true, replace: true });
+                            }}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder={t('All Sites')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('All Sites')}</SelectItem>
+                                    {sites.map((s) => (
+                                        <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                        {devices.length > 0 && (
+                            <Select value={filters.device_id ?? 'all'} onValueChange={(v) => applyFilter('device_id', v)}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder={t('All Devices')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('All Devices')}</SelectItem>
+                                    {devices.map((d) => (
+                                        <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                        <Select value={filters.range ?? '7d'} onValueChange={(v) => applyFilter('range', v)}>
+                            <SelectTrigger className="w-[160px]">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="24h">{t('Last 24 hours')}</SelectItem>
+                                <SelectItem value="7d">{t('Last 7 days')}</SelectItem>
+                                <SelectItem value="30d">{t('Last 30 days')}</SelectItem>
+                                <SelectItem value="all">{t('All time')}</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {hasFilters && (
+                            <Button variant="ghost" size="sm" onClick={clearAll} className="text-muted-foreground">
+                                <X className="mr-1 h-3 w-3" /> {t('Clear filters')}
+                            </Button>
+                        )}
+                        <div className="ml-auto">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    const params = new URLSearchParams();
+                                    Object.entries(filters).forEach(([k, v]) => {
+                                        if (v) params.set(k, String(v));
+                                    });
+                                    window.location.href = `/alerts/export?${params.toString()}`;
+                                }}
+                                title={t('Download filtered alerts as CSV')}
+                            >
+                                <Download className="mr-1.5 h-3.5 w-3.5" />
+                                {t('Export CSV')}
+                            </Button>
+                        </div>
+                    </div>
                 </FadeIn>
 
-                <FadeIn delay={150} duration={500}>
-                    <ContentWithSidebar
-                        showSidebar={showFilters}
-                        sidebar={filterSidebar}
-                    >
-                        <Card className="flex-1 shadow-elevation-1">
-                            <DataTable
-                                columns={columns}
-                                data={alerts.data}
-                                getRowId={(row) => String(row.id)}
-                                enableRowSelection={(alert) =>
-                                    alert.status === 'active' || alert.status === 'acknowledged'
-                                }
-                                rowSelection={rowSelection}
-                                onRowSelectionStateChange={setRowSelection}
-                                onRowClick={handleRowClick}
-                                rowClassName={getRowClassName}
-                                bordered={false}
-                                emptyState={emptyStateNode}
-                            />
+                {/* Filter pills */}
+                <FadeIn delay={100} duration={400}>
+                    <Card className="shadow-elevation-1">
+                        <CardContent className="flex flex-wrap items-center gap-2 p-3">
+                            <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/60">{t('Severity')}:</span>
+                            <FilterPill active={!filters.severity} onClick={() => applyFilter('severity', undefined)}>{t('All')}</FilterPill>
+                            <FilterPill active={filters.severity === 'critical'} onClick={() => applyFilter('severity', 'critical')}>{t('Critical')}</FilterPill>
+                            <FilterPill active={filters.severity === 'high'} onClick={() => applyFilter('severity', 'high')}>{t('High')}</FilterPill>
+                            <FilterPill active={filters.severity === 'medium'} onClick={() => applyFilter('severity', 'medium')}>{t('Medium')}</FilterPill>
+                            <FilterPill active={filters.severity === 'low'} onClick={() => applyFilter('severity', 'low')}>{t('Low')}</FilterPill>
+                            <div className="mx-2 h-4 w-px bg-border" />
+                            <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/60">{t('Status')}:</span>
+                            <FilterPill active={!filters.status} onClick={() => applyFilter('status', undefined)}>{t('Active + Ack')}</FilterPill>
+                            <FilterPill active={filters.status === 'active'} onClick={() => applyFilter('status', 'active')}>{t('Active only')}</FilterPill>
+                            <FilterPill active={filters.status === 'resolved'} onClick={() => applyFilter('status', 'resolved')}>{t('Resolved')}</FilterPill>
+                            <FilterPill active={filters.status === 'dismissed'} onClick={() => applyFilter('status', 'dismissed')}>{t('Dismissed')}</FilterPill>
+                            <div className="mx-2 h-4 w-px bg-border" />
+                            <FilterPill
+                                active={filters.assigned === 'me'}
+                                onClick={() => applyFilter('assigned', filters.assigned === 'me' ? undefined : 'me')}
+                            >
+                                {t('Triaged by me')}
+                            </FilterPill>
+                        </CardContent>
+                    </Card>
+                </FadeIn>
 
-                            {/* Pagination */}
-                            {alerts.last_page > 1 && (
-                                <div className="flex items-center justify-between border-t px-4 py-3">
-                                    <p className="text-xs text-muted-foreground">
-                                        {t('Page')}{' '}
-                                        <span className="font-mono font-medium tabular-nums text-foreground">
-                                            {alerts.current_page}
-                                        </span>{' '}
-                                        {t('of')}{' '}
-                                        <span className="font-mono tabular-nums">
-                                            {alerts.last_page}
-                                        </span>
-                                    </p>
-                                    <div className="flex gap-1">
-                                        <Button
-                                            variant="outline"
-                                            size="icon-sm"
-                                            disabled={!alerts.prev_page_url}
-                                            onClick={() =>
-                                                alerts.prev_page_url &&
-                                                router.get(
-                                                    alerts.prev_page_url,
-                                                    {},
-                                                    { preserveState: true },
-                                                )
-                                            }
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="icon-sm"
-                                            disabled={!alerts.next_page_url}
-                                            onClick={() =>
-                                                alerts.next_page_url &&
-                                                router.get(
-                                                    alerts.next_page_url,
-                                                    {},
-                                                    { preserveState: true },
-                                                )
-                                            }
-                                        >
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                {/* Alert rows */}
+                <FadeIn delay={150} duration={500}>
+                    <Card className="shadow-elevation-1 overflow-hidden">
+                        {alerts.data.length === 0 ? (
+                            <EmptyState
+                                size="sm"
+                                variant="muted"
+                                icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+                                title={hasFilters ? t('No alerts match these filters') : t('All clear — no alerts')}
+                                description={hasFilters ? t('Try adjusting your filters to see more results') : t('Your devices are operating within normal thresholds')}
+                                action={hasFilters ? <Button variant="outline" size="sm" onClick={clearAll}>{t('Clear filters')}</Button> : undefined}
+                            />
+                        ) : (
+                            <>
+                                {/* Table header */}
+                                <div className="grid grid-cols-[24px_90px_1fr_200px_160px_100px_70px_80px] items-center gap-3 border-b bg-muted/20 px-4 py-2.5 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                                    <input
+                                        type="checkbox"
+                                        checked={selected.size === alerts.data.filter((a) => a.status === 'active' || a.status === 'acknowledged').length && selected.size > 0}
+                                        onChange={() => {
+                                            const actionable = alerts.data.filter((a) => a.status === 'active' || a.status === 'acknowledged');
+                                            if (selected.size === actionable.length) setSelected(new Set());
+                                            else setSelected(new Set(actionable.map((a) => a.id)));
+                                        }}
+                                    />
+                                    <span>{t('Severity')}</span>
+                                    <span>{t('Alert')}</span>
+                                    <span>{t('Device / Zone')}</span>
+                                    <span>{t('Reading')}</span>
+                                    <span>{t('Status')}</span>
+                                    <span>{t('Age')}</span>
+                                    <span></span>
                                 </div>
-                            )}
-                        </Card>
-                    </ContentWithSidebar>
+
+                                {alerts.data.map((alert) => (
+                                    <AlertRow
+                                        key={alert.id}
+                                        alert={alert}
+                                        selected={selected.has(alert.id)}
+                                        onToggleSelect={() => toggleSelect(alert.id)}
+                                        onClick={() => router.get(`/alerts/${alert.id}`)}
+                                        t={t}
+                                    />
+                                ))}
+                            </>
+                        )}
+
+                        {/* Pagination */}
+                        {alerts.last_page > 1 && (
+                            <div className="flex items-center justify-between border-t px-4 py-3">
+                                <p className="font-mono text-[11px] text-muted-foreground">
+                                    {t('Showing')} {(alerts.current_page - 1) * 20 + 1}–{Math.min(alerts.current_page * 20, alerts.total)} {t('of')} {alerts.total}
+                                </p>
+                                <div className="flex gap-1">
+                                    <Button variant="outline" size="icon-sm" disabled={!alerts.prev_page_url} onClick={() => alerts.prev_page_url && router.get(alerts.prev_page_url, {}, { preserveState: true })}>
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="outline" size="icon-sm" disabled={!alerts.next_page_url} onClick={() => alerts.next_page_url && router.get(alerts.next_page_url, {}, { preserveState: true })}>
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </Card>
                 </FadeIn>
             </div>
 
             <Can permission="acknowledge alerts">
-                <BulkActionBar
-                    selectedCount={selectedIds.length}
-                    onClear={clearSelection}
-                >
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={bulkAcknowledge}
-                    >
-                        <Eye className="mr-2 h-4 w-4" />
+                <BulkActionBar selectedCount={selected.size} onClear={clearSelection}>
+                    <Button variant="secondary" size="sm" onClick={bulkAcknowledge}>
+                        <CheckCheck className="mr-2 h-4 w-4" />
                         {t('Acknowledge')}
                     </Button>
-                    <Button size="sm" onClick={bulkResolve}>
+                    <Button variant="outline" size="sm" onClick={() => setConfirmAction('dismiss')}>
+                        <XCircle className="mr-2 h-4 w-4" />
+                        {t('Dismiss')}
+                    </Button>
+                    <Button size="sm" onClick={() => setConfirmAction('resolve')}>
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         {t('Resolve')}
                     </Button>
                 </BulkActionBar>
             </Can>
+
+            <ConfirmationDialog
+                open={confirmAction === 'resolve'}
+                onOpenChange={(o) => !o && setConfirmAction(null)}
+                title={t('Resolve selected alerts?')}
+                description={t('This marks the selected alerts as resolved. Use this when the underlying issue has been fixed.')}
+                warningMessage={t('Resolved alerts move out of the active queue and can only be found via filters.')}
+                actionLabel={`${t('Resolve')} ${selected.size}`}
+                onConfirm={bulkResolve}
+            />
+
+            <ConfirmationDialog
+                open={confirmAction === 'dismiss'}
+                onOpenChange={(o) => !o && setConfirmAction(null)}
+                title={t('Dismiss selected alerts?')}
+                description={t('Dismiss the selected alerts without resolving the underlying issue. Use this for false positives or duplicates.')}
+                warningMessage={t('Dismissed alerts are terminal and cannot be reopened.')}
+                actionLabel={`${t('Dismiss')} ${selected.size}`}
+                onConfirm={bulkDismiss}
+            />
         </AppLayout>
     );
 }
 
-/* -- Severity Pill (header indicator) ---------------------------------- */
+function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                'rounded-md border px-2.5 py-1 text-[11px] transition-colors',
+                active
+                    ? 'border-primary/40 bg-primary/10 text-primary'
+                    : 'border-border text-muted-foreground hover:border-border/80 hover:text-foreground',
+            )}
+        >
+            {children}
+        </button>
+    );
+}
 
-const severityPillColors = {
-    red: {
-        bg: 'bg-red-50 dark:bg-red-950/30',
-        border: 'border-red-200 dark:border-red-900',
-        text: 'text-red-700 dark:text-red-400',
-        dot: 'bg-red-500',
-    },
-    orange: {
-        bg: 'bg-orange-50 dark:bg-orange-950/30',
-        border: 'border-orange-200 dark:border-orange-900',
-        text: 'text-orange-700 dark:text-orange-400',
-        dot: 'bg-orange-500',
-    },
-    amber: {
-        bg: 'bg-amber-50 dark:bg-amber-950/30',
-        border: 'border-amber-200 dark:border-amber-900',
-        text: 'text-amber-700 dark:text-amber-400',
-        dot: 'bg-amber-500',
-    },
-};
-
-function SeverityPill({
-    color,
-    count,
-    label,
-    pulse,
+function AlertRow({
+    alert,
+    selected,
+    onToggleSelect,
+    onClick,
+    t,
 }: {
-    color: 'red' | 'orange' | 'amber';
-    count: number;
-    label: string;
-    pulse?: boolean;
+    alert: Alert;
+    selected: boolean;
+    onToggleSelect: () => void;
+    onClick: () => void;
+    t: (key: string) => string;
 }) {
-    const c = severityPillColors[color];
+    const isCriticalActive = alert.severity === 'critical' && alert.status === 'active';
+    const isActionable = alert.status === 'active' || alert.status === 'acknowledged';
+    const data = alert.data as Record<string, unknown> | null;
+
     return (
         <div
-            className={`flex items-center gap-2 rounded-full border ${c.border} ${c.bg} px-3 py-1.5`}
+            className={cn(
+                'grid grid-cols-[24px_90px_1fr_200px_160px_100px_70px_80px] items-center gap-3 border-b px-4 py-3 transition-colors last:border-b-0 hover:bg-muted/50',
+                isCriticalActive && 'border-l-[3px] border-l-rose-500 bg-gradient-to-r from-rose-500/[0.06] to-transparent pl-[13px]',
+                selected && 'bg-accent/50',
+            )}
         >
-            <span
-                className={`h-2 w-2 rounded-full ${c.dot} ${pulse ? 'animate-pulse' : ''}`}
+            <input
+                type="checkbox"
+                checked={selected}
+                disabled={!isActionable}
+                onClick={(e) => e.stopPropagation()}
+                onChange={onToggleSelect}
+                className="cursor-pointer"
             />
-            <span className={`text-xs font-medium ${c.text}`}>
-                <span className="font-mono tabular-nums">{count}</span> {label}
-            </span>
+            <div className="flex items-center gap-1.5">
+                <div
+                    className={cn(
+                        'h-6 w-[3px] rounded-sm',
+                        alert.severity === 'critical' && 'animate-pulse bg-rose-500',
+                        alert.severity === 'high' && 'bg-amber-500',
+                        alert.severity === 'medium' && 'bg-blue-500',
+                        alert.severity === 'low' && 'bg-muted-foreground/50',
+                    )}
+                />
+                <Badge variant={severityVariant(alert.severity)} className="text-[9px]">
+                    {alert.severity}
+                </Badge>
+            </div>
+            <div className="cursor-pointer" onClick={onClick}>
+                <p className="text-[13px] font-medium">{(data?.rule_name as string) ?? alert.rule?.name ?? t('Unknown rule')}</p>
+                <p className="font-mono text-[9px] text-muted-foreground/60">rule_id={alert.rule_id ?? '?'}</p>
+                {alert.corrective_actions && alert.corrective_actions.length > 0 && (
+                    <p className="mt-0.5 flex items-center gap-1 text-[9px] text-emerald-500">
+                        <CheckCircle2 className="h-2.5 w-2.5" />
+                        {t('Corrective action logged')}
+                    </p>
+                )}
+            </div>
+            <div className="cursor-pointer" onClick={onClick}>
+                <p className="text-[11px] text-muted-foreground">{alert.device?.name ?? '—'}</p>
+                <p className="font-mono text-[10px] text-muted-foreground/60">
+                    {alert.site?.name}
+                    {alert.device?.zone && ` · ${alert.device.zone}`}
+                </p>
+            </div>
+            <div className="cursor-pointer font-mono text-[11px]" onClick={onClick}>
+                {data?.metric ? (
+                    <>
+                        <span className="text-muted-foreground">{String(data.metric)}:</span>{' '}
+                        <span className={cn('font-semibold', isCriticalActive ? 'text-rose-500' : 'text-amber-500')}>
+                            {String(data.value ?? '—')}
+                        </span>
+                        {data.threshold != null && (
+                            <div className="text-[10px] text-muted-foreground/50">
+                                {t('threshold')}: {String(data.threshold)}
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    '—'
+                )}
+            </div>
+            <div>
+                <Badge variant={statusVariant(alert.status)} className="text-[9px]">
+                    {alert.status}
+                </Badge>
+            </div>
+            <div className="font-mono text-[10px] text-muted-foreground">
+                {formatTimeAgo(alert.triggered_at)}
+            </div>
+            <div className="flex justify-end gap-1">
+                {isActionable && (
+                    <Can permission="acknowledge alerts">
+                        {alert.status === 'active' && (
+                            <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                title={t('Acknowledge')}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.post(`/alerts/${alert.id}/acknowledge`, {}, { preserveScroll: true });
+                                }}
+                            >
+                                <CheckCheck className="h-3.5 w-3.5" />
+                            </Button>
+                        )}
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            title={t('Snooze')}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                router.post(`/alerts/${alert.id}/snooze`, { minutes: 60 }, { preserveScroll: true });
+                            }}
+                        >
+                            <Clock className="h-3.5 w-3.5" />
+                        </Button>
+                    </Can>
+                )}
+            </div>
         </div>
     );
+}
+
+function severityVariant(severity: string): 'destructive' | 'warning' | 'info' | 'outline' {
+    switch (severity) {
+        case 'critical': return 'destructive';
+        case 'high': return 'warning';
+        case 'medium': return 'info';
+        default: return 'outline';
+    }
+}
+
+function statusVariant(status: string): 'destructive' | 'warning' | 'success' | 'outline' {
+    switch (status) {
+        case 'active': return 'destructive';
+        case 'acknowledged': return 'warning';
+        case 'resolved': return 'success';
+        default: return 'outline';
+    }
 }
 
 /* -- Skeleton ---------------------------------------------------------- */
@@ -609,86 +610,31 @@ function SeverityPill({
 export function AlertIndexSkeleton() {
     return (
         <div className="flex flex-col gap-6 p-4 md:p-6">
-            {/* Header */}
             <div className="rounded-xl border p-6 md:p-8">
                 <Skeleton className="h-3 w-24" />
-                <Skeleton className="mt-3 h-8 w-32" />
-                <Skeleton className="mt-2 h-4 w-40" />
+                <Skeleton className="mt-3 h-8 w-40" />
+                <Skeleton className="mt-2 h-4 w-48" />
             </div>
-            {/* Filters */}
-            <div>
-                <div className="mb-2 flex items-center gap-3">
-                    <Skeleton className="h-3 w-14" />
-                    <div className="h-px flex-1 bg-border" />
-                </div>
-                <Card>
-                    <CardContent className="p-3">
-                        <div className="flex gap-3">
-                            <Skeleton className="h-9 w-[130px]" />
-                            <Skeleton className="h-9 w-[150px]" />
-                            <Skeleton className="h-9 w-[140px]" />
-                            <Skeleton className="h-9 w-[140px]" />
-                            <Skeleton className="h-9 w-16" />
-                        </div>
-                    </CardContent>
-                </Card>
+            <div className="flex gap-2">
+                <Skeleton className="h-9 w-[300px]" />
+                <Skeleton className="h-9 w-[180px]" />
+                <Skeleton className="h-9 w-[160px]" />
             </div>
-            {/* Table */}
-            <Card>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[40px]">
-                                <Skeleton className="h-4 w-4" />
-                            </TableHead>
-                            {[
-                                'w-[100px]',
-                                '',
-                                '',
-                                '',
-                                '',
-                                '',
-                                'text-right',
-                            ].map((c, i) => (
-                                <TableHead key={i} className={c}>
-                                    <Skeleton className="h-3 w-16" />
-                                </TableHead>
-                            ))}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {Array.from({ length: 6 }).map((_, i) => (
-                            <TableRow key={i}>
-                                <TableCell>
-                                    <Skeleton className="h-4 w-4" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-5 w-16 rounded-full" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-4 w-28" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-4 w-24" />
-                                    <Skeleton className="mt-1 h-3 w-16" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-4 w-20" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-5 w-20 rounded-full" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-3 w-8" />
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Skeleton className="ml-auto h-7 w-16" />
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+            <Skeleton className="h-12 w-full" />
+            <Card className="shadow-elevation-1">
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 border-b px-4 py-3 last:border-b-0">
+                        <Skeleton className="h-4 w-4" />
+                        <Skeleton className="h-6 w-16" />
+                        <Skeleton className="h-4 flex-1" />
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-6 w-20" />
+                    </div>
+                ))}
             </Card>
         </div>
     );
 }
+
+export { Bell };

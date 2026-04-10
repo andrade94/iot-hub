@@ -83,6 +83,7 @@ class AlertApiController extends Controller
             'rule:id,name,type,conditions,severity',
             'notifications' => fn ($q) => $q->with('user:id,name')->latest('sent_at'),
             'resolvedByUser:id,name',
+            'acknowledgedByUser:id,name',
         ]);
 
         return response()->json([
@@ -94,6 +95,10 @@ class AlertApiController extends Controller
                 'acknowledged_at' => $alert->acknowledged_at?->toIso8601String(),
                 'resolved_at' => $alert->resolved_at?->toIso8601String(),
                 'resolution_type' => $alert->resolution_type,
+                'acknowledged_by' => $alert->acknowledgedByUser ? [
+                    'id' => $alert->acknowledgedByUser->id,
+                    'name' => $alert->acknowledgedByUser->name,
+                ] : null,
                 'resolved_by' => $alert->resolvedByUser ? [
                     'id' => $alert->resolvedByUser->id,
                     'name' => $alert->resolvedByUser->name,

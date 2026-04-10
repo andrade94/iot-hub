@@ -36,7 +36,8 @@ test('org_admin can create an alert rule', function () {
         ])
         ->assertRedirect();
 
-    expect(AlertRule::where('name', 'Freezer temp')->exists())->toBeTrue();
+    // AlertRule::setNameAttribute title-cases the name — 'Freezer temp' → 'Freezer Temp'
+    expect(AlertRule::where('name', 'Freezer Temp')->exists())->toBeTrue();
 });
 
 test('create rule fails without required fields', function () {

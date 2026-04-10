@@ -61,16 +61,30 @@ test('user can snooze an acknowledged alert', function () {
     ]);
 });
 
-test('snooze validates duration_minutes', function () {
+test('snooze rejects duration below minimum', function () {
+    // 5 minutes is the minimum; 2 must fail
     $this->actingAs($this->manager)
-        ->post("/alerts/{$this->alert->id}/snooze", ['duration_minutes' => 999])
+        ->post("/alerts/{$this->alert->id}/snooze", ['duration_minutes' => 2])
         ->assertSessionHasErrors('duration_minutes');
 });
 
-test('snooze duration must be one of allowed values', function () {
+test('snooze rejects duration above maximum', function () {
+    // 10080 minutes (7 days) is the cap; 20000 must fail
     $this->actingAs($this->manager)
-        ->post("/alerts/{$this->alert->id}/snooze", ['duration_minutes' => 45])
+        ->post("/alerts/{$this->alert->id}/snooze", ['duration_minutes' => 20000])
         ->assertSessionHasErrors('duration_minutes');
+});
+
+test('snooze accepts custom duration within range', function () {
+    // Custom duration (180 min) should work — not limited to fixed presets
+    $this->actingAs($this->manager)
+        ->post("/alerts/{$this->alert->id}/snooze", ['duration_minutes' => 180])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('alert_snoozes', [
+        'alert_id' => $this->alert->id,
+        'user_id' => $this->manager->id,
+    ]);
 });
 
 test('user can cancel a snooze', function () {

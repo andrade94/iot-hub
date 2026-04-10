@@ -34,9 +34,13 @@ class Alert extends Model
         'status',
         'triggered_at',
         'acknowledged_at',
+        'acknowledged_by',
         'resolved_at',
         'resolved_by',
         'resolution_type',
+        'escalated_at',
+        'escalated_by',
+        'escalated_to_level',
         'data',
     ];
 
@@ -47,6 +51,7 @@ class Alert extends Model
             'triggered_at' => 'datetime',
             'acknowledged_at' => 'datetime',
             'resolved_at' => 'datetime',
+            'escalated_at' => 'datetime',
         ];
     }
 
@@ -68,6 +73,21 @@ class Alert extends Model
     public function resolvedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by');
+    }
+
+    public function acknowledgedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'acknowledged_by');
+    }
+
+    public function escalatedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'escalated_by');
+    }
+
+    public function workOrders(): HasMany
+    {
+        return $this->hasMany(WorkOrder::class);
     }
 
     public function notifications(): HasMany
@@ -99,7 +119,7 @@ class Alert extends Model
         $this->update([
             'status' => 'acknowledged',
             'acknowledged_at' => now(),
-            'resolved_by' => $userId,
+            'acknowledged_by' => $userId,
         ]);
 
         return $this;

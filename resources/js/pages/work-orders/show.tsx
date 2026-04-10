@@ -1,10 +1,29 @@
 import { Can } from '@/components/Can';
+import { CompletionDialog } from '@/components/work-orders/completion-dialog';
+import { CreateWorkOrderDialog } from '@/components/work-orders/create-work-order-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { DetailCard } from '@/components/ui/detail-card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
@@ -17,30 +36,92 @@ import {
     CheckCircle2,
     Clock,
     MessageSquare,
+    Pencil,
     Play,
     Send,
+    Trash2,
     Upload,
     User,
     XCircle,
 } from 'lucide-react';
+import { useRef, useState } from 'react';
 
-interface Props {
-    workOrder: WorkOrder;
+interface TechnicianOption {
+    id: number;
+    name: string;
 }
 
-export default function WorkOrderShow({ workOrder: wo }: Props) {
+interface Props {
+    workOrder: WorkOrder & {
+        status_duration?: string;
+        is_overdue?: boolean;
+        open_hours?: number;
+    };
+    technicians?: TechnicianOption[];
+    statusTransitions?: Record<string, string | null>;
+}
+
+export default function WorkOrderShow({ workOrder: wo, technicians = [], statusTransitions = {} }: Props) {
     const { t } = useLang();
     const noteForm = useForm({ note: '' });
+    const [showAssign, setShowAssign] = useState(false);
+    const [assignTechId, setAssignTechId] = useState<string>('');
+    const [showEdit, setShowEdit] = useState(false);
+    const [showComplete, setShowComplete] = useState(false);
+    const [confirmCancel, setConfirmCancel] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+    const [photoCaption, setPhotoCaption] = useState('');
+    const photoInputRef = useRef<HTMLInputElement>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Work Orders', href: '/work-orders' },
         { title: wo.title, href: '#' },
     ];
 
-    const STATUS_MAP: Record<string, string> = { assign: 'assigned', start: 'in_progress', complete: 'completed', cancel: 'cancelled' };
+    const STATUS_MAP: Record<string, string> = { assign: 'assigned', start: 'in_progress', cancel: 'cancelled' };
 
     function updateStatus(action: string) {
         router.put(`/work-orders/${wo.id}/status`, { status: STATUS_MAP[action] ?? action }, { preserveScroll: true });
+    }
+
+    function confirmCancelWO() {
+        router.put(`/work-orders/${wo.id}/status`, { status: 'cancelled' }, {
+            preserveScroll: true,
+            onSuccess: () => setConfirmCancel(false),
+        });
+    }
+
+    function deleteWO() {
+        router.delete(`/work-orders/${wo.id}`, {
+            onSuccess: () => setConfirmDelete(false),
+        });
+    }
+
+    function uploadPhoto(file: File) {
+        const payload: Record<string, File | string> = { photo: file };
+        if (photoCaption.trim()) payload.caption = photoCaption.trim();
+        router.post(`/work-orders/${wo.id}/photos`, payload, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setPhotoCaption('');
+                if (photoInputRef.current) photoInputRef.current.value = '';
+            },
+        });
+    }
+
+    function submitAssign() {
+        if (!assignTechId) return;
+        router.put(`/work-orders/${wo.id}/status`, {
+            status: 'assigned',
+            assigned_to: Number(assignTechId),
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowAssign(false);
+                setAssignTechId('');
+            },
+        });
     }
 
     function submitNote(e: React.FormEvent) {
@@ -84,6 +165,11 @@ export default function WorkOrderShow({ workOrder: wo }: Props) {
                                         <Badge variant={statusVariants[wo.status] ?? 'outline'}>
                                             {wo.status.replace('_', ' ')}
                                         </Badge>
+                                        {wo.is_overdue && (
+                                            <Badge variant="destructive" className="font-semibold">
+                                                <Clock className="mr-1 h-3 w-3" /> {t('SLA overdue')}
+                                            </Badge>
+                                        )}
                                     </div>
                                     <p className="mt-1 text-sm text-muted-foreground">
                                         <span className="font-mono tabular-nums">#{wo.id}</span>
@@ -91,16 +177,32 @@ export default function WorkOrderShow({ workOrder: wo }: Props) {
                                         <span className="font-mono tabular-nums">
                                             {new Date(wo.created_at).toLocaleDateString()}
                                         </span>
+                                        {wo.status_duration && (
+                                            <>
+                                                {' '}&middot; <span className={wo.is_overdue ? 'font-semibold text-rose-500' : ''}>
+                                                    {wo.status.replace('_', ' ')} {wo.status_duration}
+                                                </span>
+                                            </>
+                                        )}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Status actions */}
-                            <div className="flex shrink-0 gap-2">
-                                {wo.status === 'open' && (
+                            <div className="flex flex-wrap shrink-0 gap-2">
+                                {wo.status !== 'completed' && wo.status !== 'cancelled' && (
                                     <Can permission="manage work orders">
-                                        <Button variant="outline" onClick={() => updateStatus('assign')}>
-                                            <User className="mr-2 h-4 w-4" />{t('Assign')}
+                                        <Button variant="outline" size="sm" onClick={() => setShowEdit(true)} title={t('Edit work order')}>
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            {t('Edit')}
+                                        </Button>
+                                    </Can>
+                                )}
+                                {(wo.status === 'open' || wo.status === 'assigned') && (
+                                    <Can permission="manage work orders">
+                                        <Button variant="outline" onClick={() => setShowAssign(true)}>
+                                            <User className="mr-2 h-4 w-4" />
+                                            {wo.status === 'assigned' ? t('Reassign') : t('Assign')}
                                         </Button>
                                     </Can>
                                 )}
@@ -113,21 +215,37 @@ export default function WorkOrderShow({ workOrder: wo }: Props) {
                                 )}
                                 {wo.status === 'in_progress' && (
                                     <Can permission="complete work orders">
-                                        <Button onClick={() => updateStatus('complete')}>
+                                        <Button onClick={() => setShowComplete(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                                             <CheckCircle2 className="mr-2 h-4 w-4" />{t('Complete')}
                                         </Button>
                                     </Can>
                                 )}
                                 {wo.status !== 'completed' && wo.status !== 'cancelled' && (
                                     <Can permission="manage work orders">
-                                        <Button variant="ghost" onClick={() => updateStatus('cancel')}>
+                                        <Button variant="ghost" onClick={() => setConfirmCancel(true)}>
                                             <XCircle className="mr-2 h-4 w-4" />{t('Cancel')}
                                         </Button>
                                     </Can>
                                 )}
+                                <Can permission="manage work orders">
+                                    <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} className="text-muted-foreground hover:text-rose-500" title={t('Delete work order')}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </Can>
                             </div>
                         </div>
                     </div>
+                </FadeIn>
+
+                {/* Status flow visualization */}
+                <FadeIn delay={50} duration={400}>
+                    <StatusFlow
+                        status={wo.status}
+                        statusDuration={wo.status_duration}
+                        isOverdue={wo.is_overdue ?? false}
+                        transitions={statusTransitions}
+                        t={t}
+                    />
                 </FadeIn>
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -145,10 +263,20 @@ export default function WorkOrderShow({ workOrder: wo }: Props) {
                                     className="shadow-elevation-1"
                                     items={[
                                         { label: t('Type'), value: wo.type.replace('_', ' ') },
-                                        { label: t('Device'), value: wo.device?.name ?? '—' },
+                                        {
+                                            label: t('Device'),
+                                            value: wo.device ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => router.get(`/devices/${wo.device!.id}`)}
+                                                    className="text-primary hover:underline"
+                                                >
+                                                    {wo.device.name} &rarr;
+                                                </button>
+                                            ) : '—',
+                                        },
                                         { label: t('Assigned To'), value: wo.assigned_user?.name ?? t('Unassigned') },
                                         { label: t('Created By'), value: wo.created_by_user?.name ?? '—' },
-                                        ...(wo.alert ? [{ label: t('Linked Alert'), value: <span className="font-mono tabular-nums">#{wo.alert.id}</span> }] : []),
                                     ]}
                                 />
                                 {wo.description && (
@@ -157,6 +285,32 @@ export default function WorkOrderShow({ workOrder: wo }: Props) {
                                             <p className="text-sm leading-relaxed text-muted-foreground">
                                                 {wo.description}
                                             </p>
+                                        </CardContent>
+                                    </Card>
+                                )}
+
+                                {/* Linked Alert Card */}
+                                {wo.alert && (
+                                    <Card
+                                        className="shadow-elevation-1 cursor-pointer transition-colors hover:bg-muted/30"
+                                        onClick={() => router.get(`/alerts/${wo.alert!.id}`)}
+                                    >
+                                        <CardContent className="flex items-center gap-3 p-4">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-lg text-rose-500">
+                                                !
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-[13px] font-medium">
+                                                    {t('Linked Alert')} &middot; #{wo.alert.id}
+                                                </p>
+                                                <p className="font-mono text-[10px] text-muted-foreground/70">
+                                                    {wo.alert.severity} &middot; {wo.alert.status}
+                                                </p>
+                                            </div>
+                                            <Badge variant={wo.alert.status === 'active' ? 'destructive' : wo.alert.status === 'acknowledged' ? 'warning' : 'success'}>
+                                                {wo.alert.status}
+                                            </Badge>
+                                            <span className="text-muted-foreground">&rarr;</span>
                                         </CardContent>
                                     </Card>
                                 )}
@@ -177,27 +331,37 @@ export default function WorkOrderShow({ workOrder: wo }: Props) {
                                             {wo.photos.length}
                                         </span>
                                     )}
-                                    {wo.status !== 'completed' && wo.status !== 'cancelled' && (
-                                        <Button variant="outline" size="sm" onClick={() => {
-                                            const input = document.createElement('input');
-                                            input.type = 'file';
-                                            input.accept = 'image/*';
-                                            input.onchange = (e) => {
-                                                const file = (e.target as HTMLInputElement).files?.[0];
-                                                if (file) {
-                                                    const formData = new FormData();
-                                                    formData.append('photo', file);
-                                                    router.post(`/work-orders/${wo.id}/photos`, formData as Record<string, unknown>, { preserveScroll: true });
-                                                }
-                                            };
-                                            input.click();
-                                        }}>
-                                            <Upload className="mr-1.5 h-3.5 w-3.5" />{t('Upload')}
-                                        </Button>
-                                    )}
                                 </div>
                                 <Card className="shadow-elevation-1">
-                                    <CardContent className="p-6">
+                                    <CardContent className="space-y-4 p-6">
+                                        {wo.status !== 'completed' && wo.status !== 'cancelled' && (
+                                            <div className="flex flex-wrap gap-2 rounded-md border border-dashed border-border/60 bg-muted/20 p-3">
+                                                <Input
+                                                    value={photoCaption}
+                                                    onChange={(e) => setPhotoCaption(e.target.value)}
+                                                    placeholder={t('Caption (optional)')}
+                                                    className="flex-1 min-w-[180px] text-[11px]"
+                                                    maxLength={255}
+                                                />
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => photoInputRef.current?.click()}
+                                                >
+                                                    <Upload className="mr-1.5 h-3.5 w-3.5" />{t('Choose photo')}
+                                                </Button>
+                                                <input
+                                                    ref={photoInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) uploadPhoto(file);
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
                                         {!wo.photos || wo.photos.length === 0 ? (
                                             <p className="py-4 text-center text-sm text-muted-foreground">
                                                 {t('No photos yet')}
@@ -297,30 +461,157 @@ export default function WorkOrderShow({ workOrder: wo }: Props) {
                         </FadeIn>
                     </div>
 
-                    {/* ── TIMELINE (Sidebar) ──────────────────────── */}
-                    <FadeIn delay={240} duration={400}>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
-                                    {t('Timeline')}
-                                </h2>
-                                <div className="h-px flex-1 bg-border" />
+                    <div className="space-y-6">
+                        {/* ── TIMELINE (Sidebar) ──────────────────────── */}
+                        <FadeIn delay={240} duration={400}>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Timeline')}
+                                    </h2>
+                                    <div className="h-px flex-1 bg-border" />
+                                </div>
+                                <Card className="shadow-elevation-1">
+                                    <CardContent className="p-6">
+                                        <div className="space-y-0">
+                                            <TimelineEntry icon={<Clock className="h-3.5 w-3.5" />} label={t('Created')} time={wo.created_at} color="muted" isFirst />
+                                            {wo.status !== 'open' && (
+                                                <TimelineEntry
+                                                    icon={<User className="h-3.5 w-3.5" />}
+                                                    label={t('Assigned')}
+                                                    time={statusTransitions.assigned ?? undefined}
+                                                    color="warning"
+                                                />
+                                            )}
+                                            {(wo.status === 'in_progress' || wo.status === 'completed') && (
+                                                <TimelineEntry
+                                                    icon={<Play className="h-3.5 w-3.5" />}
+                                                    label={t('Started')}
+                                                    time={statusTransitions.in_progress ?? undefined}
+                                                    color="info"
+                                                />
+                                            )}
+                                            {wo.status === 'completed' && (
+                                                <TimelineEntry
+                                                    icon={<CheckCircle2 className="h-3.5 w-3.5" />}
+                                                    label={t('Completed')}
+                                                    time={statusTransitions.completed ?? undefined}
+                                                    color="success"
+                                                    isLast
+                                                />
+                                            )}
+                                            {wo.status === 'cancelled' && <TimelineEntry icon={<XCircle className="h-3.5 w-3.5" />} label={t('Cancelled')} color="muted" isLast />}
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             </div>
-                            <Card className="shadow-elevation-1">
-                                <CardContent className="p-6">
-                                    <div className="space-y-0">
-                                        <TimelineEntry icon={<Clock className="h-3.5 w-3.5" />} label={t('Created')} time={wo.created_at} color="muted" isFirst />
-                                        {wo.status !== 'open' && <TimelineEntry icon={<User className="h-3.5 w-3.5" />} label={t('Assigned')} color="warning" />}
-                                        {(wo.status === 'in_progress' || wo.status === 'completed') && <TimelineEntry icon={<Play className="h-3.5 w-3.5" />} label={t('Started')} color="info" />}
-                                        {wo.status === 'completed' && <TimelineEntry icon={<CheckCircle2 className="h-3.5 w-3.5" />} label={t('Completed')} color="success" isLast />}
-                                        {wo.status === 'cancelled' && <TimelineEntry icon={<XCircle className="h-3.5 w-3.5" />} label={t('Cancelled')} color="muted" isLast />}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </FadeIn>
+                        </FadeIn>
+
+                        {/* ── SLA Warning ──────────────────────────── */}
+                        {wo.is_overdue && (
+                            <FadeIn delay={280} duration={400}>
+                                <Card className="border-rose-500/25 bg-rose-500/[0.06] shadow-elevation-1">
+                                    <CardContent className="p-4">
+                                        <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-rose-500">
+                                            &#9888; {t('SLA Overdue')}
+                                        </p>
+                                        <p className="mt-2 text-xs text-muted-foreground">
+                                            {t('Open for')} <strong className="text-rose-500">{wo.status_duration}</strong> {t('without completion.')}{' '}
+                                            {wo.priority === 'urgent' && t('Urgent WOs should be resolved within 2 hours.')}
+                                            {wo.priority === 'high' && t('High-priority WOs should be resolved within 4 hours.')}
+                                            {wo.priority === 'medium' && t('Medium-priority WOs should be resolved within 24 hours.')}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            </FadeIn>
+                        )}
+                    </div>
                 </div>
             </div>
+
+            {/* Assign Technician Dialog */}
+            <Dialog open={showAssign} onOpenChange={setShowAssign}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>{wo.status === 'assigned' ? t('Reassign Work Order') : t('Assign Work Order')}</DialogTitle>
+                        <DialogDescription>
+                            {t('Select a technician to handle this task.')}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                        <Label className="text-[11px]">{t('Technician')}</Label>
+                        <Select value={assignTechId} onValueChange={setAssignTechId}>
+                            <SelectTrigger><SelectValue placeholder={t('Select a technician')} /></SelectTrigger>
+                            <SelectContent>
+                                {technicians.length === 0 ? (
+                                    <SelectItem value="__none" disabled>{t('No technicians available')}</SelectItem>
+                                ) : (
+                                    technicians.map((tech) => (
+                                        <SelectItem key={tech.id} value={String(tech.id)}>{tech.name}</SelectItem>
+                                    ))
+                                )}
+                            </SelectContent>
+                        </Select>
+                        {wo.assigned_user && (
+                            <p className="text-[11px] text-muted-foreground">
+                                {t('Currently assigned to')}: <strong>{wo.assigned_user.name}</strong>
+                            </p>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowAssign(false)}>{t('Cancel')}</Button>
+                        <Button onClick={submitAssign} disabled={!assignTechId}>
+                            {t('Assign')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Work Order Dialog */}
+            <CreateWorkOrderDialog
+                open={showEdit}
+                onOpenChange={setShowEdit}
+                mode="edit"
+                workOrderId={wo.id}
+                sites={[]}
+                devices={[]}
+                defaults={{
+                    title: wo.title,
+                    description: wo.description ?? '',
+                    type: wo.type,
+                    priority: wo.priority,
+                }}
+            />
+
+            {/* Completion Dialog */}
+            <CompletionDialog
+                open={showComplete}
+                onOpenChange={setShowComplete}
+                workOrderId={wo.id}
+                workOrderTitle={wo.title}
+            />
+
+            {/* Confirm cancel */}
+            <ConfirmationDialog
+                open={confirmCancel}
+                onOpenChange={setConfirmCancel}
+                title={t('Cancel this work order?')}
+                description={t('This will mark the work order as cancelled and stop any further action on it.')}
+                warningMessage={t('Cancelled work orders are terminal and cannot be reopened.')}
+                actionLabel={t('Cancel Work Order')}
+                onConfirm={confirmCancelWO}
+            />
+
+            {/* Confirm delete */}
+            <ConfirmationDialog
+                open={confirmDelete}
+                onOpenChange={setConfirmDelete}
+                title={t('Delete this work order?')}
+                description={t('The work order will be permanently removed along with its notes and photos.')}
+                warningMessage={t('This action cannot be undone.')}
+                actionLabel={t('Delete Permanently')}
+                onConfirm={deleteWO}
+            />
         </AppLayout>
     );
 }
@@ -445,5 +736,93 @@ export function WorkOrderShowSkeleton() {
                 </div>
             </div>
         </div>
+    );
+}
+
+/* ── Status Flow ────────────────────────────────────────────── */
+
+function StatusFlow({ status, statusDuration, isOverdue, transitions, t }: {
+    status: string;
+    statusDuration?: string;
+    isOverdue: boolean;
+    transitions: Record<string, string | null>;
+    t: (key: string) => string;
+}) {
+    const steps = [
+        { key: 'open', label: t('Open'), icon: '1' },
+        { key: 'assigned', label: t('Assigned'), icon: '2' },
+        { key: 'in_progress', label: t('In Progress'), icon: '3' },
+        { key: 'completed', label: t('Completed'), icon: '4' },
+    ];
+
+    const currentIdx = (() => {
+        if (status === 'cancelled') return -1;
+        if (status === 'completed') return 3;
+        if (status === 'in_progress') return 2;
+        if (status === 'assigned') return 1;
+        return 0;
+    })();
+
+    return (
+        <Card className="shadow-elevation-1">
+            <CardContent className="flex items-center gap-0 p-4">
+                {steps.map((step, i) => {
+                    const isDone = i < currentIdx;
+                    const isCurrent = i === currentIdx;
+                    const transitionAt = transitions[step.key];
+                    return (
+                        <div key={step.key} className="flex flex-1 items-center gap-2 text-[11px]">
+                            <div className="flex flex-1 items-center gap-2">
+                                <div
+                                    className={`flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] font-mono text-[10px] font-semibold ${
+                                        isDone
+                                            ? 'border-emerald-500 bg-emerald-500 text-background'
+                                            : isCurrent
+                                              ? isOverdue
+                                                ? 'border-rose-500 text-rose-500'
+                                                : 'border-amber-500 text-amber-500'
+                                              : 'border-border text-muted-foreground/50'
+                                    }`}
+                                >
+                                    {isDone ? '\u2713' : step.icon}
+                                </div>
+                                <div>
+                                    <div
+                                        className={
+                                            isDone
+                                                ? 'text-emerald-500'
+                                                : isCurrent
+                                                  ? isOverdue
+                                                    ? 'font-semibold text-rose-500'
+                                                    : 'font-semibold text-amber-500'
+                                                  : 'text-muted-foreground/50'
+                                        }
+                                    >
+                                        {step.label}
+                                    </div>
+                                    {transitionAt && (isDone || isCurrent) && (
+                                        <div
+                                            className={`font-mono text-[9px] ${isCurrent && isOverdue ? 'font-semibold text-rose-500' : 'text-muted-foreground/60'}`}
+                                            title={new Date(transitionAt).toLocaleString()}
+                                        >
+                                            {formatTimeAgo(transitionAt)}
+                                        </div>
+                                    )}
+                                    {isCurrent && statusDuration && (
+                                        <div className={`font-mono text-[9px] ${isOverdue ? 'font-semibold text-rose-500' : 'text-muted-foreground/70'}`}>
+                                            {isOverdue && '\u26a0 '}
+                                            {t('in state for')} {statusDuration}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            {i < steps.length - 1 && (
+                                <div className="px-2 text-base text-muted-foreground/30">&rarr;</div>
+                            )}
+                        </div>
+                    );
+                })}
+            </CardContent>
+        </Card>
     );
 }

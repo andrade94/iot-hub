@@ -29,7 +29,13 @@ class AlertPolicy
 
     public function dismiss(User $user, Alert $alert): bool
     {
-        return $user->hasPermissionTo('manage alert rules');
+        // Dismissal is an operator triage action, not a rule-config action.
+        return $user->hasPermissionTo('acknowledge alerts');
+    }
+
+    public function escalate(User $user, Alert $alert): bool
+    {
+        return $user->hasPermissionTo('acknowledge alerts');
     }
 
     public function delete(User $user, Alert $alert): bool

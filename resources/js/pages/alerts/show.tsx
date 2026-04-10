@@ -1,4 +1,5 @@
 import { Can } from '@/components/Can';
+import { CreateWorkOrderDialog } from '@/components/work-orders/create-work-order-dialog';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { formatTimeAgo } from '@/utils/date';
@@ -7,20 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DetailCard } from '@/components/ui/detail-card';
 import { FadeIn } from '@/components/ui/fade-in';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { Alert, AlertNotificationRecord, BreadcrumbItem, CorrectiveAction, SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
     AlertTriangle,
     ArrowLeft,
+    ArrowUpRight,
     Bell,
     CheckCircle2,
     ClipboardCheck,
@@ -43,17 +41,51 @@ interface AlertSnoozeData {
     expires_at: string;
 }
 
+interface AuditEntry {
+    user: string;
+    action: string;
+    time: string;
+    type: 'system' | 'notification' | 'corrective' | 'state';
+}
+
+interface ChartPoint {
+    time: string;
+    value: number;
+    is_trigger: boolean;
+}
+
+interface SiteOption { id: number; name: string }
+interface DeviceOption { id: number; name: string; site_id: number }
+interface TechnicianOption { id: number; name: string }
+
+interface LinkedWorkOrder {
+    id: number;
+    title: string;
+    status: string;
+    priority: string;
+    assigned_user: { id: number; name: string } | null;
+    created_at: string;
+}
+
 interface Props {
     alert: Alert & {
         notifications?: AlertNotificationRecord[];
     };
     userSnooze?: AlertSnoozeData | null;
+    similarAlerts?: number;
+    audit?: AuditEntry[];
+    chartData?: ChartPoint[];
+    sites?: SiteOption[];
+    devices?: DeviceOption[];
+    technicians?: TechnicianOption[];
+    linkedWorkOrders?: LinkedWorkOrder[];
 }
 
-export default function AlertShow({ alert, userSnooze }: Props) {
+export default function AlertShow({ alert, userSnooze, similarAlerts = 0, audit = [], chartData = [], sites = [], devices = [], technicians = [], linkedWorkOrders = [] }: Props) {
     const { t } = useLang();
     const { auth } = usePage<SharedData>().props;
     const data = alert.data;
+    const [showCreateWO, setShowCreateWO] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Alerts', href: '/alerts' },
@@ -151,37 +183,23 @@ export default function AlertShow({ alert, userSnooze }: Props) {
                                     )}
                                     {['active', 'acknowledged'].includes(alert.status) && (
                                         <>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="outline" size="sm">
-                                                        <Timer className="mr-2 h-4 w-4" />
-                                                        {userSnooze ? t('Snoozed') : t('Snooze')}
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    {[
-                                                        { mins: 30, label: '30 min' },
-                                                        { mins: 60, label: '1 hour' },
-                                                        { mins: 120, label: '2 hours' },
-                                                        { mins: 240, label: '4 hours' },
-                                                        { mins: 480, label: '8 hours' },
-                                                    ].map(({ mins, label }) => (
-                                                        <DropdownMenuItem
-                                                            key={mins}
-                                                            onClick={() =>
-                                                                router.post(
-                                                                    `/alerts/${alert.id}/snooze`,
-                                                                    { duration_minutes: mins },
-                                                                    { preserveScroll: true },
-                                                                )
-                                                            }
-                                                        >
-                                                            {label}
-                                                        </DropdownMenuItem>
-                                                    ))}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                            <Can permission="manage alert rules">
+                                            <SnoozePopover
+                                                alertId={alert.id}
+                                                snoozed={!!userSnooze}
+                                                t={t}
+                                            />
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    router.post(`/alerts/${alert.id}/escalate`, {}, { preserveScroll: true })
+                                                }
+                                                title={t('Escalate to the highest level of the site escalation chain')}
+                                            >
+                                                <ArrowUpRight className="mr-2 h-4 w-4" />
+                                                {t('Escalate')}
+                                            </Button>
+                                            <Can permission="acknowledge alerts">
                                                 <Button
                                                     variant="ghost"
                                                     onClick={() =>
@@ -199,6 +217,20 @@ export default function AlertShow({ alert, userSnooze }: Props) {
                         </div>
                     </div>
                 </FadeIn>
+
+                {/* ── Similar Alerts Pattern Banner ───────── */}
+                {similarAlerts > 0 && (
+                    <FadeIn delay={50} duration={400}>
+                        <div className="flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/15 font-bold text-amber-500">!</div>
+                            <div className="flex-1 text-[12px] text-muted-foreground">
+                                {t('This alert has fired')}{' '}
+                                <strong className="text-amber-500">{similarAlerts} {t('times')}</strong>{' '}
+                                {t('in the last 30 days for the same device. Consider reviewing the rule threshold or scheduling a maintenance window.')}
+                            </div>
+                        </div>
+                    </FadeIn>
+                )}
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                     {/* Main content */}
@@ -245,6 +277,26 @@ export default function AlertShow({ alert, userSnooze }: Props) {
                                             </CardContent>
                                         </Card>
                                     </div>
+                                </div>
+                            </FadeIn>
+                        )}
+
+                        {/* ── Reading Chart ─────────────────────────── */}
+                        {chartData.length > 0 && (
+                            <FadeIn delay={100} duration={500}>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                            {t('Reading Chart')}
+                                        </h2>
+                                        <div className="h-px flex-1 bg-border" />
+                                        <span className="font-mono text-[10px] text-muted-foreground/60">±2h {t('around trigger')}</span>
+                                    </div>
+                                    <Card className="shadow-elevation-1">
+                                        <CardContent className="p-4">
+                                            <ReadingChart data={chartData} metric={data?.metric ?? ''} threshold={data?.threshold ?? null} t={t} />
+                                        </CardContent>
+                                    </Card>
                                 </div>
                             </FadeIn>
                         )}
@@ -315,9 +367,45 @@ export default function AlertShow({ alert, userSnooze }: Props) {
                         )}
 
                         {/* ── Corrective Actions ─────────────────────── */}
-                        {['critical', 'high'].includes(alert.severity) && (
-                            <FadeIn delay={225} duration={500}>
-                                <CorrectiveActionsSection alert={alert} currentUserId={auth.user.id} />
+                        <FadeIn delay={225} duration={500}>
+                            <CorrectiveActionsSection alert={alert} currentUserId={auth.user.id} />
+                        </FadeIn>
+
+                        {/* ── Audit Trail ──────────────────────────── */}
+                        {audit.length > 0 && (
+                            <FadeIn delay={275} duration={500}>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                            {t('Audit Trail')}
+                                        </h2>
+                                        <div className="h-px flex-1 bg-border" />
+                                        <span className="font-mono text-[10px] tabular-nums text-muted-foreground/60">{audit.length}</span>
+                                    </div>
+                                    <Card className="shadow-elevation-1">
+                                        <CardContent className="divide-y divide-border/50 p-0">
+                                            {audit.map((entry, i) => (
+                                                <div key={i} className="flex items-start gap-3 px-4 py-2.5 text-[11px]">
+                                                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md font-mono text-[9px] font-semibold ${
+                                                        entry.type === 'system' ? 'bg-rose-500/15 text-rose-500' :
+                                                        entry.type === 'notification' ? 'bg-blue-500/15 text-blue-500' :
+                                                        entry.type === 'corrective' ? 'bg-emerald-500/15 text-emerald-500' :
+                                                        'bg-amber-500/15 text-amber-500'
+                                                    }`}>
+                                                        {entry.user.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <span className="font-medium text-foreground">{entry.user}</span>{' '}
+                                                        <span className="text-muted-foreground">{entry.action}</span>
+                                                    </div>
+                                                    <span className="shrink-0 font-mono text-[9px] text-muted-foreground/50">
+                                                        {formatTimeAgo(entry.time)}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </CardContent>
+                                    </Card>
+                                </div>
                             </FadeIn>
                         )}
                     </div>
@@ -418,9 +506,106 @@ export default function AlertShow({ alert, userSnooze }: Props) {
                                 />
                             </div>
                         </FadeIn>
+
+                        {/* Related Actions */}
+                        <FadeIn delay={225} duration={500}>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                        {t('Related')}
+                                    </h2>
+                                    <div className="h-px flex-1 bg-border" />
+                                </div>
+
+                                {/* Existing linked work orders */}
+                                {linkedWorkOrders.length > 0 && (
+                                    <div className="space-y-2">
+                                        <p className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/60">
+                                            {t('Linked Work Orders')} ({linkedWorkOrders.length})
+                                        </p>
+                                        {linkedWorkOrders.map((lwo) => (
+                                            <button
+                                                key={lwo.id}
+                                                type="button"
+                                                onClick={() => router.get(`/work-orders/${lwo.id}`)}
+                                                className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-border/80 hover:bg-accent/20"
+                                            >
+                                                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-[10px] font-semibold ${
+                                                    lwo.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' :
+                                                    lwo.status === 'cancelled' ? 'bg-muted text-muted-foreground' :
+                                                    lwo.priority === 'urgent' ? 'bg-rose-500/10 text-rose-500' :
+                                                    'bg-amber-500/10 text-amber-500'
+                                                }`}>
+                                                    WO
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="truncate text-[12px] font-medium">{lwo.title}</p>
+                                                    <p className="font-mono text-[10px] text-muted-foreground/60">
+                                                        #{lwo.id} · {lwo.status.replace('_', ' ')}
+                                                        {lwo.assigned_user && ` · ${lwo.assigned_user.name}`}
+                                                    </p>
+                                                </div>
+                                                <span className="text-muted-foreground/40">&rarr;</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <Can permission="manage work orders">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCreateWO(true)}
+                                        className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-border/80 hover:bg-accent/20"
+                                    >
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
+                                            &#128295;
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[12px] font-medium">{linkedWorkOrders.length > 0 ? t('Create another Work Order') : t('Create Work Order')}</p>
+                                            <p className="text-[10px] text-muted-foreground/60">{t('Assign technician to fix')}</p>
+                                        </div>
+                                    </button>
+                                </Can>
+                                {alert.device && (
+                                    <button
+                                        type="button"
+                                        onClick={() => router.get(`/devices/${alert.device!.id}`)}
+                                        className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-border/80 hover:bg-accent/20"
+                                    >
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
+                                            <Cpu className="h-4 w-4" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[12px] font-medium">{t('View Device')}</p>
+                                            <p className="truncate text-[10px] text-muted-foreground/60">{alert.device.name}</p>
+                                        </div>
+                                    </button>
+                                )}
+                            </div>
+                        </FadeIn>
                     </div>
                 </div>
             </div>
+
+            {/* Create Work Order Dialog */}
+            <CreateWorkOrderDialog
+                open={showCreateWO}
+                onOpenChange={setShowCreateWO}
+                sites={sites}
+                devices={devices}
+                technicians={technicians}
+                defaults={{
+                    title: data?.rule_name ? `WO: ${data.rule_name}` : `WO: Alert #${alert.id}`,
+                    description: data
+                        ? `Triggered by ${data.rule_name}: ${data.metric} ${data.condition ?? ''} ${data.value ?? ''} (threshold ${data.threshold ?? '—'})`
+                        : undefined,
+                    site_id: alert.site_id,
+                    device_id: alert.device_id ?? undefined,
+                    alert_id: alert.id,
+                    type: alert.severity === 'critical' ? 'sensor_replace' : 'maintenance',
+                    priority: alert.severity === 'critical' ? 'urgent' : alert.severity === 'high' ? 'high' : 'medium',
+                }}
+            />
         </AppLayout>
     );
 }
@@ -781,5 +966,184 @@ function CorrectiveActionsSection({ alert, currentUserId }: { alert: Props['aler
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+
+/* ── Reading Chart Component ──────────────────────── */
+
+function ReadingChart({ data, metric, threshold, t }: {
+    data: ChartPoint[];
+    metric: string;
+    threshold: number | null;
+    t: (key: string) => string;
+}) {
+    if (data.length === 0) {
+        return (
+            <div className="flex h-[140px] items-center justify-center text-[11px] text-muted-foreground">
+                {t('No readings available')}
+            </div>
+        );
+    }
+
+    const values = data.map((d) => d.value);
+    const min = Math.min(...values, threshold ?? Infinity);
+    const max = Math.max(...values, threshold ?? -Infinity);
+    const pad = (max - min) * 0.1 || 1;
+    const yMin = min - pad;
+    const yMax = max + pad;
+    const width = 600;
+    const height = 140;
+    const chartPadding = { top: 10, right: 8, bottom: 16, left: 32 };
+    const plotW = width - chartPadding.left - chartPadding.right;
+    const plotH = height - chartPadding.top - chartPadding.bottom;
+
+    const xScale = (i: number) => chartPadding.left + (i / (data.length - 1)) * plotW;
+    const yScale = (v: number) => chartPadding.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+    const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(i).toFixed(1)},${yScale(d.value).toFixed(1)}`).join(' ');
+    const areaPath = `${linePath} L ${xScale(data.length - 1)},${chartPadding.top + plotH} L ${chartPadding.left},${chartPadding.top + plotH} Z`;
+
+    const triggerIdx = data.findIndex((d) => d.is_trigger);
+    const triggerX = triggerIdx >= 0 ? xScale(triggerIdx) : null;
+    const thresholdY = threshold != null ? yScale(threshold) : null;
+
+    const avg = values.reduce((s, v) => s + v, 0) / values.length;
+
+    return (
+        <div>
+            <div className="mb-3 flex items-center justify-between">
+                <div>
+                    <p className="text-[12px] font-medium">{metric}</p>
+                    <p className="font-mono text-[10px] text-muted-foreground">
+                        {data.length} {t('data points')} · {t('Min')} {min.toFixed(1)} · {t('Avg')} {avg.toFixed(1)} · {t('Max')} {max.toFixed(1)}
+                    </p>
+                </div>
+            </div>
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="alertChartGrad" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.02} />
+                    </linearGradient>
+                </defs>
+                {thresholdY != null && (
+                    <>
+                        <line x1={chartPadding.left} y1={thresholdY} x2={width - chartPadding.right} y2={thresholdY} stroke="#f59e0b" strokeDasharray="4,4" strokeOpacity={0.5} />
+                        <text x={chartPadding.left + 4} y={thresholdY - 3} fill="#f59e0b" fontSize="9" fontFamily="Fira Code">
+                            {threshold} {t('threshold')}
+                        </text>
+                    </>
+                )}
+                {triggerX != null && (
+                    <>
+                        <line x1={triggerX} y1={chartPadding.top} x2={triggerX} y2={chartPadding.top + plotH} stroke="#f43f5e" strokeWidth="1" strokeOpacity={0.5} strokeDasharray="2,2" />
+                        <text x={triggerX + 4} y={chartPadding.top + 10} fill="#f43f5e" fontSize="9" fontFamily="Fira Code">
+                            {t('TRIGGER')}
+                        </text>
+                    </>
+                )}
+                <path d={areaPath} fill="url(#alertChartGrad)" />
+                <path d={linePath} stroke="#f43f5e" strokeWidth="2" fill="none" />
+                {triggerIdx >= 0 && (
+                    <circle cx={xScale(triggerIdx)} cy={yScale(data[triggerIdx].value)} r="4" fill="#f43f5e" />
+                )}
+            </svg>
+        </div>
+    );
+}
+
+/* -- Snooze Popover ---------------------------------------------------- */
+
+function SnoozePopover({ alertId, snoozed, t }: { alertId: number; snoozed: boolean; t: (k: string) => string }) {
+    const [open, setOpen] = useState(false);
+    const [custom, setCustom] = useState('');
+
+    function snooze(minutes: number) {
+        router.post(
+            `/alerts/${alertId}/snooze`,
+            { duration_minutes: minutes },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setOpen(false);
+                    setCustom('');
+                },
+            },
+        );
+    }
+
+    function submitCustom() {
+        const n = Number(custom);
+        if (!Number.isFinite(n) || n < 5 || n > 10080) return;
+        snooze(n);
+    }
+
+    const presets = [
+        { mins: 30, label: '30m' },
+        { mins: 60, label: '1h' },
+        { mins: 120, label: '2h' },
+        { mins: 240, label: '4h' },
+        { mins: 480, label: '8h' },
+        { mins: 1440, label: '24h' },
+    ];
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">
+                    <Timer className="mr-2 h-4 w-4" />
+                    {snoozed ? t('Snoozed') : t('Snooze')}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[260px] p-3" align="end">
+                <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">
+                    {t('Snooze duration')}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                    {presets.map(({ mins, label }) => (
+                        <button
+                            key={mins}
+                            type="button"
+                            onClick={() => snooze(mins)}
+                            className="rounded-md border border-border px-2.5 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+                <div className="mt-3 border-t pt-3">
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">
+                        {t('Custom')}
+                    </p>
+                    <div className="mt-1.5 flex gap-1.5">
+                        <Input
+                            type="number"
+                            min={5}
+                            max={10080}
+                            value={custom}
+                            onChange={(e) => setCustom(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && submitCustom()}
+                            placeholder="180"
+                            className="h-8 font-mono text-[11px]"
+                        />
+                        <span className="flex items-center font-mono text-[10px] text-muted-foreground/60">
+                            {t('min')}
+                        </span>
+                        <Button
+                            type="button"
+                            size="sm"
+                            onClick={submitCustom}
+                            disabled={!custom || Number(custom) < 5 || Number(custom) > 10080}
+                        >
+                            {t('Snooze')}
+                        </Button>
+                    </div>
+                    <p className="mt-1 font-mono text-[9px] text-muted-foreground/50">
+                        {t('5 min – 7 days (10080 min)')}
+                    </p>
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }
