@@ -28,6 +28,7 @@ import {
     AlertTriangle,
     CheckCircle2,
     Clock,
+    Download,
     Lightbulb,
     Settings2,
     TrendingDown,
@@ -59,7 +60,7 @@ interface Props {
     resolution_breakdown: { auto: number; manual: number; work_order: number; dismissed: number };
     suggested_tuning: TuningSuggestion[];
     sites: { id: number; name: string }[];
-    filters: { days: number; site_id: string | null };
+    filters: { days: number; site_id: string | null; severity: string | null };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -71,8 +72,24 @@ export default function AlertAnalytics({ summary, noisiest_rules, trend, resolut
     const { t } = useLang();
 
     const updateFilters = (key: string, value: string) => {
-        router.get('/analytics/alerts', { ...filters, [key]: value }, { preserveState: true, replace: true });
+        const next: Record<string, string> = {};
+        Object.entries(filters).forEach(([k, v]) => {
+            if (v !== null && v !== undefined && v !== '') next[k] = String(v);
+        });
+        if (value) next[key] = value;
+        else delete next[key];
+        router.get('/analytics/alerts', next, { preserveState: true, replace: true });
     };
+
+    const exportCsv = () => {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([k, v]) => {
+            if (v !== null && v !== undefined && v !== '') params.set(k, String(v));
+        });
+        window.location.href = `/analytics/alerts/export?${params.toString()}`;
+    };
+
+    const SEVERITIES = ['critical', 'high', 'medium', 'low'] as const;
 
     const totalResolved = resolution_breakdown.auto + resolution_breakdown.manual + resolution_breakdown.work_order + resolution_breakdown.dismissed;
 
@@ -110,6 +127,13 @@ export default function AlertAnalytics({ summary, noisiest_rules, trend, resolut
                                 </Select>
                                 <ButtonGroup>
                                     <Button
+                                        variant={filters.days === 7 ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => updateFilters('days', '7')}
+                                    >
+                                        <span className="font-mono tabular-nums">7</span>d
+                                    </Button>
+                                    <Button
                                         variant={filters.days === 30 ? 'default' : 'outline'}
                                         size="sm"
                                         onClick={() => updateFilters('days', '30')}
@@ -124,7 +148,42 @@ export default function AlertAnalytics({ summary, noisiest_rules, trend, resolut
                                         <span className="font-mono tabular-nums">90</span>d
                                     </Button>
                                 </ButtonGroup>
+                                <Button variant="outline" size="sm" onClick={exportCsv} title={t('Download filtered analytics as CSV')}>
+                                    <Download className="mr-1.5 h-3.5 w-3.5" />
+                                    {t('Export CSV')}
+                                </Button>
                             </div>
+                        </div>
+                        {/* Severity filter pills */}
+                        <div className="relative flex flex-wrap items-center gap-2 border-t border-border/50 px-6 py-3 md:px-8">
+                            <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/60">
+                                {t('Severity')}:
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => updateFilters('severity', '')}
+                                className={`rounded-md border px-2.5 py-1 text-[11px] transition-colors ${
+                                    !filters.severity
+                                        ? 'border-primary/40 bg-primary/10 text-primary'
+                                        : 'border-border text-muted-foreground hover:border-border/80 hover:text-foreground'
+                                }`}
+                            >
+                                {t('All')}
+                            </button>
+                            {SEVERITIES.map((sev) => (
+                                <button
+                                    key={sev}
+                                    type="button"
+                                    onClick={() => updateFilters('severity', filters.severity === sev ? '' : sev)}
+                                    className={`rounded-md border px-2.5 py-1 text-[11px] capitalize transition-colors ${
+                                        filters.severity === sev
+                                            ? 'border-primary/40 bg-primary/10 text-primary'
+                                            : 'border-border text-muted-foreground hover:border-border/80 hover:text-foreground'
+                                    }`}
+                                >
+                                    {sev}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </FadeIn>
@@ -241,25 +300,60 @@ export default function AlertAnalytics({ summary, noisiest_rules, trend, resolut
                                     </div>
                                     <Card className="shadow-elevation-1">
                                         <CardContent className="p-6">
-                                            {Object.keys(trend).length > 0 ? (
-                                                <div className="flex items-end gap-1 h-32">
-                                                    {Object.entries(trend).map(([date, count]) => {
-                                                        const maxCount = Math.max(...Object.values(trend));
-                                                        const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                                                        return (
-                                                            <div key={date} className="flex-1 flex flex-col items-center gap-1">
-                                                                <div
-                                                                    className="w-full rounded-t bg-primary/80 transition-all hover:bg-primary"
-                                                                    style={{ height: `${Math.max(height, 2)}%` }}
-                                                                    title={`${date}: ${count} alerts`}
-                                                                />
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            ) : (
-                                                <p className="text-sm text-muted-foreground">{t('No trend data available.')}</p>
-                                            )}
+                                            {(() => {
+                                                const entries = Object.entries(trend);
+                                                if (entries.length === 0) {
+                                                    return <p className="text-sm text-muted-foreground">{t('No trend data available.')}</p>;
+                                                }
+                                                const values = entries.map(([, c]) => c);
+                                                const maxCount = Math.max(...values);
+                                                // Show first, last, and ~4 labels in between (at most ~6 labels total for readability)
+                                                const labelCount = Math.min(entries.length, 6);
+                                                const step = Math.max(1, Math.floor(entries.length / labelCount));
+                                                const fmtDate = (d: string) =>
+                                                    new Date(d).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
+                                                return (
+                                                    <div>
+                                                        <div className="flex h-32 items-end gap-1">
+                                                            {entries.map(([date, count]) => {
+                                                                const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                                                                return (
+                                                                    <div key={date} className="flex flex-1 flex-col items-center">
+                                                                        <div
+                                                                            className="w-full rounded-t bg-primary/80 transition-all hover:bg-primary"
+                                                                            style={{ height: `${Math.max(height, 2)}%` }}
+                                                                            title={`${date}: ${count} alerts`}
+                                                                        />
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        <div className="mt-2 flex gap-1">
+                                                            {entries.map(([date], i) => {
+                                                                const showLabel =
+                                                                    i === 0 || i === entries.length - 1 || i % step === 0;
+                                                                return (
+                                                                    <div key={date} className="flex-1 text-center">
+                                                                        {showLabel && (
+                                                                            <span className="font-mono text-[9px] tabular-nums text-muted-foreground/60">
+                                                                                {fmtDate(date)}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        <div className="mt-1 flex items-center justify-between font-mono text-[9px] text-muted-foreground/50">
+                                                            <span>
+                                                                {entries.length} {t('days')}
+                                                            </span>
+                                                            <span>
+                                                                {t('peak')}: <span className="tabular-nums">{maxCount}</span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </CardContent>
                                     </Card>
                                 </div>

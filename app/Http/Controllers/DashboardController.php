@@ -38,14 +38,22 @@ class DashboardController extends Controller
                 'status' => $site->status,
                 'device_count' => $site->devices_count,
                 'online_count' => $site->online_devices_count,
+                'latitude' => $site->lat !== null ? (float) $site->lat : null,
+                'longitude' => $site->lng !== null ? (float) $site->lng : null,
             ]);
 
         // Action cards: counts for items needing attention (BR-099, BR-100)
+        // Overdue WOs use per-priority SLA (urgent=2h, high=4h, medium=24h, low=72h)
         $actionCards = [
             'unacknowledged_alerts' => Alert::whereIn('site_id', $siteIds)->active()->count(),
             'overdue_work_orders' => WorkOrder::whereIn('site_id', $siteIds)
-                ->where('status', 'open')
-                ->where('created_at', '<', now()->subDays(3))
+                ->whereIn('status', ['open', 'assigned'])
+                ->where(function ($q) {
+                    $q->where(fn ($qq) => $qq->where('priority', 'urgent')->where('created_at', '<=', now()->subHours(2)))
+                        ->orWhere(fn ($qq) => $qq->where('priority', 'high')->where('created_at', '<=', now()->subHours(4)))
+                        ->orWhere(fn ($qq) => $qq->where('priority', 'medium')->where('created_at', '<=', now()->subDay()))
+                        ->orWhere(fn ($qq) => $qq->where('priority', 'low')->where('created_at', '<=', now()->subHours(72)));
+                })
                 ->count(),
             'critical_battery' => Device::whereIn('site_id', $siteIds)
                 ->where('status', 'active')

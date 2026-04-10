@@ -308,6 +308,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         ->name('corrective-actions.verify');
 
     // Alert Analytics (Phase 10)
+    Route::get('analytics/alerts/export', [AlertAnalyticsController::class, 'export'])->name('analytics.alerts.export');
     Route::get('analytics/alerts', AlertAnalyticsController::class)->name('analytics.alerts');
 
     // Maintenance Windows (Phase 10)

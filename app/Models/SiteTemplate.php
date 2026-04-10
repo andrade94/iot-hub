@@ -17,6 +17,8 @@ class SiteTemplate extends Model
         'modules',
         'zone_config',
         'recipe_assignments',
+        'alert_rules',
+        'maintenance_windows',
         'escalation_structure',
         'created_by',
     ];
@@ -27,6 +29,8 @@ class SiteTemplate extends Model
             'modules' => 'array',
             'zone_config' => 'array',
             'recipe_assignments' => 'array',
+            'alert_rules' => 'array',
+            'maintenance_windows' => 'array',
             'escalation_structure' => 'array',
         ];
     }

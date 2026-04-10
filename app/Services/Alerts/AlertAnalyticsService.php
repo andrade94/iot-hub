@@ -11,6 +11,7 @@ class AlertAnalyticsService
         private ?int $orgId = null,
         private ?int $siteId = null,
         private int $days = 30,
+        private ?string $severity = null,
     ) {}
 
     /**
@@ -45,8 +46,10 @@ class AlertAnalyticsService
     {
         return Alert::query()
             ->join('alert_rules', 'alerts.rule_id', '=', 'alert_rules.id')
+            ->whereNotNull('alerts.rule_id') // exclude alerts whose rule was deleted
             ->when($this->siteId, fn ($q) => $q->where('alerts.site_id', $this->siteId))
             ->when($this->orgId, fn ($q) => $q->whereHas('site', fn ($sq) => $sq->where('org_id', $this->orgId)))
+            ->when($this->severity, fn ($q) => $q->where('alerts.severity', $this->severity))
             ->where('alerts.triggered_at', '>=', now()->subDays($this->days))
             ->groupBy('alerts.rule_id', 'alert_rules.name', 'alert_rules.site_id')
             ->selectRaw('alerts.rule_id, alert_rules.name as rule_name, alert_rules.site_id, COUNT(*) as alert_count')
@@ -116,6 +119,7 @@ class AlertAnalyticsService
         return Alert::query()
             ->when($this->siteId, fn ($q) => $q->where('site_id', $this->siteId))
             ->when($this->orgId, fn ($q) => $q->whereHas('site', fn ($sq) => $sq->where('org_id', $this->orgId)))
+            ->when($this->severity, fn ($q) => $q->where('severity', $this->severity))
             ->where('triggered_at', '>=', now()->subDays($this->days));
     }
 }

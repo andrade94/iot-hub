@@ -16,7 +16,7 @@ import { useValidatedForm } from '@/hooks/use-validated-form';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { Copy, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Copy, Plus, Rocket, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
 
@@ -27,13 +27,22 @@ interface SiteTemplateRecord {
     modules: string[];
     zone_config: { name: string }[] | null;
     recipe_assignments: { zone: string; recipe_id: number }[] | null;
+    alert_rules: { name: string }[] | null;
+    maintenance_windows: { title: string; zone: string | null }[] | null;
+    escalation_structure: unknown;
     created_at: string;
     created_by_user?: { name: string };
 }
 
+interface SiteOption {
+    id: number;
+    name: string;
+    has_escalation_chain: boolean;
+}
+
 interface Props {
     templates: SiteTemplateRecord[];
-    sites: { id: number; name: string }[];
+    sites: SiteOption[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -45,6 +54,16 @@ export default function SiteTemplatesIndex({ templates, sites }: Props) {
     const { t } = useLang();
     const [showCreate, setShowCreate] = useState(false);
     const [deleteTemplate, setDeleteTemplate] = useState<SiteTemplateRecord | null>(null);
+    const [applyTemplate, setApplyTemplate] = useState<SiteTemplateRecord | null>(null);
+    const [applySiteId, setApplySiteId] = useState<string>('');
+    const [applyProcessing, setApplyProcessing] = useState(false);
+
+    const applyTargetSite = sites.find((s) => s.id.toString() === applySiteId);
+    const escalationConflict = !!(
+        applyTemplate &&
+        applyTemplate.escalation_structure &&
+        applyTargetSite?.has_escalation_chain
+    );
 
     const siteTemplateSchema = z.object({
         source_site_id: z.string().min(1, 'Source site is required'),
@@ -125,7 +144,9 @@ export default function SiteTemplatesIndex({ templates, sites }: Props) {
                                         </div>
                                         <p className="font-mono text-xs tabular-nums text-muted-foreground">
                                             <span className="font-medium text-foreground">{tmpl.zone_config?.length ?? 0}</span> {t('zones')} &middot;{' '}
-                                            <span className="font-medium text-foreground">{tmpl.recipe_assignments?.length ?? 0}</span> {t('recipes')}
+                                            <span className="font-medium text-foreground">{tmpl.recipe_assignments?.length ?? 0}</span> {t('recipes')} &middot;{' '}
+                                            <span className="font-medium text-foreground">{tmpl.alert_rules?.length ?? 0}</span> {t('rules')} &middot;{' '}
+                                            <span className="font-medium text-foreground">{tmpl.maintenance_windows?.length ?? 0}</span> {t('windows')}
                                         </p>
                                         <p className="font-mono text-xs tabular-nums text-muted-foreground">
                                             {t('Created')} {new Date(tmpl.created_at).toLocaleDateString()} {t('by')} {tmpl.created_by_user?.name}
@@ -133,6 +154,16 @@ export default function SiteTemplatesIndex({ templates, sites }: Props) {
                                     </CardContent>
                                     <CardFooter className="gap-2">
                                         <Can permission="manage site templates">
+                                            <Button
+                                                size="sm"
+                                                onClick={() => {
+                                                    setApplyTemplate(tmpl);
+                                                    setApplySiteId('');
+                                                }}
+                                            >
+                                                <Rocket className="mr-1.5 h-3.5 w-3.5" />
+                                                {t('Apply')}
+                                            </Button>
                                             <Button variant="outline" size="sm" onClick={() => setDeleteTemplate(tmpl)}>
                                                 <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                                                 {t('Delete')}
@@ -211,11 +242,123 @@ export default function SiteTemplatesIndex({ templates, sites }: Props) {
                     </DialogContent>
                 </Dialog>
 
+                {/* ── Apply Template Dialog ──────────────────────── */}
+                <Dialog open={!!applyTemplate} onOpenChange={(open) => !open && setApplyTemplate(null)}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>{t('Apply Template')}</DialogTitle>
+                            <DialogDescription>
+                                {applyTemplate && (
+                                    <>
+                                        {t('Apply')} <strong className="text-foreground">{applyTemplate.name}</strong> {t('to a target site.')}
+                                    </>
+                                )}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {applyTemplate && (
+                            <div className="space-y-4">
+                                {/* Preview: what will be applied */}
+                                <div className="rounded-md border border-border/60 bg-muted/20 p-3 text-[11px]">
+                                    <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">
+                                        {t('Will be applied')}
+                                    </p>
+                                    <ul className="mt-2 space-y-1 text-muted-foreground">
+                                        <li>
+                                            <span className="font-mono tabular-nums text-foreground">{applyTemplate.modules.length}</span>{' '}
+                                            {t('module(s)')}
+                                        </li>
+                                        <li>
+                                            <span className="font-mono tabular-nums text-foreground">{applyTemplate.alert_rules?.length ?? 0}</span>{' '}
+                                            {t('alert rule(s)')}{' '}
+                                            <span className="text-muted-foreground/60">({t('skipped if same name exists')})</span>
+                                        </li>
+                                        <li>
+                                            <span className="font-mono tabular-nums text-foreground">{applyTemplate.maintenance_windows?.length ?? 0}</span>{' '}
+                                            {t('maintenance window(s)')}
+                                        </li>
+                                        <li>
+                                            {applyTemplate.escalation_structure ? (
+                                                <span className="text-foreground">{t('Escalation chain')}</span>
+                                            ) : (
+                                                <span className="text-muted-foreground/60">{t('No escalation chain to apply')}</span>
+                                            )}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label>{t('Target Site')}</Label>
+                                    <Select value={applySiteId} onValueChange={setApplySiteId}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('Select site')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {sites.map((s) => (
+                                                <SelectItem key={s.id} value={s.id.toString()}>
+                                                    {s.name}
+                                                    {s.has_escalation_chain && (
+                                                        <span className="ml-2 text-[9px] text-amber-500">
+                                                            ({t('has chain')})
+                                                        </span>
+                                                    )}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Conflict warning */}
+                                {escalationConflict && (
+                                    <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-[11px]">
+                                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+                                        <div className="text-amber-700 dark:text-amber-400">
+                                            <p className="font-medium">{t('Existing escalation chain will be replaced.')}</p>
+                                            <p className="mt-0.5 text-muted-foreground">
+                                                {t('The target site already has an escalation chain. Applying this template will overwrite it.')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-2 pt-1">
+                                    <Button type="button" variant="ghost" onClick={() => setApplyTemplate(null)} disabled={applyProcessing}>
+                                        {t('Cancel')}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        disabled={!applySiteId || applyProcessing}
+                                        onClick={() => {
+                                            if (!applyTemplate || !applySiteId) return;
+                                            setApplyProcessing(true);
+                                            router.post(
+                                                `/settings/site-templates/${applyTemplate.id}/apply`,
+                                                { site_id: Number(applySiteId) },
+                                                {
+                                                    preserveScroll: true,
+                                                    onSuccess: () => {
+                                                        setApplyTemplate(null);
+                                                        setApplySiteId('');
+                                                    },
+                                                    onFinish: () => setApplyProcessing(false),
+                                                },
+                                            );
+                                        }}
+                                    >
+                                        {applyProcessing ? t('Applying...') : t('Apply Template')}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
+
                 <ConfirmationDialog
                     open={!!deleteTemplate}
                     onOpenChange={(open) => !open && setDeleteTemplate(null)}
                     title={t('Delete Template')}
                     description={t(`Delete "${deleteTemplate?.name}"? Existing sites using this template are not affected.`)}
+                    warningMessage={t('This cannot be undone.')}
                     onConfirm={() => {
                         if (deleteTemplate) {
                             router.delete(`/settings/site-templates/${deleteTemplate.id}`, {

@@ -71,7 +71,7 @@ const statusBadgeVariant: Record<string, 'outline-success' | 'outline-warning' |
 
 export default function Dashboard({ kpis, siteStats, actionCards }: Props) {
     const { t } = useLang();
-    const { current_organization, auth } = usePage<SharedData>().props;
+    const { current_organization, auth, active_outage } = usePage<SharedData>().props;
     const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
     const roles = auth?.roles ?? [];
     const isViewerOnly = roles.includes('client_site_viewer') && roles.length === 1;
@@ -92,6 +92,21 @@ export default function Dashboard({ kpis, siteStats, actionCards }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('Dashboard')} />
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* ── Outage Banner ───────────────────────────────── */}
+                {active_outage && (
+                    <FadeIn direction="down" duration={300}>
+                        <div className="flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
+                            <div className="flex items-center gap-3">
+                                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                                <div>
+                                    <p className="font-medium text-red-800 dark:text-red-200">{t('Platform outage declared')}</p>
+                                    <p className="text-sm text-red-700 dark:text-red-300">{active_outage.reason}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </FadeIn>
+                )}
+
                 {/* ── Header ──────────────────────────────────────── */}
                 <FadeIn direction="down" duration={400}>
                     <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-elevation-1">
