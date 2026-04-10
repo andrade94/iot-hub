@@ -431,6 +431,7 @@ export default function SegmentsIndex({ segments, modules = [] }: Props) {
                                 getRowId={(row) => String(row.id)}
                                 bordered={false}
                                 emptyState={emptyStateNode}
+                                onRowClick={(row) => router.get(`/settings/segments/${row.id}`)}
                             />
                         </Card>
                     </ContentWithSidebar>

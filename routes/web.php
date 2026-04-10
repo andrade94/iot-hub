@@ -487,6 +487,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::middleware('role:super_admin')->prefix('settings/segments')->name('segments.')->group(function () {
         Route::get('/', [SegmentController::class, 'index'])->name('index');
         Route::post('/', [SegmentController::class, 'store'])->name('store');
+        Route::get('{segment}', [SegmentController::class, 'show'])->name('show');
         Route::put('{segment}', [SegmentController::class, 'update'])->name('update');
         Route::delete('{segment}', [SegmentController::class, 'destroy'])->name('destroy');
     });

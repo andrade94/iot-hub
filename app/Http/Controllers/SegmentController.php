@@ -38,6 +38,37 @@ class SegmentController extends Controller
         ]);
     }
 
+    public function show(Segment $segment)
+    {
+        // Get module details for suggested modules
+        $modules = Module::active()
+            ->withCount('recipes')
+            ->get()
+            ->map(fn ($m) => [
+                'slug' => $m->slug,
+                'name' => $m->name,
+                'recipes_count' => $m->recipes_count,
+                'required_sensor_models' => $m->required_sensor_models ?? [],
+            ]);
+
+        // Get organizations in this segment
+        $organizations = Organization::where('segment', $segment->name)
+            ->withCount('sites')
+            ->get()
+            ->map(fn ($o) => [
+                'id' => $o->id,
+                'name' => $o->name,
+                'slug' => $o->slug,
+                'sites_count' => $o->sites_count,
+            ]);
+
+        return Inertia::render('settings/segments/show', [
+            'segment' => $segment,
+            'modules' => $modules,
+            'organizations' => $organizations,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
