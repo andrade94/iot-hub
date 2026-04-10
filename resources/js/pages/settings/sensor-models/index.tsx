@@ -297,7 +297,7 @@ export default function SensorModelsIndex({ sensorModels }: Props) {
 
     // Row click opens edit dialog
     const handleRowClick = useCallback((row: SensorModelRow) => {
-        setEditModel(row);
+        router.get(`/settings/sensor-models/${row.id}`);
     }, []);
 
     // Column definitions (memoized)

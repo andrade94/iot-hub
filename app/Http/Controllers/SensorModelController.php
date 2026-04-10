@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Device;
+use App\Models\Recipe;
 use App\Models\SensorModel;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -36,6 +37,35 @@ class SensorModelController extends Controller
 
         return Inertia::render('settings/sensor-models/index', [
             'sensorModels' => $sensorModels,
+        ]);
+    }
+
+    public function show(SensorModel $sensorModel)
+    {
+        $deviceCount = Device::where('model', $sensorModel->name)->count();
+
+        $recipes = Recipe::where('sensor_model', $sensorModel->name)
+            ->withCount('devices')
+            ->get()
+            ->map(fn ($r) => [
+                'id' => $r->id,
+                'name' => $r->name,
+                'description' => $r->description,
+                'default_rules_count' => count($r->default_rules ?? []),
+                'devices_count' => $r->devices_count,
+            ]);
+
+        $metricUnits = [
+            'temperature' => '°C', 'humidity' => '%', 'co2' => 'ppm', 'current' => 'A',
+            'door_status' => '0/1', 'battery_pct' => '%', 'gas_level' => '', 'distance' => 'mm',
+            'pressure' => 'bar', 'people_count' => '', 'pm2_5' => 'µg/m³',
+        ];
+
+        return Inertia::render('settings/sensor-models/show', [
+            'sensorModel' => $sensorModel,
+            'deviceCount' => $deviceCount,
+            'recipes' => $recipes,
+            'metricUnits' => $metricUnits,
         ]);
     }
 

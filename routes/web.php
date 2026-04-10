@@ -496,6 +496,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::middleware('role:super_admin')->prefix('settings/sensor-models')->name('sensor-models.')->group(function () {
         Route::get('/', [SensorModelController::class, 'index'])->name('index');
         Route::post('/', [SensorModelController::class, 'store'])->name('store');
+        Route::get('{sensorModel}', [SensorModelController::class, 'show'])->name('show');
         Route::put('{sensorModel}', [SensorModelController::class, 'update'])->name('update');
         Route::delete('{sensorModel}', [SensorModelController::class, 'destroy'])->name('destroy');
     });
