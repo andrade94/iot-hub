@@ -22,9 +22,11 @@ import { useState } from 'react';
 interface Props {
     site: Site;
     gateway: Gateway & { devices?: Device[] };
+    chirpstackHost?: string;
+    isSuperAdmin?: boolean;
 }
 
-export default function GatewayShow({ site, gateway }: Props) {
+export default function GatewayShow({ site, gateway, chirpstackHost, isSuperAdmin }: Props) {
     const { t } = useLang();
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
@@ -147,7 +149,13 @@ export default function GatewayShow({ site, gateway }: Props) {
                                     { label: t('Status'), value: <Badge variant={isOnline ? 'success' : 'destructive'} className="text-[8px]">{isOnline ? t('online') : t('offline')}</Badge> },
                                     { label: t('Devices'), value: <span className="font-mono font-semibold">{devices.length}</span> },
                                     { label: t('Provisioning'), value: gateway.chirpstack_id
-                                        ? <span className="text-emerald-600 dark:text-emerald-400 text-[10px]">✓ {t('Provisioned')}</span>
+                                        ? <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-[10px]">
+                                            ✓ {t('Provisioned')}
+                                            {isSuperAdmin && chirpstackHost && (
+                                                <a href={`${chirpstackHost}/#/gateways/${gateway.chirpstack_id}`} target="_blank" rel="noopener"
+                                                    className="text-[9px] text-primary hover:underline">ChirpStack ↗</a>
+                                            )}
+                                          </span>
                                         : <span className="text-amber-500 text-[10px]">⚠ {t('Pending')}</span> },
                                     { label: t('Last Seen'), value: <span className={cn('font-mono', isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500')}>
                                         {gateway.last_seen_at ? formatTimeAgo(gateway.last_seen_at) : t('never')}</span> },

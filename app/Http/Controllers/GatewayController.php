@@ -71,6 +71,8 @@ class GatewayController extends Controller
         return Inertia::render('settings/gateways/show', [
             'site' => $site,
             'gateway' => $gateway,
+            'chirpstackHost' => config('services.chirpstack.host', ''),
+            'isSuperAdmin' => $request->user()->hasRole('super_admin'),
         ]);
     }
 
