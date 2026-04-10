@@ -182,6 +182,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::get('sites/{site}/gateways', [GatewayController::class, 'index'])->name('gateways.index');
         Route::post('sites/{site}/gateways', [GatewayController::class, 'store'])->name('gateways.store');
         Route::get('sites/{site}/gateways/{gateway}', [GatewayController::class, 'show'])->name('gateways.show');
+        Route::put('sites/{site}/gateways/{gateway}', [GatewayController::class, 'update'])->name('gateways.update');
         Route::delete('sites/{site}/gateways/{gateway}', [GatewayController::class, 'destroy'])->name('gateways.destroy');
     });
 

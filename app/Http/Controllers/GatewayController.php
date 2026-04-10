@@ -34,7 +34,8 @@ class GatewayController extends Controller
         $gateways = $site->gateways()
             ->withCount('devices')
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         return Inertia::render('settings/gateways/index', [
             'site' => $site,
@@ -71,6 +72,21 @@ class GatewayController extends Controller
             'site' => $site,
             'gateway' => $gateway,
         ]);
+    }
+
+    public function update(Request $request, Site $site, Gateway $gateway)
+    {
+        $this->authorize('update', [$gateway, $site]);
+
+        $validated = $request->validate([
+            'model' => 'required|string|max:255',
+            'serial' => 'required|string|max:255',
+            'is_addon' => 'boolean',
+        ]);
+
+        $gateway->update($validated);
+
+        return back()->with('success', 'Gateway updated successfully.');
     }
 
     public function destroy(Request $request, Site $site, Gateway $gateway)
