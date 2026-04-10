@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Detail Types — Mockup | Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --card: #161820; --border: #23262f; --border-subtle: #1c1f27;
+    --fg: #e8eaed; --muted: #7a7f8a; --muted2: #4a4f5a;
+    --primary: #06b6d4; --emerald: #22c55e; --amber: #f59e0b; --rose: #f43f5e; --blue: #3b82f6; --violet: #8b5cf6;
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+  }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--fg); font-size: 13px; line-height: 1.5; }
+  h1, h2, h3 { font-family: var(--font-display); }
+  .mono { font-family: var(--font-mono); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid; }
+  .badge-outline { color: var(--muted); border-color: var(--border); background: transparent; }
+  .badge-success { color: var(--emerald); border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
+  .badge-destructive { color: var(--rose); border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); }
+  .badge-warning { color: var(--amber); border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
+  .card { border: 1px solid var(--border); border-radius: 8px; background: var(--card); overflow: hidden; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--fg); cursor: pointer; font-family: var(--font-body); }
+  .scenario { background: linear-gradient(135deg, var(--primary), var(--blue)); color: #000; font-weight: 700; font-size: 13px; padding: 12px 20px; border-radius: 8px; margin: 48px 0 24px; font-family: var(--font-display); }
+  .scenario:first-child { margin-top: 0; }
+  .divider { display: flex; align-items: center; gap: 16px; margin: 28px 0; }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.15em; color: var(--muted2); }
+  .kpi { flex: 1; padding: 16px 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
+  .kpi-label { font-family: var(--font-mono); font-size: 9px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted2); }
+  .kpi-value { font-family: var(--font-display); font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-top: 6px; }
+  .kpi-unit { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .kpi-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">TYPE A — Temperature & Humidity (EM300-TH, WS202, EM300-PT)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Continuous metrics → Line chart. This is the default view and works for most sensors.</p>
+
+<!-- KPI Strip -->
+<div style="display: flex; gap: 3px; margin-bottom: 24px;">
+  <div class="kpi">
+    <p class="kpi-label">TEMPERATURE</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">4.2</span><span class="kpi-unit">°C</span></div>
+    <p class="kpi-sub">min 3.1 · avg 4.0 · max 5.8</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">HUMIDITY</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">65</span><span class="kpi-unit">%</span></div>
+    <p class="kpi-sub">min 58 · avg 63 · max 72</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">BATTERY</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value" style="color: var(--emerald);">95</span><span class="kpi-unit">%</span></div>
+    <div style="margin-top: 6px; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden;"><div style="width: 95%; height: 100%; background: var(--emerald); border-radius: 2px;"></div></div>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">SIGNAL</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">-75</span><span class="kpi-unit">dBm</span></div>
+    <p class="kpi-sub" style="color: var(--emerald);">Good</p>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="card" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+  <div style="text-align: center; color: var(--muted2);">
+    <p style="font-size: 14px;">📈 Line Chart — Temperature over time</p>
+    <p style="font-size: 10px; margin-top: 4px;">Smooth area chart with gradient fill</p>
+    <p style="font-size: 10px;">Metric tabs: <span style="color: var(--primary);">Temperature</span> | Humidity</p>
+    <p style="font-size: 10px;">Period: 24h | 7d | 30d</p>
+    <p style="font-size: 10px;">Reference band for acceptable range (2-8°C from recipe)</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">TYPE B — Door/Window Sensor (WS301, EM300-MCS)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Binary metric → Timeline visualization. Shows open/closed periods as horizontal bars.</p>
+
+<!-- KPI Strip -->
+<div style="display: flex; gap: 3px; margin-bottom: 24px;">
+  <div class="kpi">
+    <p class="kpi-label">DOOR STATUS</p>
+    <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+      <span style="width: 12px; height: 12px; border-radius: 50%; background: var(--emerald);"></span>
+      <span style="font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--emerald);">Closed</span>
+    </div>
+    <p class="kpi-sub">Since 14 min ago</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">OPEN TODAY</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">12</span><span class="kpi-unit">times</span></div>
+    <p class="kpi-sub">avg duration: 2m 30s</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">TOTAL OPEN TIME</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">28</span><span class="kpi-unit">min</span></div>
+    <p class="kpi-sub">today (3.2% of day)</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">LONGEST OPEN</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value" style="color: var(--amber);">8</span><span class="kpi-unit">min</span></div>
+    <p class="kpi-sub" style="color: var(--amber);">at 10:42 AM</p>
+  </div>
+</div>
+
+<!-- Door Timeline -->
+<div class="card" style="padding: 20px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+    <span style="font-size: 12px; font-weight: 600;">Door Open/Close Timeline</span>
+    <span class="mono" style="font-size: 10px; color: var(--muted2);">Today</span>
+  </div>
+
+  <!-- Timeline bar -->
+  <div style="position: relative; height: 32px; background: rgba(34,197,94,0.1); border-radius: 6px; border: 1px solid rgba(34,197,94,0.2); overflow: hidden;">
+    <!-- Open periods (red bars) -->
+    <div style="position: absolute; left: 10%; width: 2%; height: 100%; background: rgba(244,63,94,0.6);" title="Open 2:24 AM - 2:27 AM"></div>
+    <div style="position: absolute; left: 25%; width: 1.5%; height: 100%; background: rgba(244,63,94,0.6);" title="Open 6:00 AM"></div>
+    <div style="position: absolute; left: 35%; width: 3%; height: 100%; background: rgba(244,63,94,0.6);" title="Open 8:24 AM - 8:32 AM (8 min)"></div>
+    <div style="position: absolute; left: 42%; width: 1%; height: 100%; background: rgba(244,63,94,0.6);"></div>
+    <div style="position: absolute; left: 50%; width: 1.5%; height: 100%; background: rgba(244,63,94,0.6);"></div>
+    <div style="position: absolute; left: 58%; width: 1%; height: 100%; background: rgba(244,63,94,0.6);"></div>
+    <div style="position: absolute; left: 65%; width: 2%; height: 100%; background: rgba(244,63,94,0.6);"></div>
+    <div style="position: absolute; left: 72%; width: 1%; height: 100%; background: rgba(244,63,94,0.6);"></div>
+  </div>
+
+  <!-- Time labels -->
+  <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+    <span class="mono" style="font-size: 9px; color: var(--muted2);">00:00</span>
+    <span class="mono" style="font-size: 9px; color: var(--muted2);">06:00</span>
+    <span class="mono" style="font-size: 9px; color: var(--muted2);">12:00</span>
+    <span class="mono" style="font-size: 9px; color: var(--muted2);">18:00</span>
+    <span class="mono" style="font-size: 9px; color: var(--muted2);">Now</span>
+  </div>
+
+  <!-- Legend -->
+  <div style="display: flex; gap: 16px; margin-top: 12px; font-size: 10px;">
+    <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: rgba(34,197,94,0.3);"></span> Closed</span>
+    <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: rgba(244,63,94,0.6);"></span> Open</span>
+  </div>
+</div>
+
+<!-- Recent events table -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <span class="divider-label">RECENT EVENTS</span>
+  <div class="divider-line"></div>
+</div>
+
+<div class="card">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px;">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--emerald);"></span>
+    <span style="font-size: 12px; font-weight: 500;">Door Closed</span>
+    <span class="mono" style="font-size: 10px; color: var(--muted2); margin-left: auto;">14 min ago · Duration: 3m 12s</span>
+  </div>
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px;">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--rose);"></span>
+    <span style="font-size: 12px; font-weight: 500;">Door Opened</span>
+    <span class="mono" style="font-size: 10px; color: var(--muted2); margin-left: auto;">17 min ago</span>
+  </div>
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px;">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--emerald);"></span>
+    <span style="font-size: 12px; font-weight: 500;">Door Closed</span>
+    <span class="mono" style="font-size: 10px; color: var(--muted2); margin-left: auto;">45 min ago · Duration: 1m 45s</span>
+  </div>
+  <div style="padding: 10px 16px; display: flex; align-items: center; gap: 10px;">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--rose);"></span>
+    <span style="font-size: 12px; font-weight: 500;">Door Opened</span>
+    <span class="mono" style="font-size: 10px; color: var(--muted2); margin-left: auto;">47 min ago</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">TYPE C — People Counter (VS121)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Count metric → Bar chart showing hourly occupancy. Heatmap for peak hours.</p>
+
+<!-- KPI Strip -->
+<div style="display: flex; gap: 3px; margin-bottom: 24px;">
+  <div class="kpi">
+    <p class="kpi-label">CURRENT OCCUPANCY</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value" style="color: var(--primary);">7</span><span class="kpi-unit">people</span></div>
+    <p class="kpi-sub">updated 30s ago</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">PEAK TODAY</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">23</span><span class="kpi-unit">people</span></div>
+    <p class="kpi-sub">at 12:30 PM</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">TOTAL TODAY</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">156</span><span class="kpi-unit">visits</span></div>
+    <p class="kpi-sub">avg 8.7/hour</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">AVG DWELL TIME</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">4.2</span><span class="kpi-unit">min</span></div>
+    <p class="kpi-sub">↑ 12% vs yesterday</p>
+  </div>
+</div>
+
+<!-- Hourly bar chart -->
+<div class="card" style="padding: 20px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+    <span style="font-size: 12px; font-weight: 600;">Hourly Occupancy</span>
+    <span class="mono" style="font-size: 10px; color: var(--muted2);">Today</span>
+  </div>
+
+  <!-- Simple bar chart -->
+  <div style="display: flex; align-items: flex-end; gap: 4px; height: 120px; padding-top: 10px;">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 8px; background: var(--primary); opacity: 0.2; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">6</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 15px; background: var(--primary); opacity: 0.3; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">7</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 35px; background: var(--primary); opacity: 0.5; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">8</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 55px; background: var(--primary); opacity: 0.6; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">9</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 70px; background: var(--primary); opacity: 0.7; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">10</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 80px; background: var(--primary); opacity: 0.8; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">11</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 100px; background: var(--primary); border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--fg);">12</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 90px; background: var(--primary); opacity: 0.9; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">13</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 60px; background: var(--primary); opacity: 0.6; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">14</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 45px; background: var(--primary); opacity: 0.5; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">15</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 50px; background: var(--primary); opacity: 0.5; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">16</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 65px; background: var(--primary); opacity: 0.65; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">17</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 40px; background: var(--primary); opacity: 0.4; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">18</span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <div style="width: 100%; height: 20px; background: var(--primary); opacity: 0.3; border-radius: 2px 2px 0 0;"></div>
+      <span class="mono" style="font-size: 7px; color: var(--muted2);">19</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">TYPE D — Tank/Silo Level (EM310-UDL)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Distance metric → Tank fill level gauge. Distance from top = how full the tank is.</p>
+
+<!-- KPI Strip -->
+<div style="display: flex; gap: 3px; margin-bottom: 24px;">
+  <div class="kpi">
+    <p class="kpi-label">FILL LEVEL</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value" style="color: var(--primary);">72</span><span class="kpi-unit">%</span></div>
+    <p class="kpi-sub">1,440mm from top</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">DISTANCE</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">1440</span><span class="kpi-unit">mm</span></div>
+    <p class="kpi-sub">tank depth: 5000mm</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">TREND</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value" style="color: var(--amber);">↓</span><span class="kpi-unit" style="color: var(--amber);">Depleting</span></div>
+    <p class="kpi-sub">-3% in last 24h</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">EST. EMPTY</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">~24</span><span class="kpi-unit">days</span></div>
+    <p class="kpi-sub">at current rate</p>
+  </div>
+</div>
+
+<!-- Tank gauge -->
+<div class="card" style="padding: 24px;">
+  <div style="display: flex; align-items: center; gap: 32px;">
+    <!-- Gauge visualization -->
+    <div style="width: 80px; height: 180px; border: 2px solid var(--border); border-radius: 8px; position: relative; overflow: hidden; flex-shrink: 0;">
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 72%; background: linear-gradient(to top, rgba(6,182,212,0.4), rgba(6,182,212,0.15)); border-radius: 0 0 6px 6px;"></div>
+      <div style="position: absolute; bottom: 72%; left: 0; right: 0; height: 2px; background: var(--primary);"></div>
+      <span class="mono" style="position: absolute; bottom: 72%; right: 4px; transform: translateY(50%); font-size: 10px; font-weight: 700; color: var(--primary);">72%</span>
+    </div>
+    <!-- Level chart over time -->
+    <div style="flex: 1;">
+      <p style="font-size: 12px; font-weight: 600; margin-bottom: 12px;">Fill Level Over Time</p>
+      <div style="height: 140px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 6px; color: var(--muted2);">
+        <p style="font-size: 11px;">📉 Area chart showing fill level % over 7 days</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">TYPE E — Energy / Current (CT101)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Current/power metrics → Line chart + duty cycle analysis for compressors.</p>
+
+<!-- KPI Strip -->
+<div style="display: flex; gap: 3px; margin-bottom: 24px;">
+  <div class="kpi">
+    <p class="kpi-label">CURRENT</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">4.5</span><span class="kpi-unit">A</span></div>
+    <p class="kpi-sub">min 0.2 · avg 3.8 · max 12.1</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">POWER</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">990</span><span class="kpi-unit">W</span></div>
+    <p class="kpi-sub">est. from current × 220V</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">DUTY CYCLE</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">68</span><span class="kpi-unit">%</span></div>
+    <div style="margin-top: 6px; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden;"><div style="width: 68%; height: 100%; background: var(--amber); border-radius: 2px;"></div></div>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">DAILY kWh</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">23.8</span><span class="kpi-unit">kWh</span></div>
+    <p class="kpi-sub">est. $47.60 MXN/day</p>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="card" style="height: 200px; display: flex; align-items: center; justify-content: center; color: var(--muted2);">
+  <div style="text-align: center;">
+    <p style="font-size: 14px;">📈 Line Chart — Current draw over time</p>
+    <p style="font-size: 10px; margin-top: 4px;">Shows compressor on/off cycles as current spikes</p>
+    <p style="font-size: 10px;">Threshold line at 30A (from recipe)</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">TYPE F — Air Quality (AM307)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Multiple environmental metrics → Score + multi-metric tabs.</p>
+
+<!-- KPI Strip -->
+<div style="display: flex; gap: 3px; margin-bottom: 24px;">
+  <div class="kpi" style="border-color: rgba(34,197,94,0.3);">
+    <p class="kpi-label">IAQ SCORE</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value" style="color: var(--emerald);">82</span><span class="kpi-unit" style="color: var(--emerald);">/100</span></div>
+    <p class="kpi-sub" style="color: var(--emerald);">Good</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">CO₂</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">640</span><span class="kpi-unit">ppm</span></div>
+    <p class="kpi-sub" style="color: var(--emerald);">Good (&lt; 800)</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">PM2.5</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">12</span><span class="kpi-unit">µg/m³</span></div>
+    <p class="kpi-sub" style="color: var(--emerald);">Good (&lt; 35)</p>
+  </div>
+  <div class="kpi">
+    <p class="kpi-label">TEMPERATURE</p>
+    <div style="display: flex; align-items: baseline; gap: 4px;"><span class="kpi-value">23.4</span><span class="kpi-unit">°C</span></div>
+    <p class="kpi-sub" style="color: var(--emerald);">Comfortable</p>
+  </div>
+</div>
+
+<!-- Chart with metric tabs -->
+<div class="card" style="height: 200px; display: flex; align-items: center; justify-content: center; color: var(--muted2);">
+  <div style="text-align: center;">
+    <p style="font-size: 14px;">📈 Line Chart — Multi-metric with tab selector</p>
+    <p style="font-size: 10px; margin-top: 4px;">Tabs: <span style="color: var(--primary);">CO₂</span> | PM2.5 | Temperature | Humidity</p>
+    <p style="font-size: 10px;">Color-coded threshold bands: Green (good) / Amber (fair) / Red (poor)</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">Additional Sections (all device types)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">These sections appear below the chart on every device detail page, regardless of sensor type.</p>
+
+<!-- Alert Rules affecting this device -->
+<div class="divider" style="margin-top: 0;">
+  <div class="divider-line"></div>
+  <span class="divider-label">ALERT RULES</span>
+  <div class="divider-line"></div>
+  <span class="mono" style="font-size: 10px; color: var(--muted2);">3</span>
+</div>
+
+<div class="card">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; cursor: pointer;" class="row-hover">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--rose);"></span>
+    <div style="flex: 1;"><span style="font-size: 12px; font-weight: 500;">Walk-in Cooler — Temperature Above 8</span></div>
+    <span class="badge badge-success">active</span>
+  </div>
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; cursor: pointer;" class="row-hover">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--rose);"></span>
+    <div style="flex: 1;"><span style="font-size: 12px; font-weight: 500;">Walk-in Cooler — Temperature Below 0</span></div>
+    <span class="badge badge-success">active</span>
+  </div>
+  <div style="padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer;" class="row-hover">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--amber);"></span>
+    <div style="flex: 1;"><span style="font-size: 12px; font-weight: 500;">Walk-in Cooler — Humidity Above 85</span></div>
+    <span class="badge badge-success">active</span>
+  </div>
+</div>
+
+<!-- Calibration History -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <span class="divider-label">CALIBRATION HISTORY</span>
+  <div class="divider-line"></div>
+</div>
+
+<div class="card">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px;">
+    <span style="font-size: 12px; font-weight: 500;">Temperature offset: +0.3°C</span>
+    <span class="mono" style="font-size: 10px; color: var(--muted2); margin-left: auto;">Calibrated by Juan P. · Mar 15, 2026</span>
+  </div>
+  <div style="padding: 10px 16px; display: flex; align-items: center; gap: 10px;">
+    <span style="font-size: 12px; font-weight: 500;">Initial calibration</span>
+    <span class="mono" style="font-size: 10px; color: var(--muted2); margin-left: auto;">Factory default · Jan 25, 2026</span>
+  </div>
+</div>
+
+<!-- Work Orders linked -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <span class="divider-label">WORK ORDERS</span>
+  <div class="divider-line"></div>
+  <span class="mono" style="font-size: 10px; color: var(--muted2);">1</span>
+</div>
+
+<div class="card">
+  <div style="padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer;" class="row-hover">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--amber);"></span>
+    <div style="flex: 1;">
+      <span style="font-size: 12px; font-weight: 500;">Battery replacement needed</span>
+      <p class="mono" style="font-size: 9px; color: var(--muted2);">WO-2026-0042 · Created 2d ago</p>
+    </div>
+    <span class="badge badge-warning">open</span>
+  </div>
+</div>
+
+<!-- Replacement History -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <span class="divider-label">DEVICE HISTORY</span>
+  <div class="divider-line"></div>
+</div>
+
+<div class="card" style="padding: 16px;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="width: 2px; height: 60px; background: var(--border); margin-left: 8px;"></div>
+    <div>
+      <p style="font-size: 11px; font-weight: 500;">Current: <span class="mono">A81758FFFE04B2</span></p>
+      <p class="mono" style="font-size: 9px; color: var(--muted2);">Since Jan 25, 2026</p>
+      <p style="font-size: 10px; color: var(--muted); margin-top: 8px;">No previous devices — this is the original installation.</p>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
