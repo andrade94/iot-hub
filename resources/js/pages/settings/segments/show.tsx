@@ -2,13 +2,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FadeIn } from '@/components/ui/fade-in';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -52,6 +56,7 @@ const moduleEmojis: Record<string, string> = {
 export default function SegmentShow({ segment, modules, organizations }: Props) {
     const { t } = useLang();
     const [deleteOpen, setDeleteOpen] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('Settings'), href: '/settings/profile' },
@@ -97,7 +102,7 @@ export default function SegmentShow({ segment, modules, organizations }: Props) 
                                     ...segment, active, suggested_modules: segment.suggested_modules, suggested_sensor_models: [],
                                 }, { preserveScroll: true })} />
                             <Button variant="outline" size="sm" className="text-[11px]"
-                                onClick={() => router.get('/settings/segments')}>
+                                onClick={() => setEditOpen(true)}>
                                 <Pencil className="mr-1 h-3 w-3" />{t('Edit')}
                             </Button>
                             <Button variant="outline" size="sm" className="text-[11px] text-rose-600 dark:text-rose-400 border-rose-200/40 dark:border-rose-800/40"
@@ -262,6 +267,155 @@ export default function SegmentShow({ segment, modules, organizations }: Props) 
                 }}
                 actionLabel={t('Delete')}
             />
+
+            <SegmentEditDialog
+                open={editOpen}
+                onOpenChange={setEditOpen}
+                segment={segment}
+                modules={modules}
+            />
         </AppLayout>
+    );
+}
+
+/* -- Edit Dialog --------------------------------------------------------- */
+
+const moduleEmojisMap: Record<string, string> = {
+    cold_chain: '🧊', energy: '⚡', compliance: '📋', industrial: '🏭',
+    iaq: '🌬️', safety: '🛡️', people: '👥',
+};
+
+function SegmentEditDialog({ open, onOpenChange, segment, modules }: {
+    open: boolean; onOpenChange: (open: boolean) => void; segment: SegmentData; modules: ModuleInfo[];
+}) {
+    const { t } = useLang();
+    const form = useForm({
+        name: segment.name,
+        label: segment.label,
+        description: segment.description ?? '',
+        suggested_modules: segment.suggested_modules,
+        suggested_sensor_models: [] as string[],
+        icon: segment.icon ?? '',
+        color: segment.color ?? '',
+        active: segment.active,
+    });
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        router.put(`/settings/segments/${segment.id}`, {
+            ...form.data,
+            description: form.data.description || null,
+            icon: form.data.icon || null,
+            color: form.data.color || null,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => onOpenChange(false),
+        });
+    }
+
+    function toggleModule(slug: string) {
+        const current = form.data.suggested_modules;
+        const next = current.includes(slug) ? current.filter((s) => s !== slug) : [...current, slug];
+        form.setData('suggested_modules', next);
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+                <DialogHeader>
+                    <DialogTitle>{t('Edit Segment')}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>{t('Name')}</Label>
+                            <Input value={form.data.label} onChange={(e) => {
+                                form.setData('label', e.target.value);
+                                const slug = e.target.value.toLowerCase().trim().replace(/[^a-z0-9\s_]/g, '').replace(/[\s]+/g, '_').replace(/_+/g, '_');
+                                form.setData('name', slug);
+                            }} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>{t('Slug')}</Label>
+                            <div className="flex h-9 items-center rounded-md border border-border bg-muted/30 px-3">
+                                <span className="font-mono text-[12px] text-muted-foreground">{form.data.name}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>{t('Description')}</Label>
+                        <Textarea value={form.data.description} onChange={(e) => form.setData('description', e.target.value)} rows={2} />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>{t('Suggested Modules')}</Label>
+                        <div className="flex flex-wrap gap-2 rounded-md border border-border p-3">
+                            {modules.map((mod) => {
+                                const isChecked = form.data.suggested_modules.includes(mod.slug);
+                                const emoji = moduleEmojisMap[mod.slug] ?? '📡';
+                                return (
+                                    <label key={mod.slug} className={cn('flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-[11px] transition-colors',
+                                        isChecked ? 'border-primary bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:bg-accent/30')}>
+                                        <input type="checkbox" className="sr-only" checked={isChecked} onChange={() => toggleModule(mod.slug)} />
+                                        <span className={cn('h-3 w-3 shrink-0 rounded border-2 flex items-center justify-center',
+                                            isChecked ? 'border-primary bg-primary' : 'border-muted-foreground/30')}>
+                                            {isChecked && <span className="text-[8px] text-primary-foreground font-bold">✓</span>}
+                                        </span>
+                                        {emoji} {mod.name}
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>{t('Icon')}</Label>
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/20 text-xl">
+                                    {form.data.icon || '📡'}
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                    {['🏪', '🏭', '💊', '🏨', '🏢', '🚛', '🧊', '⚡', '🛡️', '🌡️'].map((emoji) => (
+                                        <button key={emoji} type="button" onClick={() => form.setData('icon', emoji)}
+                                            className={cn('flex h-7 w-7 items-center justify-center rounded text-sm transition-all',
+                                                form.data.icon === emoji ? 'bg-primary/15 ring-1 ring-primary' : 'hover:bg-accent/40')}>
+                                            {emoji}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>{t('Color')}</Label>
+                            <div className="flex items-center gap-3">
+                                <input type="color" value={form.data.color || '#06b6d4'}
+                                    onChange={(e) => form.setData('color', e.target.value)}
+                                    className="h-10 w-10 shrink-0 cursor-pointer appearance-none rounded-lg border border-border bg-transparent p-0.5 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none" />
+                                <div className="flex flex-wrap gap-1">
+                                    {['#06b6d4', '#22c55e', '#f59e0b', '#f43f5e', '#8b5cf6', '#3b82f6'].map((c) => (
+                                        <button key={c} type="button" onClick={() => form.setData('color', c)}
+                                            className={cn('h-6 w-6 rounded-full border-2 transition-all',
+                                                form.data.color === c ? 'border-foreground scale-110' : 'border-transparent hover:scale-110')}
+                                            style={{ backgroundColor: c }} />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Switch checked={form.data.active} onCheckedChange={(v) => form.setData('active', v)} />
+                        <Label>{t('Active')}</Label>
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('Cancel')}</Button>
+                        <Button type="submit" disabled={form.processing}>{t('Save Changes')}</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
