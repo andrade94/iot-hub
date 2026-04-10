@@ -232,6 +232,8 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::get('sites/{site}/layout', [\App\Http\Controllers\SiteLayoutController::class, 'show'])->middleware('permission:manage devices')->name('sites.layout');
         Route::post('sites/{site}/layout', [\App\Http\Controllers\SiteLayoutController::class, 'save'])->middleware('permission:manage devices')->name('sites.layout.save');
         Route::get('sites/{site}', [SiteDetailController::class, 'show'])->name('sites.show');
+        Route::post('sites/{site}/access', [SiteDetailController::class, 'grantAccess'])->middleware('permission:manage users')->name('sites.access.grant');
+        Route::delete('sites/{site}/access/{user}', [SiteDetailController::class, 'revokeAccess'])->middleware('permission:manage users')->name('sites.access.revoke');
         Route::get('sites/{site}/zones/{zone}', [SiteDetailController::class, 'zone'])->name('sites.zone');
     });
 

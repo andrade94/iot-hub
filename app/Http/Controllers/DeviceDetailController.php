@@ -66,18 +66,20 @@ class DeviceDetailController extends Controller
         $device->load(['site', 'gateway', 'recipe', 'floorPlan']);
 
         $period = $request->input('period', '24h');
-        $metric = $request->input('metric', 'temperature');
+        $latestReadings = $queryService->getLatestReadings($device->id);
+
+        // Available metrics for this device (from latest readings)
+        $availableMetrics = $latestReadings->pluck('metric')->unique()->values();
+
+        // Default to first available metric instead of hardcoded 'temperature'
+        $metric = $request->input('metric', $availableMetrics->first() ?? 'temperature');
 
         $chartData = $chartService->getTimeSeriesData($device->id, $metric, $period);
-        $latestReadings = $queryService->getLatestReadings($device->id);
 
         $alerts = $device->alerts()
             ->latest('triggered_at')
             ->limit(10)
             ->get();
-
-        // Available metrics for this device (from latest readings)
-        $availableMetrics = $latestReadings->pluck('metric')->unique()->values();
 
         // Alert rules that affect this device
         $alertRules = \App\Models\AlertRule::where('site_id', $device->site_id)

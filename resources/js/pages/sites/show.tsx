@@ -62,6 +62,8 @@ interface Props {
     configCounts?: { alert_rules: number; escalation_chains: number; report_schedules: number; maintenance_windows: number };
     tempExcursions24h?: number;
     zoneBoundaries?: ZoneBoundary[];
+    siteUsers?: { id: number; name: string; email: string; role: string; has_app_access: boolean }[];
+    availableUsers?: { id: number; name: string; email: string; role: string }[];
 }
 
 const statusVariants: Record<string, 'success' | 'warning' | 'outline'> = {
@@ -85,7 +87,7 @@ const severityBadge: Record<string, string> = {
 
 /* -- Main Component --------------------------------------------------- */
 
-export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, myRequests = [], onboardingChecklist, timezones = [], configCounts, tempExcursions24h = 0, zoneBoundaries = [] }: Props) {
+export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, myRequests = [], onboardingChecklist, timezones = [], configCounts, tempExcursions24h = 0, zoneBoundaries = [], siteUsers = [], availableUsers = [] }: Props) {
     const { t } = useLang();
     const { auth } = usePage<SharedData>().props;
     const isViewer = auth.roles.includes('client_site_viewer');
@@ -736,10 +738,11 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                     href={`/sites/${site.id}/modules`} description={t('Active capabilities')} />
                                 <ConfigLink icon={Wrench} label={t('Maintenance Windows')} count={configCounts?.maintenance_windows}
                                     href="/settings/maintenance-windows" description={t('Alert suppression')} />
-                                <ConfigLink icon={Users} label={t('Users')} href="/settings/users"
-                                    description={t('Access management')} />
                             </div>
                         </FadeIn>
+
+                        {/* Site Access */}
+                        <SiteAccessSection users={siteUsers} availableUsers={availableUsers} siteId={site.id} t={t} />
 
                         {/* History */}
                         <SectionDivider label={t('History')} />
@@ -771,6 +774,14 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                         <div>
                                             <span className="font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">{t('Address')}</span>
                                             <p className="mt-1 text-[13px] text-muted-foreground">{site.address || '—'}</p>
+                                            {site.lat != null && site.lng != null && (
+                                                <a href={`https://www.google.com/maps?q=${site.lat},${site.lng}`}
+                                                    target="_blank" rel="noopener noreferrer"
+                                                    className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] text-primary hover:underline">
+                                                    {site.lat.toFixed(5)}, {site.lng.toFixed(5)}
+                                                    <span className="text-[8px] text-muted-foreground">&#8599;</span>
+                                                </a>
+                                            )}
                                         </div>
                                         <div>
                                             <span className="font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">{t('Timezone')}</span>
@@ -867,13 +878,19 @@ function SiteEditDialog({ site, timezones, open, onOpenChange }: {
     const form = useForm({
         name: site.name,
         address: site.address ?? '',
+        lat: site.lat != null ? String(site.lat) : '',
+        lng: site.lng != null ? String(site.lng) : '',
         timezone: site.timezone ?? 'America/Mexico_City',
         status: site.status,
     });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        form.put(`/settings/sites/${site.id}`, {
+        router.put(`/settings/sites/${site.id}`, {
+            ...form.data,
+            lat: form.data.lat ? parseFloat(form.data.lat) : null,
+            lng: form.data.lng ? parseFloat(form.data.lng) : null,
+        }, {
             preserveScroll: true,
             onSuccess: () => onOpenChange(false),
         });
@@ -895,6 +912,18 @@ function SiteEditDialog({ site, timezones, open, onOpenChange }: {
                     <div className="space-y-2">
                         <Label>{t('Address')}</Label>
                         <Input value={form.data.address} onChange={(e) => form.setData('address', e.target.value)} placeholder={t('Street address (optional)')} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                            <Label className="text-[11px]">{t('Latitude')}</Label>
+                            <Input value={form.data.lat} onChange={(e) => form.setData('lat', e.target.value)}
+                                placeholder="25.6866142" className="font-mono text-[12px]" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[11px]">{t('Longitude')}</Label>
+                            <Input value={form.data.lng} onChange={(e) => form.setData('lng', e.target.value)}
+                                placeholder="-100.3161126" className="font-mono text-[12px]" />
+                        </div>
                     </div>
                     {timezones.length > 0 && (
                         <div className="space-y-2">
@@ -1023,6 +1052,176 @@ function SummaryStat({ label, value, suffix, subtitle, color, last, onClick }: {
             <span className="text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground/70">{label}</span>
             {subtitle && <span className="font-mono text-[9px] text-muted-foreground/70">{subtitle}</span>}
         </Comp>
+    );
+}
+
+/* ── Site Access Section ──────────────────────────────────────────── */
+
+const ROLE_COLORS: Record<string, string> = {
+    client_org_admin: 'bg-violet-500/15 text-violet-400',
+    client_site_manager: 'bg-blue-500/15 text-blue-400',
+    client_site_viewer: 'bg-zinc-500/15 text-zinc-400',
+    super_admin: 'bg-rose-500/15 text-rose-400',
+    support: 'bg-amber-500/15 text-amber-400',
+    account_manager: 'bg-emerald-500/15 text-emerald-400',
+    technician: 'bg-cyan-500/15 text-cyan-400',
+};
+
+const AVATAR_COLORS = [
+    'bg-violet-500/20 text-violet-400',
+    'bg-blue-500/20 text-blue-400',
+    'bg-emerald-500/20 text-emerald-400',
+    'bg-amber-500/20 text-amber-400',
+    'bg-rose-500/20 text-rose-400',
+    'bg-cyan-500/20 text-cyan-400',
+];
+
+function SiteAccessSection({ users, availableUsers, siteId, t }: {
+    users: { id: number; name: string; email: string; role: string; has_app_access: boolean }[];
+    availableUsers: { id: number; name: string; email: string; role: string }[];
+    siteId: number;
+    t: (key: string) => string;
+}) {
+    const [showAdd, setShowAdd] = useState(false);
+    const [removeUserId, setRemoveUserId] = useState<number | null>(null);
+    const [selectedUserId, setSelectedUserId] = useState('');
+
+    const roleCounts = useMemo(() => {
+        const counts: Record<string, number> = {};
+        users.forEach((u) => { const r = u.role ?? 'viewer'; counts[r] = (counts[r] || 0) + 1; });
+        return counts;
+    }, [users]);
+
+    const initials = (name: string) => name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+    const removeUser = users.find((u) => u.id === removeUserId);
+
+    return (
+        <>
+            <div className="my-7 flex items-center gap-4">
+                <div className="h-px flex-1 bg-border" />
+                <span className="font-mono text-[10px] font-medium tracking-[0.15em] text-muted-foreground/70">{t('SITE ACCESS')}</span>
+                <div className="h-px flex-1 bg-border" />
+                <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">{users.length}</span>
+            </div>
+            <FadeIn delay={100} duration={400}>
+                <Card className="shadow-elevation-1 overflow-hidden">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b px-4 py-3">
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-[13px] font-semibold">{t('Users with access')}</h3>
+                            <div className="flex gap-1.5">
+                                {Object.entries(roleCounts).map(([role, count]) => (
+                                    <span key={role} className={cn('rounded-full px-2 py-0.5 text-[9px] font-medium', ROLE_COLORS[role] ?? 'bg-muted text-muted-foreground')}>
+                                        {count} {role.replace('client_', '').replace('_', ' ')}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        {availableUsers.length > 0 && (
+                            <Button variant="default" size="sm" className="h-7 text-[11px]" onClick={() => setShowAdd(true)}>
+                                <Plus className="mr-1 h-3 w-3" /> {t('Add User')}
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* User rows */}
+                    {users.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-muted-foreground">{t('No users assigned to this site')}</div>
+                    ) : (
+                        <div className="divide-y divide-border/50">
+                            {users.map((user, i) => (
+                                <div key={user.id}
+                                    className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50">
+                                    <div className={cn('flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg font-display text-[11px] font-semibold', AVATAR_COLORS[i % AVATAR_COLORS.length])}
+                                        onClick={() => router.get(`/settings/users/${user.id}`)}>
+                                        {initials(user.name)}
+                                    </div>
+                                    <div className="min-w-0 flex-1 cursor-pointer" onClick={() => router.get(`/settings/users/${user.id}`)}>
+                                        <p className="text-[13px] font-medium">{user.name}</p>
+                                        <p className="truncate font-mono text-[10px] text-muted-foreground/60">{user.email}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn('rounded-full px-2 py-0.5 text-[9px] font-medium', ROLE_COLORS[user.role ?? ''] ?? 'bg-muted text-muted-foreground')}>
+                                            {(user.role ?? 'viewer').replace('client_', '').replace(/_/g, ' ')}
+                                        </span>
+                                        {user.has_app_access && (
+                                            <span className="rounded-full bg-teal-500/10 px-1.5 py-0.5 text-[8px] font-medium text-teal-400">App</span>
+                                        )}
+                                        <button className="ml-1 hidden text-muted-foreground/40 transition-colors hover:text-destructive group-hover:inline-flex"
+                                            onClick={() => setRemoveUserId(user.id)} title={t('Remove access')}>
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5">
+                        <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
+                            {users.length} {t('users')}
+                        </span>
+                        <button
+                            className="text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+                            onClick={() => router.get('/settings/users')}
+                        >
+                            {t('Manage All Users')} &rarr;
+                        </button>
+                    </div>
+                </Card>
+            </FadeIn>
+
+            {/* Add User Dialog */}
+            <Dialog open={showAdd} onOpenChange={setShowAdd}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>{t('Add User to Site')}</DialogTitle>
+                        <DialogDescription>{t('Grant an existing user access to this site.')}</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                        <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                            <SelectTrigger><SelectValue placeholder={t('Select a user')} /></SelectTrigger>
+                            <SelectContent>
+                                {availableUsers.map((u) => (
+                                    <SelectItem key={u.id} value={String(u.id)}>
+                                        <span className="font-medium">{u.name}</span>
+                                        <span className="ml-2 text-muted-foreground">{u.email}</span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="outline" size="sm" onClick={() => { setShowAdd(false); setSelectedUserId(''); }}>{t('Cancel')}</Button>
+                        <Button size="sm" disabled={!selectedUserId}
+                            onClick={() => {
+                                router.post(`/sites/${siteId}/access`, { user_id: Number(selectedUserId) }, {
+                                    preserveScroll: true,
+                                    onSuccess: () => { setShowAdd(false); setSelectedUserId(''); },
+                                });
+                            }}>{t('Grant Access')}</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Remove Confirmation */}
+            <ConfirmationDialog
+                open={removeUserId !== null}
+                onOpenChange={(open) => { if (!open) setRemoveUserId(null); }}
+                title={t('Remove Access')}
+                description={`${t('Remove')} ${removeUser?.name ?? ''} ${t('from this site')}?`}
+                onConfirm={() => {
+                    if (removeUserId) {
+                        router.delete(`/sites/${siteId}/access/${removeUserId}`, {
+                            preserveScroll: true,
+                            onSuccess: () => setRemoveUserId(null),
+                        });
+                    }
+                }}
+                actionLabel={t('Remove')}
+            />
+        </>
     );
 }
 

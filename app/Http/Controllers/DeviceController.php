@@ -116,8 +116,8 @@ class DeviceController extends Controller
         abort_unless(in_array($device->status, ['active', 'offline']), 422, 'Only active or offline devices can be replaced.');
 
         $validated = $request->validate([
-            'new_dev_eui' => 'required|string|max:16|unique:devices,dev_eui',
-            'new_app_key' => 'required|string|max:32',
+            'new_dev_eui' => 'required|string|max:32|unique:devices,dev_eui',
+            'new_app_key' => 'required|string|max:64',
             'new_model' => 'nullable|string|in:EM300-TH,CT101,WS301,AM307,VS121,EM300-MCS,WS202',
         ]);
 

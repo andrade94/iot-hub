@@ -18,6 +18,23 @@ class AlertRouter
      */
     public function route(Alert $alert): void
     {
+        // BR-073: Check maintenance window suppression before routing
+        $device = $alert->device;
+        if ($device && \App\Models\MaintenanceWindow::isActiveForZone(
+            $alert->site_id,
+            $device->zone,
+            $alert->site?->timezone,
+        )) {
+            Log::info('Alert suppressed by maintenance window', [
+                'alert_id' => $alert->id,
+                'site_id' => $alert->site_id,
+                'zone' => $device->zone,
+            ]);
+            $this->broadcastAlert($alert);
+
+            return;
+        }
+
         // Check if we should batch this alert due to high volume
         if ($this->shouldBatchAlert($alert)) {
             $this->batchAlert($alert);
@@ -27,7 +44,7 @@ class AlertRouter
 
         $siteId = $alert->site_id;
 
-        // Get escalation chain for this site (new grouped model with JSON levels)
+        // Get escalation chain for this site (one chain per site)
         $chain = EscalationChain::where('site_id', $siteId)->first();
 
         if (! $chain || empty($chain->levels)) {

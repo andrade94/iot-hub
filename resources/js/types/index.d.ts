@@ -46,6 +46,8 @@ export interface Site {
     org_id: number;
     name: string;
     address?: string;
+    lat?: number | null;
+    lng?: number | null;
     status: 'active' | 'inactive' | 'onboarding' | 'draft';
     timezone?: string;
     created_at?: string;

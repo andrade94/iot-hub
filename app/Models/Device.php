@@ -159,7 +159,7 @@ class Device extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'dev_eui', 'model', 'status', 'zone', 'gateway_id', 'recipe_id'])
+            ->logOnly(['name', 'label', 'serial', 'dev_eui', 'model', 'status', 'zone', 'gateway_id', 'recipe_id'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn (string $eventName) => "Device {$eventName}");

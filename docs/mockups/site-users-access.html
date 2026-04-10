@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Users Access — UX Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Lexend:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e11;
+    --card: #13161b;
+    --card-hover: #181c22;
+    --border: rgba(255,255,255,0.06);
+    --border-accent: rgba(255,255,255,0.1);
+    --text: #e8eaed;
+    --text-muted: #6b7280;
+    --text-muted2: rgba(255,255,255,0.35);
+    --accent: #2dd4bf;
+    --accent-muted: rgba(45,212,191,0.12);
+    --rose: #f43f5e;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --violet: #8b5cf6;
+    --emerald: #10b981;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lexend', sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; }
+  h2, h3 { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; }
+  .mono { font-family: 'Fira Code', monospace; }
+
+  .mockup-label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    background: var(--accent-muted);
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  .approach-title {
+    font-size: 22px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .approach-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+
+  .verdict {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: var(--radius);
+    border: 1px solid;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .verdict.recommended {
+    background: rgba(45,212,191,0.06);
+    border-color: rgba(45,212,191,0.2);
+  }
+  .verdict.neutral {
+    background: rgba(245,158,11,0.06);
+    border-color: rgba(245,158,11,0.15);
+  }
+  .verdict-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .verdict strong { color: var(--text); }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 48px 0;
+  }
+
+  /* ── Section Divider (app pattern) ── */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-divider span {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .section-divider .line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-divider .count {
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--text-muted2);
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* ── Badge ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    letter-spacing: 0.02em;
+  }
+  .badge-admin { background: rgba(139,92,246,0.15); color: #a78bfa; }
+  .badge-manager { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .badge-viewer { background: rgba(107,114,128,0.15); color: #9ca3af; }
+  .badge-outline { background: transparent; border: 1px solid var(--border-accent); color: var(--text-muted); }
+  .badge-success { background: rgba(16,185,129,0.15); color: #34d399; }
+  .badge-app { background: rgba(45,212,191,0.1); color: var(--accent); }
+
+  /* ── Button ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Lexend', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #0c0e11; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-outline { background: transparent; border: 1px solid var(--border-accent); color: var(--text-muted); }
+  .btn-outline:hover { background: var(--card-hover); color: var(--text); }
+  .btn-ghost { background: transparent; color: var(--text-muted); }
+  .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .btn-sm { font-size: 11px; padding: 5px 10px; }
+
+  /* ── Avatar ── */
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .avatar-violet { background: rgba(139,92,246,0.2); color: #a78bfa; }
+  .avatar-blue { background: rgba(59,130,246,0.2); color: #60a5fa; }
+  .avatar-emerald { background: rgba(16,185,129,0.2); color: #34d399; }
+  .avatar-amber { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .avatar-rose { background: rgba(244,63,94,0.2); color: #fb7185; }
+  .avatar-sm { width: 28px; height: 28px; font-size: 10px; border-radius: 6px; }
+
+  /* ── User Row ── */
+  .user-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+    cursor: pointer;
+  }
+  .user-row:last-child { border-bottom: none; }
+  .user-row:hover { background: var(--card-hover); }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 500; }
+  .user-email { font-size: 11px; color: var(--text-muted); font-family: 'Fira Code', monospace; }
+  .user-meta { display: flex; align-items: center; gap: 8px; }
+
+  /* ── Approach Panels ── */
+  .approaches {
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  .approach-panel {
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .approach-panel:nth-child(1) { animation-delay: 0.1s; }
+  .approach-panel:nth-child(2) { animation-delay: 0.3s; }
+  .approach-panel:nth-child(3) { animation-delay: 0.5s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Config grid (existing pattern) ── */
+  .config-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .config-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .config-card:hover { border-color: var(--border-accent); background: var(--card-hover); }
+  .config-icon { color: var(--text-muted); font-size: 16px; }
+
+  /* ── Inline access section ── */
+  .access-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .access-header h3 {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .access-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    background: rgba(255,255,255,0.015);
+  }
+  .access-footer-text {
+    font-size: 11px;
+    color: var(--text-muted2);
+    font-family: 'Fira Code', monospace;
+  }
+
+  /* ── Setup tab mock frame ── */
+  .tab-frame {
+    border: 1px dashed rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+  }
+  .tab-frame::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted2);
+    background: var(--bg);
+    padding: 0 8px;
+  }
+
+  .role-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .role-dot-admin { background: #a78bfa; }
+  .role-dot-manager { background: #60a5fa; }
+  .role-dot-viewer { background: #9ca3af; }
+
+  .stacked-avatars {
+    display: flex;
+  }
+  .stacked-avatars .avatar {
+    margin-left: -6px;
+    border: 2px solid var(--card);
+  }
+  .stacked-avatars .avatar:first-child { margin-left: 0; }
+
+  /* ── Recommendation banner ── */
+  .recommendation {
+    background: linear-gradient(135deg, rgba(45,212,191,0.08), rgba(59,130,246,0.06));
+    border: 1px solid rgba(45,212,191,0.15);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 48px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.7s forwards;
+  }
+  .recommendation h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: var(--accent);
+  }
+  .recommendation p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .recommendation ul {
+    margin-top: 12px;
+    padding-left: 20px;
+  }
+  .recommendation li {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.8;
+  }
+  .recommendation li strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div style="margin-bottom: 48px;">
+  <div class="mockup-label">UX Decision Mockup</div>
+  <h1 style="font-size: 28px; margin-bottom: 8px;">Site Users Access</h1>
+  <p style="font-size: 13px; color: var(--text-muted); max-width: 520px; line-height: 1.6;">
+    Three approaches compared for showing which users have access to a site.
+    Each is shown in context of how it would appear in the actual UI.
+  </p>
+</div>
+
+<div class="approaches">
+
+  <!-- ═══════════ APPROACH A: Site filter on global users page ═══════════ -->
+  <div class="approach-panel">
+    <div class="verdict neutral">
+      <span class="verdict-icon">~</span>
+      <div>
+        <strong>Approach A: Add site filter to global Users page</strong><br>
+        Useful for bulk management but loses site context. Admin has to leave the site page, then remember to filter.
+        Doesn't solve the primary use case: "who has access to THIS site right now?"
+      </div>
+    </div>
+
+    <h2 class="approach-title">A. Global Users + Site Filter</h2>
+    <p class="approach-desc">
+      Add a "Site" dropdown filter to /settings/users. The site page links there with ?site_id=X pre-filled.
+    </p>
+
+    <div class="tab-frame" data-label="Users Index Page">
+      <!-- Filter bar mockup -->
+      <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: var(--accent-muted); border: 1px solid rgba(45,212,191,0.25); border-radius: 8px; font-size: 12px;">
+          <span style="color: var(--accent);">Site:</span>
+          <span style="font-weight: 500;">CEDIS Norte</span>
+          <span style="color: var(--text-muted); cursor: pointer; margin-left: 4px;">&times;</span>
+        </div>
+        <div style="padding: 7px 14px; border: 1px solid var(--border-accent); border-radius: 8px; font-size: 12px; color: var(--text-muted);">
+          Role: All
+        </div>
+        <div style="padding: 7px 14px; border: 1px solid var(--border-accent); border-radius: 8px; font-size: 12px; color: var(--text-muted);">
+          Status: Active
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr 100px 100px 40px; padding: 10px 16px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); border-bottom: 1px solid var(--border);">
+          <span>Name</span><span>Email</span><span>Role</span><span>Sites</span><span></span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr 100px 100px 40px; padding: 12px 16px; align-items: center; border-bottom: 1px solid var(--border); font-size: 13px;">
+          <span style="font-weight: 500;">Carlos Admin</span>
+          <span class="mono" style="font-size: 11px; color: var(--text-muted);">admin@example.com</span>
+          <span><span class="badge badge-admin">Admin</span></span>
+          <span class="mono" style="font-size: 11px;">3 sites</span>
+          <span style="color: var(--text-muted);">&#8250;</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr 100px 100px 40px; padding: 12px 16px; align-items: center; border-bottom: 1px solid var(--border); font-size: 13px;">
+          <span style="font-weight: 500;">Maria Manager</span>
+          <span class="mono" style="font-size: 11px; color: var(--text-muted);">manager@example.com</span>
+          <span><span class="badge badge-manager">Manager</span></span>
+          <span class="mono" style="font-size: 11px;">1 site</span>
+          <span style="color: var(--text-muted);">&#8250;</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr 100px 100px 40px; padding: 12px 16px; align-items: center; font-size: 13px;">
+          <span style="font-weight: 500;">Pedro Viewer</span>
+          <span class="mono" style="font-size: 11px; color: var(--text-muted);">viewer@example.com</span>
+          <span><span class="badge badge-viewer">Viewer</span></span>
+          <span class="mono" style="font-size: 11px;">1 site</span>
+          <span style="color: var(--text-muted);">&#8250;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ APPROACH B: Users section in Setup tab ═══════════ -->
+  <div class="approach-panel">
+    <div class="verdict recommended">
+      <span class="verdict-icon">&#10003;</span>
+      <div>
+        <strong>Approach B: Site Access section in the Setup tab</strong><br>
+        Answers the primary question in context. 3-15 users fits perfectly in a compact card.
+        No navigation needed. Managers see who has access at a glance.
+      </div>
+    </div>
+
+    <h2 class="approach-title">B. "Site Access" in Setup Tab</h2>
+    <p class="approach-desc">
+      Replace the simple "Users" config link with a full access management section showing all assigned users, their roles, and quick actions.
+    </p>
+
+    <div class="tab-frame" data-label="Site Show &gt; Setup Tab">
+      <!-- Config grid (existing, minus Users card) -->
+      <div class="section-divider">
+        <span>Configuration</span>
+        <div class="line"></div>
+      </div>
+      <div class="config-grid" style="margin-bottom: 28px;">
+        <div class="config-card"><span class="config-icon">&#128276;</span> Alert Rules</div>
+        <div class="config-card"><span class="config-icon">&#128225;</span> Escalation Chains</div>
+        <div class="config-card"><span class="config-icon">&#128202;</span> Report Schedules</div>
+        <div class="config-card"><span class="config-icon">&#127777;</span> Verifications</div>
+        <div class="config-card"><span class="config-icon">&#128225;</span> Gateways</div>
+        <div class="config-card"><span class="config-icon">&#128506;</span> Floor Plans</div>
+        <div class="config-card"><span class="config-icon">&#128209;</span> Modules</div>
+        <div class="config-card"><span class="config-icon">&#128295;</span> Maintenance</div>
+      </div>
+
+      <!-- NEW: Site Access section -->
+      <div class="section-divider">
+        <span>Site Access</span>
+        <div class="line"></div>
+        <span class="count">7</span>
+      </div>
+
+      <div class="card">
+        <div class="access-header">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <h3>Users with access</h3>
+            <div style="display: flex; gap: 6px;">
+              <span class="badge badge-admin" style="font-size: 9px;">2 Admin</span>
+              <span class="badge badge-manager" style="font-size: 9px;">2 Manager</span>
+              <span class="badge badge-viewer" style="font-size: 9px;">3 Viewer</span>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm">+ Add User</button>
+        </div>
+
+        <div class="user-row">
+          <div class="avatar avatar-violet">CA</div>
+          <div class="user-info">
+            <div class="user-name">Carlos Admin</div>
+            <div class="user-email">admin@example.com</div>
+          </div>
+          <div class="user-meta">
+            <span class="badge badge-admin">org_admin</span>
+            <span class="badge badge-app" style="font-size: 9px;">App</span>
+          </div>
+        </div>
+
+        <div class="user-row">
+          <div class="avatar avatar-blue">MG</div>
+          <div class="user-info">
+            <div class="user-name">Maria Garcia</div>
+            <div class="user-email">maria@example.com</div>
+          </div>
+          <div class="user-meta">
+            <span class="badge badge-manager">site_manager</span>
+            <span class="badge badge-app" style="font-size: 9px;">App</span>
+          </div>
+        </div>
+
+        <div class="user-row">
+          <div class="avatar avatar-emerald">JR</div>
+          <div class="user-info">
+            <div class="user-name">Juan Rodriguez</div>
+            <div class="user-email">juan@example.com</div>
+          </div>
+          <div class="user-meta">
+            <span class="badge badge-manager">site_manager</span>
+          </div>
+        </div>
+
+        <div class="user-row">
+          <div class="avatar avatar-amber">LP</div>
+          <div class="user-info">
+            <div class="user-name">Laura Perez</div>
+            <div class="user-email">laura@example.com</div>
+          </div>
+          <div class="user-meta">
+            <span class="badge badge-viewer">site_viewer</span>
+          </div>
+        </div>
+
+        <div class="user-row">
+          <div class="avatar avatar-rose">AS</div>
+          <div class="user-info">
+            <div class="user-name">Ana Sofia</div>
+            <div class="user-email">ana@example.com</div>
+          </div>
+          <div class="user-meta">
+            <span class="badge badge-viewer">site_viewer</span>
+            <span class="badge badge-app" style="font-size: 9px;">App</span>
+          </div>
+        </div>
+
+        <div class="user-row" style="opacity: 0.6;">
+          <div class="avatar avatar-sm avatar-blue" style="width: 32px; height: 32px;">RH</div>
+          <div class="user-info">
+            <div class="user-name">Roberto Hernandez</div>
+            <div class="user-email">roberto@example.com</div>
+          </div>
+          <div class="user-meta">
+            <span class="badge badge-viewer">site_viewer</span>
+          </div>
+        </div>
+
+        <div class="user-row" style="opacity: 0.6;">
+          <div class="avatar avatar-sm avatar-amber" style="width: 32px; height: 32px;">DM</div>
+          <div class="user-info">
+            <div class="user-name">Diana Martinez</div>
+            <div class="user-email">diana@example.com</div>
+          </div>
+          <div class="user-meta">
+            <span class="badge badge-admin">org_admin</span>
+          </div>
+        </div>
+
+        <div class="access-footer">
+          <span class="access-footer-text">7 users &middot; last updated 2d ago</span>
+          <button class="btn btn-ghost btn-sm">Manage All Users &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ APPROACH C: Compact hybrid ═══════════ -->
+  <div class="approach-panel">
+    <div class="verdict neutral">
+      <span class="verdict-icon">~</span>
+      <div>
+        <strong>Approach C: Compact preview + link</strong><br>
+        Stacked avatars with a "View all" link. Saves space but hides important role info.
+        Useful if the Setup tab is already very crowded — but it's not.
+      </div>
+    </div>
+
+    <h2 class="approach-title">C. Compact Avatar Row</h2>
+    <p class="approach-desc">
+      Show stacked avatars and a summary in the config grid, linking to a filtered users page.
+    </p>
+
+    <div class="tab-frame" data-label="Site Show &gt; Setup Tab">
+      <div class="section-divider">
+        <span>Configuration</span>
+        <div class="line"></div>
+      </div>
+      <div class="config-grid" style="margin-bottom: 20px;">
+        <div class="config-card"><span class="config-icon">&#128276;</span> Alert Rules</div>
+        <div class="config-card"><span class="config-icon">&#128225;</span> Escalation Chains</div>
+        <div class="config-card"><span class="config-icon">&#128202;</span> Report Schedules</div>
+      </div>
+
+      <!-- Compact users card -->
+      <div class="card" style="padding: 16px 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 13px; font-weight: 600;">Site Access</span>
+              <span class="mono" style="font-size: 11px; color: var(--text-muted);">7 users</span>
+            </div>
+            <div class="stacked-avatars">
+              <div class="avatar avatar-sm avatar-violet">CA</div>
+              <div class="avatar avatar-sm avatar-blue">MG</div>
+              <div class="avatar avatar-sm avatar-emerald">JR</div>
+              <div class="avatar avatar-sm avatar-amber">LP</div>
+              <div class="avatar avatar-sm avatar-rose">AS</div>
+              <div class="avatar avatar-sm" style="background: var(--card-hover); color: var(--text-muted); font-size: 9px; border-color: var(--card);">+2</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; gap: 4px;">
+              <span class="badge badge-admin" style="font-size: 8px;">2</span>
+              <span class="badge badge-manager" style="font-size: 8px;">2</span>
+              <span class="badge badge-viewer" style="font-size: 8px;">3</span>
+            </div>
+            <button class="btn btn-outline btn-sm">Manage &rarr;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════ RECOMMENDATION ═══════════ -->
+<div class="recommendation">
+  <h3>Recommendation: Approach B</h3>
+  <p>
+    The full "Site Access" section in the Setup tab is the right choice for this platform.
+    Here's why:
+  </p>
+  <ul>
+    <li><strong>Primary use case is contextual</strong> — "Who has access to THIS site?" is always asked while looking at a site, not while browsing all users.</li>
+    <li><strong>3-15 users is the sweet spot</strong> — small enough to show inline without pagination, large enough to justify a dedicated section.</li>
+    <li><strong>Role visibility matters</strong> — admins need to see the role breakdown at a glance (the compact version hides this).</li>
+    <li><strong>Actionable in place</strong> — "Add User" button lets admins grant access without leaving the site page.</li>
+    <li><strong>Setup tab has room</strong> — the existing config grid is 8 cards + site details. Adding a users section doesn't crowd it.</li>
+    <li><strong>Also add the site filter</strong> to /settings/users as a secondary path — it's trivial and helps for cross-site user audits.</li>
+  </ul>
+</div>
+
+</body>
+</html>

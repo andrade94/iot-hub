@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Site;
+use App\Models\User;
 use App\Models\WorkOrder;
 use App\Services\Readings\ChartDataService;
 use Illuminate\Http\Request;
@@ -116,6 +117,26 @@ class SiteDetailController extends Controller
             ->whereJsonContains('data->metric', 'temperature')
             ->count();
 
+        // Site access — users assigned to this site (role from Spatie permissions)
+        $siteUsers = $site->users()
+            ->select('users.id', 'users.name', 'users.email', 'users.has_app_access')
+            ->with('roles')
+            ->orderBy('users.name')
+            ->get()
+            ->map(fn ($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'role' => $u->roles->first()?->name ?? 'viewer',
+                'has_app_access' => $u->has_app_access,
+            ])
+            ->sortBy(fn ($u) => match (true) {
+                str_contains($u['role'], 'admin') => 0,
+                str_contains($u['role'], 'manager') => 1,
+                default => 2,
+            })
+            ->values();
+
         // Setup tab configuration counts
         $configCounts = [
             'alert_rules' => \App\Models\AlertRule::where('site_id', $site->id)->count(),
@@ -136,6 +157,19 @@ class SiteDetailController extends Controller
             'configCounts' => $configCounts,
             'tempExcursions24h' => $tempExcursions24h,
             'zoneBoundaries' => $site->zoneBoundaries,
+            'siteUsers' => $siteUsers,
+            'availableUsers' => fn () => User::where('org_id', $site->org_id)
+                ->whereDoesntHave('sites', fn ($q) => $q->where('site_id', $site->id))
+                ->whereNull('deactivated_at')
+                ->with('roles')
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'role' => $u->roles->first()?->name ?? 'viewer',
+                ]),
         ]);
     }
 
@@ -172,5 +206,33 @@ class SiteDetailController extends Controller
             'alerts' => $alerts,
             'availableDevices' => $availableDevices,
         ]);
+    }
+
+    public function grantAccess(Request $request, Site $site)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+
+        // Ensure user belongs to the same org
+        abort_unless($user->org_id === $site->org_id, 403, 'User does not belong to this organization.');
+
+        $site->users()->syncWithoutDetaching([
+            $user->id => [
+                'assigned_at' => now(),
+                'assigned_by' => $request->user()->id,
+            ],
+        ]);
+
+        return back()->with('success', "{$user->name} now has access to {$site->name}.");
+    }
+
+    public function revokeAccess(Request $request, Site $site, User $user)
+    {
+        $site->users()->detach($user->id);
+
+        return back()->with('success', "{$user->name} removed from {$site->name}.");
     }
 }

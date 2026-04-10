@@ -353,7 +353,7 @@ class OperationalDataSeeder extends Seeder
 
         // Critical Alert Chain — CEDIS Norte
         EscalationChain::updateOrCreate(
-            ['site_id' => $cedisNorte->id, 'name' => 'Critical Alert Chain'],
+            ['site_id' => $cedisNorte->id, 'name' => 'CEDIS Norte — Alert Routing'],
             [
                 'levels' => [
                     [
@@ -374,7 +374,7 @@ class OperationalDataSeeder extends Seeder
 
         // Standard Alert Chain — CEDIS Centro
         EscalationChain::updateOrCreate(
-            ['site_id' => $cedisCentro->id, 'name' => 'Standard Alert Chain'],
+            ['site_id' => $cedisCentro->id, 'name' => 'CEDIS Centro — Alert Routing'],
             [
                 'levels' => [
                     [
@@ -382,21 +382,6 @@ class OperationalDataSeeder extends Seeder
                         'delay_minutes' => 0,
                         'channels' => ['push'],
                         'user_ids' => array_filter([$viewer?->id, $manager->id]),
-                    ],
-                ],
-            ],
-        );
-
-        // After Hours Chain — CEDIS Norte
-        EscalationChain::updateOrCreate(
-            ['site_id' => $cedisNorte->id, 'name' => 'After Hours Chain'],
-            [
-                'levels' => [
-                    [
-                        'level' => 1,
-                        'delay_minutes' => 0,
-                        'channels' => ['whatsapp'],
-                        'user_ids' => [$admin->id],
                     ],
                 ],
             ],

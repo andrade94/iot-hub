@@ -4,13 +4,14 @@ import { ButtonGroup } from '@/components/ui/button-group';
 import { Card, CardContent } from '@/components/ui/card';
 import { MetricCard } from '@/components/ui/detail-card';
 import { FadeIn } from '@/components/ui/fade-in';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { PackageOpen, ShieldCheck } from 'lucide-react';
+import { Download, ShieldCheck } from 'lucide-react';
 
 interface Props {
     site: { id: number; name: string };
@@ -32,17 +33,33 @@ interface Props {
     correctiveActions: Array<{ id: number; alert_id: number; action_taken: string; status: string; taken_by: string; taken_at: string; verified_by: string | null; verified_at: string | null }>;
     calibrations: Array<{ id: number; device_name: string; zone: string; calibrated_at: string; expires_at: string; status: string; calibrated_by: string; has_certificate: boolean }>;
     monitoringGaps: Array<{ device_name: string; zone: string; gap_start: string; gap_end: string; duration_minutes: number }>;
+    availableZones?: string[];
+    filters?: { zone: string | null };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default function AuditMode({ site, days, summary, zones, excursions, correctiveActions, calibrations, monitoringGaps }: Props) {
+export default function AuditMode({ site, days, summary, zones, excursions, correctiveActions, calibrations, monitoringGaps, availableZones = [], filters }: Props) {
     const { t } = useLang();
+    const currentZone = filters?.zone ?? null;
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Sites', href: '/dashboard' },
         { title: site.name, href: `/sites/${site.id}` },
-        { title: 'Audit Mode', href: '#' },
+        { title: t('Audit Mode'), href: '#' },
     ];
+
+    function applyParams(overrides: Record<string, string | number | null> = {}) {
+        const params: Record<string, string | number> = { days };
+        const zone = overrides.zone !== undefined ? overrides.zone : currentZone;
+        if (zone && zone !== 'all') params.zone = zone;
+        if (overrides.days) params.days = overrides.days;
+        router.get(`/sites/${site.id}/audit`, params, { preserveState: true, replace: true });
+    }
+
+    function exportPackage() {
+        const params = new URLSearchParams({ days: String(days) });
+        if (currentZone) params.set('zone', currentZone);
+        window.location.href = `/sites/${site.id}/audit/export?${params}`;
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -70,27 +87,36 @@ export default function AuditMode({ site, days, summary, zones, excursions, corr
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <ButtonGroup>
                                     {[90, 180, 365].map((d) => (
                                         <Button
                                             key={d}
                                             variant={days === d ? 'default' : 'outline'}
                                             size="sm"
-                                            onClick={() => router.get(`/sites/${site.id}/audit`, { days: d }, { preserveState: true, replace: true })}
+                                            onClick={() => applyParams({ days: d })}
                                         >
                                             <span className="font-mono tabular-nums">{d}</span>d
                                         </Button>
                                     ))}
                                 </ButtonGroup>
+                                {availableZones.length > 0 && (
+                                    <Select value={currentZone ?? 'all'} onValueChange={(v) => applyParams({ zone: v })}>
+                                        <SelectTrigger className="w-[160px]">
+                                            <SelectValue placeholder={t('All zones')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">{t('All zones')}</SelectItem>
+                                            {availableZones.map((z) => (
+                                                <SelectItem key={z} value={z}>{z}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
                                 <div className="mx-1 h-6 w-px bg-border" />
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => router.get(`/sites/${site.id}/audit/export`, { days })}
-                                >
-                                    <PackageOpen className="mr-1.5 h-3.5 w-3.5" />
-                                    {t('Export Insurance Package')}
+                                <Button variant="outline" size="sm" onClick={exportPackage}>
+                                    <Download className="mr-1.5 h-3.5 w-3.5" />
+                                    {t('Export')}
                                 </Button>
                             </div>
                         </div>
@@ -110,7 +136,7 @@ export default function AuditMode({ site, days, summary, zones, excursions, corr
                         <MetricCard
                             label={t('Excursions')}
                             value={summary.total_excursions}
-                            badge={`${summary.resolved_excursions} resolved`}
+                            badge={`${summary.resolved_excursions} ${t('resolved')}`}
                             badgeColor={summary.total_excursions === summary.resolved_excursions ? 'text-emerald-600' : 'text-amber-600'}
                             className="shadow-elevation-1"
                         />
@@ -119,7 +145,7 @@ export default function AuditMode({ site, days, summary, zones, excursions, corr
                         <MetricCard
                             label={t('Corrective Actions')}
                             value={summary.total_corrective_actions}
-                            badge={`${summary.verified_actions} verified`}
+                            badge={`${summary.verified_actions} ${t('verified')}`}
                             badgeColor={summary.total_corrective_actions === summary.verified_actions ? 'text-emerald-600' : 'text-amber-600'}
                             className="shadow-elevation-1"
                         />
@@ -128,7 +154,7 @@ export default function AuditMode({ site, days, summary, zones, excursions, corr
                         <MetricCard
                             label={t('Calibrations')}
                             value={`${summary.calibration_valid}/${summary.total_devices}`}
-                            badge={summary.calibration_expired > 0 ? `${summary.calibration_expired} expired` : 'All current'}
+                            badge={summary.calibration_expired > 0 ? `${summary.calibration_expired} ${t('expired')}` : t('All current')}
                             badgeColor={summary.calibration_expired > 0 ? 'text-red-600' : summary.calibration_none > 0 ? 'text-amber-600' : 'text-emerald-600'}
                             className="shadow-elevation-1"
                         />
@@ -137,7 +163,7 @@ export default function AuditMode({ site, days, summary, zones, excursions, corr
                         <MetricCard
                             label={t('Monitoring Gaps')}
                             value={summary.monitoring_gaps}
-                            badge={summary.monitoring_gaps === 0 ? 'No gaps >15 min' : `${summary.monitoring_gaps} gap(s) detected`}
+                            badge={summary.monitoring_gaps === 0 ? t('No gaps') : `${summary.monitoring_gaps} ${t('detected')}`}
                             badgeColor={summary.monitoring_gaps === 0 ? 'text-emerald-600' : 'text-red-600'}
                             className="shadow-elevation-1"
                         />
@@ -321,53 +347,57 @@ export default function AuditMode({ site, days, summary, zones, excursions, corr
                 </FadeIn>
 
                 {/* ── Monitoring Gaps ──────────────────────────────── */}
-                {monitoringGaps.length > 0 && (
-                    <FadeIn delay={380} duration={500}>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-destructive">
-                                    {t('Monitoring Gaps >15 min')}
-                                </h2>
-                                <div className="h-px flex-1 bg-border" />
-                                <span className="font-mono text-xs tabular-nums text-destructive">
-                                    {monitoringGaps.length}
-                                </span>
-                            </div>
-                            <Card className="shadow-elevation-1">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{t('Device')}</TableHead>
-                                            <TableHead>{t('Zone')}</TableHead>
-                                            <TableHead>{t('Gap Start')}</TableHead>
-                                            <TableHead>{t('Gap End')}</TableHead>
-                                            <TableHead>{t('Duration')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {monitoringGaps.map((g, i) => (
-                                            <TableRow key={i}>
-                                                <TableCell className="text-sm font-medium">{g.device_name}</TableCell>
-                                                <TableCell className="text-sm">{g.zone ?? '—'}</TableCell>
-                                                <TableCell className="font-mono text-xs tabular-nums">
-                                                    {new Date(g.gap_start).toLocaleString()}
-                                                </TableCell>
-                                                <TableCell className="font-mono text-xs tabular-nums">
-                                                    {new Date(g.gap_end).toLocaleString()}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="destructive">
-                                                        <span className="font-mono tabular-nums">{g.duration_minutes}</span> min
-                                                    </Badge>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </Card>
+                <FadeIn delay={380} duration={500}>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <h2 className={`text-[0.6875rem] font-semibold uppercase tracking-widest ${monitoringGaps.length > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                {t('Monitoring Gaps')}
+                            </h2>
+                            <div className="h-px flex-1 bg-border" />
+                            <span className={`font-mono text-xs tabular-nums ${monitoringGaps.length > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                {monitoringGaps.length}
+                            </span>
                         </div>
-                    </FadeIn>
-                )}
+                        <Card className="shadow-elevation-1">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>{t('Device')}</TableHead>
+                                        <TableHead>{t('Zone')}</TableHead>
+                                        <TableHead>{t('Gap Start')}</TableHead>
+                                        <TableHead>{t('Gap End')}</TableHead>
+                                        <TableHead>{t('Duration')}</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {monitoringGaps.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="py-6 text-center text-emerald-600">
+                                                {t('No monitoring gaps detected')}
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : monitoringGaps.map((g, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell className="text-sm font-medium">{g.device_name}</TableCell>
+                                            <TableCell className="text-sm">{g.zone ?? '—'}</TableCell>
+                                            <TableCell className="font-mono text-xs tabular-nums">
+                                                {new Date(g.gap_start).toLocaleString()}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs tabular-nums">
+                                                {new Date(g.gap_end).toLocaleString()}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="destructive">
+                                                    <span className="font-mono tabular-nums">{g.duration_minutes}</span> min
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </Card>
+                    </div>
+                </FadeIn>
             </div>
         </AppLayout>
     );

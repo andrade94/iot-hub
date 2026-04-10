@@ -24,16 +24,16 @@ class DeviceSeeder extends Seeder
         $office = Recipe::where('name', 'Office Space')->first();
 
         $deviceTemplates = [
-            ['model' => 'EM300-TH', 'zone' => 'Cooler A', 'recipe' => $walkinCooler, 'battery' => rand(60, 100)],
-            ['model' => 'EM300-TH', 'zone' => 'Cooler B', 'recipe' => $walkinCooler, 'battery' => rand(60, 100)],
-            ['model' => 'EM300-TH', 'zone' => 'Freezer', 'recipe' => $freezer, 'battery' => rand(60, 100)],
-            ['model' => 'EM300-TH', 'zone' => 'Vitrina 1', 'recipe' => $vitrina, 'battery' => rand(60, 100)],
-            ['model' => 'CT101', 'zone' => 'Compressor 1', 'recipe' => $compressor, 'battery' => rand(70, 100)],
-            ['model' => 'CT101', 'zone' => 'Compressor 2', 'recipe' => $compressor, 'battery' => rand(70, 100)],
-            ['model' => 'WS301', 'zone' => 'Cooler A', 'recipe' => $coldRoomDoor, 'battery' => rand(80, 100)],
-            ['model' => 'WS301', 'zone' => 'Freezer', 'recipe' => $coldRoomDoor, 'battery' => rand(80, 100)],
-            ['model' => 'GS101', 'zone' => 'Kitchen', 'recipe' => $gasDetector, 'battery' => null],
-            ['model' => 'AM307', 'zone' => 'Office', 'recipe' => $office, 'battery' => rand(70, 100)],
+            ['model' => 'EM300-TH', 'zone' => 'Cooler A', 'label' => 'Top shelf, left wall', 'recipe' => $walkinCooler, 'battery' => rand(60, 100)],
+            ['model' => 'EM300-TH', 'zone' => 'Cooler B', 'label' => 'Center rack', 'recipe' => $walkinCooler, 'battery' => rand(60, 100)],
+            ['model' => 'EM300-TH', 'zone' => 'Freezer', 'label' => 'Back wall, mid height', 'recipe' => $freezer, 'battery' => rand(60, 100)],
+            ['model' => 'EM300-TH', 'zone' => 'Vitrina 1', 'label' => 'Display front', 'recipe' => $vitrina, 'battery' => rand(60, 100)],
+            ['model' => 'CT101', 'zone' => 'Compressor 1', 'label' => 'Main breaker panel', 'recipe' => $compressor, 'battery' => rand(70, 100)],
+            ['model' => 'CT101', 'zone' => 'Compressor 2', 'label' => 'Secondary panel', 'recipe' => $compressor, 'battery' => rand(70, 100)],
+            ['model' => 'WS301', 'zone' => 'Cooler A', 'label' => 'Door frame, top', 'recipe' => $coldRoomDoor, 'battery' => rand(80, 100)],
+            ['model' => 'WS301', 'zone' => 'Freezer', 'label' => 'Door frame, top', 'recipe' => $coldRoomDoor, 'battery' => rand(80, 100)],
+            ['model' => 'GS101', 'zone' => 'Kitchen', 'label' => 'Above stove hood', 'recipe' => $gasDetector, 'battery' => null],
+            ['model' => 'AM307', 'zone' => 'Office', 'label' => 'Ceiling mount, center', 'recipe' => $office, 'battery' => rand(70, 100)],
         ];
 
         $euiCounter = 1;
@@ -44,6 +44,8 @@ class DeviceSeeder extends Seeder
             foreach ($deviceTemplates as $template) {
                 $devEui = sprintf('A81758FFFE%06X', $euiCounter++);
 
+                $serialNum = sprintf('SN-%s-%04d', $template['model'], $euiCounter);
+
                 Device::firstOrCreate(
                     ['dev_eui' => $devEui],
                     [
@@ -51,7 +53,9 @@ class DeviceSeeder extends Seeder
                         'gateway_id' => $gateway?->id,
                         'model' => $template['model'],
                         'dev_eui' => $devEui,
+                        'serial' => $serialNum,
                         'name' => "{$template['model']} - {$template['zone']}",
+                        'label' => $template['label'],
                         'zone' => $template['zone'],
                         'recipe_id' => $template['recipe']?->id,
                         'installed_at' => now()->subDays(rand(30, 180)),

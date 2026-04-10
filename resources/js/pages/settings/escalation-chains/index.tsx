@@ -19,7 +19,8 @@ import type { BreadcrumbItem, EscalationChain, EscalationLevel } from '@/types';
 import { useValidatedForm } from '@/hooks/use-validated-form';
 import { escalationChainSchema } from '@/utils/schemas';
 import { Head, router } from '@inertiajs/react';
-import { GitBranch, Mail, Pencil, Plus, Smartphone, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { GitBranch, Mail, MessageCircle, Pencil, Plus, Smartphone, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface SiteOption {
@@ -35,7 +36,7 @@ interface UserOption {
 interface Props {
     chains: EscalationChain[];
     sites: SiteOption[];
-    users: UserOption[];
+    siteUsers: Record<number, UserOption[]>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -58,7 +59,9 @@ function createEmptyLevel(levelNumber: number): EscalationLevel {
     };
 }
 
-export default function EscalationChainIndex({ chains, sites, users }: Props) {
+export default function EscalationChainIndex({ chains, sites, siteUsers }: Props) {
+    // Flatten all users for display in flow cards
+    const allUsers: UserOption[] = Object.values(siteUsers).flat().filter((u, i, arr) => arr.findIndex((x) => x.id === u.id) === i);
     const { t } = useLang();
     const [showCreate, setShowCreate] = useState(false);
     const [editChain, setEditChain] = useState<EscalationChain | null>(null);
@@ -120,7 +123,7 @@ export default function EscalationChainIndex({ chains, sites, users }: Props) {
                                         </DialogHeader>
                                         <ChainForm
                                             sites={sites}
-                                            users={users}
+                                            siteUsers={siteUsers}
                                             onSuccess={() => setShowCreate(false)}
                                         />
                                     </DialogContent>
@@ -140,109 +143,112 @@ export default function EscalationChainIndex({ chains, sites, users }: Props) {
                     </div>
                 </FadeIn>
 
-                {/* ── Table ────────────────────────────────────────── */}
+                {/* ── Chain Cards with Flow ────────────────────────── */}
                 <FadeIn delay={150} duration={500}>
-                    <Card className="flex-1 shadow-elevation-1">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>{t('Name')}</TableHead>
-                                    <TableHead>{t('Site')}</TableHead>
-                                    <TableHead>{t('Levels')}</TableHead>
-                                    <TableHead>{t('Channels')}</TableHead>
-                                    <TableHead>{t('Created')}</TableHead>
-                                    <TableHead />
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {chains.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="py-0">
-                                            <EmptyState
-                                                size="sm"
-                                                variant="muted"
-                                                className="border-0"
-                                                icon={<GitBranch className="h-5 w-5 text-muted-foreground" />}
-                                                title={t('No escalation chains')}
-                                                description={t('Create an escalation chain to route alert notifications')}
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    chains.map((chain) => {
-                                        const allChannels = [...new Set(chain.levels.flatMap((l) => l.channels))];
+                    {chains.length === 0 ? (
+                        <Card className="shadow-elevation-1">
+                            <EmptyState
+                                size="sm"
+                                variant="muted"
+                                icon={<GitBranch className="h-5 w-5 text-muted-foreground" />}
+                                title={t('No escalation chains')}
+                                description={t('Create an escalation chain to route alert notifications')}
+                            />
+                        </Card>
+                    ) : (
+                        <div className="space-y-4">
+                            {chains.map((chain) => (
+                                <Card key={chain.id} className="shadow-elevation-1 overflow-hidden">
+                                    {/* Chain header */}
+                                    <div className="flex items-center justify-between border-b px-5 py-3.5">
+                                        <div>
+                                            <p className="text-[14px] font-semibold">{chain.name}</p>
+                                            <p className="text-[11px] text-muted-foreground">{chain.site?.name ?? getSiteName(chain.site_id)}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline" className="font-mono text-[9px] tabular-nums">
+                                                {chain.levels.length} {chain.levels.length === 1 ? t('level') : t('levels')}
+                                            </Badge>
+                                            <Can permission="manage alert rules">
+                                                <Dialog open={editChain?.id === chain.id} onOpenChange={(open) => !open && setEditChain(null)}>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="ghost" size="icon-sm" onClick={() => setEditChain(chain)}>
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+                                                        <DialogHeader>
+                                                            <DialogTitle>{t('Edit Escalation Chain')}</DialogTitle>
+                                                        </DialogHeader>
+                                                        <ChainForm chain={chain} sites={sites} siteUsers={siteUsers} onSuccess={() => setEditChain(null)} />
+                                                    </DialogContent>
+                                                </Dialog>
+                                                <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleteChain(chain)}>
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </Can>
+                                        </div>
+                                    </div>
 
-                                        return (
-                                            <TableRow key={chain.id}>
-                                                <TableCell className="font-medium">{chain.name}</TableCell>
-                                                <TableCell className="text-muted-foreground">
-                                                    {chain.site?.name ?? getSiteName(chain.site_id)}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="secondary" className="font-mono text-xs tabular-nums">
-                                                        {chain.levels.length} {t('level(s)')}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex gap-1">
-                                                        {allChannels.map((ch) => (
-                                                            <Badge key={ch} variant="outline" className="text-xs">
-                                                                {ch}
-                                                            </Badge>
-                                                        ))}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="font-mono text-xs tabular-nums text-muted-foreground">
-                                                    {formatDate(chain.created_at)}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Can permission="manage alert rules">
-                                                        <div className="flex justify-end gap-1">
-                                                            <Dialog
-                                                                open={editChain?.id === chain.id}
-                                                                onOpenChange={(open) => !open && setEditChain(null)}
-                                                            >
-                                                                <DialogTrigger asChild>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon-sm"
-                                                                        title={t('Edit')}
-                                                                        onClick={() => setEditChain(chain)}
-                                                                    >
-                                                                        <Pencil className="h-3.5 w-3.5" />
-                                                                    </Button>
-                                                                </DialogTrigger>
-                                                                <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
-                                                                    <DialogHeader>
-                                                                        <DialogTitle>{t('Edit Escalation Chain')}</DialogTitle>
-                                                                    </DialogHeader>
-                                                                    <ChainForm
-                                                                        chain={chain}
-                                                                        sites={sites}
-                                                                        users={users}
-                                                                        onSuccess={() => setEditChain(null)}
-                                                                    />
-                                                                </DialogContent>
-                                                            </Dialog>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon-sm"
-                                                                className="text-destructive"
-                                                                title={t('Delete')}
-                                                                onClick={() => setDeleteChain(chain)}
-                                                            >
-                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                            </Button>
+                                    {/* Flow visualization */}
+                                    <div className="px-5 py-4">
+                                        {chain.levels
+                                            .slice()
+                                            .sort((a, b) => a.level - b.level)
+                                            .map((level, idx, arr) => {
+                                                const levelColors = ['bg-rose-500/10 border-rose-500/30 text-rose-500', 'bg-amber-500/10 border-amber-500/30 text-amber-500', 'bg-violet-500/10 border-violet-500/30 text-violet-400'];
+                                                const colorClass = levelColors[idx % levelColors.length];
+                                                const levelUsers = allUsers.filter((u) => level.user_ids.includes(u.id));
+                                                const isLast = idx === arr.length - 1;
+
+                                                return (
+                                                    <div key={level.level} className="flex gap-4">
+                                                        {/* Connector */}
+                                                        <div className="flex flex-col items-center" style={{ width: 36 }}>
+                                                            <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg border-2 font-mono text-[12px] font-bold', colorClass)}>
+                                                                L{level.level}
+                                                            </div>
+                                                            {!isLast && <div className="w-0.5 flex-1 bg-border" style={{ minHeight: 24 }} />}
                                                         </div>
-                                                    </Can>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })
-                                )}
-                            </TableBody>
-                        </Table>
-                    </Card>
+                                                        {/* Content */}
+                                                        <div className={cn('flex-1', !isLast && 'pb-4')}>
+                                                            <p className="mb-1.5 font-mono text-[10px] text-muted-foreground/60">
+                                                                {level.delay_minutes === 0 ? (
+                                                                    <span className="font-medium text-rose-500">{t('Immediate')}</span>
+                                                                ) : (
+                                                                    <><span className="font-medium text-amber-500">+{level.delay_minutes} min</span> {t('if not acknowledged')}</>
+                                                                )}
+                                                            </p>
+                                                            <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-muted/20 px-3.5 py-2.5">
+                                                                <div className="min-w-0 flex-1">
+                                                                    <p className="text-[12px] font-medium">
+                                                                        {levelUsers.length > 0 ? levelUsers.map((u) => u.name).join(', ') : t('No users selected')}
+                                                                    </p>
+                                                                    {levelUsers.length > 1 && (
+                                                                        <p className="text-[10px] text-muted-foreground/60">{t('Notified simultaneously')}</p>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex gap-1">
+                                                                    {level.channels.map((ch) => (
+                                                                        <span key={ch} className={cn('rounded-md border px-2 py-0.5 text-[9px] font-medium',
+                                                                            ch === 'whatsapp' ? 'border-emerald-500/25 text-emerald-400' :
+                                                                            ch === 'push' ? 'border-blue-500/25 text-blue-400' :
+                                                                            'border-violet-500/25 text-violet-400'
+                                                                        )}>
+                                                                            {ch === 'whatsapp' ? 'WhatsApp' : ch === 'push' ? 'Push' : 'Email'}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
                 </FadeIn>
             </div>
 
@@ -263,12 +269,12 @@ export default function EscalationChainIndex({ chains, sites, users }: Props) {
 function ChainForm({
     chain,
     sites,
-    users,
+    siteUsers,
     onSuccess,
 }: {
     chain?: EscalationChain;
     sites: SiteOption[];
-    users: UserOption[];
+    siteUsers: Record<number, UserOption[]>;
     onSuccess: () => void;
 }) {
     const { t } = useLang();
@@ -394,7 +400,7 @@ function ChainForm({
                     <LevelBuilder
                         key={index}
                         level={level}
-                        users={users}
+                        users={form.data.site_id ? (siteUsers[Number(form.data.site_id)] ?? []) : []}
                         canRemove={form.data.levels.length > 1}
                         onRemove={() => removeLevel(index)}
                         onDelayChange={(val) => updateLevel(index, 'delay_minutes', val)}
@@ -547,7 +553,7 @@ function LevelBuilder({
                 <Label className="text-xs">{t('Users to Notify')}</Label>
                 <div className="max-h-36 space-y-2 overflow-y-auto rounded-md border p-3">
                     {users.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">{t('No users available')}</p>
+                        <p className="text-sm text-muted-foreground">{t('Select a site first to see available users')}</p>
                     ) : (
                         users.map((user) => (
                             <label key={user.id} className="flex items-center gap-2 text-sm cursor-pointer">

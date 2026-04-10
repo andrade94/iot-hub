@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escalation Chains & Maintenance Windows — UX Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Lexend:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --surface: #12151a;
+    --card: #161a21;
+    --card-hover: #1c2028;
+    --border: rgba(255,255,255,0.06);
+    --border-accent: rgba(255,255,255,0.1);
+    --text: #e4e7eb;
+    --text-dim: #8b919a;
+    --text-faint: rgba(255,255,255,0.28);
+    --accent: #2dd4bf;
+    --accent-dim: rgba(45,212,191,0.12);
+    --rose: #f43f5e;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --violet: #8b5cf6;
+    --emerald: #10b981;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Lexend',sans-serif; font-weight:400; line-height:1.5; padding:40px; max-width:1140px; margin:0 auto; }
+  h1,h2,h3 { font-family:'Bricolage Grotesque',sans-serif; }
+  .mono { font-family:'Fira Code',monospace; }
+
+  /* ── Utilities ── */
+  .section-label { display:inline-block; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.2em; padding:4px 10px; border-radius:4px; margin-bottom:16px; }
+  .label-teal { background:var(--accent-dim); color:var(--accent); }
+  .label-amber { background:rgba(245,158,11,0.12); color:var(--amber); }
+  .divider { height:1px; background:var(--border); margin:56px 0; }
+  .page-title { font-size:24px; font-weight:700; margin-bottom:6px; }
+  .page-desc { font-size:13px; color:var(--text-dim); margin-bottom:28px; max-width:540px; line-height:1.6; }
+
+  .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+
+  .badge { display:inline-flex; align-items:center; font-size:9px; font-weight:500; padding:2px 7px; border-radius:9999px; letter-spacing:0.02em; }
+  .badge-outline { border:1px solid var(--border-accent); color:var(--text-dim); }
+  .badge-teal { background:var(--accent-dim); color:var(--accent); }
+  .badge-amber { background:rgba(245,158,11,0.12); color:var(--amber); }
+  .badge-rose { background:rgba(244,63,94,0.12); color:var(--rose); }
+  .badge-blue { background:rgba(59,130,246,0.12); color:var(--blue); }
+  .badge-violet { background:rgba(139,92,246,0.12); color:#a78bfa; }
+  .badge-emerald { background:rgba(16,185,129,0.12); color:var(--emerald); }
+  .badge-active { background:rgba(245,158,11,0.15); color:var(--amber); font-size:10px; font-weight:600; }
+
+  .btn { display:inline-flex; align-items:center; gap:6px; font-family:'Lexend',sans-serif; font-size:12px; font-weight:500; padding:8px 16px; border-radius:8px; border:none; cursor:pointer; transition:all 0.15s; }
+  .btn-primary { background:var(--accent); color:#0b0d10; }
+  .btn-outline { background:transparent; border:1px solid var(--border-accent); color:var(--text-dim); }
+  .btn-ghost { background:transparent; color:var(--text-dim); padding:6px 10px; }
+  .btn-sm { font-size:11px; padding:5px 10px; }
+  .btn-danger { background:rgba(244,63,94,0.1); color:var(--rose); border:1px solid rgba(244,63,94,0.2); }
+
+  .avatar { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:10px; flex-shrink:0; }
+  .avatar-v { background:rgba(139,92,246,0.2); color:#a78bfa; }
+  .avatar-b { background:rgba(59,130,246,0.2); color:#60a5fa; }
+  .avatar-e { background:rgba(16,185,129,0.2); color:#34d399; }
+  .avatar-a { background:rgba(245,158,11,0.2); color:#fbbf24; }
+
+  .channel-pill { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:500; padding:3px 8px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.02); color:var(--text-dim); }
+  .channel-wa { border-color:rgba(37,211,102,0.25); color:#25d366; }
+  .channel-push { border-color:rgba(59,130,246,0.25); color:#60a5fa; }
+  .channel-email { border-color:rgba(139,92,246,0.25); color:#a78bfa; }
+
+  /* ── Section Divider ── */
+  .sec-divider { display:flex; align-items:center; gap:12px; margin:28px 0 16px; }
+  .sec-divider span { font-family:'Fira Code',monospace; font-size:10px; font-weight:500; letter-spacing:0.15em; color:var(--text-faint); white-space:nowrap; }
+  .sec-divider .line { flex:1; height:1px; background:var(--border); }
+  .sec-divider .count { color:var(--text-faint); }
+
+  /* ── Animations ── */
+  .fade-in { opacity:0; animation:fadeUp 0.5s ease forwards; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ═══════ ESCALATION CHAIN CARD ═══════ */
+  .chain-card { margin-bottom:16px; }
+  .chain-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+  .chain-title { font-family:'Bricolage Grotesque',sans-serif; font-size:15px; font-weight:600; }
+  .chain-site { font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .chain-actions { display:flex; gap:6px; }
+
+  /* ── Flow visualization ── */
+  .flow { padding:20px; display:flex; flex-direction:column; gap:0; }
+  .flow-level { display:flex; align-items:flex-start; gap:16px; position:relative; }
+  .flow-connector { display:flex; flex-direction:column; align-items:center; width:40px; flex-shrink:0; }
+  .flow-dot { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'Fira Code',monospace; font-size:12px; font-weight:600; border:2px solid; flex-shrink:0; }
+  .flow-dot-1 { background:rgba(244,63,94,0.1); border-color:rgba(244,63,94,0.3); color:var(--rose); }
+  .flow-dot-2 { background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.3); color:var(--amber); }
+  .flow-dot-3 { background:rgba(139,92,246,0.1); border-color:rgba(139,92,246,0.3); color:#a78bfa; }
+  .flow-line { width:2px; flex:1; min-height:32px; background:var(--border); margin:4px 0; }
+  .flow-content { flex:1; padding-bottom:16px; }
+  .flow-content:last-child { padding-bottom:0; }
+  .flow-delay { display:inline-flex; align-items:center; gap:4px; font-family:'Fira Code',monospace; font-size:10px; color:var(--text-faint); margin-bottom:6px; }
+  .flow-delay .dot { width:4px; height:4px; border-radius:50%; background:var(--text-faint); }
+  .flow-detail { display:flex; align-items:center; gap:10px; padding:10px 14px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; }
+  .flow-users { display:flex; gap:-4px; }
+  .flow-users .avatar { margin-left:-4px; border:2px solid var(--card); }
+  .flow-users .avatar:first-child { margin-left:0; }
+  .flow-channels { display:flex; gap:4px; margin-left:auto; }
+
+  /* ═══════ MAINTENANCE WINDOW CARD ═══════ */
+  .mw-card { display:flex; align-items:center; gap:16px; padding:14px 20px; border-bottom:1px solid var(--border); transition:background 0.12s; }
+  .mw-card:last-child { border-bottom:none; }
+  .mw-card:hover { background:var(--card-hover); }
+  .mw-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(139,92,246,0.08); color:#a78bfa; font-size:18px; flex-shrink:0; }
+  .mw-info { flex:1; min-width:0; }
+  .mw-title { font-size:14px; font-weight:500; display:flex; align-items:center; gap:8px; }
+  .mw-meta { font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .mw-meta b { color:var(--text); font-weight:500; }
+  .mw-schedule { font-family:'Fira Code',monospace; font-size:11px; color:var(--text-dim); margin-top:1px; }
+  .mw-actions { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .mw-suppress { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+  .toggle { width:32px; height:18px; border-radius:9px; position:relative; cursor:pointer; transition:background 0.2s; }
+  .toggle.on { background:var(--accent); }
+  .toggle.off { background:rgba(255,255,255,0.12); }
+  .toggle::after { content:''; position:absolute; top:2px; width:14px; height:14px; border-radius:50%; background:white; transition:left 0.2s; }
+  .toggle.on::after { left:16px; }
+  .toggle.off::after { left:2px; }
+
+  /* ═══════ FORM PREVIEW ═══════ */
+  .form-preview { background:var(--surface); border:1px dashed rgba(255,255,255,0.08); border-radius:16px; padding:24px; position:relative; margin-top:20px; }
+  .form-preview::before { content:attr(data-label); position:absolute; top:-10px; left:20px; font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-faint); background:var(--bg); padding:0 8px; }
+  .form-row { display:flex; gap:12px; margin-bottom:14px; }
+  .form-group { flex:1; }
+  .form-label { display:block; font-size:11px; font-weight:500; color:var(--text-dim); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.05em; }
+  .form-input { width:100%; padding:8px 12px; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Lexend',sans-serif; font-size:13px; outline:none; }
+  .form-input:focus { border-color:var(--accent); }
+  .form-input::placeholder { color:var(--text-faint); }
+  .form-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+
+  /* ── Level builder in form ── */
+  .level-builder { border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-top:8px; }
+  .level-row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); }
+  .level-row:last-child { border-bottom:none; }
+  .level-num { font-family:'Fira Code',monospace; font-size:11px; font-weight:600; color:var(--text-dim); width:20px; }
+  .level-field { flex:1; }
+  .level-field-sm { width:80px; flex:none; }
+  .add-level-btn { display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; font-size:11px; color:var(--text-faint); cursor:pointer; border-top:1px dashed var(--border); transition:color 0.15s; }
+  .add-level-btn:hover { color:var(--accent); }
+
+  /* ── Recurrence visual ── */
+  .recurrence-pills { display:flex; gap:4px; }
+  .recurrence-pill { padding:4px 10px; font-size:11px; border-radius:6px; border:1px solid var(--border); color:var(--text-dim); cursor:pointer; transition:all 0.15s; }
+  .recurrence-pill.active { background:var(--accent-dim); border-color:rgba(45,212,191,0.3); color:var(--accent); }
+
+  .day-pills { display:flex; gap:3px; margin-top:8px; }
+  .day-pill { width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:500; border-radius:6px; border:1px solid var(--border); color:var(--text-dim); cursor:pointer; }
+  .day-pill.active { background:var(--accent-dim); border-color:rgba(45,212,191,0.3); color:var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗ -->
+<!-- ║  PAGE 1: ESCALATION CHAINS                                  ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════╝ -->
+
+<div class="fade-in" style="animation-delay:0.05s">
+  <div class="section-label label-teal">Page 1</div>
+  <h1 class="page-title">Escalation Chains</h1>
+  <p class="page-desc">
+    Each chain defines the notification flow when an alert fires.
+    Levels escalate sequentially — if the alert isn't acknowledged within the delay, the next level fires.
+  </p>
+</div>
+
+<div class="sec-divider fade-in" style="animation-delay:0.1s">
+  <span>ALL CHAINS</span><div class="line"></div><span class="count">3</span>
+</div>
+
+<!-- ── Chain 1: Critical Alert Chain ── -->
+<div class="card chain-card fade-in" style="animation-delay:0.15s">
+  <div class="chain-header">
+    <div>
+      <div class="chain-title">Critical Alert Chain</div>
+      <div class="chain-site">CEDIS Norte</div>
+    </div>
+    <div class="chain-actions">
+      <span class="badge badge-rose">2 levels</span>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose)">Delete</button>
+    </div>
+  </div>
+  <div class="flow">
+    <!-- Level 1 -->
+    <div class="flow-level">
+      <div class="flow-connector">
+        <div class="flow-dot flow-dot-1">L1</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-delay">
+          <span style="color:var(--rose); font-weight:500;">Immediate</span>
+          <span class="dot"></span>
+          <span>when alert fires</span>
+        </div>
+        <div class="flow-detail">
+          <div class="flow-users">
+            <div class="avatar avatar-b">MG</div>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:12px; font-weight:500;">Manager Norte-Centro</div>
+            <div style="font-size:10px; color:var(--text-faint);">Notified immediately when alert fires</div>
+          </div>
+          <div class="flow-channels">
+            <span class="channel-pill channel-wa">WhatsApp</span>
+            <span class="channel-pill channel-push">Push</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Level 2 -->
+    <div class="flow-level">
+      <div class="flow-connector">
+        <div class="flow-dot flow-dot-2">L2</div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-delay">
+          <span style="color:var(--amber); font-weight:500;">+15 min</span>
+          <span class="dot"></span>
+          <span>if not acknowledged</span>
+        </div>
+        <div class="flow-detail">
+          <div class="flow-users">
+            <div class="avatar avatar-v">AC</div>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:12px; font-weight:500;">Admin Cadena Fria</div>
+            <div style="font-size:10px; color:var(--text-faint);">Escalated after 15 minutes without response</div>
+          </div>
+          <div class="flow-channels">
+            <span class="channel-pill channel-wa">WhatsApp</span>
+            <span class="channel-pill channel-push">Push</span>
+            <span class="channel-pill channel-email">Email</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Chain 2: Standard Alert Chain ── -->
+<div class="card chain-card fade-in" style="animation-delay:0.2s">
+  <div class="chain-header">
+    <div>
+      <div class="chain-title">Standard Alert Chain</div>
+      <div class="chain-site">CEDIS Centro</div>
+    </div>
+    <div class="chain-actions">
+      <span class="badge badge-blue">1 level</span>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose)">Delete</button>
+    </div>
+  </div>
+  <div class="flow">
+    <div class="flow-level">
+      <div class="flow-connector">
+        <div class="flow-dot flow-dot-1">L1</div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-delay">
+          <span style="color:var(--rose); font-weight:500;">Immediate</span>
+        </div>
+        <div class="flow-detail">
+          <div class="flow-users">
+            <div class="avatar avatar-e">VN</div>
+            <div class="avatar avatar-b">MG</div>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:12px; font-weight:500;">Viewer Norte, Manager Norte-Centro</div>
+            <div style="font-size:10px; color:var(--text-faint);">Both notified simultaneously</div>
+          </div>
+          <div class="flow-channels">
+            <span class="channel-pill channel-push">Push</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Chain 3: After Hours ── -->
+<div class="card chain-card fade-in" style="animation-delay:0.25s">
+  <div class="chain-header">
+    <div>
+      <div class="chain-title">After Hours Chain</div>
+      <div class="chain-site">CEDIS Norte</div>
+    </div>
+    <div class="chain-actions">
+      <span class="badge badge-blue">1 level</span>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose)">Delete</button>
+    </div>
+  </div>
+  <div class="flow">
+    <div class="flow-level">
+      <div class="flow-connector">
+        <div class="flow-dot flow-dot-1">L1</div>
+      </div>
+      <div class="flow-content">
+        <div class="flow-delay">
+          <span style="color:var(--rose); font-weight:500;">Immediate</span>
+          <span class="dot"></span>
+          <span>WhatsApp only (no push at night)</span>
+        </div>
+        <div class="flow-detail">
+          <div class="flow-users">
+            <div class="avatar avatar-v">AC</div>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:12px; font-weight:500;">Admin Cadena Fria</div>
+          </div>
+          <div class="flow-channels">
+            <span class="channel-pill channel-wa">WhatsApp</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create Chain Form Preview ── -->
+<div class="form-preview fade-in" style="animation-delay:0.3s" data-label="Create Chain Dialog">
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Chain Name</label>
+      <input class="form-input" placeholder="e.g. Critical Alert Chain" />
+    </div>
+    <div class="form-group" style="max-width:200px">
+      <label class="form-label">Site</label>
+      <select class="form-input form-select">
+        <option>CEDIS Norte</option>
+        <option>CEDIS Centro</option>
+      </select>
+    </div>
+  </div>
+
+  <label class="form-label">Escalation Levels</label>
+  <div class="level-builder">
+    <div class="level-row">
+      <span class="level-num">L1</span>
+      <div class="level-field-sm">
+        <input class="form-input" value="0" style="text-align:center; font-family:'Fira Code',monospace; font-size:12px;" />
+        <div style="font-size:9px; color:var(--text-faint); text-align:center; margin-top:2px;">min delay</div>
+      </div>
+      <div class="level-field">
+        <select class="form-input form-select" style="font-size:12px;">
+          <option>Manager Norte-Centro, Viewer Norte</option>
+        </select>
+        <div style="font-size:9px; color:var(--text-faint); margin-top:2px;">Users to notify</div>
+      </div>
+      <div style="display:flex; gap:4px;">
+        <span class="channel-pill channel-wa" style="cursor:pointer; opacity:1;">WA</span>
+        <span class="channel-pill channel-push" style="cursor:pointer; opacity:1;">Push</span>
+        <span class="channel-pill channel-email" style="cursor:pointer; opacity:0.3;">Email</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose); font-size:14px;">&times;</button>
+    </div>
+    <div class="level-row">
+      <span class="level-num">L2</span>
+      <div class="level-field-sm">
+        <input class="form-input" value="15" style="text-align:center; font-family:'Fira Code',monospace; font-size:12px;" />
+        <div style="font-size:9px; color:var(--text-faint); text-align:center; margin-top:2px;">min delay</div>
+      </div>
+      <div class="level-field">
+        <select class="form-input form-select" style="font-size:12px;">
+          <option>Admin Cadena Fria</option>
+        </select>
+        <div style="font-size:9px; color:var(--text-faint); margin-top:2px;">Users to notify</div>
+      </div>
+      <div style="display:flex; gap:4px;">
+        <span class="channel-pill channel-wa" style="cursor:pointer; opacity:1;">WA</span>
+        <span class="channel-pill channel-push" style="cursor:pointer; opacity:1;">Push</span>
+        <span class="channel-pill channel-email" style="cursor:pointer; opacity:1;">Email</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose); font-size:14px;">&times;</button>
+    </div>
+    <div class="add-level-btn">+ Add Level</div>
+  </div>
+
+  <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+    <button class="btn btn-outline">Cancel</button>
+    <button class="btn btn-primary">Create Chain</button>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗ -->
+<!-- ║  PAGE 2: MAINTENANCE WINDOWS                                ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════╝ -->
+
+<div class="divider"></div>
+
+<div class="fade-in" style="animation-delay:0.35s">
+  <div class="section-label label-amber">Page 2</div>
+  <h1 class="page-title">Maintenance Windows</h1>
+  <p class="page-desc">
+    Schedule downtime periods to suppress alerts during planned maintenance.
+    Active windows prevent false alarm notifications from reaching your team.
+  </p>
+</div>
+
+<div class="sec-divider fade-in" style="animation-delay:0.4s">
+  <span>ACTIVE WINDOWS</span><div class="line"></div><span class="count">5</span>
+</div>
+
+<div class="card fade-in" style="animation-delay:0.45s">
+  <!-- Window 1: Active now -->
+  <div class="mw-card">
+    <div class="mw-icon">&#128295;</div>
+    <div class="mw-info">
+      <div class="mw-title">
+        Nightly System Maintenance
+        <span class="badge badge-active">Active now</span>
+      </div>
+      <div class="mw-meta"><b>CEDIS Norte</b> &middot; <em>Entire site</em></div>
+      <div class="mw-schedule">Daily at 22:00 &middot; 480 min</div>
+    </div>
+    <div class="mw-actions">
+      <div class="mw-suppress">Suppress <div class="toggle on"></div></div>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose)">&times;</button>
+    </div>
+  </div>
+
+  <!-- Window 2 -->
+  <div class="mw-card">
+    <div class="mw-icon">&#128295;</div>
+    <div class="mw-info">
+      <div class="mw-title">Monday Compressor Check</div>
+      <div class="mw-meta"><b>CEDIS Norte</b> &middot; Compressor 1</div>
+      <div class="mw-schedule">Mondays at 06:00 &middot; 120 min</div>
+    </div>
+    <div class="mw-actions">
+      <div class="mw-suppress">Suppress <div class="toggle on"></div></div>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose)">&times;</button>
+    </div>
+  </div>
+
+  <!-- Window 3 -->
+  <div class="mw-card">
+    <div class="mw-icon">&#128295;</div>
+    <div class="mw-info">
+      <div class="mw-title">Freezer Defrost & Deep Clean</div>
+      <div class="mw-meta"><b>CEDIS Centro</b> &middot; Freezer</div>
+      <div class="mw-schedule">Once at 05:00 &middot; 180 min</div>
+    </div>
+    <div class="mw-actions">
+      <div class="mw-suppress">Suppress <div class="toggle on"></div></div>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose)">&times;</button>
+    </div>
+  </div>
+
+  <!-- Window 4: Suppress OFF -->
+  <div class="mw-card">
+    <div class="mw-icon" style="background:rgba(107,114,128,0.08); color:#9ca3af;">&#128295;</div>
+    <div class="mw-info">
+      <div class="mw-title">Daily Opening Checklist Window</div>
+      <div class="mw-meta"><b>CEDIS Centro</b> &middot; <em>Entire site</em></div>
+      <div class="mw-schedule">Daily at 07:00 &middot; 60 min</div>
+    </div>
+    <div class="mw-actions">
+      <div class="mw-suppress" style="opacity:0.5">Suppress <div class="toggle off"></div></div>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose)">&times;</button>
+    </div>
+  </div>
+
+  <!-- Window 5 -->
+  <div class="mw-card">
+    <div class="mw-icon">&#128295;</div>
+    <div class="mw-info">
+      <div class="mw-title">Weekly Cooler Cleaning</div>
+      <div class="mw-meta"><b>CEDIS Norte</b> &middot; Walk-in Cooler</div>
+      <div class="mw-schedule">Tuesdays at 14:00 &middot; 120 min</div>
+    </div>
+    <div class="mw-actions">
+      <div class="mw-suppress">Suppress <div class="toggle on"></div></div>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rose)">&times;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create Window Form Preview ── -->
+<div class="form-preview fade-in" style="animation-delay:0.5s" data-label="Add Window Dialog">
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input class="form-input" placeholder="e.g. Nightly System Maintenance" />
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Site</label>
+      <select class="form-input form-select">
+        <option>CEDIS Norte</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Zone</label>
+      <select class="form-input form-select">
+        <option>Entire site</option>
+        <option>Cooler A</option>
+        <option>Freezer</option>
+        <option>Compressor 1</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Recurrence</label>
+      <div class="recurrence-pills">
+        <span class="recurrence-pill">Once</span>
+        <span class="recurrence-pill active">Daily</span>
+        <span class="recurrence-pill">Weekly</span>
+        <span class="recurrence-pill">Monthly</span>
+      </div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group" style="max-width:140px">
+      <label class="form-label">Start Time</label>
+      <input class="form-input mono" value="22:00" style="font-family:'Fira Code',monospace;" />
+    </div>
+    <div class="form-group" style="max-width:140px">
+      <label class="form-label">Duration</label>
+      <select class="form-input form-select mono" style="font-family:'Fira Code',monospace;">
+        <option>60 min</option>
+        <option>120 min</option>
+        <option selected>480 min</option>
+      </select>
+    </div>
+    <div class="form-group" style="display:flex; align-items:flex-end; padding-bottom:2px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="toggle on"></div>
+        <span style="font-size:12px; color:var(--text-dim);">Suppress alerts</span>
+      </div>
+    </div>
+  </div>
+  <div style="font-size:11px; color:var(--text-faint); margin-top:-4px; margin-bottom:12px; font-family:'Fira Code',monospace;">
+    Window: 22:00 — 06:00 next day
+  </div>
+  <div style="display:flex; justify-content:flex-end; gap:8px;">
+    <button class="btn btn-outline">Cancel</button>
+    <button class="btn btn-primary">Add Window</button>
+  </div>
+</div>
+
+</body>
+</html>

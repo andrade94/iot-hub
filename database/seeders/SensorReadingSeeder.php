@@ -178,6 +178,15 @@ class SensorReadingSeeder extends Seeder
         }
     }
 
+    private function generateDoorStatus(int $minutesAgo): float
+    {
+        $hourOfDay = (int) now()->subMinutes($minutesAgo)->format('G');
+        $isBusyHour = $hourOfDay >= 8 && $hourOfDay <= 18;
+        $openChance = $isBusyHour ? 25 : 5;
+
+        return mt_rand(0, 100) < $openChance ? 1 : 0;
+    }
+
     private function generateValue(string $metric, string $zone, int $minutesAgo, array $tempRanges): float
     {
         // Add a slight time-based drift for realistic charts
@@ -191,7 +200,7 @@ class SensorReadingSeeder extends Seeder
                 2
             ),
             'humidity' => round(55 + mt_rand(-150, 150) / 10 + $timeFactor * 3, 1),
-            'door_status' => mt_rand(0, 100) < 95 ? 0 : 1, // 5% chance door is open
+            'door_status' => $this->generateDoorStatus($minutesAgo),
             'current' => round(3.5 + mt_rand(-100, 100) / 100 * 1.5, 2),
             'power' => round(0.8 + mt_rand(-30, 50) / 100 * 0.6, 2),
             'gas_level' => round(mt_rand(0, 50) / 10, 1),

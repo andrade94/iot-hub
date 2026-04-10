@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { FadeIn } from '@/components/ui/fade-in';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,11 +14,12 @@ import { format } from 'date-fns';
 import {
     AlertTriangle,
     CheckCircle,
+    ChevronRight,
     Clock,
     FileText,
-    Filter,
     ShieldCheck,
     Wrench,
+    X,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -58,6 +60,12 @@ export default function SiteTimeline({ site, events, totalEvents, zones, filters
         { title: 'Timeline', href: '#' },
     ];
 
+    const hasActiveFilters = !!(filters.type || filters.zone);
+
+    function clearAllFilters() {
+        router.get(`/sites/${site.id}/timeline`, { from, to }, { preserveState: true, replace: true });
+    }
+
     function applyFilters(overrides: Record<string, string | null> = {}) {
         const params: Record<string, string> = { from, to };
         const type = overrides.type ?? filters.type;
@@ -91,18 +99,11 @@ export default function SiteTimeline({ site, events, totalEvents, zones, filters
                                 {site.name}
                             </h1>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                <span className="font-mono tabular-nums">{totalEvents}</span>{' '}
-                                {t('events')}{' '}
-                                {filters.from && (
-                                    <span>
-                                        from <span className="font-mono tabular-nums">{filters.from}</span>
-                                    </span>
-                                )}{' '}
-                                {filters.to && (
-                                    <span>
-                                        to <span className="font-mono tabular-nums">{filters.to}</span>
-                                    </span>
-                                )}
+                                <span className="font-mono font-medium tabular-nums text-foreground">{totalEvents}</span>{' '}
+                                {t('events from')}{' '}
+                                <span className="font-mono tabular-nums">{filters.from}</span>{' '}
+                                {t('to')}{' '}
+                                <span className="font-mono tabular-nums">{filters.to}</span>
                             </p>
                         </div>
                     </div>
@@ -110,62 +111,64 @@ export default function SiteTimeline({ site, events, totalEvents, zones, filters
 
                 {/* ── Filters ─────────────────────────────────────── */}
                 <FadeIn delay={80} duration={500}>
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
-                                {t('Filters')}
-                            </h2>
-                            <div className="h-px flex-1 bg-border" />
-                        </div>
-                        <Card className="shadow-elevation-1">
-                            <CardContent className="p-3">
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <Filter className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" />
-                                    <DatePicker
-                                        date={from ? new Date(from + 'T00:00:00') : undefined}
-                                        onDateChange={(d) => setFrom(d ? format(d, 'yyyy-MM-dd') : '')}
-                                        placeholder={t('From')}
-                                        className="w-full sm:w-[160px]"
-                                    />
-                                    <span className="hidden text-xs text-muted-foreground sm:inline">—</span>
-                                    <DatePicker
-                                        date={to ? new Date(to + 'T00:00:00') : undefined}
-                                        onDateChange={(d) => setTo(d ? format(d, 'yyyy-MM-dd') : '')}
-                                        placeholder={t('To')}
-                                        className="w-full sm:w-[160px]"
-                                    />
-                                    <Button variant="secondary" size="sm" onClick={() => applyFilters()}>
-                                        {t('Apply')}
-                                    </Button>
-                                    <Select value={filters.type ?? 'all'} onValueChange={(v) => applyFilters({ type: v })}>
+                    <Card className="shadow-elevation-1">
+                        <CardContent className="space-y-3 p-4">
+                            {/* Date range row */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t('Period')}</span>
+                                <DatePicker
+                                    date={from ? new Date(from + 'T00:00:00') : undefined}
+                                    onDateChange={(d) => setFrom(d ? format(d, 'yyyy-MM-dd') : '')}
+                                    placeholder={t('From')}
+                                    className="w-full sm:w-auto"
+                                />
+                                <span className="hidden text-xs text-muted-foreground/40 sm:inline">—</span>
+                                <DatePicker
+                                    date={to ? new Date(to + 'T00:00:00') : undefined}
+                                    onDateChange={(d) => setTo(d ? format(d, 'yyyy-MM-dd') : '')}
+                                    placeholder={t('To')}
+                                    className="w-full sm:w-auto"
+                                />
+                                <Button variant="secondary" size="sm" onClick={() => applyFilters()}>
+                                    {t('Apply')}
+                                </Button>
+                            </div>
+                            {/* Category filters row */}
+                            <div className="flex flex-wrap items-center gap-3 border-t border-border/50 pt-3">
+                                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t('Filter')}</span>
+                                <Select value={filters.type ?? 'all'} onValueChange={(v) => applyFilters({ type: v })}>
+                                    <SelectTrigger className="w-[160px]">
+                                        <SelectValue placeholder={t('Event type')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('All types')}</SelectItem>
+                                        <SelectItem value="alert">{t('Alerts')}</SelectItem>
+                                        <SelectItem value="work_order">{t('Work Orders')}</SelectItem>
+                                        <SelectItem value="corrective_action">{t('Corrective Actions')}</SelectItem>
+                                        <SelectItem value="activity">{t('Activity Log')}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {zones.length > 0 && (
+                                    <Select value={filters.zone ?? 'all'} onValueChange={(v) => applyFilters({ zone: v })}>
                                         <SelectTrigger className="w-[160px]">
-                                            <SelectValue placeholder={t('Event type')} />
+                                            <SelectValue placeholder={t('Zone')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">{t('All types')}</SelectItem>
-                                            <SelectItem value="alert">{t('Alerts')}</SelectItem>
-                                            <SelectItem value="work_order">{t('Work Orders')}</SelectItem>
-                                            <SelectItem value="corrective_action">{t('Corrective Actions')}</SelectItem>
-                                            <SelectItem value="activity">{t('Activity Log')}</SelectItem>
+                                            <SelectItem value="all">{t('All zones')}</SelectItem>
+                                            {zones.map((z) => (
+                                                <SelectItem key={z} value={z}>{z}</SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
-                                    {zones.length > 0 && (
-                                        <Select value={filters.zone ?? 'all'} onValueChange={(v) => applyFilters({ zone: v })}>
-                                            <SelectTrigger className="w-[160px]">
-                                                <SelectValue placeholder={t('Zone')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">{t('All zones')}</SelectItem>
-                                                {zones.map((z) => (
-                                                    <SelectItem key={z} value={z}>{z}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                                )}
+                                {hasActiveFilters && (
+                                    <Button variant="ghost" size="sm" className="h-7 text-[11px] text-muted-foreground" onClick={clearAllFilters}>
+                                        <X className="mr-1 h-3 w-3" /> {t('Clear filters')}
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </FadeIn>
 
                 {/* ── Timeline ────────────────────────────────────── */}
@@ -190,53 +193,52 @@ export default function SiteTimeline({ site, events, totalEvents, zones, filters
                                 </CardContent>
                             </Card>
                         ) : (
-                            <div className="space-y-6">
+                            <div className="space-y-8">
                                 {Object.entries(grouped).map(([hour, hourEvents]) => (
                                     <div key={hour}>
-                                        <h3 className="mb-3 text-xs font-semibold uppercase text-muted-foreground">
-                                            <span className="font-mono tabular-nums">
-                                                {new Date(hour).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                                                {' — '}
-                                                {new Date(hour).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
+                                        <h3 className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                                            {new Date(hour).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                                            <span className="mx-2 text-border">—</span>
+                                            {new Date(hour).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                                         </h3>
-                                        <div className="relative ml-4 space-y-3 border-l-2 border-border pl-6">
+                                        <div className="relative ml-3 space-y-3 border-l border-border/60 pl-7">
                                             {hourEvents.map((event, i) => {
                                                 const config = EVENT_ICONS[event.type] ?? EVENT_ICONS.activity;
                                                 const Icon = config.icon;
 
                                                 return (
-                                                    <div key={`${hour}-${i}`} className="relative">
-                                                        <div className="absolute -left-[31px] top-1 h-4 w-4 rounded-full border-2 border-background bg-background">
-                                                            <Icon className={`h-4 w-4 ${config.color}`} />
+                                                    <div key={`${hour}-${i}`} className="group relative">
+                                                        {/* Dot — centered on the border-l line */}
+                                                        <div className="absolute -left-[29.5px] top-3.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-card">
+                                                            <Icon className={cn('h-3.5 w-3.5', config.color)} />
                                                         </div>
-                                                        <Card className="shadow-elevation-1 transition-colors hover:bg-muted/50">
-                                                            <CardContent className="p-3">
-                                                                <div className="flex items-start justify-between gap-2">
-                                                                    <div className="min-w-0 flex-1">
-                                                                        <p className="text-sm font-medium">{event.title}</p>
-                                                                        <p className="mt-0.5 text-xs text-muted-foreground">{event.description}</p>
-                                                                    </div>
-                                                                    <div className="flex shrink-0 items-center gap-2">
-                                                                        {event.severity && (
-                                                                            <Badge variant={
-                                                                                event.severity === 'critical' ? 'destructive' :
-                                                                                event.severity === 'high' || event.severity === 'urgent' ? 'warning' :
-                                                                                'outline'
-                                                                            } className="text-xs">
-                                                                                {event.severity}
-                                                                            </Badge>
-                                                                        )}
-                                                                        <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                                                                            {new Date(event.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                                                                        </span>
-                                                                    </div>
+                                                        <Card className={cn(
+                                                            'border-border/50 shadow-none transition-all hover:border-border hover:shadow-elevation-1',
+                                                            event.link && 'cursor-pointer',
+                                                        )}
+                                                        onClick={event.link ? () => router.get(event.link!) : undefined}>
+                                                            <CardContent className="flex items-center gap-3 p-3.5">
+                                                                <div className="min-w-0 flex-1">
+                                                                    <p className="text-[13px] font-medium">{event.title}</p>
+                                                                    <p className="mt-0.5 text-[11px] text-muted-foreground/70">{event.description}</p>
                                                                 </div>
-                                                                {event.link && (
-                                                                    <Link href={event.link} className="mt-2 inline-block text-xs text-primary underline-offset-4 hover:underline">
-                                                                        {t('View details')}
-                                                                    </Link>
-                                                                )}
+                                                                <div className="flex shrink-0 items-center gap-2">
+                                                                    {event.severity && (
+                                                                        <Badge variant={
+                                                                            event.severity === 'critical' ? 'destructive' :
+                                                                            event.severity === 'high' || event.severity === 'urgent' ? 'warning' :
+                                                                            'outline'
+                                                                        } className="text-[9px]">
+                                                                            {event.severity}
+                                                                        </Badge>
+                                                                    )}
+                                                                    <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
+                                                                        {new Date(event.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                                                    </span>
+                                                                    {event.link && (
+                                                                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30 transition-colors group-hover:text-muted-foreground" />
+                                                                    )}
+                                                                </div>
                                                             </CardContent>
                                                         </Card>
                                                     </div>

@@ -1,4 +1,5 @@
 import { Can } from '@/components/Can';
+import { DeviceChart } from '@/components/devices/device-charts';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { formatTimeAgo } from '@/utils/date';
@@ -6,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DetailCard, MetricCard } from '@/components/ui/detail-card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FadeIn } from '@/components/ui/fade-in';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,21 +18,8 @@ import { useLang } from '@/hooks/use-lang';
 import AppLayout from '@/layouts/app-layout';
 import type { Alert, BreadcrumbItem, ChartDataPoint, Device } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import {
-    Activity,
-    ArrowLeft,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
-import {
-    CartesianGrid,
-    Line,
-    LineChart,
-    ReferenceLine,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts';
+import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 
 interface LatestReading {
     metric: string;
@@ -39,14 +28,36 @@ interface LatestReading {
     time: string;
 }
 
+interface AlertRuleInfo {
+    id: number;
+    name: string;
+    severity: string;
+    active: boolean;
+    conditions: { metric: string; condition: string; threshold: number }[];
+}
+
+interface WorkOrderInfo {
+    id: number;
+    title: string;
+    status: string;
+    priority: string;
+    created_at: string;
+}
+
 interface Props {
     device: Device;
     chartData: ChartDataPoint[];
     latestReadings: LatestReading[];
     alerts: Alert[];
+    alertRules?: AlertRuleInfo[];
+    workOrders?: WorkOrderInfo[];
     availableMetrics: string[];
+    metricUnits?: Record<string, string>;
     period: string;
     metric: string;
+    gateways?: { id: number; model: string; serial: string }[];
+    recipes?: { id: number; name: string }[];
+    zones?: string[];
 }
 
 export default function DeviceShow({
@@ -54,9 +65,15 @@ export default function DeviceShow({
     chartData,
     latestReadings,
     alerts,
+    alertRules = [],
+    workOrders = [],
     availableMetrics,
+    metricUnits = {},
     period,
     metric,
+    gateways = [],
+    recipes = [],
+    zones = [],
 }: Props) {
     const { t } = useLang();
 
@@ -66,6 +83,8 @@ export default function DeviceShow({
     ];
 
     const [showReplace, setShowReplace] = useState(false);
+    const [showEdit, setShowEdit] = useState(false);
+    const [showDelete, setShowDelete] = useState(false);
     const replaceForm = useForm({ new_dev_eui: '', new_app_key: '', new_model: '' });
 
     function changePeriod(newPeriod: string) {
@@ -88,7 +107,7 @@ export default function DeviceShow({
                         <div className="bg-dots absolute inset-0 opacity-30 dark:opacity-20" />
                         <div className="relative flex items-start justify-between p-6 md:p-8">
                             <div className="flex items-start gap-4">
-                                <Button variant="ghost" size="icon" onClick={() => router.get(`/sites/${device.site_id}`)}>
+                                <Button variant="ghost" size="icon" onClick={() => router.get('/devices')}>
                                     <ArrowLeft className="h-4 w-4" />
                                 </Button>
                                 <div>
@@ -106,14 +125,21 @@ export default function DeviceShow({
                                     </p>
                                 </div>
                             </div>
-                            {/* Replace button (Phase 10) */}
-                            {['active', 'offline'].includes(device.status) && (
-                                <Can permission="manage devices">
-                                    <Button variant="outline" size="sm" onClick={() => setShowReplace(true)}>
-                                        {t('Replace')}
+                            <Can permission="manage devices">
+                                <div className="flex gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => setShowEdit(true)}>
+                                        {t('Edit')}
                                     </Button>
-                                </Can>
-                            )}
+                                    {['active', 'offline'].includes(device.status) && (
+                                        <Button variant="outline" size="sm" onClick={() => setShowReplace(true)}>
+                                            {t('Replace')}
+                                        </Button>
+                                    )}
+                                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setShowDelete(true)}>
+                                        {t('Delete')}
+                                    </Button>
+                                </div>
+                            </Can>
                         </div>
                     </div>
                 </FadeIn>
@@ -202,7 +228,7 @@ export default function DeviceShow({
                                 </Card>
 
                                 {/* Device metric chart */}
-                                <DeviceChart chartData={chartData} metric={metric} period={period} t={t} />
+                                <DeviceChart chartData={chartData} metric={metric} unit={metricUnits[metric] ?? ''} period={period} t={t} />
                             </div>
                         </FadeIn>
 
@@ -261,6 +287,8 @@ export default function DeviceShow({
                                     className="shadow-elevation-1"
                                     items={[
                                         { label: t('Model'), value: <span className="font-mono tabular-nums">{device.model}</span> },
+                                        ...(device.label ? [{ label: t('Label'), value: device.label }] : []),
+                                        ...(device.serial ? [{ label: t('Serial'), value: <span className="font-mono tabular-nums">{device.serial}</span> }] : []),
                                         { label: t('Zone'), value: device.zone ?? '—' },
                                         { label: t('Gateway'), value: <span className="font-mono tabular-nums">{device.gateway?.serial ?? '—'}</span> },
                                         ...(device.recipe ? [{ label: t('Recipe'), value: device.recipe.name }] : []),
@@ -315,10 +343,74 @@ export default function DeviceShow({
                                 </Card>
                             </div>
                         </FadeIn>
+                        {/* ── Alert Rules ──────────────────────── */}
+                        {alertRules.length > 0 && (
+                            <FadeIn delay={300} duration={500}>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                            {t('Alert Rules')}
+                                        </h2>
+                                        <div className="h-px flex-1 bg-border" />
+                                        <span className="font-mono text-xs tabular-nums text-muted-foreground">{alertRules.length}</span>
+                                    </div>
+                                    <Card className="shadow-elevation-1">
+                                        <CardContent className="p-0">
+                                            <div className="divide-y">
+                                                {alertRules.map((rule) => (
+                                                    <div key={rule.id} className="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-xs transition-colors hover:bg-muted/50"
+                                                        onClick={() => router.get(`/sites/${device.site_id}/rules/${rule.id}`)}>
+                                                        <SeverityDot severity={rule.severity} />
+                                                        <span className="flex-1 truncate font-medium">{rule.name}</span>
+                                                        <Badge variant={rule.active ? 'success' : 'outline'} className="text-[8px]">{rule.active ? t('active') : t('inactive')}</Badge>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </FadeIn>
+                        )}
+
+                        {/* ── Work Orders ─────────────────────── */}
+                        {workOrders.length > 0 && (
+                            <FadeIn delay={350} duration={500}>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                            {t('Work Orders')}
+                                        </h2>
+                                        <div className="h-px flex-1 bg-border" />
+                                        <span className="font-mono text-xs tabular-nums text-muted-foreground">{workOrders.length}</span>
+                                    </div>
+                                    <Card className="shadow-elevation-1">
+                                        <CardContent className="p-0">
+                                            <div className="divide-y">
+                                                {workOrders.map((wo) => (
+                                                    <div key={wo.id} className="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-xs transition-colors hover:bg-muted/50"
+                                                        onClick={() => router.get(`/work-orders/${wo.id}`)}>
+                                                        <span className={`h-2 w-2 shrink-0 rounded-full ${
+                                                            wo.priority === 'urgent' || wo.priority === 'high' ? 'bg-rose-500' : wo.priority === 'medium' ? 'bg-amber-400' : 'bg-blue-400'
+                                                        }`} />
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="truncate font-medium">{wo.title}</p>
+                                                            <p className="font-mono text-[9px] tabular-nums text-muted-foreground/60">{formatTimeAgo(wo.created_at)}</p>
+                                                        </div>
+                                                        <Badge variant="outline" className="text-[8px] capitalize">{wo.status}</Badge>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </FadeIn>
+                        )}
                     </div>
                 </div>
 
-                {/* Device Replacement Dialog (Phase 10) */}
+                {/* ── Dialogs ────────────────────────────────────── */}
+
+                {/* Device Replacement Dialog */}
                 <Dialog open={showReplace} onOpenChange={setShowReplace}>
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
@@ -347,128 +439,127 @@ export default function DeviceShow({
                         </form>
                     </DialogContent>
                 </Dialog>
+
+                {/* ── Edit Dialog ──────────────────────────────── */}
+                <DeviceEditDialog
+                    open={showEdit} onOpenChange={setShowEdit}
+                    device={device} gateways={gateways} recipes={recipes} zones={zones}
+                />
+
+                {/* ── Delete Confirmation ──────────────────────── */}
+                <ConfirmationDialog
+                    open={showDelete}
+                    onOpenChange={setShowDelete}
+                    title={t('Delete Device')}
+                    description={`${t('Delete')} "${device.name}" (${device.model})?`}
+                    warningMessage={t('The device will be removed from the floor plan and deprovisioned. Sensor readings and alert history are preserved.')}
+                    onConfirm={() => {
+                        router.delete(`/sites/${device.site_id}/devices/${device.id}`, {
+                            onSuccess: () => router.get('/devices'),
+                        });
+                    }}
+                    actionLabel={t('Delete')}
+                />
             </div>
         </AppLayout>
     );
 }
 
-interface DeviceChartProps {
-    chartData: ChartDataPoint[];
-    metric: string;
-    period: string;
-    t: (key: string) => string;
-}
+/* -- Edit Dialog --------------------------------------------------------- */
 
-function DeviceChart({ chartData, metric, period, t }: DeviceChartProps) {
-    const stats = useMemo(() => {
-        if (chartData.length === 0) return null;
+function DeviceEditDialog({ open, onOpenChange, device, gateways, recipes, zones }: {
+    open: boolean; onOpenChange: (open: boolean) => void;
+    device: Device; gateways: { id: number; model: string; serial: string }[];
+    recipes: { id: number; name: string }[]; zones: string[];
+}) {
+    const { t } = useLang();
+    const form = useForm({
+        name: device.name,
+        label: device.label ?? '',
+        serial: device.serial ?? '',
+        zone: device.zone ?? '',
+        gateway_id: device.gateway_id ? String(device.gateway_id) : '',
+        recipe_id: device.recipe_id ? String(device.recipe_id) : '',
+    });
 
-        const values = chartData.map((d) => d.avg_value ?? d.value ?? 0);
-        const min = Math.min(...values);
-        const max = Math.max(...values);
-        const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
-
-        return { min, max, avg };
-    }, [chartData]);
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        router.put(`/sites/${device.site_id}/devices/${device.id}`, {
+            ...form.data,
+            gateway_id: form.data.gateway_id || null,
+            recipe_id: form.data.recipe_id || null,
+            zone: form.data.zone || null,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => onOpenChange(false),
+        });
+    }
 
     return (
-        <Card className="shadow-elevation-1">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                    <Activity className="h-4 w-4" />
-                    {metric} — {period}
-                </CardTitle>
-                <CardDescription>
-                    <span className="font-mono tabular-nums">{chartData.length}</span> {t('data points')}
-                    {stats && (
-                        <span className="ml-3 font-mono tabular-nums">
-                            {t('Min')} {stats.min.toFixed(1)} · {t('Avg')} {stats.avg.toFixed(1)} · {t('Max')} {stats.max.toFixed(1)}
-                        </span>
-                    )}
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                {chartData.length === 0 ? (
-                    <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-                        {t('No readings for this period')}
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>{t('Edit Device')}</DialogTitle>
+                    <DialogDescription>
+                        <span className="font-mono">{device.model}</span> · <span className="font-mono text-[10px]">{device.dev_eui}</span>
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Device Name')}</Label>
+                            <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} className="text-[13px] font-medium" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Label')}</Label>
+                            <Input value={form.data.label} onChange={(e) => form.setData('label', e.target.value)} placeholder={t('e.g. Left wall, top shelf')} className="text-[12px]" />
+                        </div>
                     </div>
-                ) : (
-                    <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={chartData} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="deviceLineGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.15} />
-                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.01} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                            <XAxis
-                                dataKey="time"
-                                tick={{ fontSize: 11 }}
-                                tickLine={false}
-                                axisLine={false}
-                                className="fill-muted-foreground"
-                            />
-                            <YAxis
-                                tick={{ fontSize: 11 }}
-                                tickLine={false}
-                                axisLine={false}
-                                className="fill-muted-foreground"
-                                domain={['auto', 'auto']}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'hsl(var(--popover))',
-                                    border: '1px solid hsl(var(--border))',
-                                    borderRadius: '8px',
-                                    fontSize: 12,
-                                    color: 'hsl(var(--popover-foreground))',
-                                }}
-                                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-                                formatter={(val: number) => [val.toFixed(2), metric]}
-                                labelFormatter={(label: string) => label}
-                            />
-                            {stats && (
-                                <>
-                                    <ReferenceLine
-                                        y={stats.min}
-                                        stroke="#ef4444"
-                                        strokeDasharray="4 4"
-                                        strokeOpacity={0.5}
-                                        label={{ value: t('Min'), position: 'insideTopLeft', fontSize: 10, fill: '#ef4444' }}
-                                    />
-                                    <ReferenceLine
-                                        y={stats.avg}
-                                        stroke="#f59e0b"
-                                        strokeDasharray="4 4"
-                                        strokeOpacity={0.5}
-                                        label={{ value: t('Avg'), position: 'insideTopLeft', fontSize: 10, fill: '#f59e0b' }}
-                                    />
-                                    <ReferenceLine
-                                        y={stats.max}
-                                        stroke="#ef4444"
-                                        strokeDasharray="4 4"
-                                        strokeOpacity={0.5}
-                                        label={{ value: t('Max'), position: 'insideBottomLeft', fontSize: 10, fill: '#ef4444' }}
-                                    />
-                                </>
-                            )}
-                            <Line
-                                type="monotone"
-                                dataKey="value"
-                                stroke="#3b82f6"
-                                strokeWidth={2}
-                                dot={false}
-                                activeDot={{ r: 4, strokeWidth: 2 }}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                )}
-            </CardContent>
-        </Card>
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px]">{t('Serial Number')}</Label>
+                        <Input value={form.data.serial} onChange={(e) => form.setData('serial', e.target.value)} placeholder="SN-..." className="font-mono text-[12px]" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Zone')}</Label>
+                            <Select value={form.data.zone || '__none'} onValueChange={(v) => form.setData('zone', v === '__none' ? '' : v)}>
+                                <SelectTrigger className="text-[12px]"><SelectValue placeholder={t('Select zone')} /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="__none">{t('No zone')}</SelectItem>
+                                    {zones.map((z) => <SelectItem key={z} value={z}>{z}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px]">{t('Gateway')}</Label>
+                            <Select value={form.data.gateway_id || '__none'} onValueChange={(v) => form.setData('gateway_id', v === '__none' ? '' : v)}>
+                                <SelectTrigger className="text-[12px]"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="__none">{t('No gateway')}</SelectItem>
+                                    {gateways.map((gw) => <SelectItem key={gw.id} value={String(gw.id)}>{gw.model} ({gw.serial})</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px]">{t('Recipe')}</Label>
+                        <Select value={form.data.recipe_id || '__none'} onValueChange={(v) => form.setData('recipe_id', v === '__none' ? '' : v)}>
+                            <SelectTrigger className="text-[12px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="__none">{t('No recipe')}</SelectItem>
+                                {recipes.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('Cancel')}</Button>
+                        <Button type="submit" disabled={form.processing}>{t('Save Changes')}</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
-
 
 function StatusBadge({ status }: { status: string }) {
     const v: Record<string, 'success' | 'warning' | 'destructive' | 'outline' | 'info'> = {
