@@ -215,7 +215,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     // Site, Device & Gateway index (monitor pages)
     Route::get('sites', [SiteDetailController::class, 'index'])->name('sites.index');
     Route::get('devices', [DeviceDetailController::class, 'index'])->name('devices.index');
-    Route::get('settings/gateways', [GatewayController::class, 'globalIndex'])->name('gateways.global');
+    Route::get('settings/gateways', [GatewayController::class, 'globalIndex'])->middleware('role:super_admin')->name('gateways.global');
 
     // Site Comparison (Phase 11) — must be before sites/{site} to avoid wildcard capture
     Route::get('sites/compare', \App\Http\Controllers\SiteComparisonController::class)->name('sites.compare');
