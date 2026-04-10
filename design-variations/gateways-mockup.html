@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gateways — Mockup | Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --card: #161820; --border: #23262f; --border-subtle: #1c1f27;
+    --fg: #e8eaed; --muted: #7a7f8a; --muted2: #4a4f5a;
+    --primary: #06b6d4; --emerald: #22c55e; --amber: #f59e0b; --rose: #f43f5e; --blue: #3b82f6;
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+  }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--fg); font-size: 13px; line-height: 1.5; }
+  h1, h2, h3 { font-family: var(--font-display); }
+  .mono { font-family: var(--font-mono); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid; }
+  .badge-outline { color: var(--muted); border-color: var(--border); background: transparent; }
+  .badge-success { color: var(--emerald); border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
+  .badge-destructive { color: var(--rose); border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); }
+  .card { border: 1px solid var(--border); border-radius: 8px; background: var(--card); overflow: hidden; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--fg); cursor: pointer; font-family: var(--font-body); }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #000; font-weight: 600; }
+  .scenario { background: linear-gradient(135deg, var(--primary), var(--blue)); color: #000; font-weight: 700; font-size: 13px; padding: 12px 20px; border-radius: 8px; margin: 48px 0 24px; font-family: var(--font-display); }
+  .scenario:first-child { margin-top: 0; }
+  .row-hover:hover { background: rgba(255,255,255,0.02); }
+  .th { text-align: left; padding: 10px 16px; font-family: var(--font-mono); font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted2); }
+  .td { padding: 14px 16px; }
+  .divider { display: flex; align-items: center; gap: 16px; margin: 28px 0; }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.15em; color: var(--muted2); }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">1 — PER-SITE: Gateway List</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;">
+  <div>
+    <a href="#" style="color: var(--muted); text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">← CEDIS Norte</a>
+    <h1 style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">Gateways</h1>
+    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+      <span class="mono" style="color: var(--fg); font-weight: 500;">2</span> gateways · CEDIS Norte
+    </p>
+  </div>
+  <button class="btn btn-primary">+ Register Gateway</button>
+</div>
+
+<!-- Gateway Cards -->
+<div style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));">
+  <!-- Gateway 1 — Primary, Online -->
+  <div class="card" style="cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--muted2)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(34,197,94,0.1); display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 20px;">📡</span>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 class="mono" style="font-size: 15px; font-weight: 700;">UG65</h3>
+              <span class="badge badge-success">online</span>
+            </div>
+            <p class="mono" style="font-size: 11px; color: var(--muted2); margin-top: 2px;">GW-1-001</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px;">
+          <div>
+            <span style="color: var(--muted2);">Devices:</span>
+            <span class="mono" style="font-weight: 600; margin-left: 4px;">10</span>
+          </div>
+          <div>
+            <span style="color: var(--muted2);">Type:</span>
+            <span style="margin-left: 4px;">Primary</span>
+          </div>
+          <div>
+            <span style="color: var(--muted2);">Last seen:</span>
+            <span class="mono" style="color: var(--emerald); margin-left: 4px;">2 min ago</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <span class="mono" style="font-size: 9px; color: var(--muted2);">ChirpStack: gw-demo-1-001</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gateway 2 — Addon, Online -->
+  <div class="card" style="cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--muted2)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="padding: 20px;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(6,182,212,0.1); display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 20px;">📡</span>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 class="mono" style="font-size: 15px; font-weight: 700;">UG65</h3>
+              <span class="badge badge-success">online</span>
+              <span class="badge badge-outline">addon</span>
+            </div>
+            <p class="mono" style="font-size: 11px; color: var(--muted2); margin-top: 2px;">GW-1-002</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px;">
+          <div>
+            <span style="color: var(--muted2);">Devices:</span>
+            <span class="mono" style="font-weight: 600; margin-left: 4px;">0</span>
+          </div>
+          <div>
+            <span style="color: var(--muted2);">Type:</span>
+            <span style="margin-left: 4px;">Addon (coverage extension)</span>
+          </div>
+          <div>
+            <span style="color: var(--muted2);">Last seen:</span>
+            <span class="mono" style="color: var(--emerald); margin-left: 4px;">5 min ago</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <span class="mono" style="font-size: 9px; color: var(--muted2);">ChirpStack: gw-demo-1-002</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">2 — REGISTER GATEWAY (Dialog)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="card" style="max-width: 450px; padding: 0;">
+  <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle);">
+    <h2 style="font-size: 16px; font-weight: 700;">Register Gateway</h2>
+    <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">Add a LoRaWAN gateway to this site.</p>
+  </div>
+
+  <div style="padding: 20px 24px;">
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Model</label>
+      <div style="height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; font-size: 12px; cursor: pointer;">
+        Milesight UG65 <span style="margin-left: auto; color: var(--muted2);">▾</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Serial Number</label>
+      <input type="text" value="24E124743C00XXXX" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-family: var(--font-mono); font-size: 13px; font-weight: 600; outline: none; letter-spacing: 0.05em;">
+      <p style="font-size: 10px; color: var(--muted2); margin-top: 4px;">Found on the gateway label or packaging</p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="width: 36px; height: 20px; border-radius: 10px; background: var(--border); position: relative; cursor: pointer;"><div style="position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: white;"></div></div>
+      <div>
+        <span style="font-size: 12px;">Additional gateway (addon)</span>
+        <p style="font-size: 10px; color: var(--muted2);">For coverage extension only — doesn't replace the primary</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
+    <button class="btn">Cancel</button>
+    <button class="btn btn-primary">Register Gateway</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">3 — SHOW: Gateway Detail</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;">
+  <div>
+    <a href="#" style="color: var(--muted); text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">← Gateways · CEDIS Norte</a>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <h1 class="mono" style="font-size: 28px; font-weight: 800;">UG65</h1>
+      <span class="badge badge-success">online</span>
+    </div>
+    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+      Serial: <span class="mono">GW-1-001</span> · Primary gateway · CEDIS Norte
+    </p>
+  </div>
+  <div style="display: flex; gap: 8px;">
+    <button class="btn">✎ Edit</button>
+    <button class="btn" style="color: var(--rose); border-color: rgba(244,63,94,0.3);">🗑 Delete</button>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 280px; gap: 24px;">
+  <!-- Left -->
+  <div>
+    <!-- Connected Devices -->
+    <div class="divider" style="margin-top: 0;">
+      <div class="divider-line"></div>
+      <span class="divider-label">CONNECTED DEVICES</span>
+      <div class="divider-line"></div>
+      <span class="mono" style="font-size: 10px; color: var(--muted2);">10</span>
+    </div>
+
+    <div class="card">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--border-subtle);">
+            <th class="th">Device</th>
+            <th class="th">Model</th>
+            <th class="th">Zone</th>
+            <th class="th">Status</th>
+            <th class="th">Last Reading</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+            <td class="td" style="font-weight: 500;">EM300-TH - Cooler A</td>
+            <td class="td"><span class="mono" style="font-size: 11px;">EM300-TH</span></td>
+            <td class="td" style="color: var(--muted);">Cooler A</td>
+            <td class="td"><span class="badge badge-success">online</span></td>
+            <td class="td"><span class="mono" style="font-size: 10px; color: var(--muted);">2 min ago</span></td>
+          </tr>
+          <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+            <td class="td" style="font-weight: 500;">EM300-TH - Cooler B</td>
+            <td class="td"><span class="mono" style="font-size: 11px;">EM300-TH</span></td>
+            <td class="td" style="color: var(--muted);">Cooler B</td>
+            <td class="td"><span class="badge badge-success">online</span></td>
+            <td class="td"><span class="mono" style="font-size: 10px; color: var(--muted);">3 min ago</span></td>
+          </tr>
+          <tr class="row-hover" style="border-bottom: 1px solid var(--border-subtle); cursor: pointer;">
+            <td class="td" style="font-weight: 500;">CT101 - Compressor 1</td>
+            <td class="td"><span class="mono" style="font-size: 11px;">CT101</span></td>
+            <td class="td" style="color: var(--muted);">Compressor 1</td>
+            <td class="td"><span class="badge badge-success">online</span></td>
+            <td class="td"><span class="mono" style="font-size: 10px; color: var(--muted);">1 min ago</span></td>
+          </tr>
+          <tr class="row-hover" style="cursor: pointer;">
+            <td class="td" style="color: var(--muted);">+7 more devices</td>
+            <td class="td"></td>
+            <td class="td"></td>
+            <td class="td"></td>
+            <td class="td"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Right: Details -->
+  <div>
+    <div class="divider" style="margin-top: 0;">
+      <div class="divider-line"></div>
+      <span class="divider-label">DETAILS</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="card" style="padding: 0;">
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Gateway ID</span>
+        <span class="mono" style="font-size: 11px; font-weight: 500;">#1</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Model</span>
+        <span class="mono" style="font-size: 11px; font-weight: 700;">UG65</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Serial</span>
+        <span class="mono" style="font-size: 11px;">GW-1-001</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Type</span>
+        <span style="font-size: 11px;">Primary</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Status</span>
+        <span class="badge badge-success">online</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Devices</span>
+        <span class="mono" style="font-size: 11px; font-weight: 600;">10</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">ChirpStack ID</span>
+        <span class="mono" style="font-size: 10px; color: var(--muted);">gw-demo-1-001</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Last Seen</span>
+        <span class="mono" style="font-size: 11px; color: var(--emerald);">2 min ago</span>
+      </div>
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Site</span>
+        <span style="font-size: 11px;">CEDIS Norte</span>
+      </div>
+      <div style="padding: 12px 16px; display: flex; justify-content: space-between;">
+        <span style="font-size: 11px; color: var(--muted);">Registered</span>
+        <span class="mono" style="font-size: 11px;">Apr 6, 2026</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">4 — EDIT GATEWAY (Dialog)</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Opens when clicking Edit on the show page. Limited fields — model and serial are the main editable fields.</p>
+
+<div class="card" style="max-width: 450px; padding: 0;">
+  <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle);">
+    <h2 style="font-size: 16px; font-weight: 700;">Edit Gateway</h2>
+    <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">Update gateway details.</p>
+  </div>
+
+  <div style="padding: 20px 24px;">
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Model</label>
+      <div style="height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; font-size: 12px; cursor: pointer;">
+        Milesight UG65 <span style="margin-left: auto; color: var(--muted2);">▾</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;">Serial Number</label>
+      <input type="text" value="GW-1-001" style="width: 100%; height: 36px; padding: 0 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-family: var(--font-mono); font-size: 13px; font-weight: 600; outline: none;">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="width: 36px; height: 20px; border-radius: 10px; background: var(--border); position: relative; cursor: pointer;"><div style="position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: white;"></div></div>
+      <span style="font-size: 12px;">Additional gateway (addon)</span>
+    </div>
+  </div>
+
+  <div style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
+    <button class="btn">Cancel</button>
+    <button class="btn btn-primary">Save Changes</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">5 — DELETE WARNING</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="card" style="max-width: 450px; padding: 0;">
+  <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle);">
+    <h2 style="font-size: 16px; font-weight: 700;">Delete Gateway</h2>
+    <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">Delete <strong>UG65 (GW-1-001)</strong>?</p>
+  </div>
+
+  <div style="padding: 16px 24px;">
+    <div style="padding: 12px 14px; border: 1px solid rgba(244,63,94,0.2); border-radius: 6px; background: rgba(244,63,94,0.04);">
+      <p style="font-size: 12px; color: var(--rose); font-weight: 500; margin-bottom: 4px;">⚠️ This gateway has connected devices</p>
+      <ul style="font-size: 11px; color: var(--muted); list-style: none; padding: 0;">
+        <li style="padding: 3px 0;">• <strong>10 devices</strong> are connected through this gateway</li>
+        <li style="padding: 3px 0;">• Devices will remain but lose their gateway connection</li>
+        <li style="padding: 3px 0;">• ChirpStack provisioning will be removed</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 8px;">
+    <button class="btn">Cancel</button>
+    <button class="btn" style="background: var(--rose); border-color: var(--rose); color: white;">Delete Gateway</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="scenario">Design Notes</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="card" style="padding: 24px;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; width: 30%; color: var(--primary);">Cards instead of table</td>
+      <td style="padding: 8px 0; color: var(--muted);">Sites usually have 1-3 gateways — cards give more visual weight than table rows. Each card shows model, serial, status, device count, type, last seen.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Primary vs Addon distinction</td>
+      <td style="padding: 8px 0; color: var(--muted);">Primary gateway handles all devices. Addon is for coverage extension. Shown as badge + description text.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Show page: connected devices</td>
+      <td style="padding: 8px 0; color: var(--muted);">Table of all devices using this gateway — name, model, zone, status, last reading. Click navigates to device detail.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Edit capability (NEW)</td>
+      <td style="padding: 8px 0; color: var(--muted);">Currently missing — adding update route + dialog. Model, serial, and addon toggle editable.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-subtle);">
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">Delete with device warning</td>
+      <td style="padding: 8px 0; color: var(--muted);">Shows device count and warns that devices will lose their gateway connection. Doesn't block — just warns.</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; font-weight: 600; color: var(--primary);">ChirpStack ID shown</td>
+      <td style="padding: 8px 0; color: var(--muted);">Technical reference for the LoRaWAN server integration. Shown in detail sidebar, not prominent.</td>
+    </tr>
+  </table>
+</div>
+
+</div>
+</body>
+</html>
