@@ -15,8 +15,10 @@ class MaintenanceWindowController extends Controller
         abort_unless($user->hasPermissionTo('manage maintenance windows'), 403);
 
         $siteIds = $user->accessibleSites()->pluck('id');
+        $filterSiteId = $request->input('site_id');
 
         $windows = MaintenanceWindow::whereIn('site_id', $siteIds)
+            ->when($filterSiteId, fn ($q) => $q->where('site_id', $filterSiteId))
             ->with(['site:id,name,timezone', 'createdByUser:id,name'])
             ->orderBy('site_id')
             ->orderBy('start_time')
@@ -36,6 +38,9 @@ class MaintenanceWindowController extends Controller
         return Inertia::render('settings/maintenance-windows/index', [
             'windows' => $windows,
             'sites' => $sites,
+            'filters' => [
+                'site_id' => $filterSiteId,
+            ],
         ]);
     }
 

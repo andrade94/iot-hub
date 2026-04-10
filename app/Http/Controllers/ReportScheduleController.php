@@ -13,7 +13,13 @@ class ReportScheduleController extends Controller
         $user = $request->user();
         abort_unless($user->hasPermissionTo('manage report schedules'), 403);
 
-        $schedules = ReportSchedule::where('org_id', $user->org_id)
+        $siteIds = $user->accessibleSites()->pluck('id');
+        $filterSiteId = $request->input('site_id');
+
+        $schedules = ReportSchedule::where(function ($q) use ($siteIds) {
+                $q->whereNull('site_id')->orWhereIn('site_id', $siteIds);
+            })
+            ->when($filterSiteId, fn ($q) => $q->where('site_id', $filterSiteId))
             ->with(['site:id,name', 'createdByUser:id,name'])
             ->orderBy('type')
             ->get();
@@ -23,6 +29,9 @@ class ReportScheduleController extends Controller
         return Inertia::render('settings/report-schedules/index', [
             'schedules' => $schedules,
             'sites' => $sites,
+            'filters' => [
+                'site_id' => $filterSiteId,
+            ],
         ]);
     }
 

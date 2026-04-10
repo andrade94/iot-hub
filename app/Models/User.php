@@ -86,10 +86,19 @@ class User extends Authenticatable
     public function accessibleSites(): Collection
     {
         if ($this->isSuperAdmin()) {
-            $orgId = session('current_org_id') ?? $this->org_id;
+            // If the super admin explicitly has a current_org_id key in session,
+            // respect it even if null ("All Organizations" = see everything).
+            // If the key is NOT set at all, default to their own org.
+            if (session()->has('current_org_id')) {
+                $orgId = session('current_org_id');
 
-            return $orgId
-                ? Site::where('org_id', $orgId)->get()
+                return $orgId
+                    ? Site::where('org_id', $orgId)->get()
+                    : Site::all();
+            }
+
+            return $this->org_id
+                ? Site::where('org_id', $this->org_id)->get()
                 : Site::all();
         }
 

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Layout Manager — Mockup | Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8f9fb; --card: #ffffff; --surface: #f1f3f7;
+    --border: #dfe3ea; --border-subtle: #e8ecf1;
+    --text: #0f1218; --text-secondary: #374151;
+    --muted: #6b7280; --dim: #9ca3af;
+    --emerald: #10b981; --cyan: #0891b2; --rose: #f43f5e;
+    --amber: #f59e0b; --blue: #3b82f6;
+    --font-display: 'Bricolage Grotesque', serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+  }
+  html { font-family: var(--font-body); font-size: 14px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+
+  /* ── Page Layout ─── */
+  .page { display: flex; flex-direction: column; height: 100vh; }
+  .page-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; background: var(--card); }
+  .page-header .back { font-size: 12px; color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+  .page-header .back:hover { color: var(--text); }
+  .page-header h1 { font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+  .page-header .spacer { flex: 1; }
+  .page-body { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── Sidebar ─── */
+  .sidebar { width: 320px; border-right: 1px solid var(--border); background: var(--card); display: flex; flex-direction: column; overflow: hidden; }
+  .sidebar-tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .sidebar-tab { flex: 1; padding: 10px 0; text-align: center; font-size: 11px; font-weight: 500; cursor: pointer; color: var(--dim); border: none; background: none; transition: all .15s; }
+  .sidebar-tab.active { color: var(--text); background: var(--surface); }
+  .sidebar-tab:hover { color: var(--muted); }
+  .sidebar-content { flex: 1; overflow-y: auto; padding: 12px; }
+  .sidebar-section-label { font-family: var(--font-mono); font-size: 9px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin: 12px 0 8px; }
+
+  /* ── Device cards in sidebar ─── */
+  .device-sidebar-card { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; cursor: grab; transition: all .15s; font-size: 12px; }
+  .device-sidebar-card:hover { border-color: var(--cyan); background: rgba(8,145,178,0.03); }
+  .device-sidebar-card.dragging { opacity: 0.5; border-style: dashed; }
+  .device-sidebar-card .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .device-sidebar-card .dot.online { background: var(--emerald); }
+  .device-sidebar-card .dot.offline { background: var(--rose); }
+  .device-sidebar-card .dot.unplaced { background: var(--amber); border: 2px dashed var(--amber); background: transparent; }
+  .device-sidebar-card .info { flex: 1; min-width: 0; }
+  .device-sidebar-card .info .name { font-weight: 500; font-size: 12px; }
+  .device-sidebar-card .info .meta { font-family: var(--font-mono); font-size: 9px; color: var(--dim); }
+  .device-sidebar-card .badge { font-family: var(--font-mono); font-size: 9px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--muted); }
+
+  /* ── Zone cards in sidebar ─── */
+  .zone-sidebar-card { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; cursor: pointer; transition: all .15s; }
+  .zone-sidebar-card:hover { background: var(--surface); }
+  .zone-sidebar-card.active { border-color: var(--cyan); background: rgba(8,145,178,0.05); }
+  .zone-sidebar-card .zone-bar { width: 3px; height: 24px; border-radius: 2px; flex-shrink: 0; }
+  .zone-sidebar-card .zone-bar.ok { background: var(--emerald); }
+  .zone-sidebar-card .zone-bar.warn { background: var(--amber); }
+  .zone-sidebar-card .zone-bar.bad { background: var(--rose); }
+  .zone-sidebar-card .zone-info { flex: 1; }
+  .zone-sidebar-card .zone-info .name { font-size: 13px; font-weight: 600; }
+  .zone-sidebar-card .zone-info .count { font-family: var(--font-mono); font-size: 9px; color: var(--dim); }
+  .zone-sidebar-card .zone-reading { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+  .zone-sidebar-card .zone-reading .unit { font-size: 10px; color: var(--muted); }
+
+  /* ── Main canvas area ─── */
+  .canvas-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .canvas-toolbar { padding: 8px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 8px; background: var(--card); }
+  .floor-tabs { display: flex; gap: 0; }
+  .floor-tab { padding: 6px 14px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); background: none; cursor: pointer; color: var(--dim); transition: all .15s; font-family: var(--font-mono); }
+  .floor-tab:first-child { border-radius: 6px 0 0 6px; }
+  .floor-tab:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+  .floor-tab.active { background: var(--surface); color: var(--text); }
+  .toolbar-spacer { flex: 1; }
+  .toolbar-meta { font-family: var(--font-mono); font-size: 10px; color: var(--dim); display: flex; gap: 12px; }
+  .btn { padding: 6px 12px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); border-radius: 6px; background: var(--card); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: var(--text-secondary); transition: all .1s; font-family: var(--font-body); }
+  .btn:hover { background: var(--surface); }
+  .btn.primary { background: var(--cyan); color: white; border-color: var(--cyan); }
+  .btn.sm { padding: 4px 8px; font-size: 10px; }
+
+  /* ── Floor plan canvas ─── */
+  .canvas-scroll { flex: 1; overflow: auto; padding: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); }
+  .floor-plan-canvas { position: relative; background: white; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; width: 900px; height: 500px; }
+  .floor-plan-canvas .grid { position: absolute; inset: 0; background-image: linear-gradient(to right, var(--border-subtle) 1px, transparent 1px), linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.4; pointer-events: none; }
+
+  /* ── Rooms on canvas ─── */
+  .room { position: absolute; border: 2px solid rgba(0,0,0,0.06); border-radius: 6px; background: rgba(255,255,255,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; color: var(--dim); font-family: var(--font-mono); letter-spacing: 0.05em; transition: all .15s; cursor: pointer; }
+  .room:hover { border-color: var(--cyan); background: rgba(8,145,178,0.04); }
+  .room.selected { border-color: var(--cyan); border-width: 2px; background: rgba(8,145,178,0.06); box-shadow: 0 0 0 3px rgba(8,145,178,0.1); }
+  .room .room-label { margin-top: 4px; }
+  .room .room-temp { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .room .room-temp .unit { font-size: 10px; color: var(--muted); }
+  .room .room-status { font-size: 8px; margin-top: 2px; }
+  .room .room-status.ok { color: var(--emerald); }
+  .room .room-status.warn { color: var(--amber); }
+
+  /* ── Device dots on canvas ─── */
+  .device-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.15); cursor: grab; transition: transform .15s; z-index: 10; }
+  .device-dot:hover { transform: scale(1.5); z-index: 20; }
+  .device-dot.online { background: var(--emerald); }
+  .device-dot.offline { background: var(--rose); }
+  .device-dot.warning { background: var(--amber); }
+  .device-dot .tooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--text); color: white; padding: 6px 10px; border-radius: 6px; font-size: 10px; white-space: nowrap; font-family: var(--font-mono); box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; }
+  .device-dot .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 4px solid transparent; border-top-color: var(--text); }
+  .device-dot:hover .tooltip { display: block; }
+
+  /* ── Drop zone indicator ─── */
+  .drop-indicator { position: absolute; inset: 0; border: 3px dashed var(--cyan); border-radius: 8px; background: rgba(8,145,178,0.05); display: none; z-index: 5; pointer-events: none; }
+  .drop-indicator.active { display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--cyan); font-weight: 500; }
+
+  /* ── Zone editor overlay ─── */
+  .zone-overlay { position: absolute; border: 2px dashed; border-radius: 4px; pointer-events: none; display: flex; align-items: flex-start; justify-content: flex-start; padding: 4px 6px; }
+  .zone-overlay .zone-tag { font-family: var(--font-mono); font-size: 8px; font-weight: 600; padding: 2px 6px; border-radius: 3px; color: white; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── Properties panel (right side) ─── */
+  .properties { width: 280px; border-left: 1px solid var(--border); background: var(--card); padding: 16px; overflow-y: auto; }
+  .properties h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .property-row { margin-bottom: 12px; }
+  .property-row label { display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--dim); margin-bottom: 4px; }
+  .property-row input, .property-row select { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: var(--font-body); background: var(--card); }
+  .property-row input:focus, .property-row select:focus { outline: none; border-color: var(--cyan); }
+
+  /* ── Status bar ─── */
+  .status-bar { padding: 6px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; font-family: var(--font-mono); font-size: 10px; color: var(--dim); background: var(--card); }
+  .status-bar .sep { color: var(--border); }
+
+  /* ── Annotations ─── */
+  hr.thick { border: none; height: 3px; background: var(--border); margin: 32px 0; border-radius: 2px; }
+  .variant-label { display: inline-block; padding: 5px 14px; margin: 24px 0 16px; background: var(--cyan); color: white; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; }
+  .annotation { margin: 24px 0; padding: 16px 20px; background: #fffbeb; border: 1px dashed var(--amber); border-radius: 10px; font-size: 12px; color: #92400e; line-height: 1.6; }
+  .annotation h4 { font-weight: 600; margin-bottom: 8px; font-size: 13px; }
+  .annotation ul { padding-left: 20px; }
+  .annotation li { margin-bottom: 6px; }
+  .annotation code { font-family: var(--font-mono); background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+</style>
+</head>
+<body style="padding: 0;">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN VIEW: Site Layout Manager
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <a href="#" class="back">&#8592; CEDIS Norte</a>
+    <h1>Site Layout</h1>
+    <div class="spacer"></div>
+    <span style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">8 devices placed &middot; 2 unplaced</span>
+    <button class="btn">&#8635; Reset</button>
+    <button class="btn primary">&#10003; Save Changes</button>
+  </div>
+
+  <div class="page-body">
+    <!-- ── Left Sidebar ─── -->
+    <div class="sidebar">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active">Devices</button>
+        <button class="sidebar-tab">Zones</button>
+        <button class="sidebar-tab">Floors</button>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Devices Tab -->
+        <div class="sidebar-section-label">Unplaced (2)</div>
+
+        <div class="device-sidebar-card" draggable="true">
+          <div class="dot unplaced"></div>
+          <div class="info">
+            <div class="name">EM300-TH - Cold Room 3</div>
+            <div class="meta">EM300-TH &middot; A81758FFFE000021</div>
+          </div>
+          <span class="badge">drag to place</span>
+        </div>
+
+        <div class="device-sidebar-card" draggable="true">
+          <div class="dot unplaced"></div>
+          <div class="info">
+            <div class="name">CT101 - Compressor 3</div>
+            <div class="meta">CT101 &middot; A81758FFFE000022</div>
+          </div>
+          <span class="badge">drag to place</span>
+        </div>
+
+        <div class="sidebar-section-label">Placed (8)</div>
+
+        <div class="device-sidebar-card">
+          <div class="dot online"></div>
+          <div class="info">
+            <div class="name">EM300-TH - Cooler A</div>
+            <div class="meta">Cooler A &middot; 3.8&deg;C</div>
+          </div>
+        </div>
+        <div class="device-sidebar-card">
+          <div class="dot online"></div>
+          <div class="info">
+            <div class="name">WS301 - Cooler A</div>
+            <div class="meta">Cooler A &middot; Door OK</div>
+          </div>
+        </div>
+        <div class="device-sidebar-card">
+          <div class="dot online"></div>
+          <div class="info">
+            <div class="name">EM300-TH - Cooler B</div>
+            <div class="meta">Cooler B &middot; 4.3&deg;C</div>
+          </div>
+        </div>
+        <div class="device-sidebar-card">
+          <div class="dot online"></div>
+          <div class="info">
+            <div class="name">EM300-TH - Freezer</div>
+            <div class="meta">Freezer &middot; -22.1&deg;C</div>
+          </div>
+        </div>
+        <div class="device-sidebar-card">
+          <div class="dot online"></div>
+          <div class="info">
+            <div class="name">CT101 - Compressor 1</div>
+            <div class="meta">Compressor 1 &middot; 4.5A</div>
+          </div>
+        </div>
+        <div class="device-sidebar-card">
+          <div class="dot offline"></div>
+          <div class="info">
+            <div class="name">AM307 - Office</div>
+            <div class="meta">Office &middot; Offline 2h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Main Canvas ─── -->
+    <div class="canvas-area">
+      <div class="canvas-toolbar">
+        <div class="floor-tabs">
+          <button class="floor-tab active">Planta Baja</button>
+          <button class="floor-tab">Piso 2</button>
+        </div>
+        <button class="btn sm">+ Add Floor</button>
+        <div class="toolbar-spacer"></div>
+        <div class="toolbar-meta">
+          <span>&#9679; 6 online</span>
+          <span style="color:var(--rose)">&#9679; 1 offline</span>
+          <span style="color:var(--amber)">&#9679; 1 alert</span>
+        </div>
+        <button class="btn sm">&#128736; Edit Zones</button>
+        <button class="btn sm">&#128247; Upload Image</button>
+      </div>
+
+      <div class="canvas-scroll">
+        <div class="floor-plan-canvas">
+          <div class="grid"></div>
+
+          <!-- Drop indicator (shown when dragging a device) -->
+          <div class="drop-indicator">Drop device here to place</div>
+
+          <!-- Rooms with zone data overlaid -->
+          <div class="room" style="top:4%;left:3%;width:28%;height:42%">
+            <div class="room-label">COOLER A</div>
+            <div class="room-temp">3.8<span class="unit">&deg;C</span></div>
+            <div class="room-status ok">2/2 online</div>
+          </div>
+          <div class="room" style="top:4%;left:33%;width:22%;height:42%">
+            <div class="room-label">COOLER B</div>
+            <div class="room-temp">4.3<span class="unit">&deg;C</span></div>
+            <div class="room-status ok">1/1 online</div>
+          </div>
+          <div class="room selected" style="top:4%;left:57%;width:40%;height:42%;border-color:var(--cyan);background:rgba(8,145,178,0.06)">
+            <div class="room-label" style="color:var(--cyan)">FREEZER</div>
+            <div class="room-temp" style="color:var(--rose)">-22.1<span class="unit">&deg;C</span></div>
+            <div class="room-status warn">1/2 online</div>
+          </div>
+          <div class="room" style="top:52%;left:3%;width:22%;height:44%">
+            <div class="room-label">KITCHEN</div>
+            <div class="room-temp">24.3<span class="unit">&deg;C</span></div>
+            <div class="room-status ok">1/1 online</div>
+          </div>
+          <div class="room" style="top:52%;left:27%;width:22%;height:44%">
+            <div class="room-label">COMPRESSOR 1</div>
+            <div class="room-temp">4.5<span class="unit">A</span></div>
+            <div class="room-status ok">1/1 online</div>
+          </div>
+          <div class="room" style="top:52%;left:51%;width:22%;height:44%">
+            <div class="room-label">COMPRESSOR 2</div>
+            <div class="room-temp">4.4<span class="unit">A</span></div>
+            <div class="room-status ok">1/1 online</div>
+          </div>
+          <div class="room" style="top:52%;left:75%;width:22%;height:44%">
+            <div class="room-label">OFFICE</div>
+            <div class="room-temp" style="color:var(--dim)">&mdash;</div>
+            <div class="room-status" style="color:var(--rose)">0/1 offline</div>
+          </div>
+
+          <!-- Device dots -->
+          <div class="device-dot online" style="top:18%;left:15%"><span class="tooltip">EM300-TH &middot; 3.8&deg;C</span></div>
+          <div class="device-dot online" style="top:30%;left:24%"><span class="tooltip">WS301 &middot; Door OK</span></div>
+          <div class="device-dot online" style="top:20%;left:43%"><span class="tooltip">EM300-TH &middot; 4.3&deg;C</span></div>
+          <div class="device-dot online" style="top:16%;left:72%"><span class="tooltip">EM300-TH &middot; -22.1&deg;C</span></div>
+          <div class="device-dot warning" style="top:32%;left:82%"><span class="tooltip">WS301 &middot; Door OPEN &#9888;</span></div>
+          <div class="device-dot online" style="top:68%;left:12%"><span class="tooltip">GS101 &middot; 24.3&deg;C</span></div>
+          <div class="device-dot online" style="top:70%;left:37%"><span class="tooltip">CT101 &middot; 4.5A</span></div>
+          <div class="device-dot offline" style="top:66%;left:85%"><span class="tooltip">AM307 &middot; OFFLINE</span></div>
+        </div>
+      </div>
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span>Selected: <strong>Freezer</strong></span>
+        <span class="sep">|</span>
+        <span>2 devices &middot; 1 online &middot; 1 alert</span>
+        <span class="sep">|</span>
+        <span>-22.1&deg;C (range: -25 to -18&deg;C)</span>
+        <div style="flex:1"></div>
+        <span>Click zone to select &middot; Drag device to reposition</span>
+      </div>
+    </div>
+
+    <!-- ── Right Properties Panel ─── -->
+    <div class="properties">
+      <h3>&#10052; Freezer</h3>
+
+      <div class="property-row">
+        <label>Zone Name</label>
+        <input type="text" value="Freezer">
+      </div>
+      <div class="property-row">
+        <label>Color</label>
+        <div style="display:flex;gap:6px;">
+          <div style="width:24px;height:24px;border-radius:4px;background:#dbeafe;border:2px solid var(--blue);cursor:pointer;"></div>
+          <div style="width:24px;height:24px;border-radius:4px;background:#dcfce7;border:1px solid var(--border);cursor:pointer;"></div>
+          <div style="width:24px;height:24px;border-radius:4px;background:#fef3c7;border:1px solid var(--border);cursor:pointer;"></div>
+          <div style="width:24px;height:24px;border-radius:4px;background:#ffe4e6;border:1px solid var(--border);cursor:pointer;"></div>
+          <div style="width:24px;height:24px;border-radius:4px;background:#f3e8ff;border:1px solid var(--border);cursor:pointer;"></div>
+        </div>
+      </div>
+
+      <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--dim);margin:20px 0 8px;">Devices in Zone</div>
+
+      <div class="device-sidebar-card" style="margin-bottom:4px;">
+        <div class="dot online"></div>
+        <div class="info">
+          <div class="name" style="font-size:11px;">EM300-TH - Freezer</div>
+          <div class="meta">-22.1&deg;C &middot; 2m ago</div>
+        </div>
+      </div>
+      <div class="device-sidebar-card" style="margin-bottom:4px;">
+        <div class="dot warning"></div>
+        <div class="info">
+          <div class="name" style="font-size:11px;">WS301 - Freezer</div>
+          <div class="meta">Door OPEN &middot; 5m ago</div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--dim);margin-bottom:8px;">Zone Boundary</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="property-row" style="margin:0"><label>X</label><input type="text" value="57%" style="font-family:var(--font-mono);font-size:11px;"></div>
+          <div class="property-row" style="margin:0"><label>Y</label><input type="text" value="4%" style="font-family:var(--font-mono);font-size:11px;"></div>
+          <div class="property-row" style="margin:0"><label>Width</label><input type="text" value="40%" style="font-family:var(--font-mono);font-size:11px;"></div>
+          <div class="property-row" style="margin:0"><label>Height</label><input type="text" value="42%" style="font-family:var(--font-mono);font-size:11px;"></div>
+        </div>
+      </div>
+
+      <button class="btn" style="width:100%;margin-top:16px;justify-content:center;color:var(--rose);border-color:rgba(244,63,94,0.3);">&#128465; Delete Zone</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div style="padding:24px 40px;max-width:1200px;margin:0 auto;">
+
+<hr class="thick">
+
+<div class="variant-label">SIDEBAR: Zones Tab</div>
+
+<div style="width:320px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card);">
+  <div class="sidebar-tabs">
+    <button class="sidebar-tab">Devices</button>
+    <button class="sidebar-tab active">Zones</button>
+    <button class="sidebar-tab">Floors</button>
+  </div>
+  <div style="padding:12px;">
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input type="text" placeholder="Search zones..." style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font-body);">
+      <button class="btn sm">+ Add</button>
+    </div>
+
+    <div class="zone-sidebar-card active">
+      <div class="zone-bar warn"></div>
+      <div class="zone-info"><div class="name">Freezer</div><div class="count">2 devices &middot; 1 alert</div></div>
+      <div class="zone-reading" style="color:var(--rose)">-22<span class="unit">&deg;C</span></div>
+    </div>
+    <div class="zone-sidebar-card">
+      <div class="zone-bar ok"></div>
+      <div class="zone-info"><div class="name">Cooler A</div><div class="count">2 devices</div></div>
+      <div class="zone-reading">3.8<span class="unit">&deg;C</span></div>
+    </div>
+    <div class="zone-sidebar-card">
+      <div class="zone-bar ok"></div>
+      <div class="zone-info"><div class="name">Cooler B</div><div class="count">1 device</div></div>
+      <div class="zone-reading">4.3<span class="unit">&deg;C</span></div>
+    </div>
+    <div class="zone-sidebar-card">
+      <div class="zone-bar ok"></div>
+      <div class="zone-info"><div class="name">Kitchen</div><div class="count">1 device</div></div>
+      <div class="zone-reading">24.3<span class="unit">&deg;C</span></div>
+    </div>
+    <div class="zone-sidebar-card">
+      <div class="zone-bar ok"></div>
+      <div class="zone-info"><div class="name">Compressor 1</div><div class="count">1 device</div></div>
+      <div class="zone-reading">4.5<span class="unit">A</span></div>
+    </div>
+    <div class="zone-sidebar-card">
+      <div class="zone-bar bad"></div>
+      <div class="zone-info"><div class="name">Office</div><div class="count">1 device &middot; offline</div></div>
+      <div class="zone-reading" style="color:var(--dim)">&mdash;</div>
+    </div>
+  </div>
+</div>
+
+<hr class="thick">
+
+<div class="variant-label">SIDEBAR: Floors Tab</div>
+
+<div style="width:320px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card);">
+  <div class="sidebar-tabs">
+    <button class="sidebar-tab">Devices</button>
+    <button class="sidebar-tab">Zones</button>
+    <button class="sidebar-tab active">Floors</button>
+  </div>
+  <div style="padding:12px;">
+    <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;background:var(--surface);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:13px;font-weight:600;">Planta Baja</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">Floor 1 &middot; 1200 x 600px &middot; 7 devices</div>
+        </div>
+        <span style="font-size:10px;color:var(--emerald);">Active</span>
+      </div>
+      <div style="margin-top:8px;height:60px;background:var(--border-subtle);border-radius:4px;overflow:hidden;">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#f0f2f5,#e8ecf1);"></div>
+      </div>
+    </div>
+
+    <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:13px;font-weight:600;">Piso 2</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);">Floor 2 &middot; 1200 x 400px &middot; 3 devices</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;height:40px;background:var(--border-subtle);border-radius:4px;"></div>
+    </div>
+
+    <div style="border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;color:var(--dim);cursor:pointer;">
+      <div style="font-size:16px;opacity:0.4;margin-bottom:4px;">&#128506;</div>
+      <div style="font-size:12px;font-weight:500;">Upload Floor Plan</div>
+      <div style="font-size:10px;color:var(--dim);">Drag image or click to browse</div>
+    </div>
+
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">
+      <button class="btn" style="width:100%;justify-content:center;color:var(--rose);border-color:rgba(244,63,94,0.3);">&#128465; Delete Current Floor</button>
+    </div>
+  </div>
+</div>
+
+<hr class="thick">
+
+<!-- Design Notes -->
+<div class="annotation">
+  <h4>&#128208; Site Layout Manager — Design Decisions</h4>
+  <ul>
+    <li><strong>Full-page editor</strong> — Not a tab on the site show page. This is a dedicated tool accessed via Setup tab &rarr; "Floor Plans" config card, or the "Manage" button on the floor plan header.</li>
+    <li><strong>Three-panel layout</strong> — Left sidebar (devices/zones/floors), center canvas (floor plan), right properties (selected zone/device details). Follows the Figma/design-tool mental model operators already know.</li>
+    <li><strong>Drag to place</strong> — Unplaced devices in the sidebar have a dashed amber border. Drag them onto the canvas to place. The existing <code>FloorPlanView</code> already handles this — we wrap it in this layout.</li>
+    <li><strong>Zone rectangles on canvas</strong> — Zones are drawn as rectangles (not polygons) over the floor plan image. Each zone has: name, color, position (x/y/w/h as percentages). Clicking a zone selects it in the right panel.</li>
+    <li><strong>Auto-zone assignment</strong> — When a device is placed inside a zone rectangle, it auto-assigns <code>device.zone</code> to that zone's name. Moving a device to a different zone rectangle reassigns it.</li>
+    <li><strong>Zone as data model</strong> — Currently <code>zone</code> is a string on Device. For zone boundaries, we need a new table: <code>zone_boundaries</code> with <code>site_id, floor_plan_id, name, color, x, y, width, height</code>. The zone string on Device stays for backward compatibility.</li>
+    <li><strong>Rooms vs Zones</strong> — The mockup shows rooms with temperature overlays. These ARE the zones. Each zone boundary corresponds to a physical area on the floor plan.</li>
+    <li><strong>Status bar</strong> — Bottom bar shows selected zone info + keyboard shortcuts. Contextual help.</li>
+    <li><strong>Sidebar tabs</strong> — Three modes: <strong>Devices</strong> (drag to place, see unplaced vs placed), <strong>Zones</strong> (list with readings, click to select/highlight on canvas), <strong>Floors</strong> (manage floor plan images, upload, delete, reorder).</li>
+    <li><strong>Save/Reset</strong> — Changes are batched locally. "Save Changes" persists all position + zone changes at once. "Reset" discards unsaved changes. This prevents accidental modifications.</li>
+    <li><strong>Properties panel</strong> — Right side shows details of selected zone or device. For zones: name, color, devices in zone, boundary coordinates, delete. For devices: name, model, zone assignment, position, status.</li>
+  </ul>
+</div>
+
+<div class="annotation" style="background:#f0fdf4;border-color:#86efac;color:#166534;">
+  <h4>&#9989; Implementation Plan</h4>
+  <ul>
+    <li><strong>Phase 1:</strong> New route <code>GET /sites/{site}/layout</code> &rarr; dedicated Inertia page <code>sites/layout.tsx</code></li>
+    <li><strong>Phase 2:</strong> Create <code>zone_boundaries</code> migration + model (site_id, floor_plan_id, name, color, x, y, width, height)</li>
+    <li><strong>Phase 3:</strong> Build the three-panel layout wrapping existing <code>FloorPlanView</code></li>
+    <li><strong>Phase 4:</strong> Add zone rectangle drawing (click-drag to create, resize handles)</li>
+    <li><strong>Phase 5:</strong> Auto-zone assignment when device placed inside boundary</li>
+    <li><strong>Phase 6:</strong> Batch save endpoint for positions + zone assignments</li>
+    <li><strong>Phase 7:</strong> Update Overview tab floor plan to show zone overlays with readings</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alerts & Work Orders — UX Mockup v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Lexend:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --surface: #12151a;
+    --card: #161a21;
+    --card-hover: #1c2028;
+    --border: rgba(255,255,255,0.06);
+    --border-accent: rgba(255,255,255,0.1);
+    --text: #e4e7eb;
+    --text-dim: #8b919a;
+    --text-faint: rgba(255,255,255,0.3);
+    --accent: #2dd4bf;
+    --accent-dim: rgba(45,212,191,0.12);
+    --rose: #f43f5e;
+    --rose-dim: rgba(244,63,94,0.1);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.1);
+    --blue: #3b82f6;
+    --violet: #8b5cf6;
+    --emerald: #10b981;
+    --radius: 12px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Lexend',sans-serif; line-height:1.5; padding:40px; max-width:1180px; margin:0 auto; }
+  h1,h2,h3 { font-family:'Bricolage Grotesque',sans-serif; }
+  .mono { font-family:'Fira Code',monospace; }
+
+  .mockup-label { display:inline-block; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.2em; padding:4px 10px; border-radius:4px; margin-bottom:16px; }
+  .label-rose { background:var(--rose-dim); color:var(--rose); }
+  .label-blue { background:rgba(59,130,246,0.12); color:var(--blue); }
+  .page-title { font-size:24px; font-weight:700; margin-bottom:6px; }
+  .page-desc { font-size:13px; color:var(--text-dim); margin-bottom:28px; max-width:540px; }
+  .divider { height:1px; background:var(--border); margin:72px 0; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .sec-divider { display:flex; align-items:center; gap:12px; margin:24px 0 14px; }
+  .sec-divider span { font-family:'Fira Code',monospace; font-size:10px; font-weight:500; letter-spacing:0.15em; color:var(--text-faint); white-space:nowrap; }
+  .sec-divider .line { flex:1; height:1px; background:var(--border); }
+
+  .badge { display:inline-flex; align-items:center; font-size:9px; font-weight:500; padding:2px 8px; border-radius:9999px; }
+  .b-critical { background:rgba(244,63,94,0.15); color:var(--rose); }
+  .b-high { background:rgba(245,158,11,0.18); color:var(--amber); }
+  .b-medium { background:rgba(59,130,246,0.18); color:var(--blue); }
+  .b-low { background:rgba(107,114,128,0.2); color:#9ca3af; }
+  .b-active { background:rgba(244,63,94,0.1); color:var(--rose); border:1px solid rgba(244,63,94,0.2); }
+  .b-ack { background:rgba(245,158,11,0.12); color:var(--amber); }
+  .b-resolved { background:rgba(16,185,129,0.12); color:var(--emerald); }
+  .b-dismissed { background:rgba(107,114,128,0.15); color:#9ca3af; }
+  .b-open { background:rgba(244,63,94,0.1); color:var(--rose); }
+  .b-assigned { background:rgba(245,158,11,0.12); color:var(--amber); }
+  .b-progress { background:rgba(59,130,246,0.12); color:var(--blue); }
+  .b-completed { background:rgba(16,185,129,0.12); color:var(--emerald); }
+  .b-outline { border:1px solid var(--border-accent); color:var(--text-dim); }
+  .b-overdue { background:rgba(244,63,94,0.15); color:var(--rose); border:1px solid rgba(244,63,94,0.3); font-weight:600; }
+
+  .btn { display:inline-flex; align-items:center; gap:6px; font-family:'Lexend',sans-serif; font-size:12px; font-weight:500; padding:7px 14px; border-radius:8px; border:none; cursor:pointer; }
+  .btn-primary { background:var(--accent); color:#0b0d10; }
+  .btn-outline { background:transparent; border:1px solid var(--border-accent); color:var(--text-dim); }
+  .btn-ghost { background:transparent; color:var(--text-dim); padding:5px 8px; }
+  .btn-sm { font-size:11px; padding:5px 10px; }
+  .btn-icon { width:28px; height:28px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--text-dim); cursor:pointer; }
+  .btn-icon:hover { border-color:var(--border-accent); color:var(--text); }
+
+  .fade-in { opacity:0; animation:fadeUp 0.5s ease forwards; }
+  @keyframes fadeUp { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ═══════ Header ═══════ */
+  .header-row { display:flex; align-items:flex-start; justify-content:space-between; }
+  .kpi-strip { display:flex; gap:8px; }
+  .kpi-pill { display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.02); }
+  .kpi-dot { width:6px; height:6px; border-radius:50%; }
+  .kpi-count { font-family:'Fira Code',monospace; font-weight:600; font-size:13px; }
+  .kpi-label { font-size:11px; color:var(--text-dim); }
+
+  .live-indicator { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:9999px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); font-size:10px; color:var(--emerald); font-family:'Fira Code',monospace; }
+  .live-dot { width:6px; height:6px; border-radius:50%; background:var(--emerald); animation:blink 1.5s infinite; }
+
+  /* ═══════ Toolbar (search + filters) ═══════ */
+  .toolbar { display:flex; gap:10px; align-items:center; margin-top:20px; flex-wrap:wrap; }
+  .search { position:relative; flex:1; min-width:240px; max-width:340px; }
+  .search input { width:100%; padding:8px 12px 8px 34px; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Lexend',sans-serif; font-size:12px; outline:none; }
+  .search input:focus { border-color:var(--accent); }
+  .search .icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-faint); font-size:14px; }
+  .select-field { padding:8px 28px 8px 12px; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Lexend',sans-serif; font-size:12px; cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
+
+  .filter-bar { display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px; background:var(--card); border:1px solid var(--border); border-radius:10px; align-items:center; margin-top:10px; }
+  .filter-pill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; font-size:11px; border-radius:6px; border:1px solid var(--border); cursor:pointer; color:var(--text-dim); }
+  .filter-pill.active { background:var(--accent-dim); border-color:rgba(45,212,191,0.3); color:var(--accent); }
+
+  /* ═══════ Alert row ═══════ */
+  .alert-row { display:grid; grid-template-columns:20px 80px 1fr 180px 140px 80px 70px 80px; gap:14px; padding:12px 16px; border-bottom:1px solid var(--border); align-items:center; transition:background 0.12s; }
+  .alert-row:last-child { border-bottom:none; }
+  .alert-row:hover { background:var(--card-hover); }
+  .alert-row.critical-active { background:linear-gradient(90deg, rgba(244,63,94,0.08) 0%, transparent 100%); border-left:3px solid var(--rose); padding-left:13px; }
+  .alert-row input[type="checkbox"] { margin:0; accent-color:var(--accent); }
+  .alert-title { font-size:13px; font-weight:500; }
+  .alert-rule { font-size:10px; color:var(--text-faint); font-family:'Fira Code',monospace; margin-top:1px; }
+  .alert-device { font-size:11px; color:var(--text-dim); }
+  .alert-zone { font-size:10px; color:var(--text-faint); }
+  .alert-reading { font-family:'Fira Code',monospace; font-size:11px; }
+  .alert-reading .val { color:var(--rose); font-weight:600; }
+  .alert-reading .threshold { color:var(--text-faint); }
+  .alert-time { font-family:'Fira Code',monospace; font-size:11px; color:var(--text-dim); }
+  .alert-actions { display:flex; gap:4px; justify-content:flex-end; }
+  .severity-bar { width:3px; height:24px; border-radius:2px; }
+  .severity-bar-critical { background:var(--rose); animation:pulse 2s infinite; }
+  .severity-bar-high { background:var(--amber); }
+  .severity-bar-medium { background:var(--blue); }
+  .chain-indicator { display:inline-flex; align-items:center; gap:3px; font-size:9px; color:var(--text-faint); margin-top:2px; }
+  .chain-dot { width:4px; height:4px; border-radius:50%; background:var(--amber); }
+
+  /* Pagination */
+  .pagination { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-top:1px solid var(--border); }
+  .pagination .info { font-size:11px; color:var(--text-dim); font-family:'Fira Code',monospace; }
+  .pagination .nav { display:flex; gap:4px; }
+
+  /* ═══════ Alert Detail ═══════ */
+  .alert-hero { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; }
+  .hero-top { display:flex; align-items:flex-start; justify-content:space-between; }
+  .hero-meta { font-family:'Fira Code',monospace; font-size:10px; color:var(--text-faint); letter-spacing:0.15em; text-transform:uppercase; }
+  .hero-title { font-size:22px; font-weight:700; margin-top:4px; margin-bottom:8px; }
+  .hero-badges { display:flex; gap:6px; margin-top:8px; }
+  .hero-actions { display:flex; gap:8px; position:relative; }
+  .hero-timestamp { font-family:'Fira Code',monospace; font-size:11px; color:var(--text-dim); margin-top:8px; }
+
+  .similar-banner { display:flex; align-items:center; gap:12px; padding:12px 16px; margin-top:16px; background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.2); border-radius:10px; }
+  .similar-banner .icon { width:32px; height:32px; border-radius:50%; background:rgba(245,158,11,0.15); color:var(--amber); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
+  .similar-banner .text { flex:1; font-size:12px; color:var(--text-dim); }
+  .similar-banner .text strong { color:var(--amber); }
+  .similar-banner .link { font-size:11px; color:var(--amber); text-decoration:underline; cursor:pointer; }
+
+  .detail-grid { display:grid; grid-template-columns:1fr 320px; gap:20px; margin-top:20px; }
+  .detail-main { display:flex; flex-direction:column; gap:16px; }
+
+  .trigger-card { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; padding:16px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); }
+  .trigger-field .label { font-size:9px; font-weight:500; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:4px; }
+  .trigger-field .value { font-size:13px; font-weight:500; }
+  .trigger-field .value.mono { font-family:'Fira Code',monospace; font-weight:600; }
+  .trigger-field .value.rose { color:var(--rose); }
+  .trigger-field .sub { font-size:10px; color:var(--text-faint); }
+
+  .chart-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+  .chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .chart-title { font-size:12px; font-weight:500; color:var(--text); }
+  .chart-sub { font-size:10px; color:var(--text-faint); margin-top:2px; }
+  .chart-svg { width:100%; height:140px; }
+
+  .notif-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+  .notif-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--border); font-size:11px; }
+  .notif-avatar { width:24px; height:24px; border-radius:6px; background:rgba(139,92,246,0.2); color:#a78bfa; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:10px; font-family:'Bricolage Grotesque',sans-serif; }
+  .notif-name { font-weight:500; flex:1; }
+  .notif-channel { padding:2px 6px; border-radius:4px; font-size:9px; border:1px solid; }
+  .ch-wa { border-color:rgba(37,211,102,0.3); color:#25d366; }
+  .ch-push { border-color:rgba(59,130,246,0.3); color:#60a5fa; }
+  .ch-email { border-color:rgba(139,92,246,0.3); color:#a78bfa; }
+  .notif-status { font-family:'Fira Code',monospace; font-size:9px; color:var(--text-faint); }
+  .notif-status.delivered { color:var(--emerald); }
+  .notif-status.failed { color:var(--rose); }
+
+  .ca-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+  .ca-item { padding:12px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; }
+  .ca-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .ca-user { font-size:12px; font-weight:500; }
+  .ca-text { font-size:12px; color:var(--text-dim); }
+  .ca-verify { font-size:10px; color:var(--text-faint); margin-top:6px; }
+
+  /* Audit trail */
+  .audit-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+  .audit-item { display:flex; gap:10px; padding:8px 0; border-top:1px solid var(--border); font-size:11px; }
+  .audit-item:first-of-type { border-top:none; padding-top:0; }
+  .audit-user { font-weight:500; color:var(--text); }
+  .audit-action { color:var(--text-dim); }
+  .audit-time { font-family:'Fira Code',monospace; font-size:9px; color:var(--text-faint); margin-left:auto; white-space:nowrap; }
+
+  /* Sidebar */
+  .detail-sidebar { display:flex; flex-direction:column; gap:16px; }
+  .side-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+  .side-title { font-family:'Fira Code',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-faint); margin-bottom:12px; }
+  .timeline-step { display:flex; gap:12px; padding:8px 0; }
+  .timeline-dot { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; border:2px solid; flex-shrink:0; }
+  .dot-done { background:var(--emerald); border-color:var(--emerald); color:#0b0d10; }
+  .dot-active { background:var(--amber); border-color:var(--amber); color:#0b0d10; animation:pulse 2s infinite; }
+  .dot-pending { background:transparent; border-color:var(--border); color:var(--text-faint); }
+  .timeline-content { flex:1; }
+  .timeline-label { font-size:12px; font-weight:500; }
+  .timeline-time { font-family:'Fira Code',monospace; font-size:10px; color:var(--text-faint); }
+
+  .side-row { display:flex; justify-content:space-between; padding:6px 0; font-size:12px; }
+  .side-row .k { color:var(--text-faint); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; }
+  .side-row .v { color:var(--text); font-family:'Fira Code',monospace; }
+
+  .related-item { display:flex; align-items:center; gap:10px; padding:10px; border:1px solid var(--border); border-radius:8px; margin-top:8px; cursor:pointer; }
+  .related-item:hover { border-color:var(--border-accent); }
+  .related-icon { width:32px; height:32px; border-radius:8px; background:rgba(139,92,246,0.1); color:#a78bfa; display:flex; align-items:center; justify-content:center; font-size:14px; }
+
+  /* Snooze menu */
+  .snooze-menu { position:absolute; top:calc(100% + 4px); right:80px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:6px; min-width:160px; box-shadow:0 10px 30px rgba(0,0,0,0.4); z-index:10; }
+  .snooze-menu-title { font-size:9px; font-weight:600; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.1em; padding:6px 10px; }
+  .snooze-item { display:flex; align-items:center; justify-content:space-between; padding:7px 10px; font-size:12px; border-radius:6px; cursor:pointer; color:var(--text-dim); }
+  .snooze-item:hover { background:var(--card-hover); color:var(--text); }
+  .snooze-item .dur { font-family:'Fira Code',monospace; font-size:10px; color:var(--text-faint); }
+
+  /* Dismiss confirmation */
+  .dismiss-warning { margin-top:12px; padding:10px; background:rgba(244,63,94,0.06); border:1px solid rgba(244,63,94,0.2); border-radius:8px; font-size:11px; color:var(--text-dim); }
+  .dismiss-warning strong { color:var(--rose); }
+
+  /* ═══════ Work Orders ═══════ */
+  .workload-strip { display:flex; gap:12px; flex-wrap:wrap; }
+  .workload-card { flex:1; min-width:180px; padding:14px; background:var(--card); border:1px solid var(--border); border-radius:10px; display:flex; align-items:center; gap:12px; }
+  .workload-avatar { width:36px; height:36px; border-radius:10px; background:rgba(59,130,246,0.2); color:#60a5fa; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:12px; font-family:'Bricolage Grotesque',sans-serif; }
+  .workload-info { flex:1; }
+  .workload-name { font-size:13px; font-weight:500; }
+  .workload-bar { height:4px; background:rgba(255,255,255,0.05); border-radius:2px; margin-top:6px; overflow:hidden; }
+  .workload-fill { height:100%; border-radius:2px; }
+  .workload-count { font-family:'Fira Code',monospace; font-size:11px; font-weight:600; }
+
+  .wo-row { display:grid; grid-template-columns:20px 3px 1fr 110px 80px 100px 130px 90px 70px; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); align-items:center; }
+  .wo-row:last-child { border-bottom:none; }
+  .wo-row:hover { background:var(--card-hover); }
+  .wo-row.urgent-open { background:linear-gradient(90deg, rgba(244,63,94,0.06) 0%, transparent 100%); border-left:3px solid var(--rose); padding-left:13px; }
+  .priority-indicator { width:3px; height:24px; border-radius:2px; }
+  .p-urgent { background:var(--rose); animation:pulse 2s infinite; }
+  .p-high { background:var(--amber); }
+  .p-medium { background:var(--blue); }
+  .p-low { background:#6b7280; }
+  .wo-title { font-size:13px; font-weight:500; }
+  .wo-sub { font-size:10px; color:var(--text-faint); margin-top:1px; font-family:'Fira Code',monospace; }
+  .wo-assigned { font-size:12px; display:flex; align-items:center; gap:6px; }
+  .wo-assigned .avatar { width:20px; height:20px; border-radius:4px; background:rgba(59,130,246,0.2); color:#60a5fa; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:600; }
+  .wo-age { display:flex; flex-direction:column; gap:2px; font-family:'Fira Code',monospace; font-size:10px; }
+  .wo-age .status-time { color:var(--text-dim); }
+  .wo-age .created { color:var(--text-faint); }
+  .wo-age.overdue .status-time { color:var(--rose); font-weight:600; }
+
+  /* Detail */
+  .wo-hero { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; }
+  .wo-detail-grid { display:grid; grid-template-columns:1fr 320px; gap:20px; margin-top:20px; }
+
+  .info-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+  .info-row { display:flex; justify-content:space-between; padding:8px 0; font-size:12px; border-bottom:1px solid var(--border); }
+  .info-row:last-child { border-bottom:none; }
+  .info-row .k { color:var(--text-faint); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; }
+  .info-row .v { font-weight:500; }
+
+  .inline-assign { display:flex; align-items:center; gap:6px; padding:4px 8px; background:rgba(59,130,246,0.1); border:1px dashed rgba(59,130,246,0.3); border-radius:6px; color:#60a5fa; font-size:11px; cursor:pointer; }
+
+  .photo-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-top:10px; }
+  .photo-placeholder { aspect-ratio:1; background:rgba(255,255,255,0.03); border:1px dashed var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:18px; cursor:pointer; }
+  .photo-thumb { aspect-ratio:1; background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.08)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+
+  .notes-list { margin-top:12px; }
+  .note-item { padding:10px; background:rgba(255,255,255,0.02); border-radius:8px; margin-bottom:6px; font-size:12px; }
+  .note-head { display:flex; justify-content:space-between; margin-bottom:4px; font-size:10px; color:var(--text-faint); }
+  .note-head .user { color:var(--text); font-weight:500; }
+  .note-input { display:flex; gap:8px; margin-top:10px; }
+  .note-input input { flex:1; padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Lexend',sans-serif; font-size:12px; }
+
+  .status-flow { display:flex; align-items:center; gap:0; padding:14px; background:var(--card); border:1px solid var(--border); border-radius:10px; margin-bottom:16px; }
+  .status-step { flex:1; display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text-faint); }
+  .status-step.done { color:var(--emerald); }
+  .status-step.current { color:var(--amber); font-weight:600; }
+  .status-arrow { color:var(--text-faint); font-size:14px; }
+  .status-step .num { width:20px; height:20px; border-radius:50%; border:1.5px solid currentColor; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; }
+
+  .callout { background:rgba(45,212,191,0.06); border:1px solid rgba(45,212,191,0.2); border-radius:10px; padding:12px 16px; margin-bottom:24px; display:flex; align-items:flex-start; gap:10px; font-size:12px; color:var(--text-dim); }
+  .callout strong { color:var(--accent); }
+  .callout .icon { color:var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  PAGE 1: ALERTS INDEX                               -->
+<!-- ═══════════════════════════════════════════════════ -->
+
+<div class="fade-in">
+  <div class="mockup-label label-rose">Page 1 · Alerts Index</div>
+  <h1 class="page-title">Alert Monitor</h1>
+  <p class="page-desc">Real-time alert feed with search, site filter, severity pills, and quick actions.</p>
+</div>
+
+<div class="callout fade-in" style="animation-delay:0.1s">
+  <span class="icon">+</span>
+  <div><strong>v2 additions:</strong> search bar, site filter dropdown, date range, live indicator, pagination footer.</div>
+</div>
+
+<div class="header-row fade-in" style="animation-delay:0.15s">
+  <div>
+    <div class="mono" style="font-size:10px; letter-spacing:0.2em; color:var(--text-faint); text-transform:uppercase;">Alert Monitor</div>
+    <h2 style="font-size:28px; font-weight:700; margin-top:4px;">Active Alerts <span class="live-indicator" style="margin-left:8px; vertical-align:middle; font-size:9px;"><span class="live-dot"></span>LIVE</span></h2>
+    <p style="font-size:13px; color:var(--text-dim); margin-top:4px;">
+      <span class="mono" style="font-weight:600; color:var(--text);">10</span> alerts &middot;
+      <span style="color:var(--rose);">7 active</span>
+    </p>
+  </div>
+  <div class="kpi-strip">
+    <div class="kpi-pill"><div class="kpi-dot" style="background:var(--rose);"></div><span class="kpi-count">5</span><span class="kpi-label">critical</span></div>
+    <div class="kpi-pill"><div class="kpi-dot" style="background:var(--amber);"></div><span class="kpi-count">2</span><span class="kpi-label">high</span></div>
+    <div class="kpi-pill"><div class="kpi-dot" style="background:var(--emerald);"></div><span class="kpi-count">3</span><span class="kpi-label">resolved</span></div>
+  </div>
+</div>
+
+<!-- Toolbar: search + site + date -->
+<div class="toolbar fade-in" style="animation-delay:0.2s">
+  <div class="search">
+    <span class="icon">&#128269;</span>
+    <input placeholder="Search rule, device, or zone..." />
+  </div>
+  <select class="select-field">
+    <option>All Sites</option>
+    <option>CEDIS Norte</option>
+    <option>CEDIS Centro</option>
+  </select>
+  <select class="select-field">
+    <option>Last 7 days</option>
+    <option>Last 24 hours</option>
+    <option>Last 30 days</option>
+    <option>Custom range</option>
+  </select>
+</div>
+
+<!-- Filter pills -->
+<div class="fade-in" style="animation-delay:0.25s">
+  <div class="filter-bar">
+    <span style="font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.1em; margin-right:4px;">Severity:</span>
+    <span class="filter-pill active">All</span>
+    <span class="filter-pill">Critical</span>
+    <span class="filter-pill">High</span>
+    <span class="filter-pill">Medium</span>
+    <span class="filter-pill">Low</span>
+    <div style="width:1px; height:16px; background:var(--border); margin:0 6px;"></div>
+    <span style="font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.1em; margin-right:4px;">Status:</span>
+    <span class="filter-pill active">Active + Ack</span>
+    <span class="filter-pill">Active only</span>
+    <span class="filter-pill">Resolved</span>
+    <span class="filter-pill">Dismissed</span>
+    <div style="flex:1"></div>
+    <span class="filter-pill" style="border-color:rgba(45,212,191,0.3); color:var(--accent);">Bulk actions (3)</span>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card fade-in" style="animation-delay:0.3s; margin-top:14px;">
+  <div class="alert-row" style="background:rgba(255,255,255,0.02); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-faint); padding-top:10px; padding-bottom:10px;">
+    <input type="checkbox" />
+    <span>Severity</span>
+    <span>Alert</span>
+    <span>Device / Zone</span>
+    <span>Reading</span>
+    <span>Status</span>
+    <span>Age</span>
+    <span></span>
+  </div>
+
+  <div class="alert-row critical-active">
+    <input type="checkbox" checked />
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div class="severity-bar severity-bar-critical"></div>
+      <span class="badge b-critical">critical</span>
+    </div>
+    <div>
+      <div class="alert-title">Walk-in Cooler Max Temp</div>
+      <div class="alert-rule">rule_id=12 &middot; Walk-in Cooler</div>
+      <div class="chain-indicator"><span class="chain-dot"></span>L2 escalated to Admin</div>
+    </div>
+    <div>
+      <div class="alert-device">EM300-TH Cooler A</div>
+      <div class="alert-zone">CEDIS Norte &middot; Cooler A</div>
+    </div>
+    <div class="alert-reading">temperature: <span class="val">11.3°C</span><br /><span class="threshold">threshold: 8°C</span></div>
+    <div><span class="badge b-active">active</span></div>
+    <div class="alert-time">13h</div>
+    <div class="alert-actions">
+      <button class="btn-icon" title="Acknowledge">&check;</button>
+      <button class="btn-icon" title="Snooze">&#9201;</button>
+    </div>
+  </div>
+
+  <div class="alert-row critical-active">
+    <input type="checkbox" checked />
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div class="severity-bar severity-bar-critical"></div>
+      <span class="badge b-critical">critical</span>
+    </div>
+    <div>
+      <div class="alert-title">Freezer Min Temp</div>
+      <div class="alert-rule">rule_id=14 &middot; Freezer</div>
+      <div class="chain-indicator"><span style="color:var(--emerald)">&#10003;</span> <span>CA logged by Viewer Norte</span></div>
+    </div>
+    <div>
+      <div class="alert-device">EM300-TH Freezer</div>
+      <div class="alert-zone">CEDIS Norte &middot; Freezer</div>
+    </div>
+    <div class="alert-reading">temperature: <span class="val">-27.4°C</span><br /><span class="threshold">threshold: -25°C</span></div>
+    <div><span class="badge b-active">active</span></div>
+    <div class="alert-time">12h</div>
+    <div class="alert-actions">
+      <button class="btn-icon">&check;</button>
+      <button class="btn-icon">&#9201;</button>
+    </div>
+  </div>
+
+  <div class="alert-row">
+    <input type="checkbox" />
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div class="severity-bar severity-bar-high"></div>
+      <span class="badge b-high">high</span>
+    </div>
+    <div>
+      <div class="alert-title">Door Open Too Long</div>
+      <div class="alert-rule">rule_id=9 &middot; Cold Room Door</div>
+    </div>
+    <div>
+      <div class="alert-device">WS301 Cooler A</div>
+      <div class="alert-zone">CEDIS Norte &middot; Cooler A</div>
+    </div>
+    <div class="alert-reading">door_status: <span class="val">open 18m</span><br /><span class="threshold">threshold: 15m</span></div>
+    <div><span class="badge b-active">active</span></div>
+    <div class="alert-time">11h</div>
+    <div class="alert-actions">
+      <button class="btn-icon">&check;</button>
+      <button class="btn-icon">&#9201;</button>
+    </div>
+  </div>
+
+  <div class="alert-row">
+    <input type="checkbox" />
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div class="severity-bar severity-bar-medium"></div>
+      <span class="badge b-medium">medium</span>
+    </div>
+    <div>
+      <div class="alert-title">High Humidity Alert</div>
+      <div class="alert-rule">rule_id=5 &middot; Walk-in Cooler</div>
+    </div>
+    <div>
+      <div class="alert-device">EM300-TH Cooler B</div>
+      <div class="alert-zone">CEDIS Centro &middot; Cooler B</div>
+    </div>
+    <div class="alert-reading">humidity: <span class="val" style="color:var(--amber);">89.2%</span><br /><span class="threshold">threshold: 85%</span></div>
+    <div><span class="badge b-ack">acknowledged</span></div>
+    <div class="alert-time">1d</div>
+    <div class="alert-actions">
+      <button class="btn-icon">&#10003;&#10003;</button>
+    </div>
+  </div>
+
+  <div class="alert-row">
+    <input type="checkbox" />
+    <div style="display:flex; align-items:center; gap:6px;">
+      <div class="severity-bar severity-bar-medium"></div>
+      <span class="badge b-medium">medium</span>
+    </div>
+    <div>
+      <div class="alert-title">Display Case Temp Warning</div>
+      <div class="alert-rule">rule_id=7 &middot; Display Case</div>
+    </div>
+    <div>
+      <div class="alert-device">EM300-TH Vitrina 1</div>
+      <div class="alert-zone">CEDIS Centro &middot; Vitrina 1</div>
+    </div>
+    <div class="alert-reading">temperature: <span class="val" style="color:var(--emerald);">6.2°C</span><br /><span class="threshold">threshold: 10°C</span></div>
+    <div><span class="badge b-resolved">resolved</span></div>
+    <div class="alert-time">2d</div>
+    <div class="alert-actions" style="opacity:0.3;">
+      <button class="btn-icon">&#9201;</button>
+    </div>
+  </div>
+
+  <div class="pagination">
+    <div class="info">Showing 1–5 of 10</div>
+    <div class="nav">
+      <button class="btn-icon" disabled style="opacity:0.4">&lsaquo;</button>
+      <button class="btn-icon" style="background:var(--accent); color:#0b0d10; border-color:var(--accent);">1</button>
+      <button class="btn-icon">2</button>
+      <button class="btn-icon">&rsaquo;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  PAGE 2: ALERT DETAIL                               -->
+<!-- ═══════════════════════════════════════════════════ -->
+
+<div class="divider"></div>
+
+<div class="fade-in">
+  <div class="mockup-label label-rose">Page 2 · Alert Detail</div>
+  <h1 class="page-title">Alert Detail</h1>
+  <p class="page-desc">Complete alert context with pattern detection, audit trail, snooze menu, and dismiss guardrails.</p>
+</div>
+
+<div class="callout fade-in" style="animation-delay:0.1s">
+  <span class="icon">+</span>
+  <div><strong>v2 additions:</strong> "similar alerts" banner (pattern detection), snooze dropdown with 6 durations, audit trail card, dismiss confirmation inline.</div>
+</div>
+
+<!-- Hero -->
+<div class="alert-hero fade-in" style="animation-delay:0.15s">
+  <div class="hero-top">
+    <div>
+      <div class="hero-meta">Alert Detail &middot; #47</div>
+      <h2 class="hero-title">Walk-in Cooler Max Temperature</h2>
+      <div class="hero-badges">
+        <span class="badge b-critical">critical</span>
+        <span class="badge b-active">active</span>
+        <span class="badge b-outline">L2 escalated</span>
+      </div>
+      <div class="hero-timestamp">Triggered 2026-03-31 13:15:03 &middot; 13h ago</div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-outline btn-sm">&#128065; Acknowledge</button>
+      <button class="btn btn-primary btn-sm">&#10003; Resolve</button>
+      <button class="btn btn-outline btn-sm">&#9201; Snooze &#9662;</button>
+      <button class="btn btn-outline btn-sm" style="color:var(--rose); border-color:rgba(244,63,94,0.25)">&times; Dismiss</button>
+      <!-- Snooze menu -->
+      <div class="snooze-menu">
+        <div class="snooze-menu-title">Snooze for</div>
+        <div class="snooze-item">30 minutes<span class="dur">until 01:45</span></div>
+        <div class="snooze-item">1 hour<span class="dur">until 02:15</span></div>
+        <div class="snooze-item">2 hours<span class="dur">until 03:15</span></div>
+        <div class="snooze-item">4 hours<span class="dur">until 05:15</span></div>
+        <div class="snooze-item">8 hours<span class="dur">until 09:15</span></div>
+        <div style="border-top:1px solid var(--border); margin:4px 0;"></div>
+        <div class="snooze-item">Custom...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Similar alerts pattern banner -->
+  <div class="similar-banner">
+    <div class="icon">!</div>
+    <div class="text">
+      This alert has fired <strong>5 times</strong> in the last 30 days for the same device —
+      all during <strong>loading/unloading hours (06:00–10:00)</strong>. Consider reviewing the rule threshold
+      or scheduling a maintenance window.
+    </div>
+    <span class="link">View pattern &rarr;</span>
+  </div>
+
+  <!-- Dismiss warning (shown when Dismiss clicked) -->
+  <div class="dismiss-warning">
+    <strong>&#9888; Dismissing ignores this alert permanently.</strong> Dismissed alerts don't trigger corrective action requirements for compliance. This action cannot be undone.
+  </div>
+</div>
+
+<div class="detail-grid fade-in" style="animation-delay:0.2s">
+  <div class="detail-main">
+    <div class="sec-divider"><span>TRIGGER CONTEXT</span><div class="line"></div></div>
+    <div class="trigger-card">
+      <div class="trigger-field">
+        <div class="label">Device</div>
+        <div class="value">CT101 - Compressor 1</div>
+        <div class="sub">CT101 &middot; CEDIS Norte</div>
+      </div>
+      <div class="trigger-field">
+        <div class="label">Zone</div>
+        <div class="value">Compressor 1</div>
+        <div class="sub">Cold Chain zone</div>
+      </div>
+      <div class="trigger-field">
+        <div class="label">Metric &middot; Condition</div>
+        <div class="value">temperature</div>
+        <div class="sub">above 8°C</div>
+      </div>
+      <div class="trigger-field">
+        <div class="label">Value at trigger</div>
+        <div class="value mono rose">13.1°C</div>
+        <div class="sub">threshold: 8°C</div>
+      </div>
+    </div>
+
+    <div class="sec-divider"><span>READING CHART</span><div class="line"></div><span style="color:var(--text-faint)">±2h around trigger</span></div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">temperature (°C)</div>
+          <div class="chart-sub">45 data points &middot; Min 4.2 &middot; Avg 7.8 &middot; Max 13.1</div>
+        </div>
+      </div>
+      <svg class="chart-svg" viewBox="0 0 600 140" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="60" x2="600" y2="60" stroke="#f59e0b" stroke-dasharray="4,4" opacity="0.5" />
+        <text x="6" y="55" fill="#f59e0b" font-size="9" font-family="Fira Code">8°C threshold</text>
+        <line x1="380" y1="0" x2="380" y2="140" stroke="#f43f5e" stroke-width="1" opacity="0.5" stroke-dasharray="2,2" />
+        <text x="384" y="12" fill="#f43f5e" font-size="9" font-family="Fira Code">TRIGGER</text>
+        <path d="M 0,85 L 40,82 L 80,80 L 120,78 L 160,75 L 200,72 L 240,68 L 280,62 L 320,55 L 380,28 L 420,35 L 460,40 L 500,48 L 540,52 L 600,58 L 600,140 L 0,140 Z" fill="url(#g1)" />
+        <polyline points="0,85 40,82 80,80 120,78 160,75 200,72 240,68 280,62 320,55 380,28 420,35 460,40 500,48 540,52 600,58" stroke="#f43f5e" stroke-width="2" fill="none" />
+        <circle cx="380" cy="28" r="4" fill="#f43f5e" />
+      </svg>
+    </div>
+
+    <div class="sec-divider"><span>NOTIFICATION LOG</span><div class="line"></div><span style="color:var(--text-faint)">4 sent</span></div>
+    <div class="notif-card">
+      <div class="notif-row" style="border-top:none; padding-top:0;">
+        <div class="notif-avatar">MN</div>
+        <div class="notif-name">Manager Norte-Centro</div>
+        <span class="notif-channel ch-wa">WhatsApp</span>
+        <span class="notif-status delivered">delivered 13:15</span>
+      </div>
+      <div class="notif-row">
+        <div class="notif-avatar">MN</div>
+        <div class="notif-name">Manager Norte-Centro</div>
+        <span class="notif-channel ch-push">Push</span>
+        <span class="notif-status delivered">delivered 13:15</span>
+      </div>
+      <div class="notif-row">
+        <div class="notif-avatar" style="background:rgba(59,130,246,0.2); color:#60a5fa;">AC</div>
+        <div class="notif-name">Admin Cadena Frio <span style="font-size:9px; color:var(--amber);">L2 escalated +15m</span></div>
+        <span class="notif-channel ch-wa">WhatsApp</span>
+        <span class="notif-status delivered">delivered 13:30</span>
+      </div>
+      <div class="notif-row">
+        <div class="notif-avatar" style="background:rgba(59,130,246,0.2); color:#60a5fa;">AC</div>
+        <div class="notif-name">Admin Cadena Frio</div>
+        <span class="notif-channel ch-email">Email</span>
+        <span class="notif-status failed">failed &middot; retry</span>
+      </div>
+    </div>
+
+    <div class="sec-divider"><span>AUDIT TRAIL</span><div class="line"></div></div>
+    <div class="audit-card">
+      <div class="audit-item">
+        <div class="notif-avatar" style="background:rgba(244,63,94,0.15); color:var(--rose); width:20px; height:20px; font-size:9px;">S</div>
+        <div style="flex:1;"><span class="audit-user">System</span> <span class="audit-action">triggered alert from rule "Walk-in Cooler Max Temp"</span></div>
+        <div class="audit-time">13:15:03 &middot; 13h ago</div>
+      </div>
+      <div class="audit-item">
+        <div class="notif-avatar" style="width:20px; height:20px; font-size:9px;">MN</div>
+        <div style="flex:1;"><span class="audit-user">Manager Norte-Centro</span> <span class="audit-action">viewed alert</span></div>
+        <div class="audit-time">13:22 &middot; 13h ago</div>
+      </div>
+      <div class="audit-item">
+        <div class="notif-avatar" style="background:rgba(59,130,246,0.2); color:#60a5fa; width:20px; height:20px; font-size:9px;">AC</div>
+        <div style="flex:1;"><span class="audit-user">Admin Cadena Frio</span> <span class="audit-action">was notified at L2 escalation (WhatsApp + Email)</span></div>
+        <div class="audit-time">13:30 &middot; 13h ago</div>
+      </div>
+      <div class="audit-item">
+        <div class="notif-avatar" style="background:rgba(16,185,129,0.15); color:var(--emerald); width:20px; height:20px; font-size:9px;">VN</div>
+        <div style="flex:1;"><span class="audit-user">Viewer Norte</span> <span class="audit-action">logged corrective action</span></div>
+        <div class="audit-time">14:05 &middot; 12h ago</div>
+      </div>
+      <div class="audit-item">
+        <div class="notif-avatar" style="width:20px; height:20px; font-size:9px;">MN</div>
+        <div style="flex:1;"><span class="audit-user">Manager Norte-Centro</span> <span class="audit-action">verified corrective action</span></div>
+        <div class="audit-time">14:12 &middot; 12h ago</div>
+      </div>
+    </div>
+
+    <div class="sec-divider"><span>CORRECTIVE ACTIONS</span><div class="line"></div><span style="color:var(--emerald)">1 verified &check;</span></div>
+    <div class="ca-card">
+      <div class="ca-item">
+        <div class="ca-head">
+          <div class="ca-user">Viewer Norte <span style="color:var(--text-faint); font-family:'Fira Code',monospace; font-size:10px;">&middot; 9d ago</span></div>
+          <span class="badge b-resolved">verified &check;</span>
+        </div>
+        <div class="ca-text">Door alarm triggered — found loading dock door propped open by delivery. Closed door, temperature returned to range in 20 minutes.</div>
+        <div class="ca-verify">Verified by Manager Norte-Centro &middot; 9d ago</div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:4px;">+ Log Corrective Action</button>
+    </div>
+  </div>
+
+  <div class="detail-sidebar">
+    <div class="side-card">
+      <div class="side-title">Timeline</div>
+      <div class="timeline-step">
+        <div class="timeline-dot dot-done">&check;</div>
+        <div class="timeline-content">
+          <div class="timeline-label">Triggered</div>
+          <div class="timeline-time">13:15:03 &middot; 13h ago</div>
+        </div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-dot dot-done">&check;</div>
+        <div class="timeline-content">
+          <div class="timeline-label">L1 notified</div>
+          <div class="timeline-time">Manager &middot; 13:15</div>
+        </div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-dot dot-active">!</div>
+        <div class="timeline-content">
+          <div class="timeline-label">L2 escalated</div>
+          <div class="timeline-time">Admin &middot; 13:30</div>
+        </div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-dot dot-pending">&middot;</div>
+        <div class="timeline-content">
+          <div class="timeline-label" style="color:var(--text-faint);">Awaiting acknowledgment</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-card">
+      <div class="side-title">Details</div>
+      <div class="side-row"><span class="k">Alert ID</span><span class="v">#47</span></div>
+      <div class="side-row"><span class="k">Rule ID</span><span class="v">#12</span></div>
+      <div class="side-row"><span class="k">Severity</span><span class="v" style="color:var(--rose);">critical</span></div>
+      <div class="side-row"><span class="k">Site</span><span class="v">CEDIS Norte</span></div>
+    </div>
+
+    <div class="side-card">
+      <div class="side-title">Related</div>
+      <div class="related-item">
+        <div class="related-icon">&#128295;</div>
+        <div style="flex:1;">
+          <div style="font-size:12px; font-weight:500;">Create Work Order</div>
+          <div style="font-size:10px; color:var(--text-faint);">Assign technician to fix</div>
+        </div>
+      </div>
+      <div class="related-item">
+        <div class="related-icon" style="background:rgba(45,212,191,0.1); color:var(--accent);">&#128266;</div>
+        <div style="flex:1;">
+          <div style="font-size:12px; font-weight:500;">View Device</div>
+          <div style="font-size:10px; color:var(--text-faint);">CT101 - Compressor 1</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  PAGE 3: WORK ORDERS INDEX                          -->
+<!-- ═══════════════════════════════════════════════════ -->
+
+<div class="divider"></div>
+
+<div class="fade-in">
+  <div class="mockup-label label-blue">Page 3 · Work Orders Index</div>
+  <h1 class="page-title">Work Orders</h1>
+  <p class="page-desc">Task management with workload, priority indicators, SLA tracking, and age-in-status.</p>
+</div>
+
+<div class="callout fade-in" style="animation-delay:0.1s">
+  <span class="icon">+</span>
+  <div><strong>v2 additions:</strong> search bar, site filter, date range, age-in-status column, overdue SLA indicator on rows.</div>
+</div>
+
+<div class="header-row fade-in" style="animation-delay:0.15s">
+  <div>
+    <div class="mono" style="font-size:10px; letter-spacing:0.2em; color:var(--text-faint); text-transform:uppercase;">Operations</div>
+    <h2 style="font-size:28px; font-weight:700; margin-top:4px;">Work Orders</h2>
+    <p style="font-size:13px; color:var(--text-dim); margin-top:4px;">
+      <span class="mono" style="font-weight:600; color:var(--text);">8</span> total &middot;
+      <span style="color:var(--rose);">2 open</span> &middot;
+      <span style="color:var(--rose); font-weight:600;">1 overdue</span>
+    </p>
+  </div>
+  <button class="btn btn-primary">+ New Work Order</button>
+</div>
+
+<div class="sec-divider fade-in" style="animation-delay:0.2s"><span>TEAM WORKLOAD</span><div class="line"></div></div>
+<div class="workload-strip fade-in" style="animation-delay:0.25s">
+  <div class="workload-card">
+    <div class="workload-avatar">TC</div>
+    <div class="workload-info">
+      <div class="workload-name">Técnico Campo</div>
+      <div class="workload-bar"><div class="workload-fill" style="width:30%; background:var(--amber);"></div></div>
+    </div>
+    <div class="workload-count" style="color:var(--amber);">3 open</div>
+  </div>
+  <div class="workload-card">
+    <div class="workload-avatar" style="background:rgba(16,185,129,0.2); color:#34d399;">MG</div>
+    <div class="workload-info">
+      <div class="workload-name">Manager Garcia</div>
+      <div class="workload-bar"><div class="workload-fill" style="width:10%; background:var(--emerald);"></div></div>
+    </div>
+    <div class="workload-count" style="color:var(--emerald);">1 open</div>
+  </div>
+  <div class="workload-card">
+    <div class="workload-avatar" style="background:rgba(139,92,246,0.2); color:#a78bfa;">JR</div>
+    <div class="workload-info">
+      <div class="workload-name">Juan Rodriguez</div>
+      <div class="workload-bar"><div class="workload-fill" style="width:0%; background:var(--emerald);"></div></div>
+    </div>
+    <div class="workload-count" style="color:var(--text-faint);">0 open</div>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar fade-in" style="animation-delay:0.3s">
+  <div class="search">
+    <span class="icon">&#128269;</span>
+    <input placeholder="Search by title or device..." />
+  </div>
+  <select class="select-field">
+    <option>All Sites</option>
+    <option>CEDIS Norte</option>
+    <option>CEDIS Centro</option>
+  </select>
+  <select class="select-field">
+    <option>Last 30 days</option>
+    <option>Last 7 days</option>
+    <option>All time</option>
+  </select>
+</div>
+
+<!-- Filter pills -->
+<div class="fade-in" style="animation-delay:0.35s">
+  <div class="filter-bar">
+    <span style="font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.1em; margin-right:4px;">Status:</span>
+    <span class="filter-pill active">All</span>
+    <span class="filter-pill">Open</span>
+    <span class="filter-pill">In Progress</span>
+    <span class="filter-pill">Completed</span>
+    <div style="width:1px; height:16px; background:var(--border); margin:0 6px;"></div>
+    <span style="font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.1em; margin-right:4px;">Priority:</span>
+    <span class="filter-pill active">All</span>
+    <span class="filter-pill">Urgent</span>
+    <span class="filter-pill">High</span>
+    <div style="width:1px; height:16px; background:var(--border); margin:0 6px;"></div>
+    <span class="filter-pill">My work orders</span>
+    <span class="filter-pill" style="border-color:rgba(244,63,94,0.3); color:var(--rose);">&#9888; Overdue (1)</span>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card fade-in" style="animation-delay:0.4s; margin-top:14px;">
+  <div class="wo-row" style="background:rgba(255,255,255,0.02); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-faint); padding-top:10px; padding-bottom:10px;">
+    <input type="checkbox" />
+    <span></span>
+    <span>Title</span>
+    <span>Type</span>
+    <span>Priority</span>
+    <span>Status</span>
+    <span>Assigned</span>
+    <span>Age</span>
+    <span></span>
+  </div>
+
+  <div class="wo-row urgent-open">
+    <input type="checkbox" />
+    <div class="priority-indicator p-urgent"></div>
+    <div>
+      <div class="wo-title">Replace battery — EM300-TH Cooler A</div>
+      <div class="wo-sub">#1 &middot; CEDIS Norte &middot; <span style="color:var(--rose);">linked to Alert #47</span></div>
+    </div>
+    <span class="badge b-outline">battery replace</span>
+    <span class="badge b-high">high</span>
+    <span><span class="badge b-open">open</span> <span class="badge b-overdue" style="margin-left:2px;">SLA</span></span>
+    <div class="wo-assigned"><span style="color:var(--text-faint);">—</span></div>
+    <div class="wo-age overdue">
+      <div class="status-time">Open 2d</div>
+      <div class="created">Created 4/7</div>
+    </div>
+    <div class="alert-actions">
+      <button class="btn-icon" title="Assign">&#9998;</button>
+    </div>
+  </div>
+
+  <div class="wo-row">
+    <input type="checkbox" />
+    <div class="priority-indicator p-high"></div>
+    <div>
+      <div class="wo-title">Replace door sensor — Freezer</div>
+      <div class="wo-sub">#3 &middot; CEDIS Norte</div>
+    </div>
+    <span class="badge b-outline">sensor replace</span>
+    <span class="badge b-high">high</span>
+    <span class="badge b-assigned">assigned</span>
+    <div class="wo-assigned"><div class="avatar">TC</div>Técnico Campo</div>
+    <div class="wo-age">
+      <div class="status-time">Assigned 4h</div>
+      <div class="created">Created 4/6</div>
+    </div>
+    <div class="alert-actions">
+      <button class="btn-icon" title="Start">&#9654;</button>
+    </div>
+  </div>
+
+  <div class="wo-row">
+    <input type="checkbox" />
+    <div class="priority-indicator p-high"></div>
+    <div>
+      <div class="wo-title">Calibrate EM300-TH Cooler B</div>
+      <div class="wo-sub">#4 &middot; CEDIS Norte</div>
+    </div>
+    <span class="badge b-outline">maintenance</span>
+    <span class="badge b-high">high</span>
+    <span class="badge b-progress">in progress</span>
+    <div class="wo-assigned"><div class="avatar">TC</div>Técnico Campo</div>
+    <div class="wo-age">
+      <div class="status-time">Running 1h</div>
+      <div class="created">Created 4/5</div>
+    </div>
+    <div class="alert-actions">
+      <button class="btn-icon" title="Complete">&check;</button>
+    </div>
+  </div>
+
+  <div class="wo-row">
+    <input type="checkbox" />
+    <div class="priority-indicator p-medium"></div>
+    <div>
+      <div class="wo-title">Quarterly compressor maintenance</div>
+      <div class="wo-sub">#5 &middot; CEDIS Centro</div>
+    </div>
+    <span class="badge b-outline">maintenance</span>
+    <span class="badge b-medium">medium</span>
+    <span class="badge b-assigned">assigned</span>
+    <div class="wo-assigned"><div class="avatar">TC</div>Técnico Campo</div>
+    <div class="wo-age">
+      <div class="status-time">Assigned 1d</div>
+      <div class="created">Created 4/4</div>
+    </div>
+    <div class="alert-actions">
+      <button class="btn-icon" title="Start">&#9654;</button>
+    </div>
+  </div>
+
+  <div class="wo-row" style="opacity:0.5;">
+    <input type="checkbox" />
+    <div class="priority-indicator" style="background:var(--emerald);"></div>
+    <div>
+      <div class="wo-title">Install gas detector in kitchen</div>
+      <div class="wo-sub">#7 &middot; CEDIS Norte</div>
+    </div>
+    <span class="badge b-outline">install</span>
+    <span class="badge b-low">low</span>
+    <span class="badge b-completed">completed</span>
+    <div class="wo-assigned"><div class="avatar">TC</div>Técnico Campo</div>
+    <div class="wo-age">
+      <div class="status-time">Done 15d</div>
+      <div class="created">Created 3/26</div>
+    </div>
+    <div></div>
+  </div>
+
+  <div class="pagination">
+    <div class="info">Showing 1–5 of 8</div>
+    <div class="nav">
+      <button class="btn-icon" disabled style="opacity:0.4">&lsaquo;</button>
+      <button class="btn-icon" style="background:var(--accent); color:#0b0d10; border-color:var(--accent);">1</button>
+      <button class="btn-icon">2</button>
+      <button class="btn-icon">&rsaquo;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!--  PAGE 4: WORK ORDER DETAIL                          -->
+<!-- ═══════════════════════════════════════════════════ -->
+
+<div class="divider"></div>
+
+<div class="fade-in">
+  <div class="mockup-label label-blue">Page 4 · Work Order Detail</div>
+  <h1 class="page-title">Work Order Detail</h1>
+  <p class="page-desc">Lifecycle tracking with age-in-state, SLA warning, photos, notes, and linked alert.</p>
+</div>
+
+<div class="callout fade-in" style="animation-delay:0.1s">
+  <span class="icon">+</span>
+  <div><strong>v2 additions:</strong> age-in-state shown on each status step, SLA warning sidebar card visible (2d overdue).</div>
+</div>
+
+<div class="wo-hero fade-in" style="animation-delay:0.15s">
+  <div class="hero-top">
+    <div>
+      <div class="hero-meta">Work Order &middot; #1</div>
+      <h2 class="hero-title">Replace battery — EM300-TH Cooler A</h2>
+      <div class="hero-badges">
+        <span class="badge b-high">high</span>
+        <span class="badge b-open">open</span>
+        <span class="badge b-outline">battery replace</span>
+        <span class="badge b-overdue">SLA overdue</span>
+      </div>
+      <div class="hero-timestamp">CEDIS Norte &middot; Created 4/7/2026 by System &middot; Open 2d</div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-primary btn-sm">Assign Technician</button>
+      <button class="btn btn-outline btn-sm" style="color:var(--rose); border-color:rgba(244,63,94,0.25)">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="fade-in" style="animation-delay:0.2s; margin-top:16px;">
+  <div class="status-flow">
+    <div class="status-step current">
+      <div class="num">1</div>
+      <div>
+        <div>Open</div>
+        <div style="font-size:9px; color:var(--rose); font-family:'Fira Code',monospace; font-weight:600;">2d overdue</div>
+      </div>
+    </div>
+    <div class="status-arrow">&rarr;</div>
+    <div class="status-step">
+      <div class="num">2</div>
+      <div><div>Assigned</div></div>
+    </div>
+    <div class="status-arrow">&rarr;</div>
+    <div class="status-step">
+      <div class="num">3</div>
+      <div><div>In Progress</div></div>
+    </div>
+    <div class="status-arrow">&rarr;</div>
+    <div class="status-step">
+      <div class="num">4</div>
+      <div><div>Completed</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="wo-detail-grid fade-in" style="animation-delay:0.25s">
+  <div class="detail-main">
+    <div class="sec-divider"><span>DESCRIPTION</span><div class="line"></div></div>
+    <div class="info-card" style="padding:16px;">
+      <p style="font-size:13px; color:var(--text-dim);">Battery level dropped to 12%. Sensor reporting intermittently. Replace CR123A battery and verify readings resume.</p>
+    </div>
+
+    <div class="sec-divider"><span>LINKED ALERT</span><div class="line"></div></div>
+    <div class="info-card" style="padding:14px; display:flex; align-items:center; gap:12px; cursor:pointer;">
+      <div style="width:40px; height:40px; border-radius:10px; background:rgba(244,63,94,0.1); color:var(--rose); display:flex; align-items:center; justify-content:center; font-size:18px;">!</div>
+      <div style="flex:1;">
+        <div style="font-size:13px; font-weight:500;">Battery Low Alert &middot; Alert #23</div>
+        <div style="font-size:11px; color:var(--text-faint); margin-top:1px;">EM300-TH Cooler A &middot; battery_pct 12% &middot; threshold 15%</div>
+      </div>
+      <span class="badge b-ack">acknowledged</span>
+      <span style="color:var(--text-faint);">&rarr;</span>
+    </div>
+
+    <div class="sec-divider"><span>PHOTOS</span><div class="line"></div><span style="color:var(--text-faint)">3</span></div>
+    <div class="photo-grid">
+      <div class="photo-thumb">&#128247;</div>
+      <div class="photo-thumb">&#128247;</div>
+      <div class="photo-thumb">&#128247;</div>
+      <div class="photo-placeholder">+</div>
+    </div>
+
+    <div class="sec-divider"><span>NOTES</span><div class="line"></div><span style="color:var(--text-faint)">2</span></div>
+    <div class="info-card">
+      <div class="notes-list">
+        <div class="note-item">
+          <div class="note-head"><span class="user">Técnico Campo</span><span>2d ago</span></div>
+          <div>Battery tested — confirmed low. Ordered replacement CR123A, will swap tomorrow morning.</div>
+        </div>
+        <div class="note-item">
+          <div class="note-head"><span class="user">Manager Norte-Centro</span><span>1d ago</span></div>
+          <div>ETA on replacement? Cooler A temperature stable but monitoring increased.</div>
+        </div>
+      </div>
+      <div class="note-input">
+        <input placeholder="Add a note..." />
+        <button class="btn btn-primary btn-sm">&#10148;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-sidebar">
+    <div class="side-card">
+      <div class="side-title">Details</div>
+      <div class="info-row"><span class="k">Type</span><span class="v">battery replace</span></div>
+      <div class="info-row"><span class="k">Device</span><span class="v" style="color:var(--accent);">EM300-TH Cooler A &rarr;</span></div>
+      <div class="info-row"><span class="k">Assigned</span><span class="v"><span class="inline-assign">+ Assign</span></span></div>
+      <div class="info-row"><span class="k">Created by</span><span class="v">System</span></div>
+    </div>
+
+    <div class="side-card">
+      <div class="side-title">Timeline</div>
+      <div class="timeline-step">
+        <div class="timeline-dot dot-done">&check;</div>
+        <div class="timeline-content">
+          <div class="timeline-label">Created from alert</div>
+          <div class="timeline-time">4/7/2026 &middot; 2d ago</div>
+        </div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-dot dot-pending">&middot;</div>
+        <div class="timeline-content">
+          <div class="timeline-label" style="color:var(--text-faint);">Awaiting assignment</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-card" style="background:rgba(244,63,94,0.08); border-color:rgba(244,63,94,0.25);">
+      <div class="side-title" style="color:var(--rose);">&#9888; SLA Overdue</div>
+      <div style="font-size:12px; color:var(--text-dim);">Open for <strong style="color:var(--rose);">2 days</strong> without assignment. High-priority WOs should be assigned within 4 hours. Notify manager?</div>
+      <button class="btn btn-outline btn-sm" style="margin-top:10px; width:100%; color:var(--rose); border-color:rgba(244,63,94,0.3);">Notify Manager</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

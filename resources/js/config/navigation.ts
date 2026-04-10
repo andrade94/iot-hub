@@ -12,14 +12,11 @@ import {
     BookOpen,
     Boxes,
     Building2,
-    Calendar,
     CalendarCheck,
     ClipboardList,
     Copy,
     Cpu,
-    CreditCard,
     Download,
-    GitBranch,
     Layers,
     LayoutGrid,
     MapPin,
@@ -29,7 +26,6 @@ import {
     Scale,
     TrendingUp,
     Users,
-    Wrench,
 } from 'lucide-react';
 
 /**
@@ -196,32 +192,11 @@ export const navigation: NavGroup[] = [
                 requiredPermission: 'manage org settings',
             },
             {
-                title: 'Escalation Chains',
-                href: '/settings/escalation-chains',
-                icon: GitBranch,
-                tooltip: 'Alert escalation setup',
-                requiredPermission: 'manage alert rules',
-            },
-            {
                 title: 'Compliance',
                 href: '/settings/compliance',
                 icon: CalendarCheck,
                 tooltip: 'Compliance calendar',
                 requiredPermission: 'manage org settings',
-            },
-            {
-                title: 'Maintenance',
-                href: '/settings/maintenance-windows',
-                icon: Wrench,
-                tooltip: 'Schedule maintenance windows',
-                requiredPermission: 'manage maintenance windows',
-            },
-            {
-                title: 'Report Schedules',
-                href: '/settings/report-schedules',
-                icon: Calendar,
-                tooltip: 'Automated report delivery',
-                requiredPermission: 'manage report schedules',
             },
             {
                 title: 'Site Templates',
@@ -237,14 +212,11 @@ export const navigation: NavGroup[] = [
                 tooltip: 'Export organization data',
                 requiredPermission: 'export organization data',
             },
+            // Site-specific items removed from global nav — accessed via site Setup tab:
+            //   - Escalation Chains: one per site
+            //   - Maintenance Windows: N per site
+            //   - Report Schedules: per site (some org-wide)
             // Billing deactivated for MVP — reactivate when payment processing is needed
-            // {
-            //     title: 'Billing',
-            //     href: '/settings/billing',
-            //     icon: CreditCard,
-            //     tooltip: 'Billing & invoices',
-            //     requiredPermission: 'manage org settings',
-            // },
         ],
     },
 ];

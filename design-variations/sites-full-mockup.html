@@ -1,0 +1,3147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sites Full — Mockup | Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  /* ============================================================
+     RESET & FOUNDATIONS
+     ============================================================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0d10;
+    --card: #111318;
+    --surface: #161a20;
+    --border: #1e2228;
+    --border-subtle: #171b21;
+    --text: #e0e4ea;
+    --text-secondary: #b0b8c4;
+    --muted: #6b7280;
+    --dim: #374151;
+    --emerald: #10b981;
+    --cyan: #06b6d4;
+    --coral: #f43f5e;
+    --rose: #f43f5e;
+    --amber: #f59e0b;
+    --purple: #a855f7;
+    --blue: #3b82f6;
+
+    --font-display: 'Bricolage Grotesque', serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+
+    --sidebar-w: 220px;
+  }
+
+  html {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ============================================================
+     VARIANT LABEL
+     ============================================================ */
+  .variant-label {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    z-index: 999;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--cyan);
+    background: rgba(11, 13, 16, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 4px;
+  }
+
+  /* ============================================================
+     SIDEBAR
+     ============================================================ */
+  .sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-logo .logo-mark {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--cyan), var(--emerald));
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--bg);
+  }
+
+  .sidebar-logo .logo-text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 12px 0;
+    overflow-y: auto;
+  }
+
+  .nav-section { margin-bottom: 4px; }
+
+  .nav-section-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    padding: 12px 20px 6px;
+  }
+
+  .nav-sub-label {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    padding: 8px 20px 4px 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-sub-label::before,
+  .nav-sub-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .nav-sub-label::before { flex: 0; width: 0; display: none; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 20px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    position: relative;
+  }
+
+  .nav-item:hover {
+    color: var(--text);
+    background: rgba(255,255,255, 0.02);
+  }
+
+  .nav-item.active {
+    color: var(--text);
+    background: rgba(6, 182, 212, 0.06);
+  }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: var(--cyan);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .nav-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  .nav-item.active .nav-icon { opacity: 0.9; }
+  .nav-item:hover .nav-icon { opacity: 0.7; }
+
+  .sidebar-footer {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-footer .user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), var(--emerald));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer .user-info { overflow: hidden; }
+
+  .sidebar-footer .user-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-footer .user-role {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* ============================================================
+     MAIN AREA
+     ============================================================ */
+  .main {
+    flex: 1;
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+  }
+
+  .breadcrumb-bar {
+    height: 44px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--card);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .breadcrumb-bar a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .breadcrumb-bar a:hover { color: var(--text); }
+  .breadcrumb-bar .sep { color: var(--dim); margin: 0 2px; }
+
+  .breadcrumb-bar .current {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .content { padding: 32px; max-width: 1260px; }
+
+  /* ============================================================
+     SECTION DIVIDER
+     ============================================================ */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 36px 0 24px;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section-divider span {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--dim);
+    white-space: nowrap;
+  }
+
+  /* ============================================================
+     PAGE DIVIDER (between pages)
+     ============================================================ */
+  .page-divider {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin: 72px 0 48px;
+    padding: 0 32px;
+  }
+
+  .page-divider::before,
+  .page-divider::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.3;
+  }
+
+  .page-divider span {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--cyan);
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  /* ============================================================
+     SUMMARY STRIP
+     ============================================================ */
+  .summary-strip {
+    display: flex;
+    align-items: stretch;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .summary-stat {
+    flex: 1;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+
+  .summary-stat + .summary-stat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .summary-stat .stat-value {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .summary-stat .stat-value.emerald { color: var(--emerald); }
+  .summary-stat .stat-value.coral { color: var(--coral); }
+  .summary-stat .stat-value.cyan { color: var(--cyan); }
+  .summary-stat .stat-value.amber { color: var(--amber); }
+
+  .summary-stat .stat-label {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ============================================================
+     PAGE HEADER
+     ============================================================ */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 300;
+  }
+
+  /* ============================================================
+     BUTTONS
+     ============================================================ */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: var(--cyan);
+    color: var(--bg);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-primary:hover {
+    background: #0891b2;
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+    background: transparent;
+    color: var(--text-secondary);
+  }
+
+  .btn-outline:hover {
+    background: rgba(255,255,255,0.03);
+    border-color: rgba(255,255,255,0.12);
+  }
+
+  .btn-outline.accent {
+    color: var(--cyan);
+    border-color: rgba(6, 182, 212, 0.3);
+    background: rgba(6, 182, 212, 0.06);
+  }
+
+  .btn-outline.accent:hover {
+    background: rgba(6, 182, 212, 0.12);
+    border-color: rgba(6, 182, 212, 0.5);
+  }
+
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: rgba(244, 63, 94, 0.1);
+    color: var(--coral);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(244, 63, 94, 0.25);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-danger:hover {
+    background: rgba(244, 63, 94, 0.18);
+    border-color: rgba(244, 63, 94, 0.4);
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 400;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .btn-ghost:hover {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-secondary);
+  }
+
+  .btn-sm {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  /* ============================================================
+     FILTER BAR
+     ============================================================ */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 16px;
+  }
+
+  .search-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--text);
+    width: 280px;
+    transition: border-color 0.15s;
+  }
+
+  .search-input:focus-within { border-color: rgba(6, 182, 212, 0.4); }
+
+  .search-input input {
+    background: none;
+    border: none;
+    outline: none;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--text);
+    flex: 1;
+    font-weight: 300;
+  }
+
+  .search-input input::placeholder { color: var(--dim); }
+  .search-input svg { color: var(--dim); flex-shrink: 0; }
+
+  .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover {
+    border-color: rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+  }
+
+  /* ============================================================
+     EDITORIAL TABLE
+     ============================================================ */
+  .ed-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .ed-table thead th {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .ed-table thead th.right { text-align: right; }
+  .ed-table thead th.center { text-align: center; }
+
+  .ed-table tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+
+  .ed-table tbody tr:hover { background: rgba(255,255,255, 0.015); }
+  .ed-table tbody tr:last-child { border-bottom: none; }
+
+  .ed-table td {
+    padding: 14px 12px;
+    font-size: 13px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .ed-table td.right { text-align: right; }
+  .ed-table td.center { text-align: center; }
+
+  .site-name {
+    font-weight: 500;
+    color: var(--text);
+    display: block;
+    line-height: 1.2;
+  }
+
+  .site-address {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 2px;
+    font-weight: 400;
+  }
+
+  .mono { font-family: var(--font-mono); font-size: 12px; }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 500;
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+  }
+
+  .badge-active { background: rgba(16, 185, 129, 0.1); color: var(--emerald); }
+  .badge-onboarding { background: rgba(6, 182, 212, 0.1); color: var(--cyan); }
+  .badge-draft { background: rgba(107, 114, 128, 0.15); color: var(--muted); }
+  .badge-suspended { background: rgba(244, 63, 94, 0.1); color: var(--coral); }
+  .badge-retail { background: rgba(6, 182, 212, 0.08); color: var(--cyan); }
+  .badge-tz { background: rgba(107, 114, 128, 0.08); color: var(--muted); }
+  .badge-critical { background: rgba(244, 63, 94, 0.1); color: var(--coral); }
+  .badge-high { background: rgba(245, 158, 11, 0.1); color: var(--amber); }
+
+  .badge-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .badge-active .badge-dot { box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
+  .badge-onboarding .badge-dot { box-shadow: 0 0 6px rgba(6, 182, 212, 0.4); }
+
+  /* Online % colors */
+  .pct-green { color: var(--emerald); }
+  .pct-amber { color: var(--amber); }
+  .pct-red { color: var(--coral); }
+  .pct-none { color: var(--dim); }
+
+  /* Alert/WO counts */
+  .count-alert { color: var(--coral); font-weight: 500; }
+  .count-wo { color: var(--amber); font-weight: 500; }
+  .count-zero { color: var(--dim); }
+
+  .chevron {
+    color: var(--dim);
+    transition: color 0.15s, transform 0.15s;
+  }
+
+  .ed-table tbody tr:hover .chevron {
+    color: var(--cyan);
+    transform: translateX(2px);
+  }
+
+  /* ============================================================
+     BACK LINK
+     ============================================================ */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 16px;
+    transition: color 0.15s;
+    font-weight: 400;
+  }
+
+  .back-link:hover { color: var(--cyan); }
+
+  /* ============================================================
+     SITE HEADER (SHOW)
+     ============================================================ */
+  .site-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .site-header-info { flex: 1; min-width: 0; }
+
+  .site-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .site-subtitle {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  .site-badges {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .site-header-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+
+  /* ============================================================
+     KPI STRIP (SHOW)
+     ============================================================ */
+  .kpi-strip {
+    display: flex;
+    align-items: stretch;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .kpi-cell {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+  }
+
+  .kpi-cell + .kpi-cell::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .kpi-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .kpi-value.emerald { color: var(--emerald); }
+  .kpi-value.coral { color: var(--coral); }
+  .kpi-value.amber { color: var(--amber); }
+  .kpi-value.cyan { color: var(--cyan); }
+
+  .kpi-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ============================================================
+     HEALTH BAR
+     ============================================================ */
+  .health-bar-wrapper {
+    margin-top: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+
+  .health-bar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .health-bar-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .health-bar-pct {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--emerald);
+  }
+
+  .health-bar-track {
+    height: 8px;
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .health-bar-fill-green {
+    height: 100%;
+    background: var(--emerald);
+    border-radius: 4px 0 0 4px;
+    transition: width 0.6s ease;
+  }
+
+  .health-bar-fill-red {
+    height: 100%;
+    background: var(--coral);
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* ============================================================
+     DETAILS BAR
+     ============================================================ */
+  .details-bar {
+    margin-top: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 12px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+
+  .details-bar .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .details-bar .detail-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--dim);
+  }
+
+  .details-bar .detail-value {
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .details-bar .detail-sep {
+    width: 1px;
+    height: 16px;
+    background: var(--border);
+  }
+
+  /* ============================================================
+     ZONE CARDS
+     ============================================================ */
+  .zone-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .zone-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .zone-card:hover {
+    border-color: rgba(6, 182, 212, 0.3);
+    background: rgba(17, 19, 24, 0.8);
+    transform: translateY(-1px);
+  }
+
+  .zone-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .zone-card-title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .zone-device-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface);
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .zone-temp-display {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .zone-temp-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .zone-temp-range {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--dim);
+    padding-bottom: 3px;
+  }
+
+  .zone-status-bar {
+    height: 4px;
+    border-radius: 2px;
+    width: 100%;
+  }
+
+  .zone-status-bar.green { background: var(--emerald); box-shadow: 0 0 8px rgba(16, 185, 129, 0.3); }
+  .zone-status-bar.amber { background: var(--amber); box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+  .zone-status-bar.red { background: var(--coral); box-shadow: 0 0 8px rgba(244, 63, 94, 0.3); }
+
+  .zone-card-chevron {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dim);
+    opacity: 0;
+    transition: all 0.2s;
+  }
+
+  .zone-card:hover .zone-card-chevron {
+    opacity: 1;
+    color: var(--cyan);
+    right: 12px;
+  }
+
+  /* ============================================================
+     FLOOR PLAN
+     ============================================================ */
+  .floor-plan-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .floor-plan-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .floor-plan-toolbar-left {
+    display: flex;
+    gap: 8px;
+  }
+
+  .floor-plan-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .zoom-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-mono);
+  }
+
+  .zoom-btn:hover {
+    color: var(--text);
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .floor-plan-area {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background:
+      linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+    background-position: center center;
+    overflow: hidden;
+  }
+
+  .floor-plan-zone {
+    position: absolute;
+    border: 1px dashed;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .floor-plan-device {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    z-index: 10;
+  }
+
+  .floor-plan-device.online {
+    background: var(--emerald);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  }
+
+  .floor-plan-device.offline {
+    background: var(--coral);
+    box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
+  }
+
+  .floor-plan-device-label {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--muted);
+    white-space: nowrap;
+    background: rgba(11, 13, 16, 0.7);
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+
+  .floor-plan-legend {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .legend-dot.online { background: var(--emerald); }
+  .legend-dot.offline { background: var(--coral); }
+
+  .legend-zone-swatch {
+    width: 14px;
+    height: 10px;
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+
+  /* ============================================================
+     ALERT ROWS
+     ============================================================ */
+  .alert-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: background 0.15s;
+  }
+
+  .alert-row:hover { background: rgba(17, 19, 24, 0.8); }
+
+  .alert-severity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .alert-severity-dot.critical {
+    background: var(--coral);
+    box-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
+  }
+
+  .alert-severity-dot.high {
+    background: var(--amber);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  }
+
+  .alert-info { flex: 1; min-width: 0; }
+
+  .alert-device {
+    font-weight: 500;
+    color: var(--text);
+    font-size: 13px;
+  }
+
+  .alert-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .alert-time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+
+  /* ============================================================
+     STATUS DOTS
+     ============================================================ */
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status-dot.online {
+    background: var(--emerald);
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+  }
+
+  .status-dot.offline {
+    background: var(--coral);
+    box-shadow: 0 0 6px rgba(244, 63, 94, 0.4);
+  }
+
+  /* ============================================================
+     BATTERY BAR
+     ============================================================ */
+  .battery-bar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .battery-bar {
+    width: 48px;
+    height: 6px;
+    background: var(--surface);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .battery-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  .battery-fill.high { background: var(--emerald); }
+  .battery-fill.mid { background: var(--amber); }
+  .battery-fill.low { background: var(--coral); }
+
+  .battery-text {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* ============================================================
+     DEVICE CARDS (Zone Detail)
+     ============================================================ */
+  .device-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.15s;
+  }
+
+  .device-card:hover {
+    border-color: rgba(6, 182, 212, 0.2);
+    background: rgba(17, 19, 24, 0.8);
+  }
+
+  .device-card-info { flex: 1; min-width: 0; }
+
+  .device-card-name {
+    font-weight: 500;
+    color: var(--text);
+    font-size: 13px;
+  }
+
+  .device-card-model {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 2px;
+  }
+
+  .device-card-reading {
+    text-align: center;
+    min-width: 80px;
+  }
+
+  .device-card-temp {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .device-card-humidity {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .device-card-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 70px;
+  }
+
+  .device-card-status-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .device-card-lastseen {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--dim);
+  }
+
+  .device-card-battery { min-width: 80px; }
+
+  .device-card-sparkline {
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ============================================================
+     ALERT RULE ROWS
+     ============================================================ */
+  .rule-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+
+  .rule-name {
+    font-weight: 500;
+    color: var(--text);
+    font-size: 13px;
+    flex: 1;
+  }
+
+  .rule-threshold {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .rule-active-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--emerald);
+  }
+
+  /* ============================================================
+     FLOOR PLAN EDITOR
+     ============================================================ */
+  .editor-layout {
+    display: flex;
+    gap: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 500px;
+  }
+
+  .editor-canvas {
+    flex: 7;
+    position: relative;
+    border-right: 1px solid var(--border);
+  }
+
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .editor-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .editor-tool-btn:hover {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-secondary);
+  }
+
+  .editor-tool-btn.selected {
+    background: rgba(6, 182, 212, 0.1);
+    border-color: rgba(6, 182, 212, 0.3);
+    color: var(--cyan);
+  }
+
+  .editor-canvas-area {
+    height: 440px;
+    position: relative;
+    background:
+      linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .editor-zone-poly {
+    position: absolute;
+    border: 2px solid;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    cursor: move;
+    transition: border-color 0.15s;
+  }
+
+  .editor-zone-poly.selected {
+    border-style: solid;
+    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.3);
+  }
+
+  .editor-device-marker {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    cursor: move;
+    z-index: 5;
+  }
+
+  .editor-panel {
+    flex: 3;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .editor-panel-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .editor-panel-body {
+    padding: 16px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .editor-field {
+    margin-bottom: 14px;
+  }
+
+  .editor-field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+
+  .editor-input {
+    width: 100%;
+    padding: 7px 10px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .editor-input:focus { border-color: rgba(6, 182, 212, 0.4); }
+
+  .editor-color-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .editor-color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .editor-zone-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 12px;
+  }
+
+  .editor-zone-list-item:last-child { border-bottom: none; }
+
+  .editor-zone-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .editor-zone-name {
+    flex: 1;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .editor-zone-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--dim);
+  }
+
+  /* ============================================================
+     FORM (Edit Page)
+     ============================================================ */
+  .form-container {
+    max-width: 720px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-row.single { grid-template-columns: 1fr; }
+
+  .form-group { margin-bottom: 0; }
+
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 9px 12px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus { border-color: rgba(6, 182, 212, 0.4); }
+
+  .form-select {
+    width: 100%;
+    padding: 9px 12px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+  }
+
+  .form-select:focus { border-color: rgba(6, 182, 212, 0.4); }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Zone edit rows */
+  .zone-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+
+  .zone-edit-color {
+    width: 8px;
+    height: 28px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .zone-edit-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .zone-edit-range {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .zone-edit-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--dim);
+    background: var(--surface);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  .zone-edit-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  /* Danger zone */
+  .danger-zone {
+    margin-top: 40px;
+    padding: 20px;
+    background: rgba(244, 63, 94, 0.04);
+    border: 1px solid rgba(244, 63, 94, 0.15);
+    border-radius: 8px;
+  }
+
+  .danger-zone-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--coral);
+    margin-bottom: 8px;
+  }
+
+  .danger-zone-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  /* ============================================================
+     SVG CHART (Zone Detail)
+     ============================================================ */
+  .chart-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .chart-current {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--emerald);
+  }
+
+  /* ============================================================
+     EMPTY STATE
+     ============================================================ */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--dim);
+    font-size: 13px;
+  }
+
+  .empty-state svg {
+    margin-bottom: 12px;
+    opacity: 0.3;
+  }
+
+  /* ============================================================
+     UTILITY CLASSES
+     ============================================================ */
+  .flex { display: flex; }
+  .items-center { align-items: center; }
+  .gap-2 { gap: 8px; }
+  .gap-3 { gap: 12px; }
+  .gap-4 { gap: 16px; }
+  .ml-auto { margin-left: auto; }
+  .text-muted { color: var(--muted); }
+  .text-dim { color: var(--dim); }
+  .text-emerald { color: var(--emerald); }
+  .text-coral { color: var(--coral); }
+  .text-amber { color: var(--amber); }
+  .text-cyan { color: var(--cyan); }
+  .font-mono { font-family: var(--font-mono); }
+  .text-xs { font-size: 11px; }
+  .text-xxs { font-size: 10px; }
+  .fw-500 { font-weight: 500; }
+  .mt-2 { margin-top: 8px; }
+  .mt-4 { margin-top: 16px; }
+  .mb-2 { margin-bottom: 8px; }
+  .mb-3 { margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     VARIANT LABEL
+     ============================================================ -->
+<div class="variant-label">Sites Full &mdash; Mockup</div>
+
+<!-- ============================================================
+     SIDEBAR
+     ============================================================ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">A</div>
+    <div class="logo-text">Astrea</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Platform</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Sites
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        Devices
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 003.4 0"/></svg>
+        Alerts
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        Work Orders
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Gateways
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Analytics</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+        Reports
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.2-8.6"/><path d="M21 3v6h-6"/></svg>
+        Compliance
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Settings</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Users
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        Organizations
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-avatar">SA</div>
+    <div class="user-info">
+      <div class="user-name">Super Admin</div>
+      <div class="user-role">super_admin</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<main class="main">
+
+
+<!-- ************************************************************
+     PAGE 1: SITES INDEX
+     ************************************************************ -->
+<div class="breadcrumb-bar">
+  <a href="#">Platform</a>
+  <span class="sep">/</span>
+  <span class="current">Sites</span>
+</div>
+
+<div class="content">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Sites</h1>
+      <p class="page-subtitle">Monitor your IoT deployment fleet.</p>
+    </div>
+    <button class="btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Add Site
+    </button>
+  </div>
+
+  <!-- Summary Strip -->
+  <div class="summary-strip">
+    <div class="summary-stat">
+      <div class="stat-value">8</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="summary-stat">
+      <div class="stat-value emerald">6</div>
+      <div class="stat-label">Active</div>
+    </div>
+    <div class="summary-stat">
+      <div class="stat-value cyan">1</div>
+      <div class="stat-label">Onboarding</div>
+    </div>
+    <div class="summary-stat">
+      <div class="stat-value">1</div>
+      <div class="stat-label">Draft</div>
+    </div>
+    <div class="summary-stat">
+      <div class="stat-value">247</div>
+      <div class="stat-label">Devices</div>
+    </div>
+    <div class="summary-stat">
+      <div class="stat-value emerald">85%</div>
+      <div class="stat-label">Online</div>
+    </div>
+  </div>
+
+  <!-- Section: Fleet -->
+  <div class="section-divider"><span>FLEET</span></div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-input">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search sites...">
+    </div>
+    <button class="filter-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filters
+    </button>
+  </div>
+
+  <!-- Table -->
+  <table class="ed-table">
+    <thead>
+      <tr>
+        <th>Site</th>
+        <th>Status</th>
+        <th class="right">Devices</th>
+        <th class="right">Online</th>
+        <th class="right">Alerts</th>
+        <th class="right">Work Orders</th>
+        <th class="right">Gateways</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <span class="site-name">OXXO Centro Monterrey</span>
+          <span class="site-address">Av. Juarez 450, Centro, Monterrey</span>
+        </td>
+        <td><span class="badge badge-active"><span class="badge-dot"></span>Active</span></td>
+        <td class="right mono">14</td>
+        <td class="right mono pct-green">93%</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono">2</td>
+        <td class="right">
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">OXXO San Pedro</span>
+          <span class="site-address">Calzada del Valle 200, San Pedro</span>
+        </td>
+        <td><span class="badge badge-active"><span class="badge-dot"></span>Active</span></td>
+        <td class="right mono">12</td>
+        <td class="right mono pct-green">100%</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono">2</td>
+        <td class="right">
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">7-Eleven Guadalajara Centro</span>
+          <span class="site-address">Av. Vallarta 1500, Guadalajara</span>
+        </td>
+        <td><span class="badge badge-active"><span class="badge-dot"></span>Active</span></td>
+        <td class="right mono">18</td>
+        <td class="right mono pct-green">89%</td>
+        <td class="right mono count-alert">2</td>
+        <td class="right mono count-wo">1</td>
+        <td class="right mono">3</td>
+        <td class="right">
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">Bodega Aurrera Apodaca</span>
+          <span class="site-address">Blvd. Miguel de la Madrid, Apodaca</span>
+        </td>
+        <td><span class="badge badge-active"><span class="badge-dot"></span>Active</span></td>
+        <td class="right mono">42</td>
+        <td class="right mono pct-green">95%</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono">4</td>
+        <td class="right">
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">Soriana Express CDMX</span>
+          <span class="site-address">Av. Insurgentes Sur 2375, CDMX</span>
+        </td>
+        <td><span class="badge badge-active"><span class="badge-dot"></span>Active</span></td>
+        <td class="right mono">56</td>
+        <td class="right mono pct-amber">78%</td>
+        <td class="right mono count-alert">5</td>
+        <td class="right mono count-wo">3</td>
+        <td class="right mono">6</td>
+        <td class="right">
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">OXXO Cumbres</span>
+          <span class="site-address">Paseo de los Leones 3200, Cumbres</span>
+        </td>
+        <td><span class="badge badge-active"><span class="badge-dot"></span>Active</span></td>
+        <td class="right mono">85</td>
+        <td class="right mono pct-green">92%</td>
+        <td class="right mono count-alert">1</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono">8</td>
+        <td class="right">
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">CEDIS Norte Saltillo</span>
+          <span class="site-address">Carr. Saltillo-Monterrey Km 5, Saltillo</span>
+        </td>
+        <td><span class="badge badge-onboarding"><span class="badge-dot"></span>Onboarding</span></td>
+        <td class="right mono">16</td>
+        <td class="right mono pct-amber">63%</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono">2</td>
+        <td class="right">
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">Farmacias Benavides Queretaro</span>
+          <span class="site-address">Av. Universidad 500, Queretaro</span>
+        </td>
+        <td><span class="badge badge-draft"><span class="badge-dot"></span>Draft</span></td>
+        <td class="right mono pct-none">4</td>
+        <td class="right mono pct-none">&mdash;</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono count-zero">0</td>
+        <td class="right mono">0</td>
+        <td class="right">
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ************************************************************
+     PAGE DIVIDER
+     ************************************************************ -->
+<div class="page-divider"><span>Page 2 &mdash; Site Show: Monitoring Dashboard</span></div>
+
+
+<!-- ************************************************************
+     PAGE 2: SITE SHOW — MONITORING DASHBOARD
+     ************************************************************ -->
+<div class="breadcrumb-bar" style="position: relative;">
+  <a href="#">Platform</a>
+  <span class="sep">/</span>
+  <a href="#">Sites</a>
+  <span class="sep">/</span>
+  <span class="current">OXXO Centro Monterrey</span>
+</div>
+
+<div class="content">
+  <!-- Back Link -->
+  <a class="back-link" href="#">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Sites
+  </a>
+
+  <!-- Site Header -->
+  <div class="site-header">
+    <div class="site-header-info">
+      <h1 class="site-title">OXXO Centro Monterrey</h1>
+      <div class="site-subtitle">Av. Juarez 450, Centro, Monterrey, NL 64000</div>
+      <div class="site-badges">
+        <span class="badge badge-active"><span class="badge-dot"></span>Active</span>
+        <span class="badge badge-retail">Retail</span>
+        <span class="badge badge-tz">America/Monterrey</span>
+      </div>
+    </div>
+    <div class="site-header-actions">
+      <button class="btn-outline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        Manage
+      </button>
+      <button class="btn-outline accent">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip">
+    <div class="kpi-cell">
+      <div class="kpi-value">14</div>
+      <div class="kpi-label">Devices</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-value">2</div>
+      <div class="kpi-label">Gateways</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-value emerald">93%</div>
+      <div class="kpi-label">Online</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-value">0</div>
+      <div class="kpi-label">Alerts</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-value">0</div>
+      <div class="kpi-label">Work Orders</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-value emerald">13</div>
+      <div class="kpi-label">Online</div>
+    </div>
+  </div>
+
+  <!-- Health Bar -->
+  <div class="health-bar-wrapper">
+    <div class="health-bar-header">
+      <div class="health-bar-title">Fleet Health</div>
+      <div class="health-bar-pct">93% online</div>
+    </div>
+    <div class="health-bar-track">
+      <div class="health-bar-fill-green" style="width: 93%;"></div>
+      <div class="health-bar-fill-red" style="width: 7%;"></div>
+    </div>
+  </div>
+
+  <!-- Details Bar -->
+  <div class="details-bar">
+    <div class="detail-item">
+      <span class="detail-label">Timezone:</span>
+      <span class="detail-value">America/Monterrey</span>
+    </div>
+    <div class="detail-sep"></div>
+    <div class="detail-item">
+      <span class="detail-label">Opening:</span>
+      <span class="detail-value">07:00</span>
+    </div>
+    <div class="detail-sep"></div>
+    <div class="detail-item">
+      <span class="detail-label">Created:</span>
+      <span class="detail-value">Mar 2024</span>
+    </div>
+    <div class="detail-sep"></div>
+    <div class="detail-item">
+      <span class="detail-label">Last Activity:</span>
+      <span class="detail-value" style="color: var(--emerald);">2m ago</span>
+    </div>
+  </div>
+
+  <!-- Section: Zones -->
+  <div class="section-divider"><span>ZONES</span></div>
+
+  <div class="zone-grid">
+    <!-- Zone 1 -->
+    <div class="zone-card">
+      <div class="zone-card-header">
+        <div class="zone-card-title">Refrigeracion Principal</div>
+        <div class="zone-device-badge">5 devices &middot; 5 online</div>
+      </div>
+      <div class="zone-temp-display">
+        <div class="zone-temp-value">3.4&deg;C</div>
+        <div class="zone-temp-range">range: 2&ndash;5&deg;C</div>
+      </div>
+      <div class="zone-status-bar green"></div>
+      <svg class="zone-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+
+    <!-- Zone 2 -->
+    <div class="zone-card">
+      <div class="zone-card-header">
+        <div class="zone-card-title">Cuarto Frio A</div>
+        <div class="zone-device-badge">3 devices &middot; 3 online</div>
+      </div>
+      <div class="zone-temp-display">
+        <div class="zone-temp-value">-17.5&deg;C</div>
+        <div class="zone-temp-range">range: -20 to -15&deg;C</div>
+      </div>
+      <div class="zone-status-bar green"></div>
+      <svg class="zone-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+
+    <!-- Zone 3 -->
+    <div class="zone-card">
+      <div class="zone-card-header">
+        <div class="zone-card-title">Cuarto Frio B</div>
+        <div class="zone-device-badge">3 devices &middot; 2 online</div>
+      </div>
+      <div class="zone-temp-display">
+        <div class="zone-temp-value">-18.0&deg;C</div>
+        <div class="zone-temp-range">range: -20 to -15&deg;C</div>
+      </div>
+      <div class="zone-status-bar amber"></div>
+      <svg class="zone-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+
+    <!-- Zone 4 -->
+    <div class="zone-card">
+      <div class="zone-card-header">
+        <div class="zone-card-title">Oficinas</div>
+        <div class="zone-device-badge">3 devices &middot; 3 online</div>
+      </div>
+      <div class="zone-temp-display">
+        <div class="zone-temp-value">23.5&deg;C</div>
+        <div class="zone-temp-range">range: 20&ndash;26&deg;C</div>
+      </div>
+      <div class="zone-status-bar green"></div>
+      <svg class="zone-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </div>
+
+  <!-- Section: Floor Plan -->
+  <div class="section-divider"><span>FLOOR PLAN</span></div>
+
+  <div class="floor-plan-container">
+    <div class="floor-plan-toolbar">
+      <div class="floor-plan-toolbar-left">
+        <button class="btn-outline btn-sm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Plan
+        </button>
+        <button class="btn-outline btn-sm accent">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Zones
+        </button>
+      </div>
+      <div class="floor-plan-toolbar-right">
+        <button class="zoom-btn">-</button>
+        <span style="font-family: var(--font-mono); font-size: 10px; color: var(--dim); padding: 0 4px;">100%</span>
+        <button class="zoom-btn">+</button>
+      </div>
+    </div>
+
+    <div class="floor-plan-area">
+      <!-- Zone overlays -->
+      <div class="floor-plan-zone" style="left: 5%; top: 8%; width: 42%; height: 40%; background: rgba(59, 130, 246, 0.06); border-color: rgba(59, 130, 246, 0.25); color: rgba(59, 130, 246, 0.6);">
+        Refrigeracion Principal
+      </div>
+      <div class="floor-plan-zone" style="left: 52%; top: 8%; width: 22%; height: 40%; background: rgba(168, 85, 247, 0.06); border-color: rgba(168, 85, 247, 0.25); color: rgba(168, 85, 247, 0.6);">
+        Cuarto Frio A
+      </div>
+      <div class="floor-plan-zone" style="left: 78%; top: 8%; width: 18%; height: 40%; background: rgba(6, 182, 212, 0.06); border-color: rgba(6, 182, 212, 0.25); color: rgba(6, 182, 212, 0.6);">
+        Cuarto Frio B
+      </div>
+      <div class="floor-plan-zone" style="left: 5%; top: 55%; width: 91%; height: 38%; background: rgba(16, 185, 129, 0.06); border-color: rgba(16, 185, 129, 0.25); color: rgba(16, 185, 129, 0.6);">
+        Oficinas
+      </div>
+
+      <!-- Devices: Refrigeracion Principal -->
+      <div class="floor-plan-device online" style="left: 12%; top: 18%;">
+        <span class="floor-plan-device-label">T-001</span>
+      </div>
+      <div class="floor-plan-device online" style="left: 22%; top: 25%;">
+        <span class="floor-plan-device-label">T-002</span>
+      </div>
+      <div class="floor-plan-device online" style="left: 32%; top: 18%;">
+        <span class="floor-plan-device-label">T-003</span>
+      </div>
+      <div class="floor-plan-device online" style="left: 18%; top: 35%;">
+        <span class="floor-plan-device-label">T-004</span>
+      </div>
+      <div class="floor-plan-device online" style="left: 38%; top: 30%;">
+        <span class="floor-plan-device-label">T-005</span>
+      </div>
+
+      <!-- Devices: Cuarto Frio A -->
+      <div class="floor-plan-device online" style="left: 56%; top: 18%;">
+        <span class="floor-plan-device-label">T-006</span>
+      </div>
+      <div class="floor-plan-device online" style="left: 63%; top: 30%;">
+        <span class="floor-plan-device-label">T-007</span>
+      </div>
+      <div class="floor-plan-device online" style="left: 68%; top: 20%;">
+        <span class="floor-plan-device-label">T-008</span>
+      </div>
+
+      <!-- Devices: Cuarto Frio B -->
+      <div class="floor-plan-device online" style="left: 83%; top: 18%;">
+        <span class="floor-plan-device-label">T-009</span>
+      </div>
+      <div class="floor-plan-device online" style="left: 88%; top: 30%;">
+        <span class="floor-plan-device-label">T-010</span>
+      </div>
+      <div class="floor-plan-device offline" style="left: 86%; top: 38%;">
+        <span class="floor-plan-device-label">T-011</span>
+      </div>
+
+      <!-- Devices: Oficinas -->
+      <div class="floor-plan-device online" style="left: 20%; top: 68%;">
+        <span class="floor-plan-device-label">T-012</span>
+      </div>
+      <div class="floor-plan-device online" style="left: 50%; top: 72%;">
+        <span class="floor-plan-device-label">T-013</span>
+      </div>
+      <div class="floor-plan-device online" style="left: 75%; top: 68%;">
+        <span class="floor-plan-device-label">T-014</span>
+      </div>
+    </div>
+
+    <div class="floor-plan-legend">
+      <div class="legend-item">
+        <div class="legend-dot online"></div>
+        <span>Online Sensor</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot offline"></div>
+        <span>Offline Sensor</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-zone-swatch" style="background: var(--blue);"></div>
+        <span>Refrigeracion Principal</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-zone-swatch" style="background: var(--purple);"></div>
+        <span>Cuarto Frio A</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-zone-swatch" style="background: var(--cyan);"></div>
+        <span>Cuarto Frio B</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-zone-swatch" style="background: var(--emerald);"></div>
+        <span>Oficinas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section: Alerts -->
+  <div class="section-divider"><span>ALERTS</span></div>
+
+  <div class="alert-row">
+    <div class="alert-severity-dot critical"></div>
+    <div class="alert-info">
+      <div class="alert-device">Sensor T-011 &mdash; Cuarto Frio B</div>
+      <div class="alert-meta">Device Offline &middot; Severity: Critical</div>
+    </div>
+    <div class="alert-time">3m ago</div>
+  </div>
+  <div class="alert-row">
+    <div class="alert-severity-dot high"></div>
+    <div class="alert-info">
+      <div class="alert-device">Sensor T-009 &mdash; Cuarto Frio B</div>
+      <div class="alert-meta">High Temperature &gt; -15&deg;C &middot; Severity: High</div>
+    </div>
+    <div class="alert-time">12m ago</div>
+  </div>
+
+  <!-- Section: Devices -->
+  <div class="section-divider"><span>DEVICES</span></div>
+
+  <table class="ed-table">
+    <thead>
+      <tr>
+        <th>Device</th>
+        <th>Type</th>
+        <th class="center">Status</th>
+        <th class="right">Last Reading</th>
+        <th class="right">Last Seen</th>
+        <th class="right">Battery</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <span class="site-name">Sensor T-001</span>
+          <span class="site-address">Refrigeracion Principal</span>
+        </td>
+        <td><span class="mono">LHT65</span></td>
+        <td class="center"><span class="status-dot online"></span></td>
+        <td class="right"><span class="mono">3.4&deg;C</span></td>
+        <td class="right"><span class="mono text-muted">2m ago</span></td>
+        <td class="right">
+          <div class="battery-bar-wrapper" style="justify-content: flex-end;">
+            <div class="battery-bar"><div class="battery-fill high" style="width: 87%;"></div></div>
+            <span class="battery-text">87%</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">Sensor T-002</span>
+          <span class="site-address">Refrigeracion Principal</span>
+        </td>
+        <td><span class="mono">LHT65</span></td>
+        <td class="center"><span class="status-dot online"></span></td>
+        <td class="right"><span class="mono">3.1&deg;C</span></td>
+        <td class="right"><span class="mono text-muted">2m ago</span></td>
+        <td class="right">
+          <div class="battery-bar-wrapper" style="justify-content: flex-end;">
+            <div class="battery-bar"><div class="battery-fill high" style="width: 92%;"></div></div>
+            <span class="battery-text">92%</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">Sensor T-006</span>
+          <span class="site-address">Cuarto Frio A</span>
+        </td>
+        <td><span class="mono">LHT65</span></td>
+        <td class="center"><span class="status-dot online"></span></td>
+        <td class="right"><span class="mono">-17.5&deg;C</span></td>
+        <td class="right"><span class="mono text-muted">4m ago</span></td>
+        <td class="right">
+          <div class="battery-bar-wrapper" style="justify-content: flex-end;">
+            <div class="battery-bar"><div class="battery-fill high" style="width: 74%;"></div></div>
+            <span class="battery-text">74%</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">Sensor T-009</span>
+          <span class="site-address">Cuarto Frio B</span>
+        </td>
+        <td><span class="mono">LHT65</span></td>
+        <td class="center"><span class="status-dot online"></span></td>
+        <td class="right"><span class="mono text-amber">-14.2&deg;C</span></td>
+        <td class="right"><span class="mono text-muted">5m ago</span></td>
+        <td class="right">
+          <div class="battery-bar-wrapper" style="justify-content: flex-end;">
+            <div class="battery-bar"><div class="battery-fill mid" style="width: 45%;"></div></div>
+            <span class="battery-text">45%</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">Sensor T-011</span>
+          <span class="site-address">Cuarto Frio B</span>
+        </td>
+        <td><span class="mono">LHT65</span></td>
+        <td class="center"><span class="status-dot offline"></span></td>
+        <td class="right"><span class="mono text-dim">&mdash;</span></td>
+        <td class="right"><span class="mono text-coral">47m ago</span></td>
+        <td class="right">
+          <div class="battery-bar-wrapper" style="justify-content: flex-end;">
+            <div class="battery-bar"><div class="battery-fill low" style="width: 12%;"></div></div>
+            <span class="battery-text">12%</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="site-name">Sensor T-012</span>
+          <span class="site-address">Oficinas</span>
+        </td>
+        <td><span class="mono">LHT65</span></td>
+        <td class="center"><span class="status-dot online"></span></td>
+        <td class="right"><span class="mono">23.5&deg;C</span></td>
+        <td class="right"><span class="mono text-muted">1m ago</span></td>
+        <td class="right">
+          <div class="battery-bar-wrapper" style="justify-content: flex-end;">
+            <div class="battery-bar"><div class="battery-fill high" style="width: 96%;"></div></div>
+            <span class="battery-text">96%</span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Section: Gateways -->
+  <div class="section-divider"><span>GATEWAYS</span></div>
+
+  <table class="ed-table">
+    <thead>
+      <tr>
+        <th>Gateway</th>
+        <th>Model</th>
+        <th class="center">Status</th>
+        <th class="right">Connected</th>
+        <th class="right">Last Seen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="site-name">GW-MTY-001</span></td>
+        <td><span class="mono">Dragino LPS8</span></td>
+        <td class="center"><span class="status-dot online"></span></td>
+        <td class="right mono">8</td>
+        <td class="right"><span class="mono text-muted">1m ago</span></td>
+      </tr>
+      <tr>
+        <td><span class="site-name">GW-MTY-002</span></td>
+        <td><span class="mono">Dragino LPS8</span></td>
+        <td class="center"><span class="status-dot online"></span></td>
+        <td class="right mono">6</td>
+        <td class="right"><span class="mono text-muted">1m ago</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ************************************************************
+     PAGE DIVIDER
+     ************************************************************ -->
+<div class="page-divider"><span>Page 3 &mdash; Zone Detail</span></div>
+
+
+<!-- ************************************************************
+     PAGE 3: ZONE DETAIL
+     ************************************************************ -->
+<div class="breadcrumb-bar" style="position: relative;">
+  <a href="#">Platform</a>
+  <span class="sep">/</span>
+  <a href="#">Sites</a>
+  <span class="sep">/</span>
+  <a href="#">OXXO Centro Monterrey</a>
+  <span class="sep">/</span>
+  <span class="current">Refrigeracion Principal</span>
+</div>
+
+<div class="content">
+  <!-- Back Link -->
+  <a class="back-link" href="#">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    OXXO Centro Monterrey
+  </a>
+
+  <!-- Zone Header -->
+  <div class="site-header">
+    <div class="site-header-info">
+      <h1 class="site-title" style="font-size: 22px;">Refrigeracion Principal</h1>
+      <div class="site-badges" style="margin-top: 8px;">
+        <span class="badge badge-active"><span class="badge-dot"></span>5 devices &middot; 5 online</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Temperature Chart -->
+  <div class="chart-container">
+    <div class="chart-header">
+      <div class="chart-title">Temperature &mdash; Last 24 Hours</div>
+      <div class="chart-current">3.4&deg;C</div>
+    </div>
+
+    <svg viewBox="0 0 800 220" style="width: 100%; height: auto; display: block;">
+      <!-- Y-axis labels -->
+      <text x="25" y="18" fill="#374151" font-family="Fira Code" font-size="9" text-anchor="end">8&deg;C</text>
+      <text x="25" y="68" fill="#374151" font-family="Fira Code" font-size="9" text-anchor="end">6&deg;C</text>
+      <text x="25" y="118" fill="#374151" font-family="Fira Code" font-size="9" text-anchor="end">4&deg;C</text>
+      <text x="25" y="168" fill="#374151" font-family="Fira Code" font-size="9" text-anchor="end">2&deg;C</text>
+      <text x="25" y="213" fill="#374151" font-family="Fira Code" font-size="9" text-anchor="end">0&deg;C</text>
+
+      <!-- Grid lines -->
+      <line x1="35" y1="15" x2="790" y2="15" stroke="#1e2228" stroke-width="0.5"/>
+      <line x1="35" y1="65" x2="790" y2="65" stroke="#1e2228" stroke-width="0.5"/>
+      <line x1="35" y1="115" x2="790" y2="115" stroke="#1e2228" stroke-width="0.5"/>
+      <line x1="35" y1="165" x2="790" y2="165" stroke="#1e2228" stroke-width="0.5"/>
+      <line x1="35" y1="210" x2="790" y2="210" stroke="#1e2228" stroke-width="0.5"/>
+
+      <!-- Acceptable range band (2-5°C = y:65 to y:165) -->
+      <rect x="35" y="65" width="755" height="100" fill="rgba(16, 185, 129, 0.06)" rx="2"/>
+      <line x1="35" y1="65" x2="790" y2="65" stroke="rgba(16, 185, 129, 0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="35" y1="165" x2="790" y2="165" stroke="rgba(16, 185, 129, 0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+
+      <!-- Range labels -->
+      <text x="795" y="62" fill="#10b981" font-family="Fira Code" font-size="8" opacity="0.5">5&deg;C max</text>
+      <text x="795" y="172" fill="#10b981" font-family="Fira Code" font-size="8" opacity="0.5">2&deg;C min</text>
+
+      <!-- Temperature line (24h, fluctuating around 3-4°C) -->
+      <polyline
+        points="
+          35,120  67,125  99,118  131,115  163,122  195,128  227,130  259,125
+          291,118  323,112  355,108  387,115  419,120  451,118  483,112
+          515,108  547,110  579,115  611,118  643,122  675,120  707,115
+          739,112  771,108
+        "
+        fill="none"
+        stroke="#06b6d4"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+
+      <!-- Glow effect -->
+      <polyline
+        points="
+          35,120  67,125  99,118  131,115  163,122  195,128  227,130  259,125
+          291,118  323,112  355,108  387,115  419,120  451,118  483,112
+          515,108  547,110  579,115  611,118  643,122  675,120  707,115
+          739,112  771,108
+        "
+        fill="none"
+        stroke="#06b6d4"
+        stroke-width="6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.15"
+      />
+
+      <!-- Current point -->
+      <circle cx="771" cy="108" r="5" fill="#06b6d4" stroke="#0b0d10" stroke-width="2"/>
+      <text x="771" y="98" fill="#06b6d4" font-family="Bricolage Grotesque" font-size="11" font-weight="700" text-anchor="middle">3.4&deg;C</text>
+
+      <!-- X-axis labels -->
+      <text x="35" y="213" fill="#374151" font-family="Fira Code" font-size="8">00:00</text>
+      <text x="163" y="213" fill="#374151" font-family="Fira Code" font-size="8">04:00</text>
+      <text x="291" y="213" fill="#374151" font-family="Fira Code" font-size="8">08:00</text>
+      <text x="419" y="213" fill="#374151" font-family="Fira Code" font-size="8">12:00</text>
+      <text x="547" y="213" fill="#374151" font-family="Fira Code" font-size="8">16:00</text>
+      <text x="675" y="213" fill="#374151" font-family="Fira Code" font-size="8">20:00</text>
+      <text x="771" y="213" fill="#374151" font-family="Fira Code" font-size="8">23:00</text>
+    </svg>
+  </div>
+
+  <!-- Section: Devices in Zone -->
+  <div class="section-divider"><span>DEVICES IN ZONE</span></div>
+
+  <!-- Device 1 -->
+  <div class="device-card">
+    <div class="device-card-info">
+      <div class="device-card-name">Sensor T-001</div>
+      <div class="device-card-model">Dragino LHT65</div>
+    </div>
+    <div class="device-card-reading">
+      <div class="device-card-temp">3.4&deg;C</div>
+      <div class="device-card-humidity">62% humidity</div>
+    </div>
+    <div class="device-card-status">
+      <div class="device-card-status-label"><span class="status-dot online"></span> Online</div>
+      <div class="device-card-lastseen">2m ago</div>
+    </div>
+    <div class="device-card-battery">
+      <div class="battery-bar-wrapper">
+        <div class="battery-bar"><div class="battery-fill high" style="width: 87%;"></div></div>
+        <span class="battery-text">87%</span>
+      </div>
+    </div>
+    <div class="device-card-sparkline">
+      <svg width="100" height="30" viewBox="0 0 100 30">
+        <polyline points="0,18 16,15 32,20 48,14 64,16 80,12 100,10" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="0,18 16,15 32,20 48,14 64,16 80,12 100,10" fill="none" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.1"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Device 2 -->
+  <div class="device-card">
+    <div class="device-card-info">
+      <div class="device-card-name">Sensor T-002</div>
+      <div class="device-card-model">Dragino LHT65</div>
+    </div>
+    <div class="device-card-reading">
+      <div class="device-card-temp">3.1&deg;C</div>
+      <div class="device-card-humidity">65% humidity</div>
+    </div>
+    <div class="device-card-status">
+      <div class="device-card-status-label"><span class="status-dot online"></span> Online</div>
+      <div class="device-card-lastseen">2m ago</div>
+    </div>
+    <div class="device-card-battery">
+      <div class="battery-bar-wrapper">
+        <div class="battery-bar"><div class="battery-fill high" style="width: 92%;"></div></div>
+        <span class="battery-text">92%</span>
+      </div>
+    </div>
+    <div class="device-card-sparkline">
+      <svg width="100" height="30" viewBox="0 0 100 30">
+        <polyline points="0,15 16,18 32,14 48,16 64,12 80,15 100,13" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="0,15 16,18 32,14 48,16 64,12 80,15 100,13" fill="none" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.1"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Device 3 -->
+  <div class="device-card">
+    <div class="device-card-info">
+      <div class="device-card-name">Sensor T-003</div>
+      <div class="device-card-model">Dragino LHT65</div>
+    </div>
+    <div class="device-card-reading">
+      <div class="device-card-temp">3.8&deg;C</div>
+      <div class="device-card-humidity">58% humidity</div>
+    </div>
+    <div class="device-card-status">
+      <div class="device-card-status-label"><span class="status-dot online"></span> Online</div>
+      <div class="device-card-lastseen">3m ago</div>
+    </div>
+    <div class="device-card-battery">
+      <div class="battery-bar-wrapper">
+        <div class="battery-bar"><div class="battery-fill high" style="width: 79%;"></div></div>
+        <span class="battery-text">79%</span>
+      </div>
+    </div>
+    <div class="device-card-sparkline">
+      <svg width="100" height="30" viewBox="0 0 100 30">
+        <polyline points="0,12 16,14 32,18 48,15 64,20 80,16 100,14" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="0,12 16,14 32,18 48,15 64,20 80,16 100,14" fill="none" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.1"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Device 4 -->
+  <div class="device-card">
+    <div class="device-card-info">
+      <div class="device-card-name">Sensor T-004</div>
+      <div class="device-card-model">Dragino LHT65</div>
+    </div>
+    <div class="device-card-reading">
+      <div class="device-card-temp">2.9&deg;C</div>
+      <div class="device-card-humidity">70% humidity</div>
+    </div>
+    <div class="device-card-status">
+      <div class="device-card-status-label"><span class="status-dot online"></span> Online</div>
+      <div class="device-card-lastseen">4m ago</div>
+    </div>
+    <div class="device-card-battery">
+      <div class="battery-bar-wrapper">
+        <div class="battery-bar"><div class="battery-fill high" style="width: 68%;"></div></div>
+        <span class="battery-text">68%</span>
+      </div>
+    </div>
+    <div class="device-card-sparkline">
+      <svg width="100" height="30" viewBox="0 0 100 30">
+        <polyline points="0,20 16,16 32,18 48,22 64,18 80,14 100,16" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="0,20 16,16 32,18 48,22 64,18 80,14 100,16" fill="none" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.1"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Device 5 -->
+  <div class="device-card">
+    <div class="device-card-info">
+      <div class="device-card-name">Sensor T-005</div>
+      <div class="device-card-model">Dragino LHT65</div>
+    </div>
+    <div class="device-card-reading">
+      <div class="device-card-temp">4.2&deg;C</div>
+      <div class="device-card-humidity">55% humidity</div>
+    </div>
+    <div class="device-card-status">
+      <div class="device-card-status-label"><span class="status-dot online"></span> Online</div>
+      <div class="device-card-lastseen">1m ago</div>
+    </div>
+    <div class="device-card-battery">
+      <div class="battery-bar-wrapper">
+        <div class="battery-bar"><div class="battery-fill high" style="width: 95%;"></div></div>
+        <span class="battery-text">95%</span>
+      </div>
+    </div>
+    <div class="device-card-sparkline">
+      <svg width="100" height="30" viewBox="0 0 100 30">
+        <polyline points="0,16 16,12 32,14 48,10 64,14 80,18 100,12" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="0,16 16,12 32,14 48,10 64,14 80,18 100,12" fill="none" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.1"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Section: Alert Rules -->
+  <div class="section-divider"><span>ALERT RULES</span></div>
+
+  <div class="rule-row">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div class="rule-name">High Temperature</div>
+    <div class="rule-threshold">threshold: &gt; 5&deg;C</div>
+    <span class="badge badge-critical">Critical</span>
+    <span class="rule-active-badge">Active</span>
+  </div>
+
+  <div class="rule-row">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div class="rule-name">Low Temperature</div>
+    <div class="rule-threshold">threshold: &lt; 2&deg;C</div>
+    <span class="badge badge-high">High</span>
+    <span class="rule-active-badge">Active</span>
+  </div>
+</div>
+
+
+<!-- ************************************************************
+     PAGE DIVIDER
+     ************************************************************ -->
+<div class="page-divider"><span>Page 4 &mdash; Floor Plan Editor</span></div>
+
+
+<!-- ************************************************************
+     PAGE 4: FLOOR PLAN EDITOR
+     ************************************************************ -->
+<div class="breadcrumb-bar" style="position: relative;">
+  <a href="#">Platform</a>
+  <span class="sep">/</span>
+  <a href="#">Sites</a>
+  <span class="sep">/</span>
+  <a href="#">OXXO Centro Monterrey</a>
+  <span class="sep">/</span>
+  <span class="current">Floor Plan Editor</span>
+</div>
+
+<div class="content">
+  <!-- Back Link -->
+  <a class="back-link" href="#">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    OXXO Centro Monterrey
+  </a>
+
+  <!-- Header -->
+  <div class="site-header">
+    <div class="site-header-info">
+      <h1 class="site-title" style="font-size: 22px;">Floor Plan Editor</h1>
+    </div>
+    <div class="site-header-actions">
+      <button class="btn-outline">Cancel</button>
+      <button class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Save
+      </button>
+    </div>
+  </div>
+
+  <!-- Editor Layout -->
+  <div class="editor-layout">
+    <!-- Left: Canvas -->
+    <div class="editor-canvas">
+      <div class="editor-toolbar">
+        <button class="editor-tool-btn selected">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+          Draw Zone
+        </button>
+        <button class="editor-tool-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          Place Device
+        </button>
+        <button class="editor-tool-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1115.71 8h1.79a4.5 4.5 0 012.5 8.242"/><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+          Select
+        </button>
+        <button class="editor-tool-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          Delete
+        </button>
+      </div>
+
+      <div class="editor-canvas-area">
+        <!-- Zone polygons -->
+        <div class="editor-zone-poly selected" style="left: 4%; top: 6%; width: 44%; height: 42%; background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.5); color: rgba(59, 130, 246, 0.7);">
+          Refrigeracion Principal
+        </div>
+        <div class="editor-zone-poly" style="left: 52%; top: 6%; width: 22%; height: 42%; background: rgba(168, 85, 247, 0.08); border-color: rgba(168, 85, 247, 0.3); color: rgba(168, 85, 247, 0.7);">
+          Cuarto Frio A
+        </div>
+        <div class="editor-zone-poly" style="left: 78%; top: 6%; width: 18%; height: 42%; background: rgba(6, 182, 212, 0.08); border-color: rgba(6, 182, 212, 0.3); color: rgba(6, 182, 212, 0.7);">
+          Cuarto Frio B
+        </div>
+        <div class="editor-zone-poly" style="left: 4%; top: 54%; width: 92%; height: 40%; background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); color: rgba(16, 185, 129, 0.7);">
+          Oficinas
+        </div>
+
+        <!-- Device markers -->
+        <div class="editor-device-marker" style="left: 12%; top: 18%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 22%; top: 26%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 32%; top: 18%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 18%; top: 36%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 38%; top: 30%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 56%; top: 18%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 63%; top: 30%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 68%; top: 20%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 83%; top: 18%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 88%; top: 30%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 86%; top: 38%; background: var(--coral); box-shadow: 0 0 6px rgba(244,63,94,0.4);"></div>
+        <div class="editor-device-marker" style="left: 20%; top: 68%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 50%; top: 72%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+        <div class="editor-device-marker" style="left: 75%; top: 68%; background: var(--emerald); box-shadow: 0 0 6px rgba(16,185,129,0.4);"></div>
+      </div>
+    </div>
+
+    <!-- Right: Properties Panel -->
+    <div class="editor-panel">
+      <div class="editor-panel-header">Zone Properties</div>
+      <div class="editor-panel-body">
+        <div class="editor-field">
+          <label>Zone Name</label>
+          <input class="editor-input" type="text" value="Refrigeracion Principal">
+        </div>
+
+        <div class="editor-field">
+          <label>Color</label>
+          <div class="editor-color-row">
+            <div class="editor-color-swatch" style="background: rgba(59, 130, 246, 0.4);"></div>
+            <input class="editor-input" type="text" value="#3b82f6" style="width: calc(100% - 32px);">
+          </div>
+        </div>
+
+        <div class="editor-field">
+          <label>Temp Range Min</label>
+          <input class="editor-input" type="text" value="2">
+        </div>
+
+        <div class="editor-field">
+          <label>Temp Range Max</label>
+          <input class="editor-input" type="text" value="5">
+        </div>
+
+        <div class="editor-field">
+          <label>Devices</label>
+          <div style="font-size: 12px; color: var(--text-secondary); padding: 4px 0;">5 sensors assigned</div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); margin-top: 16px; padding-top: 16px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 12px;">All Zones</div>
+
+          <div class="editor-zone-list-item">
+            <div class="editor-zone-dot" style="background: rgba(59, 130, 246, 0.5);"></div>
+            <div class="editor-zone-name">Refrigeracion Principal</div>
+            <div class="editor-zone-count">5 devices</div>
+          </div>
+          <div class="editor-zone-list-item">
+            <div class="editor-zone-dot" style="background: rgba(168, 85, 247, 0.5);"></div>
+            <div class="editor-zone-name">Cuarto Frio A</div>
+            <div class="editor-zone-count">3 devices</div>
+          </div>
+          <div class="editor-zone-list-item">
+            <div class="editor-zone-dot" style="background: rgba(6, 182, 212, 0.5);"></div>
+            <div class="editor-zone-name">Cuarto Frio B</div>
+            <div class="editor-zone-count">3 devices</div>
+          </div>
+          <div class="editor-zone-list-item">
+            <div class="editor-zone-dot" style="background: rgba(16, 185, 129, 0.5);"></div>
+            <div class="editor-zone-name">Oficinas</div>
+            <div class="editor-zone-count">3 devices</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ************************************************************
+     PAGE DIVIDER
+     ************************************************************ -->
+<div class="page-divider"><span>Page 5 &mdash; Site Settings / Edit</span></div>
+
+
+<!-- ************************************************************
+     PAGE 5: SITE SETTINGS / EDIT
+     ************************************************************ -->
+<div class="breadcrumb-bar" style="position: relative;">
+  <a href="#">Platform</a>
+  <span class="sep">/</span>
+  <a href="#">Sites</a>
+  <span class="sep">/</span>
+  <a href="#">OXXO Centro Monterrey</a>
+  <span class="sep">/</span>
+  <span class="current">Edit</span>
+</div>
+
+<div class="content">
+  <!-- Back Link -->
+  <a class="back-link" href="#">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    OXXO Centro Monterrey
+  </a>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title" style="font-size: 24px;">Edit Site</h1>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <!-- Profile Section -->
+    <div class="section-divider" style="margin-top: 0;"><span>PROFILE</span></div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input class="form-input" type="text" value="OXXO Centro Monterrey">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input class="form-input" type="text" value="Av. Juarez 450, Centro, Monterrey, NL 64000">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Latitude</label>
+        <input class="form-input" type="text" value="25.6714">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Longitude</label>
+        <input class="form-input" type="text" value="-100.3089">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Timezone</label>
+        <select class="form-select">
+          <option selected>America/Monterrey</option>
+          <option>America/Mexico_City</option>
+          <option>America/Cancun</option>
+          <option>America/Tijuana</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Opening Hour</label>
+        <input class="form-input" type="time" value="07:00">
+      </div>
+    </div>
+
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select">
+          <option>Draft</option>
+          <option selected>Active</option>
+          <option>Suspended</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Zones Section -->
+    <div class="section-divider"><span>ZONES</span></div>
+
+    <div class="zone-edit-row">
+      <div class="zone-edit-color" style="background: var(--blue);"></div>
+      <div class="zone-edit-name">Refrigeracion Principal</div>
+      <div class="zone-edit-range">2&deg;C &ndash; 5&deg;C</div>
+      <div class="zone-edit-count">5 devices</div>
+      <div class="zone-edit-actions">
+        <button class="btn-ghost btn-sm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-ghost btn-sm" style="color: var(--coral);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="zone-edit-row">
+      <div class="zone-edit-color" style="background: var(--purple);"></div>
+      <div class="zone-edit-name">Cuarto Frio A</div>
+      <div class="zone-edit-range">-20&deg;C &ndash; -15&deg;C</div>
+      <div class="zone-edit-count">3 devices</div>
+      <div class="zone-edit-actions">
+        <button class="btn-ghost btn-sm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-ghost btn-sm" style="color: var(--coral);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="zone-edit-row">
+      <div class="zone-edit-color" style="background: var(--cyan);"></div>
+      <div class="zone-edit-name">Cuarto Frio B</div>
+      <div class="zone-edit-range">-20&deg;C &ndash; -15&deg;C</div>
+      <div class="zone-edit-count">3 devices</div>
+      <div class="zone-edit-actions">
+        <button class="btn-ghost btn-sm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-ghost btn-sm" style="color: var(--coral);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="zone-edit-row">
+      <div class="zone-edit-color" style="background: var(--emerald);"></div>
+      <div class="zone-edit-name">Oficinas</div>
+      <div class="zone-edit-range">20&deg;C &ndash; 26&deg;C</div>
+      <div class="zone-edit-count">3 devices</div>
+      <div class="zone-edit-actions">
+        <button class="btn-ghost btn-sm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-ghost btn-sm" style="color: var(--coral);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-outline btn-sm" style="margin-top: 12px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Add Zone
+    </button>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Changes
+      </button>
+      <button class="btn-outline">Cancel</button>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="danger-zone">
+      <div class="danger-zone-title">Danger Zone</div>
+      <div class="danger-zone-desc">
+        Permanently delete this site and all associated data including devices, zones, alerts, and work orders.
+        This action cannot be undone.
+      </div>
+      <button class="btn-danger">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        Delete Site
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom padding -->
+<div style="height: 80px;"></div>
+
+</main>
+</body>
+</html>

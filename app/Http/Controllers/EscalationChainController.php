@@ -13,9 +13,11 @@ class EscalationChainController extends Controller
     {
         $user = $request->user();
         $isSuperAdmin = $user->hasRole('super_admin');
+        $filterSiteId = $request->input('site_id');
 
         $chains = EscalationChain::with('site')
             ->when(! $isSuperAdmin, fn ($q) => $q->whereHas('site', fn ($sq) => $sq->where('org_id', $user->org_id)))
+            ->when($filterSiteId, fn ($q) => $q->where('site_id', $filterSiteId))
             ->latest()
             ->get();
 
@@ -37,6 +39,9 @@ class EscalationChainController extends Controller
             'chains' => $chains,
             'sites' => $sites,
             'siteUsers' => $siteUsers,
+            'filters' => [
+                'site_id' => $filterSiteId,
+            ],
         ]);
     }
 

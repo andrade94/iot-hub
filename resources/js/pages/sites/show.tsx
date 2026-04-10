@@ -725,9 +725,9 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                 <ConfigLink icon={Bell} label={t('Alert Rules')} count={configCounts?.alert_rules}
                                     href={`/sites/${site.id}/rules`} description={t('Thresholds & triggers')} />
                                 <ConfigLink icon={Signal} label={t('Escalation Chains')} count={configCounts?.escalation_chains}
-                                    href="/settings/escalation-chains" description={t('Notification routing')} />
+                                    href={`/settings/escalation-chains?site_id=${site.id}`} description={t('Notification routing')} />
                                 <ConfigLink icon={FileBarChart} label={t('Report Schedules')} count={configCounts?.report_schedules}
-                                    href="/settings/report-schedules" description={t('Automated reports')} />
+                                    href={`/settings/report-schedules?site_id=${site.id}`} description={t('Automated reports')} />
                                 <ConfigLink icon={Thermometer} label={t('Verifications')} href={`/sites/${site.id}/verifications`}
                                     description={t('Temperature checks')} />
                                 <ConfigLink icon={Radio} label={t('Gateways')} count={gatewayCount}
@@ -737,7 +737,7 @@ export default function SiteShow({ site, kpis, zones, activeAlerts, floorPlans, 
                                 <ConfigLink icon={Layers} label={t('Modules')} count={(site as any).modules?.length}
                                     href={`/sites/${site.id}/modules`} description={t('Active capabilities')} />
                                 <ConfigLink icon={Wrench} label={t('Maintenance Windows')} count={configCounts?.maintenance_windows}
-                                    href="/settings/maintenance-windows" description={t('Alert suppression')} />
+                                    href={`/settings/maintenance-windows?site_id=${site.id}`} description={t('Alert suppression')} />
                             </div>
                         </FadeIn>
 

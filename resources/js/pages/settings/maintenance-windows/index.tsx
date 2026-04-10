@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { TimeInput } from '@/components/ui/time-input';
 import InputError from '@/components/input-error';
 import { useValidatedForm } from '@/hooks/use-validated-form';
 import { useLang } from '@/hooks/use-lang';
@@ -56,6 +57,7 @@ interface MaintenanceWindowRecord {
 interface Props {
     windows: MaintenanceWindowRecord[];
     sites: SiteOption[];
+    filters?: { site_id: string | null };
 }
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -64,6 +66,68 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Settings', href: '/settings/organization' },
     { title: 'Maintenance Windows', href: '#' },
 ];
+
+function renderWindowCard(
+    w: MaintenanceWindowRecord,
+    t: (key: string) => string,
+    setEditWindow: (w: MaintenanceWindowRecord) => void,
+    setDeleteWindow: (w: MaintenanceWindowRecord) => void,
+) {
+    return (
+        <Card key={w.id} className="shadow-elevation-1">
+            <CardContent className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                        <Wrench className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <p className="font-medium">{w.title}</p>
+                            {w.suppress_alerts && isWindowActiveNow(w) && (
+                                <Badge variant="warning" className="text-xs">
+                                    {t('Active now')}
+                                </Badge>
+                            )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            {w.site?.name}
+                            {w.zone && <> &middot; {w.zone}</>}
+                            {!w.zone && <> &middot; <span className="italic">{t('Entire site')}</span></>}
+                        </p>
+                        <p className="font-mono text-xs tabular-nums text-muted-foreground">
+                            {formatSchedule(w)} &middot; <span className="font-medium text-foreground">{w.duration_minutes}</span> {t('min')}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Can permission="manage maintenance windows">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{t('Suppress')}</span>
+                            <Switch
+                                checked={w.suppress_alerts}
+                                onCheckedChange={(checked) => {
+                                    router.put(
+                                        `/settings/maintenance-windows/${w.id}`,
+                                        { ...w, suppress_alerts: checked, site_id: undefined } as Record<string, unknown>,
+                                        { preserveScroll: true },
+                                    );
+                                }}
+                            />
+                        </div>
+                    </Can>
+                    <Can permission="manage maintenance windows">
+                        <Button variant="ghost" size="icon" onClick={() => setEditWindow(w)}>
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteWindow(w)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </Can>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
 
 export function MaintenanceWindowsSkeleton() {
     return (
@@ -111,11 +175,26 @@ export function MaintenanceWindowsSkeleton() {
     );
 }
 
-export default function MaintenanceWindowsIndex({ windows, sites }: Props) {
+export default function MaintenanceWindowsIndex({ windows, sites, filters }: Props) {
     const { t } = useLang();
     const [showCreate, setShowCreate] = useState(false);
     const [editWindow, setEditWindow] = useState<MaintenanceWindowRecord | null>(null);
     const [deleteWindow, setDeleteWindow] = useState<MaintenanceWindowRecord | null>(null);
+    const currentSiteId = filters?.site_id ?? '';
+
+    function applySiteFilter(siteId: string) {
+        router.get('/settings/maintenance-windows', siteId && siteId !== 'all' ? { site_id: siteId } : {}, { preserveState: true, replace: true });
+    }
+
+    // Group by site when no filter is active
+    const groupedWindows = !currentSiteId
+        ? windows.reduce<Record<string, { site: { id: number; name: string } | undefined; items: MaintenanceWindowRecord[] }>>((acc, w) => {
+              const key = String(w.site_id);
+              if (!acc[key]) acc[key] = { site: w.site, items: [] };
+              acc[key].items.push(w);
+              return acc;
+          }, {})
+        : null;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -147,18 +226,30 @@ export default function MaintenanceWindowsIndex({ windows, sites }: Props) {
                     </div>
                 </FadeIn>
 
-                {/* ── Section Divider ─────────────────────────────── */}
-                <FadeIn delay={75} duration={400}>
-                    <div className="flex items-center gap-3">
-                        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
-                            {t('Active Windows')}
-                        </p>
-                        <div className="h-px flex-1 bg-border" />
-                        <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                            {windows.length}
-                        </span>
-                    </div>
-                </FadeIn>
+                {/* ── Site Filter ─────────────────────────────────── */}
+                {sites.length > 1 && (
+                    <FadeIn delay={60} duration={400}>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-medium text-muted-foreground">{t('Site')}:</span>
+                            <Select value={currentSiteId || 'all'} onValueChange={applySiteFilter}>
+                                <SelectTrigger className="h-8 w-[200px] text-[12px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('All sites')}</SelectItem>
+                                    {sites.map((s) => (
+                                        <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {currentSiteId && (
+                                <Button variant="ghost" size="sm" className="h-8 text-[11px]" onClick={() => applySiteFilter('all')}>
+                                    {t('Clear')}
+                                </Button>
+                            )}
+                        </div>
+                    </FadeIn>
+                )}
 
                 {/* ── Content ─────────────────────────────────────── */}
                 {windows.length === 0 ? (
@@ -177,65 +268,48 @@ export default function MaintenanceWindowsIndex({ windows, sites }: Props) {
                             }
                         />
                     </FadeIn>
-                ) : (
-                    <div className="space-y-3">
-                        {windows.map((w, index) => (
-                            <FadeIn key={w.id} delay={150 + index * 50} duration={400}>
-                                <Card className="shadow-elevation-1">
-                                    <CardContent className="flex items-center justify-between p-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                                                <Wrench className="h-5 w-5 text-muted-foreground" />
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <p className="font-medium">{w.title}</p>
-                                                    {w.suppress_alerts && isWindowActiveNow(w) && (
-                                                        <Badge variant="warning" className="text-xs">
-                                                            {t('Active now')}
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {w.site?.name}
-                                                    {w.zone && <> &middot; {w.zone}</>}
-                                                    {!w.zone && <> &middot; <span className="italic">{t('Entire site')}</span></>}
-                                                </p>
-                                                <p className="font-mono text-xs tabular-nums text-muted-foreground">
-                                                    {formatSchedule(w)} &middot; <span className="font-medium text-foreground">{w.duration_minutes}</span> {t('min')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <Can permission="manage maintenance windows">
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <span>{t('Suppress')}</span>
-                                                    <Switch
-                                                        checked={w.suppress_alerts}
-                                                        onCheckedChange={(checked) => {
-                                                            router.put(
-                                                                `/settings/maintenance-windows/${w.id}`,
-                                                                { ...w, suppress_alerts: checked, site_id: undefined } as Record<string, unknown>,
-                                                                { preserveScroll: true },
-                                                            );
-                                                        }}
-                                                    />
-                                                </div>
-                                            </Can>
-                                            <Can permission="manage maintenance windows">
-                                                <Button variant="ghost" size="icon" onClick={() => setEditWindow(w)}>
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => setDeleteWindow(w)}>
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </Can>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                ) : groupedWindows ? (
+                    <div className="space-y-6">
+                        {Object.entries(groupedWindows).map(([siteId, group], groupIdx) => (
+                            <FadeIn key={siteId} delay={75 + groupIdx * 40} duration={400}>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                            {group.site?.name ?? t('Unknown site')}
+                                        </p>
+                                        <div className="h-px flex-1 bg-border" />
+                                        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                                            {group.items.length}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {group.items.map((w) => renderWindowCard(w, t, setEditWindow, setDeleteWindow))}
+                                    </div>
+                                </div>
                             </FadeIn>
                         ))}
                     </div>
+                ) : (
+                    <>
+                        <FadeIn delay={75} duration={400}>
+                            <div className="flex items-center gap-3">
+                                <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-muted-foreground">
+                                    {t('Active Windows')}
+                                </p>
+                                <div className="h-px flex-1 bg-border" />
+                                <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                                    {windows.length}
+                                </span>
+                            </div>
+                        </FadeIn>
+                        <div className="space-y-3">
+                            {windows.map((w, index) => (
+                                <FadeIn key={w.id} delay={150 + index * 50} duration={400}>
+                                    {renderWindowCard(w, t, setEditWindow, setDeleteWindow)}
+                                </FadeIn>
+                            ))}
+                        </div>
+                    </>
                 )}
 
                 {/* Create Dialog */}
@@ -428,12 +502,26 @@ function WindowFormDialog({
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
                             <Label>{t('Start time')}</Label>
-                            <Input
-                                type="time"
-                                value={form.data.start_time}
-                                onChange={(e) => form.setData('start_time', e.target.value)}
-                                className="font-mono tabular-nums"
+                            <TimeInput
+                                value={form.data.start_time || '00:00'}
+                                onChange={(v) => form.setData('start_time', v)}
                             />
+                            <div className="flex flex-wrap gap-1.5">
+                                {['06:00', '08:00', '12:00', '14:00', '18:00', '22:00'].map((preset) => (
+                                    <button
+                                        key={preset}
+                                        type="button"
+                                        onClick={() => form.setData('start_time', preset)}
+                                        className={`rounded-md border px-2 py-0.5 font-mono text-[10px] tabular-nums transition-colors ${
+                                            form.data.start_time === preset
+                                                ? 'border-primary/40 bg-primary/10 text-primary'
+                                                : 'border-border text-muted-foreground hover:border-primary/30 hover:text-foreground'
+                                        }`}
+                                    >
+                                        {preset}
+                                    </button>
+                                ))}
+                            </div>
                             <InputError message={form.errors.start_time} />
                         </div>
                         <div className="grid gap-2">
@@ -446,6 +534,22 @@ function WindowFormDialog({
                                 onChange={(e) => form.setData('duration_minutes', e.target.value)}
                                 className="font-mono tabular-nums"
                             />
+                            <div className="flex flex-wrap gap-1.5">
+                                {[30, 60, 120, 240, 480].map((preset) => (
+                                    <button
+                                        key={preset}
+                                        type="button"
+                                        onClick={() => form.setData('duration_minutes', String(preset))}
+                                        className={`rounded-md border px-2 py-0.5 font-mono text-[10px] tabular-nums transition-colors ${
+                                            Number(form.data.duration_minutes) === preset
+                                                ? 'border-primary/40 bg-primary/10 text-primary'
+                                                : 'border-border text-muted-foreground hover:border-primary/30 hover:text-foreground'
+                                        }`}
+                                    >
+                                        {preset < 60 ? `${preset}m` : `${preset / 60}h`}
+                                    </button>
+                                ))}
+                            </div>
                             <InputError message={form.errors.duration_minutes} />
                         </div>
                     </div>
