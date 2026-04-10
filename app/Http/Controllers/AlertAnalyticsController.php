@@ -24,12 +24,26 @@ class AlertAnalyticsController extends Controller
             severity: $severity,
         );
 
+        $summary = $service->getSummary();
+        $mttr = $service->getMttr();
+        $noiseScore = $service->getNoiseScore($summary, $mttr);
+
+        // Team performance is gated — shown to managers+ on teams of ≥ 3
+        $teamPerformance = $user->hasAnyRole(['super_admin', 'client_org_admin', 'client_site_manager'])
+            ? $service->getTeamPerformance(minTeamSize: 3)
+            : collect();
+
         return Inertia::render('analytics/alerts', [
-            'summary' => $service->getSummary(),
+            'summary' => $summary,
+            'mttr' => $mttr,
+            'ack_histogram' => $service->getAckHistogram(),
+            'noise_score' => $noiseScore,
             'noisiest_rules' => $service->getNoisiestRules(),
             'trend' => $service->getTrend(),
+            'trend_by_severity' => $service->getTrendBySeverity(),
             'resolution_breakdown' => $service->getResolutionBreakdown(),
             'suggested_tuning' => $service->getSuggestedTuning(),
+            'team_performance' => $teamPerformance,
             'sites' => $user->accessibleSites()->map(fn ($s) => ['id' => $s->id, 'name' => $s->name]),
             'filters' => [
                 'days' => $days,
