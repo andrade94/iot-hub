@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predictive Analytics — Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0d10;
+    --card: #111318;
+    --surface: #161a20;
+    --surface-2: #1a1f26;
+    --border: #1e2228;
+    --border-subtle: #171b21;
+    --text: #e0e4ea;
+    --text-secondary: #b0b8c4;
+    --muted: #6b7280;
+    --dim: #374151;
+    --emerald: #10b981;
+    --emerald-dim: rgba(16, 185, 129, 0.12);
+    --cyan: #06b6d4;
+    --cyan-dim: rgba(6, 182, 212, 0.12);
+    --coral: #f43f5e;
+    --coral-dim: rgba(244, 63, 94, 0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --violet: #8b5cf6;
+    --violet-dim: rgba(139, 92, 246, 0.12);
+
+    --font-display: 'Bricolage Grotesque', serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+    --sidebar-w: 220px;
+  }
+
+  html { font-family: var(--font-body); font-size: 14px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+  body { display: flex; min-height: 100vh; }
+
+  .variant-label {
+    position: fixed; top: 12px; right: 16px; z-index: 999;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.08em; color: var(--cyan);
+    background: rgba(15,14,12,0.85); backdrop-filter: blur(12px);
+    border: 1px solid var(--border); padding: 5px 12px; border-radius: 4px;
+  }
+
+  /* Sidebar placeholder */
+  .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card); border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; z-index: 100; }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 28px; height: 28px; background: linear-gradient(135deg, var(--cyan), var(--amber)); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--bg); }
+  .logo-text { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--text); letter-spacing: -0.02em; }
+
+  .nav-section-label { font-family: var(--font-mono); font-size: 9px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); padding: 12px 20px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 7px 20px; font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: none; position: relative; }
+  .nav-item.active { color: var(--text); background: var(--cyan-dim); }
+  .nav-item.active::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px; background: var(--cyan); border-radius: 0 2px 2px 0; }
+  .nav-item .badge-new { margin-left: auto; padding: 1px 6px; background: var(--violet-dim); color: var(--violet); border-radius: 10px; font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: 0.05em; }
+
+  main.shell { margin-left: var(--sidebar-w); flex: 1; min-width: 0; }
+  .breadcrumb-bar { height: 44px; display: flex; align-items: center; padding: 0 32px; gap: 6px; font-size: 12px; color: var(--muted); background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+  .breadcrumb-bar a { color: var(--muted); text-decoration: none; }
+  .breadcrumb-bar .sep { color: var(--dim); margin: 0 2px; }
+  .breadcrumb-bar .current { color: var(--text-secondary); font-weight: 500; }
+
+  .content { padding: 32px; max-width: 1200px; }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 28px 32px; margin-bottom: 24px; position: relative; overflow: hidden;
+  }
+  .hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0); background-size: 24px 24px; opacity: 0.6; pointer-events: none; }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; position: relative; }
+  .hero-kicker { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .hero-title { font-family: var(--font-display); font-size: 36px; font-weight: 700; color: var(--text); letter-spacing: -0.025em; line-height: 1.05; margin-top: 8px; }
+  .hero-subtitle { font-size: 13px; color: var(--muted); margin-top: 8px; font-weight: 300; max-width: 640px; }
+  .hero-subtitle strong { color: var(--text); font-weight: 500; }
+  .hero-actions { display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0; }
+
+  .last-run { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 4px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; font-family: var(--font-mono); font-size: 9px; color: var(--muted); }
+  .last-run .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--emerald); }
+
+  /* ============================================================
+     STAT STRIP
+     ============================================================ */
+  .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-cell { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 22px; position: relative; overflow: hidden; }
+  .stat-cell::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: 0.6; }
+  .stat-cell.coral::before { background: linear-gradient(90deg, var(--coral), transparent); }
+  .stat-cell.amber::before { background: linear-gradient(90deg, var(--amber), transparent); }
+  .stat-cell.cyan::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .stat-cell.emerald::before { background: linear-gradient(90deg, var(--emerald), transparent); }
+  .stat-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .stat-value { font-family: var(--font-display); font-size: 34px; font-weight: 700; color: var(--text); line-height: 1; margin-top: 12px; font-variant-numeric: tabular-nums; }
+  .stat-value.coral { color: var(--coral); }
+  .stat-value.amber { color: var(--amber); }
+  .stat-value.emerald { color: var(--emerald); }
+  .stat-sub { margin-top: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+  .stat-sub strong { color: var(--text); font-weight: 600; }
+
+  /* ============================================================
+     CARDS
+     ============================================================ */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; margin-bottom: 20px; }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; gap: 12px; }
+  .card-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.015em; }
+  .card-subtitle { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ============================================================
+     BATTERY FORECAST
+     ============================================================ */
+  .battery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .battery-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; position: relative; overflow: hidden; transition: all 0.15s;
+  }
+  .battery-card:hover { background: var(--surface-2); border-color: var(--dim); }
+  .battery-card.urgent { border-left: 3px solid var(--coral); }
+  .battery-card.warning { border-left: 3px solid var(--amber); }
+  .battery-card.healthy { border-left: 3px solid var(--emerald); }
+
+  .battery-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .battery-device { font-size: 13px; font-weight: 600; color: var(--text); }
+  .battery-device a { color: var(--text); text-decoration: none; }
+  .battery-device a:hover { text-decoration: underline; }
+  .battery-site { font-family: var(--font-mono); font-size: 9px; color: var(--muted); margin-top: 2px; }
+  .battery-tags { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .battery-tag {
+    padding: 3px 8px; border-radius: 4px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .battery-tag.urgent { background: var(--coral-dim); color: var(--coral); }
+  .battery-tag.warning { background: var(--amber-dim); color: var(--amber); }
+  .battery-tag.healthy { background: var(--emerald-dim); color: var(--emerald); }
+
+  .battery-bar-wrap { margin-bottom: 12px; }
+  .battery-bar-label { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+  .battery-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .battery-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+  .battery-fill.urgent { background: linear-gradient(90deg, var(--coral), rgba(244,63,94,0.5)); }
+  .battery-fill.warning { background: linear-gradient(90deg, var(--amber), rgba(245,158,11,0.5)); }
+  .battery-fill.healthy { background: linear-gradient(90deg, var(--emerald), rgba(16,185,129,0.5)); }
+
+  .battery-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .battery-stat { text-align: center; }
+  .battery-stat-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+  .battery-stat-value { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text); margin-top: 2px; }
+  .battery-stat-value.urgent { color: var(--coral); }
+  .battery-stat-value.warning { color: var(--amber); }
+
+  /* ============================================================
+     DEGRADATION / DRIFT TABLE
+     ============================================================ */
+  .insight-row {
+    display: grid; grid-template-columns: auto 1fr auto auto auto auto;
+    gap: 16px; align-items: center;
+    padding: 14px 16px; background: var(--surface); border: 1px solid var(--border-subtle);
+    border-radius: 8px; margin-bottom: 6px; transition: all 0.15s;
+  }
+  .insight-row:hover { background: var(--surface-2); border-color: var(--border); }
+  .insight-row.critical { border-left: 3px solid var(--coral); }
+  .insight-row.warn { border-left: 3px solid var(--amber); }
+
+  .insight-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .insight-icon svg { width: 15px; height: 15px; }
+  .insight-icon.compressor { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+  .insight-icon.drift { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(6,182,212,0.2); }
+  .insight-icon.anomaly { background: var(--coral-dim); color: var(--coral); border: 1px solid rgba(244,63,94,0.2); }
+
+  .insight-body { min-width: 0; }
+  .insight-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .insight-meta { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .insight-description { font-size: 11px; color: var(--text-secondary); margin-top: 6px; line-height: 1.5; }
+
+  .insight-severity {
+    padding: 3px 8px; border-radius: 4px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+  }
+  .insight-severity.high { background: var(--amber-dim); color: var(--amber); }
+  .insight-severity.medium { background: var(--cyan-dim); color: var(--cyan); }
+  .insight-severity.critical { background: var(--coral-dim); color: var(--coral); }
+
+  .insight-action {
+    font-family: var(--font-mono); font-size: 9px; color: var(--muted);
+    padding: 5px 10px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; text-decoration: none; cursor: pointer; transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .insight-action:hover { color: var(--cyan); border-color: var(--cyan); }
+
+  /* ============================================================
+     ANOMALY LOG
+     ============================================================ */
+  .anomaly-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+  .anomaly-table thead th {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--dim); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left;
+  }
+  .anomaly-table thead th.right { text-align: right; }
+  .anomaly-table tbody td { padding: 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+  .anomaly-table tbody tr:last-child td { border-bottom: none; }
+  .anomaly-table tbody td.right { text-align: right; }
+  .anomaly-table tbody td.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .anomaly-table .bad { color: var(--coral); font-weight: 600; }
+  .anomaly-table .range { color: var(--muted); font-size: 10px; }
+  .anomaly-table .device-link { color: var(--text); text-decoration: none; font-weight: 600; }
+  .anomaly-table .device-link:hover { text-decoration: underline; }
+
+  /* ============================================================
+     NEW: CONFIDENCE BADGES
+     ============================================================ */
+  .confidence-badge {
+    padding: 2px 6px; border-radius: 3px;
+    font-family: var(--font-mono); font-size: 8px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .confidence-badge.high { background: var(--emerald-dim); color: var(--emerald); }
+  .confidence-badge.medium { background: var(--amber-dim); color: var(--amber); }
+  .confidence-badge.low { background: var(--surface-2); color: var(--muted); }
+
+  /* ============================================================
+     NEW: DISMISS / SNOOZE BUTTONS
+     ============================================================ */
+  .dismiss-btn {
+    position: absolute; top: 10px; right: 10px;
+    width: 20px; height: 20px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--muted); border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s; font-size: 11px;
+  }
+  .dismiss-btn:hover { color: var(--coral); border-color: var(--coral); }
+
+  .snooze-btn {
+    font-family: var(--font-mono); font-size: 9px; color: var(--muted);
+    padding: 5px 10px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .snooze-btn:hover { color: var(--amber); border-color: var(--amber); }
+
+  /* ============================================================
+     NEW: FILTER SELECT
+     ============================================================ */
+  .filter-select {
+    padding: 6px 28px 6px 10px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 5px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text);
+    cursor: pointer; appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6' fill='none' stroke='%236b7280' stroke-width='1.5'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 9px;
+  }
+
+  /* ============================================================
+     NEW: BATTERY SPARKLINE
+     ============================================================ */
+  .battery-sparkline {
+    display: flex; align-items: end; gap: 3px; height: 20px; margin-bottom: 6px;
+  }
+  .battery-sparkline .spark-dot {
+    flex: 1; border-radius: 1px; min-height: 3px;
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-1 { animation: fadeUp 0.5s ease-out 0.05s both; }
+  .anim-2 { animation: fadeUp 0.5s ease-out 0.15s both; }
+  .anim-3 { animation: fadeUp 0.5s ease-out 0.25s both; }
+  .anim-4 { animation: fadeUp 0.5s ease-out 0.35s both; }
+  .anim-5 { animation: fadeUp 0.5s ease-out 0.45s both; }
+</style>
+</head>
+<body>
+
+<div class="variant-label">PREDICTIVE ANALYTICS · X4 EDITORIAL COOL · v2</div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">A</div>
+    <div class="logo-text">Astrea</div>
+  </div>
+  <div class="nav-section-label">Analytics</div>
+  <a class="nav-item" href="#">Alert Tuning</a>
+  <a class="nav-item" href="#">Activity</a>
+  <a class="nav-item active" href="#">
+    Predictive
+    <span class="badge-new">NEW</span>
+  </a>
+</aside>
+
+<main class="shell">
+  <div class="breadcrumb-bar">
+    <a href="#">Analytics</a>
+    <span class="sep">/</span>
+    <span class="current">Predictive</span>
+  </div>
+
+  <div class="content">
+
+    <!-- ============================================================
+         [A] HERO
+         ============================================================ -->
+    <div class="hero anim-1">
+      <div class="hero-top">
+        <div>
+          <div class="hero-kicker">Predictive maintenance</div>
+          <h1 class="hero-title">What's about to break</h1>
+          <p class="hero-subtitle">
+            Battery forecasts, compressor degradation, and temperature drift — computed daily
+            from <strong>90 days of sensor history</strong>. Act before the alert fires.
+          </p>
+          <div class="last-run">
+            <span class="dot"></span>
+            Last analysis: today 05:00 · 30 devices analyzed · 4 insights found
+          </div>
+        </div>
+        <div class="hero-actions">
+          <select class="filter-select" style="min-width: 160px;">
+            <option>All sites (5)</option>
+            <option>CEDIS Norte</option>
+            <option>CEDIS Centro</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [B] STAT STRIP
+         ============================================================ -->
+    <div class="stat-strip">
+      <div class="stat-cell coral anim-2">
+        <div class="stat-label">Urgent replacements</div>
+        <div class="stat-value coral">3</div>
+        <div class="stat-sub">batteries < 7 days · <strong>order parts now</strong></div>
+      </div>
+      <div class="stat-cell amber anim-2">
+        <div class="stat-label">Upcoming (30d)</div>
+        <div class="stat-value amber">5</div>
+        <div class="stat-sub">batteries between 7–30 days remaining</div>
+      </div>
+      <div class="stat-cell cyan anim-2">
+        <div class="stat-label">Degradation warnings</div>
+        <div class="stat-value">2</div>
+        <div class="stat-sub"><strong>1 compressor</strong> · 1 temperature drift</div>
+      </div>
+      <div class="stat-cell emerald anim-2">
+        <div class="stat-label">Fleet health</div>
+        <div class="stat-value emerald">87<span style="font-size: 14px; color: var(--muted); margin-left: 3px;">%</span></div>
+        <div class="stat-sub">26 of 30 devices with no predicted issues</div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [C] BATTERY FORECASTS
+         ============================================================ -->
+    <div class="card anim-3">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Battery forecasts</div>
+          <div class="card-subtitle">
+            Linear regression on 90 days of battery readings. Devices sorted by urgency.
+            Replace when reaching 20%.
+          </div>
+        </div>
+      </div>
+
+      <div class="battery-grid">
+        <!-- Urgent: 5 days left -->
+        <div class="battery-card urgent">
+          <button class="dismiss-btn" title="Dismiss">&times;</button>
+          <div class="battery-head">
+            <div>
+              <div class="battery-device"><a href="#">EM300-TH · Cooler A</a></div>
+              <div class="battery-site">CEDIS Norte · cold_chain</div>
+            </div>
+            <div class="battery-tags">
+              <span class="battery-tag urgent">5 days</span>
+              <span class="confidence-badge high">High confidence</span>
+            </div>
+          </div>
+          <div class="battery-bar-wrap">
+            <div class="battery-sparkline">
+              <div class="spark-dot" style="height: 90%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 78%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 65%; background: var(--amber); opacity: 0.5;"></div>
+              <div class="spark-dot" style="height: 50%; background: var(--amber); opacity: 0.6;"></div>
+              <div class="spark-dot" style="height: 38%; background: var(--amber); opacity: 0.7;"></div>
+              <div class="spark-dot" style="height: 25%; background: var(--coral); opacity: 0.8;"></div>
+              <div class="spark-dot" style="height: 18%; background: var(--coral); opacity: 1;"></div>
+            </div>
+            <div class="battery-bar-label">
+              <span>Battery</span>
+              <span>18%</span>
+            </div>
+            <div class="battery-bar">
+              <div class="battery-fill urgent" style="width: 18%;"></div>
+            </div>
+          </div>
+          <div class="battery-stats">
+            <div class="battery-stat">
+              <div class="battery-stat-label">Current</div>
+              <div class="battery-stat-value urgent">18%</div>
+            </div>
+            <div class="battery-stat">
+              <div class="battery-stat-label">Drain</div>
+              <div class="battery-stat-value">0.4%/d</div>
+            </div>
+            <div class="battery-stat">
+              <div class="battery-stat-label">Replace by</div>
+              <div class="battery-stat-value urgent">Apr 21</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Urgent: 3 days left -->
+        <div class="battery-card urgent">
+          <button class="dismiss-btn" title="Dismiss">&times;</button>
+          <div class="battery-head">
+            <div>
+              <div class="battery-device"><a href="#">WS301 · Puerta Congelador</a></div>
+              <div class="battery-site">CEDIS Norte · cold_chain</div>
+            </div>
+            <div class="battery-tags">
+              <span class="battery-tag urgent">3 days</span>
+              <span class="confidence-badge high">High confidence</span>
+            </div>
+          </div>
+          <div class="battery-bar-wrap">
+            <div class="battery-sparkline">
+              <div class="spark-dot" style="height: 85%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 72%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 58%; background: var(--amber); opacity: 0.5;"></div>
+              <div class="spark-dot" style="height: 44%; background: var(--amber); opacity: 0.6;"></div>
+              <div class="spark-dot" style="height: 30%; background: var(--coral); opacity: 0.7;"></div>
+              <div class="spark-dot" style="height: 20%; background: var(--coral); opacity: 0.8;"></div>
+              <div class="spark-dot" style="height: 12%; background: var(--coral); opacity: 1;"></div>
+            </div>
+            <div class="battery-bar-label">
+              <span>Battery</span>
+              <span>12%</span>
+            </div>
+            <div class="battery-bar">
+              <div class="battery-fill urgent" style="width: 12%;"></div>
+            </div>
+          </div>
+          <div class="battery-stats">
+            <div class="battery-stat">
+              <div class="battery-stat-label">Current</div>
+              <div class="battery-stat-value urgent">12%</div>
+            </div>
+            <div class="battery-stat">
+              <div class="battery-stat-label">Drain</div>
+              <div class="battery-stat-value">0.6%/d</div>
+            </div>
+            <div class="battery-stat">
+              <div class="battery-stat-label">Replace by</div>
+              <div class="battery-stat-value urgent">Apr 19</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Warning: 22 days -->
+        <div class="battery-card warning">
+          <button class="dismiss-btn" title="Dismiss">&times;</button>
+          <div class="battery-head">
+            <div>
+              <div class="battery-device"><a href="#">EM300-TH · Vitrina 1</a></div>
+              <div class="battery-site">CEDIS Centro · cold_chain</div>
+            </div>
+            <div class="battery-tags">
+              <span class="battery-tag warning">22 days</span>
+              <span class="confidence-badge medium">Medium confidence</span>
+            </div>
+          </div>
+          <div class="battery-bar-wrap">
+            <div class="battery-sparkline">
+              <div class="spark-dot" style="height: 95%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 88%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 78%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 68%; background: var(--amber); opacity: 0.5;"></div>
+              <div class="spark-dot" style="height: 58%; background: var(--amber); opacity: 0.6;"></div>
+              <div class="spark-dot" style="height: 50%; background: var(--amber); opacity: 0.7;"></div>
+              <div class="spark-dot" style="height: 42%; background: var(--amber); opacity: 0.8;"></div>
+            </div>
+            <div class="battery-bar-label">
+              <span>Battery</span>
+              <span>42%</span>
+            </div>
+            <div class="battery-bar">
+              <div class="battery-fill warning" style="width: 42%;"></div>
+            </div>
+          </div>
+          <div class="battery-stats">
+            <div class="battery-stat">
+              <div class="battery-stat-label">Current</div>
+              <div class="battery-stat-value">42%</div>
+            </div>
+            <div class="battery-stat">
+              <div class="battery-stat-label">Drain</div>
+              <div class="battery-stat-value">1.0%/d</div>
+            </div>
+            <div class="battery-stat">
+              <div class="battery-stat-label">Replace by</div>
+              <div class="battery-stat-value warning">May 8</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Healthy: 180 days -->
+        <div class="battery-card healthy">
+          <button class="dismiss-btn" title="Dismiss">&times;</button>
+          <div class="battery-head">
+            <div>
+              <div class="battery-device"><a href="#">AM307 · Oficina</a></div>
+              <div class="battery-site">CEDIS Centro · iaq</div>
+            </div>
+            <div class="battery-tags">
+              <span class="battery-tag healthy">180+ days</span>
+              <span class="confidence-badge low">Low confidence</span>
+            </div>
+          </div>
+          <div class="battery-bar-wrap">
+            <div class="battery-sparkline">
+              <div class="spark-dot" style="height: 98%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 96%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 95%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 93%; background: var(--emerald); opacity: 0.4;"></div>
+              <div class="spark-dot" style="height: 92%; background: var(--emerald); opacity: 0.5;"></div>
+              <div class="spark-dot" style="height: 90%; background: var(--emerald); opacity: 0.5;"></div>
+              <div class="spark-dot" style="height: 89%; background: var(--emerald); opacity: 0.6;"></div>
+            </div>
+            <div class="battery-bar-label">
+              <span>Battery</span>
+              <span>89%</span>
+            </div>
+            <div class="battery-bar">
+              <div class="battery-fill healthy" style="width: 89%;"></div>
+            </div>
+          </div>
+          <div class="battery-stats">
+            <div class="battery-stat">
+              <div class="battery-stat-label">Current</div>
+              <div class="battery-stat-value">89%</div>
+            </div>
+            <div class="battery-stat">
+              <div class="battery-stat-label">Drain</div>
+              <div class="battery-stat-value">0.05%/d</div>
+            </div>
+            <div class="battery-stat">
+              <div class="battery-stat-label">Replace by</div>
+              <div class="battery-stat-value">Oct 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [D] DEGRADATION & DRIFT INSIGHTS
+         ============================================================ -->
+    <div class="card anim-4">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Equipment insights</div>
+          <div class="card-subtitle">
+            Compressor degradation detected by rising current draw over baseline.
+            Temperature drift detected by sustained offset from calibration baseline.
+          </div>
+        </div>
+      </div>
+
+      <!-- Compressor degradation -->
+      <div class="insight-row warn">
+        <div class="insight-icon compressor">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12l4-4 3 3 5-6"/><polyline points="10 5 14 5 14 9"/></svg>
+        </div>
+        <div class="insight-body">
+          <div class="insight-title">Compressor degradation — CT101 Compresor 1</div>
+          <div class="insight-meta">
+            <span>CEDIS Norte</span>
+            <span>·</span>
+            <span>Rising for 4 consecutive weeks</span>
+            <span>·</span>
+            <span>Baseline: 12.5A → Current avg: 18.2A</span>
+          </div>
+          <div class="insight-description">
+            Current draw has increased 46% above the 90-day baseline. This pattern typically indicates
+            bearing wear or refrigerant leak. Schedule a compressor inspection before it fails.
+          </div>
+        </div>
+        <span class="insight-severity high">High</span>
+        <a class="insight-action" href="#">Crear OT: Inspecci&oacute;n compresor &rarr;</a>
+        <button class="insight-action" style="border-color: var(--border);">Dismiss</button>
+        <button class="snooze-btn">Snooze 7d</button>
+      </div>
+
+      <!-- Temperature drift -->
+      <div class="insight-row">
+        <div class="insight-icon drift">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2a2 2 0 0 0-2 2v6.3a3 3 0 1 0 4 0V4a2 2 0 0 0-2-2z"/><circle cx="8" cy="12" r="1" fill="currentColor"/></svg>
+        </div>
+        <div class="insight-body">
+          <div class="insight-title">Temperature warming drift — EM300-TH Cooler B</div>
+          <div class="insight-meta">
+            <span>CEDIS Norte</span>
+            <span>·</span>
+            <span>Drifting for 3 weeks</span>
+            <span>·</span>
+            <span>Baseline: 3.8°C → Current avg: 5.1°C</span>
+          </div>
+          <div class="insight-description">
+            Sensor is reading 1.3°C warmer than its 90-day calibration baseline. This could indicate
+            sensor drift (needs recalibration), a door seal issue, or reduced compressor efficiency.
+          </div>
+        </div>
+        <span class="insight-severity medium">Medium</span>
+        <a class="insight-action" href="#">Crear OT: Calibraci&oacute;n &rarr;</a>
+        <button class="insight-action" style="border-color: var(--border);">Dismiss</button>
+        <button class="snooze-btn">Snooze 7d</button>
+      </div>
+
+      <!-- Temperature cooling drift -->
+      <div class="insight-row">
+        <div class="insight-icon drift">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2a2 2 0 0 0-2 2v6.3a3 3 0 1 0 4 0V4a2 2 0 0 0-2-2z"/><circle cx="8" cy="12" r="1" fill="currentColor"/></svg>
+        </div>
+        <div class="insight-body">
+          <div class="insight-title">Temperature cooling drift — EM300-TH Congelador</div>
+          <div class="insight-meta">
+            <span>CEDIS Centro</span>
+            <span>·</span>
+            <span>Drifting for 2 weeks</span>
+            <span>·</span>
+            <span>Baseline: -19.2°C → Current avg: -21.8°C</span>
+          </div>
+          <div class="insight-description">
+            Freezer is running 2.6°C colder than baseline. May indicate thermostat miscalibration or
+            compressor running in continuous cycle. Risk of product freezer burn.
+          </div>
+        </div>
+        <span class="insight-severity medium">Medium</span>
+        <a class="insight-action" href="#">Ver dispositivo &rarr;</a>
+        <button class="insight-action" style="border-color: var(--border);">Dismiss</button>
+        <button class="snooze-btn">Snooze 7d</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [E] ANOMALY LOG (sanity check failures)
+         ============================================================ -->
+    <div class="card anim-5">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Anomaly log</div>
+          <div class="card-subtitle">
+            Sensor readings that failed sanity checks — values physically impossible for the sensor type.
+            Usually indicates a hardware failure, wiring issue, or firmware bug.
+          </div>
+        </div>
+      </div>
+
+      <table class="anomaly-table">
+        <thead>
+          <tr>
+            <th>Device</th>
+            <th>Site</th>
+            <th>Metric</th>
+            <th class="right">Reading</th>
+            <th class="right">Valid range</th>
+            <th class="right">When</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="#" class="device-link">WS301 · Cooler A</a></td>
+            <td style="color: var(--muted);">CEDIS Norte</td>
+            <td class="mono">temperature</td>
+            <td class="right mono bad">327.4°C</td>
+            <td class="right mono range">-40 to 85°C</td>
+            <td class="right mono" style="color: var(--muted);">Apr 5</td>
+          </tr>
+          <tr>
+            <td><a href="#" class="device-link">WS301 · Cooler A</a></td>
+            <td style="color: var(--muted);">CEDIS Norte</td>
+            <td class="mono">temperature</td>
+            <td class="right mono bad">419.0°C</td>
+            <td class="right mono range">-40 to 85°C</td>
+            <td class="right mono" style="color: var(--muted);">Apr 5</td>
+          </tr>
+          <tr>
+            <td><a href="#" class="device-link">WS301 · Cooler A</a></td>
+            <td style="color: var(--muted);">CEDIS Norte</td>
+            <td class="mono">temperature</td>
+            <td class="right mono bad">490.6°C</td>
+            <td class="right mono range">-40 to 85°C</td>
+            <td class="right mono" style="color: var(--muted);">Apr 6</td>
+          </tr>
+          <tr>
+            <td><a href="#" class="device-link">WS301 · Cooler A</a></td>
+            <td style="color: var(--muted);">CEDIS Norte</td>
+            <td class="mono">temperature</td>
+            <td class="right mono bad">280.4°C</td>
+            <td class="right mono range">-40 to 85°C</td>
+            <td class="right mono" style="color: var(--muted);">Apr 7</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-family: var(--font-mono); font-size: 10px; color: var(--muted);">
+          8 anomalies total · all from WS301 Cooler A — likely hardware failure
+        </span>
+        <a class="insight-action" href="#">Create WO for replacement →</a>
+      </div>
+    </div>
+
+    <!-- EMPTY STATE (shown when zero predictions) -->
+    <!--
+    <div class="card" style="text-align: center; padding: 60px 40px;">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--emerald-dim); border: 1px solid rgba(16,185,129,0.2); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; color: var(--emerald);">&#10003;</div>
+      <h3 style="font-family: var(--font-display); font-size: 22px; font-weight: 600; margin-top: 16px;">Fleet looks healthy</h3>
+      <p style="color: var(--muted); font-size: 13px; margin-top: 8px; max-width: 400px; margin-left: auto; margin-right: auto;">
+        No battery replacements, degradation warnings, or sensor drift detected.
+        The analysis runs daily at 05:00 — check back tomorrow.
+      </p>
+    </div>
+    -->
+
+  </div>
+</main>
+
+</body>
+</html>

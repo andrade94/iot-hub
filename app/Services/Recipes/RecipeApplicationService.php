@@ -48,6 +48,7 @@ class RecipeApplicationService
     /**
      * Apply a single recipe's default rules to a device.
      * Skips if a rule from this recipe already exists for this device.
+     * Uses the site's org locale to pick the localized recipe name.
      */
     public function applyRecipeToDevice(Site $site, Recipe $recipe, Device $device): int
     {
@@ -57,15 +58,24 @@ class RecipeApplicationService
             return 0;
         }
 
-        // Check for existing rule with same recipe for this device
+        // Check for existing rule with same recipe for this device (check both EN and ES names)
         $existing = AlertRule::where('site_id', $site->id)
             ->where('device_id', $device->id)
-            ->where('name', 'like', "%{$recipe->name}%")
+            ->where(function ($q) use ($recipe) {
+                $q->where('name', 'like', "%{$recipe->name}%");
+                if ($recipe->name_es) {
+                    $q->orWhere('name', 'like', "%{$recipe->name_es}%");
+                }
+            })
             ->exists();
 
         if ($existing) {
             return 0;
         }
+
+        // Use the org's locale to pick the recipe name for the rule.
+        $locale = $site->organization?->settings['locale'] ?? app()->getLocale();
+        $recipeName = $recipe->localizedName($locale);
 
         // Wrap all default_rules into a single AlertRule with multiple conditions
         $conditions = array_map(fn (array $rule) => [
@@ -79,7 +89,7 @@ class RecipeApplicationService
         AlertRule::create([
             'site_id' => $site->id,
             'device_id' => $device->id,
-            'name' => "{$recipe->name} — {$device->name}",
+            'name' => "{$recipeName} — {$device->name}",
             'conditions' => $conditions,
             'severity' => $conditions[0]['severity'] ?? 'medium',
             'cooldown_minutes' => 15,

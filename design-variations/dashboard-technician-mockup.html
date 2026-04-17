@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Technician · Astrea IoT</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0b0d10; --card: #111318; --surface: #161a20; --surface-2: #1a1f26;
+    --border: #1e2228; --border-subtle: #171b21;
+    --text: #e0e4ea; --text-secondary: #b0b8c4; --muted: #6b7280; --dim: #374151;
+    --emerald: #10b981; --emerald-dim: rgba(16,185,129,0.12);
+    --cyan: #06b6d4; --cyan-dim: rgba(6,182,212,0.12);
+    --coral: #f43f5e; --coral-dim: rgba(244,63,94,0.12);
+    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+    --violet: #8b5cf6; --violet-dim: rgba(139,92,246,0.12);
+    --font-display: 'Bricolage Grotesque', serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+    --sidebar-w: 220px;
+  }
+  html { font-family: var(--font-body); font-size: 14px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+  body { display: flex; min-height: 100vh; }
+  .variant-label { position: fixed; top: 12px; right: 16px; z-index: 999; font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.08em; color: var(--amber); background: rgba(15,14,12,0.85); backdrop-filter: blur(12px); border: 1px solid var(--border); padding: 5px 12px; border-radius: 4px; }
+
+  .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card); border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; z-index: 100; }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 28px; height: 28px; background: linear-gradient(135deg, var(--cyan), var(--amber)); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--bg); }
+  .logo-text { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--text); }
+
+  main.shell { margin-left: var(--sidebar-w); flex: 1; }
+  .breadcrumb-bar { height: 44px; display: flex; align-items: center; padding: 0 32px; gap: 6px; font-size: 12px; color: var(--muted); background: var(--card); border-bottom: 1px solid var(--border); }
+  .content { padding: 32px; max-width: 1000px; }
+
+  .hero { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; margin-bottom: 24px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0); background-size: 24px 24px; opacity: 0.6; pointer-events: none; }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; position: relative; }
+  .hero-kicker { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .hero-title { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; margin-top: 6px; }
+  .hero-subtitle { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .hero-subtitle strong { color: var(--text); }
+
+  /* Summary pills at top */
+  .summary-pills { display: flex; gap: 12px; margin-bottom: 24px; }
+  .summary-pill { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; text-align: center; }
+  .summary-pill .num { font-family: var(--font-display); font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .summary-pill .num.coral { color: var(--coral); }
+  .summary-pill .num.amber { color: var(--amber); }
+  .summary-pill .num.emerald { color: var(--emerald); }
+  .summary-pill .label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin-bottom: 20px; }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .card-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+  .card-subtitle { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .card-action { font-family: var(--font-mono); font-size: 10px; color: var(--cyan); text-decoration: none; padding: 4px 8px; border: 1px solid rgba(6,182,212,0.2); border-radius: 4px; }
+
+  /* WO card — prominent, actionable */
+  .wo-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s; position: relative; }
+  .wo-card:hover { background: var(--surface-2); border-color: var(--dim); }
+  .wo-card.overdue { border-left: 4px solid var(--coral); }
+  .wo-card.in-progress { border-left: 4px solid var(--cyan); }
+  .wo-card.assigned { border-left: 4px solid var(--amber); }
+
+  .wo-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .wo-card-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .wo-card-badges { display: flex; gap: 4px; flex-shrink: 0; }
+  .wo-badge { padding: 3px 7px; border-radius: 3px; font-family: var(--font-mono); font-size: 8px; font-weight: 700; text-transform: uppercase; }
+  .wo-badge.priority-high { background: var(--amber-dim); color: var(--amber); }
+  .wo-badge.priority-medium { background: var(--cyan-dim); color: var(--cyan); }
+  .wo-badge.priority-urgent { background: var(--coral-dim); color: var(--coral); }
+  .wo-badge.sla-overdue { background: var(--coral-dim); color: var(--coral); }
+  .wo-badge.status { background: var(--surface-2); color: var(--text-secondary); }
+
+  .wo-card-meta { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .wo-card-description { font-size: 12px; color: var(--text-secondary); margin-top: 10px; line-height: 1.5; border-top: 1px solid var(--border-subtle); padding-top: 10px; }
+  .wo-card-actions { display: flex; gap: 6px; margin-top: 12px; }
+  .wo-action { padding: 6px 12px; font-family: var(--font-body); font-size: 11px; font-weight: 500; border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; border: 1px solid; transition: all 0.15s; }
+  .wo-action svg { width: 12px; height: 12px; }
+  .wo-action.primary { background: var(--cyan-dim); color: var(--cyan); border-color: rgba(6,182,212,0.25); }
+  .wo-action.primary:hover { background: rgba(6,182,212,0.2); }
+  .wo-action.success { background: var(--emerald-dim); color: var(--emerald); border-color: rgba(16,185,129,0.25); }
+  .wo-action.success:hover { background: rgba(16,185,129,0.2); }
+  .wo-action.ghost { background: transparent; color: var(--muted); border-color: var(--border); }
+  .wo-action.ghost:hover { color: var(--text); border-color: var(--dim); }
+
+  /* Alert mini-list */
+  .alert-mini { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 6px; margin-bottom: 4px; font-size: 12px; }
+  .alert-mini .sev-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .alert-mini .sev-dot.critical { background: var(--coral); }
+  .alert-mini .sev-dot.high { background: var(--amber); }
+  .alert-mini .sev-dot.medium { background: var(--cyan); }
+  .alert-mini .title { flex: 1; color: var(--text-secondary); }
+  .alert-mini .time { font-family: var(--font-mono); font-size: 9px; color: var(--dim); }
+  .alert-mini .ack-btn { padding: 3px 8px; background: transparent; border: 1px solid var(--border); border-radius: 3px; font-family: var(--font-mono); font-size: 9px; color: var(--muted); cursor: pointer; }
+  .alert-mini .ack-btn:hover { color: var(--emerald); border-color: var(--emerald); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-1 { animation: fadeUp 0.5s ease-out 0.05s both; }
+  .anim-2 { animation: fadeUp 0.5s ease-out 0.12s both; }
+  .anim-3 { animation: fadeUp 0.5s ease-out 0.19s both; }
+  .anim-4 { animation: fadeUp 0.5s ease-out 0.26s both; }
+</style>
+</head>
+<body>
+
+<div class="variant-label">DASHBOARD · TECHNICIAN · v2</div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">A</div>
+    <div class="logo-text">Astrea</div>
+  </div>
+</aside>
+
+<main class="shell">
+  <div class="breadcrumb-bar">
+    <span style="color: var(--text-secondary); font-weight: 500;">Dashboard</span>
+    <span style="margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--dim);">
+      Juan Pérez · Técnico · CEDIS Norte / CEDIS Centro
+    </span>
+  </div>
+
+  <div class="content">
+
+    <!-- ============================================================
+         [A] HERO — WO-focused, personal greeting
+         ============================================================ -->
+    <div class="hero anim-1">
+      <div class="hero-top">
+        <div>
+          <div class="hero-kicker">Buenos días, Juan</div>
+          <h1 class="hero-title">Mis órdenes de trabajo</h1>
+          <p class="hero-subtitle">
+            <strong>3 OTs</strong> asignadas a ti · 1 en progreso · 1 vencida de SLA
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [B] SUMMARY PILLS — what the tech needs to know at a glance
+         ============================================================ -->
+    <div class="summary-pills anim-2">
+      <div class="summary-pill">
+        <div class="num coral">1</div>
+        <div class="label">SLA vencido</div>
+      </div>
+      <div class="summary-pill">
+        <div class="num amber">2</div>
+        <div class="label">Asignadas</div>
+      </div>
+      <div class="summary-pill">
+        <div class="num" style="color: var(--cyan);">1</div>
+        <div class="label">En progreso</div>
+      </div>
+      <div class="summary-pill">
+        <div class="num emerald">4</div>
+        <div class="label">Completadas este mes</div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [C] MY WORK ORDERS — the core of the tech's day
+         Each card is actionable: Start, Complete, Add Note, Add Photo
+         ============================================================ -->
+    <div class="card anim-3">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Mis OTs activas</div>
+          <div class="card-subtitle">Ordenadas por urgencia — las vencidas primero</div>
+        </div>
+        <a class="card-action" href="#">VER HISTORIAL →</a>
+      </div>
+
+      <!-- Overdue WO — most urgent -->
+      <div class="wo-card overdue">
+        <div class="wo-card-head">
+          <div class="wo-card-title">Reemplazar sensor de puerta — Congelador</div>
+          <div class="wo-card-badges">
+            <span class="wo-badge priority-high">Alta</span>
+            <span class="wo-badge sla-overdue">SLA vencido</span>
+          </div>
+        </div>
+        <div class="wo-card-meta">
+          <span>CEDIS Norte · Congelador</span>
+          <span>·</span>
+          <span>WS301</span>
+          <span>·</span>
+          <span style="color: var(--coral);">hace 3d · SLA era 4h</span>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 9px; color: var(--dim); margin-top: 2px;">📍 Av. Constitución 1200, Monterrey, NL</div>
+        <div style="margin-top: 6px; padding: 4px 10px; background: var(--coral-dim); border-radius: 4px; font-family: var(--font-mono); font-size: 10px; color: var(--coral); display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M5 5l6 6M11 5l-6 6"/></svg>
+          Sin lecturas desde hace 48h · último estado: puerta cerrada
+        </div>
+        <div class="wo-card-description">
+          WS301 en puerta del congelador dejó de reportar hace 48h. Reemplazar unidad y emparejar con gateway.
+        </div>
+        <div class="wo-card-actions">
+          <button class="wo-action primary">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 13,8 5,13" fill="currentColor"/></svg>
+            Iniciar
+          </button>
+          <button class="wo-action ghost">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M6 6h4M6 9h2"/></svg>
+            Agregar nota
+          </button>
+          <button class="wo-action ghost">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="12" height="10" rx="1"/><circle cx="6" cy="7" r="1.5"/></svg>
+            Foto
+          </button>
+        </div>
+      </div>
+
+      <!-- In-progress WO -->
+      <div class="wo-card in-progress">
+        <div class="wo-card-head">
+          <div class="wo-card-title">Calibrar EM300-TH Cooler B</div>
+          <div class="wo-card-badges">
+            <span class="wo-badge priority-high">Alta</span>
+            <span class="wo-badge status">En progreso</span>
+          </div>
+        </div>
+        <div class="wo-card-meta">
+          <span>CEDIS Norte · Cooler B</span>
+          <span>·</span>
+          <span>EM300-TH</span>
+          <span>·</span>
+          <span>iniciada hace 1d</span>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 9px; color: var(--dim); margin-top: 2px;">📍 Av. Constitución 1200, Monterrey, NL</div>
+        <div style="margin-top: 6px; padding: 4px 10px; background: var(--amber-dim); border-radius: 4px; font-family: var(--font-mono); font-size: 10px; color: var(--amber); display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1"/></svg>
+          Lectura actual: 3.8°C · deriva -1.5°C del baseline
+        </div>
+        <div class="wo-card-description">
+          Deriva del sensor detectada: lectura 1.5°C por debajo del termómetro de referencia. Realizar calibración punto-cero.
+        </div>
+        <div class="wo-card-actions">
+          <button class="wo-action success">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3 3 7-7"/></svg>
+            Completar
+          </button>
+          <button class="wo-action ghost">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M6 6h4M6 9h2"/></svg>
+            Agregar nota
+          </button>
+          <button class="wo-action ghost">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="12" height="10" rx="1"/><circle cx="6" cy="7" r="1.5"/></svg>
+            Foto
+          </button>
+        </div>
+      </div>
+
+      <!-- Assigned WO -->
+      <div class="wo-card assigned">
+        <div class="wo-card-head">
+          <div class="wo-card-title">Reemplazar batería — EM300-TH Cooler A</div>
+          <div class="wo-card-badges">
+            <span class="wo-badge priority-high">Alta</span>
+            <span class="wo-badge status">Asignada</span>
+          </div>
+        </div>
+        <div class="wo-card-meta">
+          <span>CEDIS Norte · Cooler A</span>
+          <span>·</span>
+          <span>EM300-TH · batería 18%</span>
+          <span>·</span>
+          <span>asignada hace 2d</span>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 9px; color: var(--dim); margin-top: 2px;">📍 Av. Constitución 1200, Monterrey, NL</div>
+        <div style="margin-top: 6px; padding: 4px 10px; background: var(--coral-dim); border-radius: 4px; font-family: var(--font-mono); font-size: 10px; color: var(--coral); display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="8" height="6" rx="1"/><path d="M12 7v2"/></svg>
+          Batería: 18% · estimado 5 días restantes
+        </div>
+        <div class="wo-card-actions">
+          <button class="wo-action primary">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 13,8 5,13" fill="currentColor"/></svg>
+            Iniciar
+          </button>
+          <button class="wo-action ghost">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M6 6h4M6 9h2"/></svg>
+            Agregar nota
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [D] RECENT ALERTS — tech can ack from here
+         ============================================================ -->
+    <div class="card anim-4">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Alertas en mis sitios</div>
+          <div class="card-subtitle">3 alertas activas en CEDIS Norte y CEDIS Centro</div>
+        </div>
+      </div>
+      <div class="alert-mini">
+        <span class="sev-dot critical"></span>
+        <span class="title">Temp Máx Enfriador Walk-in · CEDIS Centro · 9.7°C</span>
+        <span class="time">1h</span>
+        <button class="ack-btn">ACK</button>
+        <span style="font-family: var(--font-mono); font-size: 8px; color: var(--dim); margin-left: 4px;">→ OT #3</span>
+      </div>
+      <div class="alert-mini">
+        <span class="sev-dot critical"></span>
+        <span class="title">Temp Máx Enfriador Walk-in · CEDIS Norte · 11.3°C</span>
+        <span class="time">2h</span>
+        <button class="ack-btn">ACK</button>
+      </div>
+      <div class="alert-mini">
+        <span class="sev-dot medium"></span>
+        <span class="title">Alerta de Humedad Alta · CEDIS Norte · 89.2%</span>
+        <span class="time">1d</span>
+        <button class="ack-btn">ACK</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

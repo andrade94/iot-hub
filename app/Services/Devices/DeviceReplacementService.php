@@ -2,6 +2,8 @@
 
 namespace App\Services\Devices;
 
+use App\Jobs\DeprovisionDeviceFromChirpStack;
+use App\Jobs\ProvisionDeviceOnChirpStack;
 use App\Models\AlertRule;
 use App\Models\Device;
 
@@ -45,6 +47,14 @@ class DeviceReplacementService
                 'new_dev_eui' => $newDevice->dev_eui,
             ])
             ->log("Device {$oldDevice->name} replaced: {$oldDevice->dev_eui} → {$newDevice->dev_eui}");
+
+        // ChirpStack: deprovision old, provision new
+        if (config('services.chirpstack.api_key')) {
+            if ($oldDevice->dev_eui) {
+                DeprovisionDeviceFromChirpStack::dispatch($oldDevice->dev_eui);
+            }
+            ProvisionDeviceOnChirpStack::dispatch($newDevice->id);
+        }
 
         return $newDevice;
     }

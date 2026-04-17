@@ -70,6 +70,11 @@ class SiteSettingsController extends Controller
     {
         $org = $this->resolveOrganization($request);
 
+        // Super_admin can pass org_id explicitly when creating sites in all-orgs mode
+        if (! $org && $request->user()->hasRole('super_admin') && $request->filled('org_id')) {
+            $org = Organization::findOrFail($request->input('org_id'));
+        }
+
         if (! $org) {
             return back()->with('error', 'Select an organization before creating sites.');
         }

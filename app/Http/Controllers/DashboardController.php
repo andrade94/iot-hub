@@ -246,6 +246,127 @@ class DashboardController extends Controller
             'last_broadcast_ago' => $latestBroadcast?->diffForHumans(null, true, true) ?? '—',
         ];
 
+        // ── Dashboard variant detection ───────────────────────
+        $roles = $user->getRoleNames()->toArray();
+        $isTechnician = in_array('technician', $roles)
+            && ! in_array('client_site_manager', $roles)
+            && ! in_array('client_org_admin', $roles)
+            && ! in_array('super_admin', $roles);
+
+        $isSiteScoped = (in_array('client_site_manager', $roles) || in_array('client_site_viewer', $roles))
+            && ! in_array('client_org_admin', $roles)
+            && ! in_array('super_admin', $roles);
+
+        $variant = $isTechnician ? 'technician' : ($isSiteScoped ? 'site' : 'fleet');
+
+        // ── Technician: my assigned WOs with device state ──────
+        $myWorkOrders = [];
+        if ($isTechnician) {
+            $myWorkOrders = WorkOrder::where('assigned_to', $user->id)
+                ->whereIn('status', ['open', 'assigned', 'in_progress'])
+                ->with(['site:id,name,address', 'device:id,name,model,status,battery_pct,last_reading_at'])
+                ->orderByRaw("CASE WHEN status = 'in_progress' THEN 0 WHEN status = 'assigned' THEN 1 ELSE 2 END")
+                ->orderBy('created_at')
+                ->get()
+                ->map(function (WorkOrder $wo) use ($now) {
+                    $slaHours = match ($wo->priority) {
+                        'urgent' => 2, 'high' => 4, 'medium' => 24, 'low' => 72, default => 24,
+                    };
+                    $isOverdue = in_array($wo->status, ['open', 'assigned'])
+                        && $wo->created_at->copy()->addHours($slaHours)->isPast();
+                    $deviceState = null;
+                    if ($wo->device) {
+                        $lastReading = $wo->device->last_reading_at;
+                        $deviceState = [
+                            'name' => $wo->device->name,
+                            'model' => $wo->device->model,
+                            'status' => $wo->device->status,
+                            'battery_pct' => $wo->device->battery_pct,
+                            'last_reading_at' => $lastReading?->toIso8601String(),
+                            'last_reading_ago' => $lastReading?->diffForHumans(null, true, true) ?? null,
+                            'is_reporting' => $lastReading && $lastReading->gte($now->copy()->subMinutes(15)),
+                        ];
+                    }
+
+                    return [
+                        'id' => $wo->id,
+                        'title' => $wo->title,
+                        'description' => $wo->description,
+                        'type' => $wo->type,
+                        'priority' => $wo->priority,
+                        'status' => $wo->status,
+                        'site_name' => $wo->site?->name,
+                        'site_address' => $wo->site?->address,
+                        'device_state' => $deviceState,
+                        'is_overdue' => $isOverdue,
+                        'created_at' => $wo->created_at?->toIso8601String(),
+                        'created_ago' => $wo->created_at?->diffForHumans(null, true, true),
+                    ];
+                });
+        }
+
+        // ── Site manager: zone-level readings ──────────────────
+        $zoneReadings = [];
+        if ($isSiteScoped && $siteIds->count() <= 3) {
+            foreach ($siteIds as $sId) {
+                $devices = Device::where('site_id', $sId)
+                    ->whereNotNull('zone')
+                    ->with('site:id,name')
+                    ->get(['id', 'site_id', 'name', 'model', 'zone', 'status', 'battery_pct', 'last_reading_at']);
+
+                $zones = $devices->groupBy('zone');
+                foreach ($zones as $zoneName => $zoneDevices) {
+                    $latestReading = \App\Models\SensorReading::whereIn('device_id', $zoneDevices->pluck('id'))
+                        ->where('metric', 'temperature')
+                        ->orderByDesc('time')
+                        ->first();
+
+                    $humidityReading = \App\Models\SensorReading::whereIn('device_id', $zoneDevices->pluck('id'))
+                        ->where('metric', 'humidity')
+                        ->orderByDesc('time')
+                        ->first();
+
+                    $activeZoneAlerts = Alert::whereIn('device_id', $zoneDevices->pluck('id'))
+                        ->whereIn('status', ['active', 'acknowledged'])
+                        ->count();
+
+                    $lowBattery = $zoneDevices->filter(fn ($d) => $d->battery_pct !== null && $d->battery_pct < 20)->first();
+
+                    $zoneReadings[] = [
+                        'site_id' => $sId,
+                        'site_name' => $zoneDevices->first()->site?->name,
+                        'zone' => $zoneName,
+                        'device_count' => $zoneDevices->count(),
+                        'temperature' => $latestReading ? (float) $latestReading->value : null,
+                        'humidity' => $humidityReading ? (float) $humidityReading->value : null,
+                        'last_reading_at' => $latestReading?->time?->toIso8601String(),
+                        'last_reading_ago' => $latestReading?->time ? Carbon::parse($latestReading->time)->diffForHumans(null, true, true) : null,
+                        'active_alerts' => $activeZoneAlerts,
+                        'low_battery_device' => $lowBattery ? [
+                            'name' => $lowBattery->name,
+                            'battery_pct' => $lowBattery->battery_pct,
+                        ] : null,
+                    ];
+                }
+            }
+        }
+
+        // ── Technician summary stats ───────────────────────────
+        $techStats = null;
+        if ($isTechnician) {
+            $completedThisMonth = WorkOrder::where('assigned_to', $user->id)
+                ->where('status', 'completed')
+                ->where('completed_at', '>=', $now->copy()->startOfMonth())
+                ->count();
+
+            $techStats = [
+                'overdue' => collect($myWorkOrders)->where('is_overdue', true)->count(),
+                'assigned' => collect($myWorkOrders)->whereIn('status', ['open', 'assigned'])->count(),
+                'in_progress' => collect($myWorkOrders)->where('status', 'in_progress')->count(),
+                'completed_this_month' => $completedThisMonth,
+            ];
+        }
+
         return Inertia::render('dashboard', [
             'kpis' => $kpis,
             'fleet' => $fleetBreakdown,
@@ -261,6 +382,11 @@ class DashboardController extends Controller
             'recentReports' => $recentReports,
             'freshness' => $freshness,
             'range' => $rangeDays,
+            // Role-adaptive props
+            'variant' => $variant,
+            'myWorkOrders' => $myWorkOrders,
+            'zoneReadings' => $zoneReadings,
+            'techStats' => $techStats,
         ]);
     }
 

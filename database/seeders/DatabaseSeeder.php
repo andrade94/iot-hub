@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             OperationalDataSeeder::class,
             SensorReadingSeeder::class,
             AlertRuleSeeder::class,
+            PredictiveAnalyticsSeeder::class,
         ]);
     }
 }

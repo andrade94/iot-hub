@@ -17,7 +17,9 @@ class EnsureOrganizationScope
             return $next($request);
         }
 
-        if ($user->isSuperAdmin()) {
+        // Astrea staff roles (super_admin, support, account_manager) have no org_id.
+        // They see all orgs or can filter via session.
+        if ($user->hasAnyRole(['super_admin', 'support', 'account_manager'])) {
             $orgId = session('current_org_id') ?? $request->header('X-Organization-Id');
 
             if ($orgId) {

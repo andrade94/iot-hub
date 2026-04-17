@@ -16,14 +16,13 @@ import {
     ClipboardList,
     Copy,
     Cpu,
-    Download,
     Layers,
     LayoutGrid,
     MapPin,
     Microchip,
-    Monitor,
     Radio,
     Scale,
+    Sparkles,
     TrendingUp,
     Users,
 } from 'lucide-react';
@@ -48,47 +47,10 @@ export const navigation: NavGroup[] = [
                 tooltip: 'Alert center',
             },
             {
-                title: 'Reports',
-                href: '/reports',
-                icon: BarChart3,
-                tooltip: 'View reports',
-            },
-            {
-                title: 'Performance',
-                href: '/analytics/performance',
-                icon: TrendingUp,
-                tooltip: 'SLA & KPI dashboard',
-            },
-            {
-                title: 'Compare Sites',
-                href: '/sites/compare',
-                icon: Scale,
-                tooltip: 'Rank and compare site performance',
-            },
-        ],
-    },
-    {
-        title: 'Operations',
-        items: [
-            {
                 title: 'Work Orders',
                 href: '/work-orders',
                 icon: ClipboardList,
                 tooltip: 'Manage work orders',
-            },
-            {
-                title: 'Command Center',
-                href: '/command-center',
-                icon: Monitor,
-                tooltip: 'Global operations view',
-                requiredRole: 'super_admin',
-            },
-            {
-                title: 'Partner Portal',
-                href: '/partner',
-                icon: Building2,
-                tooltip: 'Partner management',
-                requiredRole: 'super_admin',
             },
         ],
     },
@@ -130,6 +92,7 @@ export const navigation: NavGroup[] = [
                 href: '/settings/gateways',
                 icon: Radio,
                 tooltip: 'Gateway catalog',
+                requiredRole: 'super_admin',
             },
             {
                 title: 'Sensor Models',
@@ -166,6 +129,18 @@ export const navigation: NavGroup[] = [
         title: 'Analytics',
         items: [
             {
+                title: 'Performance',
+                href: '/analytics/performance',
+                icon: TrendingUp,
+                tooltip: 'SLA & KPI dashboard',
+            },
+            {
+                title: 'Compare Sites',
+                href: '/sites/compare',
+                icon: Scale,
+                tooltip: 'Rank and compare site performance',
+            },
+            {
                 title: 'Alert Tuning',
                 href: '/analytics/alerts',
                 icon: BarChart3,
@@ -173,10 +148,16 @@ export const navigation: NavGroup[] = [
                 requiredPermission: 'view alert analytics',
             },
             {
+                title: 'Predictive',
+                href: '/analytics/predictions',
+                icon: Sparkles,
+                tooltip: 'Predictive maintenance insights',
+            },
+            {
                 title: 'Activity',
                 href: '/activity-log',
                 icon: Activity,
-                tooltip: 'View activity log',
+                tooltip: 'Audit chronicle',
                 requiredPermission: 'view activity log',
             },
         ],
@@ -185,7 +166,7 @@ export const navigation: NavGroup[] = [
         title: 'Administration',
         items: [
             {
-                title: 'Organization',
+                title: 'Org Settings',
                 href: '/settings/organization',
                 icon: Building2,
                 tooltip: 'Organization settings',
@@ -195,7 +176,7 @@ export const navigation: NavGroup[] = [
                 title: 'Compliance',
                 href: '/settings/compliance',
                 icon: CalendarCheck,
-                tooltip: 'Compliance calendar',
+                tooltip: 'Compliance calendar & reports',
                 requiredPermission: 'manage org settings',
             },
             {
@@ -205,18 +186,6 @@ export const navigation: NavGroup[] = [
                 tooltip: 'Site configuration templates',
                 requiredPermission: 'manage site templates',
             },
-            {
-                title: 'Data Export',
-                href: '/settings/export-data',
-                icon: Download,
-                tooltip: 'Export organization data',
-                requiredPermission: 'export organization data',
-            },
-            // Site-specific items removed from global nav — accessed via site Setup tab:
-            //   - Escalation Chains: one per site
-            //   - Maintenance Windows: N per site
-            //   - Report Schedules: per site (some org-wide)
-            // Billing deactivated for MVP — reactivate when payment processing is needed
         ],
     },
 ];

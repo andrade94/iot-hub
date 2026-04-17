@@ -2,8 +2,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Card, CardContent } from '@/components/ui/card';
+import { SiteCommandCenter } from '@/components/dashboard/SiteCommandCenter';
+import { TechnicianWorkbench } from '@/components/dashboard/TechnicianWorkbench';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FadeIn } from '@/components/ui/fade-in';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useLang } from '@/hooks/use-lang';
@@ -164,6 +169,49 @@ interface Freshness {
     last_broadcast_ago: string;
 }
 
+interface ZoneReading {
+    site_id: number;
+    site_name: string | null;
+    zone: string;
+    device_count: number;
+    temperature: number | null;
+    humidity: number | null;
+    last_reading_at: string | null;
+    last_reading_ago: string | null;
+    active_alerts: number;
+    low_battery_device: { name: string; battery_pct: number } | null;
+}
+
+interface MyWorkOrder {
+    id: number;
+    title: string;
+    description: string | null;
+    type: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    status: string;
+    site_name: string | null;
+    site_address: string | null;
+    device_state: {
+        name: string;
+        model: string;
+        status: string;
+        battery_pct: number | null;
+        last_reading_at: string | null;
+        last_reading_ago: string | null;
+        is_reporting: boolean;
+    } | null;
+    is_overdue: boolean;
+    created_at: string | null;
+    created_ago: string | null;
+}
+
+interface TechStats {
+    overdue: number;
+    assigned: number;
+    in_progress: number;
+    completed_this_month: number;
+}
+
 interface Props {
     kpis: DashboardKPIs;
     fleet: FleetBreakdown;
@@ -179,6 +227,11 @@ interface Props {
     recentReports: RecentReport[];
     freshness: Freshness;
     range: number;
+    // Role-adaptive
+    variant: 'fleet' | 'site' | 'technician';
+    zoneReadings: ZoneReading[];
+    myWorkOrders: MyWorkOrder[];
+    techStats: TechStats | null;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
@@ -223,17 +276,45 @@ export default function Dashboard({
     recentReports,
     freshness,
     range,
+    variant = 'fleet',
+    zoneReadings = [],
+    myWorkOrders = [],
+    techStats = null,
 }: Props) {
     const { t } = useLang();
     const { current_organization, auth, active_outage } = usePage<SharedData>().props;
     const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+    const [showOutageDialog, setShowOutageDialog] = useState(false);
+    const [outageReason, setOutageReason] = useState('');
+    const [outageLoading, setOutageLoading] = useState(false);
     const roles = auth?.roles ?? [];
+    const isSuperAdmin = roles.includes('super_admin');
     const isViewerOnly = roles.includes('client_site_viewer') && roles.length === 1;
     const isTechnician =
         roles.includes('technician') &&
         !roles.includes('client_site_manager') &&
         !roles.includes('client_org_admin') &&
-        !roles.includes('super_admin');
+        !isSuperAdmin;
+
+    const handleDeclareOutage = () => {
+        if (!outageReason.trim()) return;
+        setOutageLoading(true);
+        router.post('/outage/declare', {
+            reason: outageReason,
+            affected_services: ['other'],
+        }, {
+            preserveScroll: true,
+            onFinish: () => { setOutageLoading(false); setShowOutageDialog(false); setOutageReason(''); },
+        });
+    };
+
+    const handleResolveOutage = () => {
+        setOutageLoading(true);
+        router.delete('/outage/resolve', {
+            preserveScroll: true,
+            onFinish: () => setOutageLoading(false),
+        });
+    };
 
     const healthPct =
         kpis.total_devices > 0 ? Math.round((kpis.online_devices / kpis.total_devices) * 100) : 0;
@@ -262,9 +343,43 @@ export default function Dashboard({
                                     <p className="text-sm text-red-700 dark:text-red-300">{active_outage.reason}</p>
                                 </div>
                             </div>
+                            {isSuperAdmin && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleResolveOutage}
+                                    disabled={outageLoading}
+                                    className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
+                                >
+                                    {outageLoading ? t('Resolving...') : t('Resolve outage')}
+                                </Button>
+                            )}
                         </div>
                     </FadeIn>
                 )}
+
+                {/* ── Variant switch ─────────────────────────────── */}
+                {variant === 'technician' && techStats && (
+                    <TechnicianWorkbench
+                        myWorkOrders={myWorkOrders}
+                        techStats={techStats}
+                        recentAlerts={recentAlerts}
+                    />
+                )}
+
+                {variant === 'site' && (
+                    <SiteCommandCenter
+                        kpis={kpis}
+                        gatewayStats={gatewayStats}
+                        zoneReadings={zoneReadings}
+                        siteStats={siteStats}
+                        recentAlerts={recentAlerts}
+                        maintenanceUpcoming={maintenanceUpcoming}
+                    />
+                )}
+
+                {/* ── Fleet variant (default) ─────────────────────── */}
+                {variant === 'fleet' && (<>
 
                 {/* Maintenance window strip */}
                 {maintenanceUpcoming.length > 0 && (
@@ -385,6 +500,17 @@ export default function Dashboard({
                                     <Download className="h-3.5 w-3.5" />
                                     {t('Snapshot')}
                                 </Button>
+                                {isSuperAdmin && !active_outage && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 gap-1.5 px-3 text-xs border-rose-500/30 text-rose-500 hover:bg-rose-500/10"
+                                        onClick={() => setShowOutageDialog(true)}
+                                    >
+                                        <AlertTriangle className="h-3.5 w-3.5" />
+                                        {t('Declare outage')}
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -883,6 +1009,9 @@ export default function Dashboard({
                     </div>
                 )}
 
+                {/* End fleet variant */}
+                </>)}
+
                 {/* Freshness footer */}
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-border bg-card px-4 py-3 font-mono text-[10px] text-muted-foreground">
                     <div className="flex flex-wrap items-center gap-3">
@@ -915,6 +1044,43 @@ export default function Dashboard({
                     </div>
                 </div>
             </div>
+
+            {/* Outage Declaration Dialog — super_admin only */}
+            {isSuperAdmin && (
+                <Dialog open={showOutageDialog} onOpenChange={setShowOutageDialog}>
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>{t('Declare platform outage')}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                            <p className="text-sm text-muted-foreground">
+                                {t('This will suppress offline alerts platform-wide and show a warning banner to all users.')}
+                            </p>
+                            <div className="space-y-2">
+                                <Label>{t('Reason')}</Label>
+                                <Input
+                                    value={outageReason}
+                                    onChange={(e) => setOutageReason(e.target.value)}
+                                    placeholder={t('e.g. ChirpStack maintenance window')}
+                                />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setShowOutageDialog(false)}>
+                                    {t('Cancel')}
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleDeclareOutage}
+                                    disabled={!outageReason.trim() || outageLoading}
+                                >
+                                    <AlertTriangle className="mr-1.5 h-3.5 w-3.5" />
+                                    {outageLoading ? t('Declaring...') : t('Declare outage')}
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </AppLayout>
     );
 }

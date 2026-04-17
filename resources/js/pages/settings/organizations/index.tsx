@@ -327,7 +327,7 @@ function CreateOrganizationForm({ segments, timezones, onSuccess }: { segments: 
 
     function generateSlug(name: string) { return name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/[\s]+/g, '-').replace(/-+/g, '-'); }
     function handleNameChange(value: string) { form.setData('name', value); form.setData('slug', generateSlug(value)); }
-    function handleSubmit(e: React.FormEvent) { e.preventDefault(); form.submit('post', '/partner', { onSuccess: () => { form.reset(); onSuccess(); } }); }
+    function handleSubmit(e: React.FormEvent) { e.preventDefault(); form.submit('post', '/settings/organizations', { onSuccess: () => { form.reset(); onSuccess(); } }); }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">

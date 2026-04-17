@@ -164,6 +164,10 @@ export default function OrganizationShow({ organization, sites, users, subscript
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                            {/* Data Export — available to org admins and super_admin */}
+                            <Button variant="outline" size="sm" className="text-[11px]" onClick={() => router.get('/settings/export-data')}>
+                                <Download className="mr-1 h-3.5 w-3.5" />{t('Data Export')}
+                            </Button>
                             {/* Lifecycle — super_admin only */}
                             {is_super_admin && ['active', 'onboarding'].includes(organization.status) && (
                                 <Button variant="outline" size="sm" className="text-[11px] text-amber-600 dark:text-amber-400 border-border hover:border-amber-300 dark:hover:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30" onClick={() => setSuspendOpen(true)}>

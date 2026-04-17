@@ -45,6 +45,18 @@ return [
         'url' => env('CHIRPSTACK_URL', 'https://cloud.chirpstack.io'),
         'api_key' => env('CHIRPSTACK_API_KEY', ''),
         'tenant_id' => env('CHIRPSTACK_TENANT_ID', ''),
+
+        // Maps sensor model names to ChirpStack device profile UUIDs.
+        // Set these after creating device profiles in ChirpStack.
+        'device_profiles' => [
+            'EM300-TH' => env('CHIRPSTACK_PROFILE_EM300TH', ''),
+            'CT101' => env('CHIRPSTACK_PROFILE_CT101', ''),
+            'WS301' => env('CHIRPSTACK_PROFILE_WS301', ''),
+            'GS101' => env('CHIRPSTACK_PROFILE_GS101', ''),
+            'AM307' => env('CHIRPSTACK_PROFILE_AM307', ''),
+            'EM300-PT' => env('CHIRPSTACK_PROFILE_EM300PT', ''),
+            'EM310-UDL' => env('CHIRPSTACK_PROFILE_EM310UDL', ''),
+        ],
     ],
 
     'facturapi' => [

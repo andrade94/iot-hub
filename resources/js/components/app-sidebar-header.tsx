@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 // Button import removed — using native <button> for search trigger
 import { Breadcrumbs } from '@/components/breadcrumbs';
-import { OrgSwitcher } from '@/components/OrgSwitcher';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationDropdown } from '@/components/ui/notification-dropdown';
 import { Separator } from '@/components/ui/separator';
@@ -106,7 +105,6 @@ export function AppSidebarHeader({
             </div>
 
             <div className="ml-auto flex items-center gap-1">
-                <OrgSwitcher />
                 <button
                     className="hidden h-8 w-56 items-center gap-2 rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted/80 md:flex"
                     onClick={() => {

@@ -78,7 +78,7 @@ class Phase10DemoSeeder extends Seeder
                         'value' => fake()->randomFloat(1, 8, 18),
                         'threshold' => 8.0,
                         'condition' => 'above',
-                        'rule_name' => 'Walk-in Cooler Max Temperature',
+                        'rule_name' => 'Temp Máx Enfriador Walk-in',
                         'device_name' => $device->name,
                         'device_model' => $device->model,
                         'zone' => $device->zone,
@@ -149,7 +149,7 @@ class Phase10DemoSeeder extends Seeder
             MaintenanceWindow::create([
                 'site_id' => $s->id,
                 'zone' => 'Walk-in Cooler',
-                'title' => 'Weekly cooler cleaning',
+                'title' => 'Limpieza semanal del enfriador',
                 'recurrence' => 'weekly',
                 'day_of_week' => 2, // Tuesday
                 'start_time' => '14:00',
@@ -161,7 +161,7 @@ class Phase10DemoSeeder extends Seeder
             MaintenanceWindow::create([
                 'site_id' => $s->id,
                 'zone' => null, // site-wide
-                'title' => 'Monthly deep clean',
+                'title' => 'Limpieza profunda mensual',
                 'recurrence' => 'monthly',
                 'day_of_week' => null,
                 'start_time' => '06:00',

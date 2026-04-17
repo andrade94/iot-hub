@@ -294,12 +294,14 @@ function QuietHoursSection() {
 function NotificationPrefsSection() {
     const { auth } = usePage<SharedData>().props;
     const user = auth.user as SharedData['auth']['user'] & {
+        whatsapp_phone?: string;
         notify_whatsapp?: boolean;
         notify_push?: boolean;
         notify_email?: boolean;
         notify_min_severity?: string;
     };
 
+    const [whatsappPhone, setWhatsappPhone] = useState(user.whatsapp_phone ?? '');
     const [whatsapp, setWhatsapp] = useState(user.notify_whatsapp ?? true);
     const [push, setPush] = useState(user.notify_push ?? true);
     const [email, setEmail] = useState(user.notify_email ?? true);
@@ -314,6 +316,7 @@ function NotificationPrefsSection() {
             {
                 name: user.name,
                 email: user.email,
+                whatsapp_phone: whatsappPhone || null,
                 notify_whatsapp: whatsapp,
                 notify_push: push,
                 notify_email: email,
@@ -340,9 +343,29 @@ function NotificationPrefsSection() {
             <div className="rounded-lg border bg-card p-6 shadow-elevation-1">
                 <div className="space-y-6">
                     <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <Switch id="notify-whatsapp" checked={whatsapp} onCheckedChange={setWhatsapp} />
-                            <Label htmlFor="notify-whatsapp">WhatsApp alerts</Label>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                                <Switch id="notify-whatsapp" checked={whatsapp} onCheckedChange={setWhatsapp} />
+                                <Label htmlFor="notify-whatsapp">WhatsApp alerts</Label>
+                            </div>
+                            {whatsapp && (
+                                <div className="ml-10 grid gap-1.5 sm:max-w-[250px]">
+                                    <Label htmlFor="whatsapp-phone" className="text-xs text-muted-foreground">
+                                        WhatsApp phone number
+                                    </Label>
+                                    <Input
+                                        id="whatsapp-phone"
+                                        type="tel"
+                                        value={whatsappPhone}
+                                        onChange={(e) => setWhatsappPhone(e.target.value)}
+                                        placeholder="+521234567890"
+                                        className="font-mono text-sm"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">
+                                        Include country code (e.g. +52 for Mexico)
+                                    </p>
+                                </div>
+                            )}
                         </div>
                         <div className="flex items-center gap-3">
                             <Switch id="notify-push" checked={push} onCheckedChange={setPush} />

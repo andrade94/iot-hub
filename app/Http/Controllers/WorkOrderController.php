@@ -215,6 +215,8 @@ class WorkOrderController extends Controller
 
     public function show(WorkOrder $workOrder)
     {
+        $this->authorize('view', $workOrder);
+
         $workOrder->load([
             'site',
             'alert',

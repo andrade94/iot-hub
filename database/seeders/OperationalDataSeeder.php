@@ -160,7 +160,7 @@ class OperationalDataSeeder extends Seeder
             // ── CEDIS Norte (5 rules) ──
             [
                 'site' => $cedisNorte,
-                'name' => 'Walk-in Cooler Max Temp',
+                'name' => 'Temp Máx Enfriador Walk-in',
                 'type' => 'simple',
                 'severity' => 'critical',
                 'cooldown_minutes' => 30,
@@ -170,7 +170,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $cedisNorte,
-                'name' => 'Freezer Min Temp',
+                'name' => 'Temp Mín Congelador',
                 'type' => 'simple',
                 'severity' => 'high',
                 'cooldown_minutes' => 60,
@@ -180,7 +180,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $cedisNorte,
-                'name' => 'High Humidity Alert',
+                'name' => 'Alerta de Humedad Alta',
                 'type' => 'simple',
                 'severity' => 'medium',
                 'cooldown_minutes' => 120,
@@ -190,7 +190,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $cedisNorte,
-                'name' => 'Door Open Too Long',
+                'name' => 'Puerta Abierta Demasiado Tiempo',
                 'type' => 'simple',
                 'severity' => 'high',
                 'cooldown_minutes' => 15,
@@ -200,7 +200,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $cedisNorte,
-                'name' => 'Compressor Energy Spike',
+                'name' => 'Pico de Energía del Compresor',
                 'type' => 'simple',
                 'severity' => 'medium',
                 'cooldown_minutes' => 60,
@@ -212,7 +212,7 @@ class OperationalDataSeeder extends Seeder
             // ── CEDIS Centro (5 rules) ──
             [
                 'site' => $cedisCentro,
-                'name' => 'Walk-in Cooler Max Temp',
+                'name' => 'Temp Máx Enfriador Walk-in',
                 'type' => 'simple',
                 'severity' => 'critical',
                 'cooldown_minutes' => 30,
@@ -222,7 +222,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $cedisCentro,
-                'name' => 'Freezer Min Temp',
+                'name' => 'Temp Mín Congelador',
                 'type' => 'simple',
                 'severity' => 'high',
                 'cooldown_minutes' => 60,
@@ -232,7 +232,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $cedisCentro,
-                'name' => 'High Humidity Alert',
+                'name' => 'Alerta de Humedad Alta',
                 'type' => 'simple',
                 'severity' => 'medium',
                 'cooldown_minutes' => 120,
@@ -242,7 +242,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $cedisCentro,
-                'name' => 'Door Open Too Long',
+                'name' => 'Puerta Abierta Demasiado Tiempo',
                 'type' => 'simple',
                 'severity' => 'high',
                 'cooldown_minutes' => 15,
@@ -252,7 +252,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $cedisCentro,
-                'name' => 'Display Case Temp Warning',
+                'name' => 'Alerta Temp Vitrina',
                 'type' => 'simple',
                 'severity' => 'medium',
                 'cooldown_minutes' => 45,
@@ -264,7 +264,7 @@ class OperationalDataSeeder extends Seeder
             // ── Tienda Polanco (5 rules) ──
             [
                 'site' => $tiendaPolanco,
-                'name' => 'Walk-in Cooler Max Temp',
+                'name' => 'Temp Máx Enfriador Walk-in',
                 'type' => 'simple',
                 'severity' => 'critical',
                 'cooldown_minutes' => 30,
@@ -274,7 +274,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $tiendaPolanco,
-                'name' => 'Freezer Min Temp',
+                'name' => 'Temp Mín Congelador',
                 'type' => 'simple',
                 'severity' => 'high',
                 'cooldown_minutes' => 60,
@@ -284,7 +284,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $tiendaPolanco,
-                'name' => 'Energy Spike',
+                'name' => 'Pico de Energía',
                 'type' => 'simple',
                 'severity' => 'medium',
                 'cooldown_minutes' => 60,
@@ -294,7 +294,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $tiendaPolanco,
-                'name' => 'Battery Low',
+                'name' => 'Batería Baja',
                 'type' => 'simple',
                 'severity' => 'low',
                 'cooldown_minutes' => 1440,
@@ -304,7 +304,7 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site' => $tiendaPolanco,
-                'name' => 'High Humidity Alert',
+                'name' => 'Alerta de Humedad Alta',
                 'type' => 'simple',
                 'severity' => 'medium',
                 'cooldown_minutes' => 120,
@@ -415,8 +415,8 @@ class OperationalDataSeeder extends Seeder
             // 2 open (unassigned)
             [
                 'site_id' => $cedisNorte->id,
-                'title' => 'Replace battery — EM300-TH Cooler A',
-                'description' => 'Battery level dropped to 12%. Sensor reporting intermittently. Replace CR123A battery and verify readings resume.',
+                'title' => 'Reemplazar batería — EM300-TH Cooler A',
+                'description' => 'Nivel de batería bajó a 12%. Sensor reportando intermitentemente. Reemplazar batería CR123A y verificar que las lecturas se reanuden.',
                 'type' => 'battery_replace',
                 'priority' => 'high',
                 'status' => 'open',
@@ -427,8 +427,8 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site_id' => $cedisCentro->id,
-                'title' => 'Inspect Vitrina 1 sensor placement',
-                'description' => 'Display case readings are 3°C higher than expected. Verify sensor is not near the light fixture. Relocate if needed.',
+                'title' => 'Inspeccionar ubicación sensor Vitrina 1',
+                'description' => 'Las lecturas del exhibidor están 3°C más altas de lo esperado. Verificar que el sensor no esté cerca de la luminaria. Reubicar si es necesario.',
                 'type' => 'inspection',
                 'priority' => 'medium',
                 'status' => 'open',
@@ -441,8 +441,8 @@ class OperationalDataSeeder extends Seeder
             // 2 assigned to technician
             [
                 'site_id' => $cedisNorte->id,
-                'title' => 'Replace door sensor — Freezer',
-                'description' => 'WS301 on freezer door stopped reporting 48h ago. Replace unit and pair with gateway.',
+                'title' => 'Reemplazar sensor de puerta — Congelador',
+                'description' => 'WS301 en puerta del congelador dejó de reportar hace 48h. Reemplazar unidad y emparejar con gateway.',
                 'type' => 'sensor_replace',
                 'priority' => 'high',
                 'status' => 'assigned',
@@ -453,8 +453,8 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site_id' => $cedisCentro->id,
-                'title' => 'Quarterly compressor maintenance',
-                'description' => 'Scheduled Q1 maintenance for both compressor circuits. Check refrigerant levels, clean condenser coils, verify amperage draw.',
+                'title' => 'Mantenimiento trimestral de compresores',
+                'description' => 'Mantenimiento programado Q1 para ambos circuitos de compresor. Verificar niveles de refrigerante, limpiar serpentines del condensador, verificar amperaje.',
                 'type' => 'maintenance',
                 'priority' => 'medium',
                 'status' => 'assigned',
@@ -467,8 +467,8 @@ class OperationalDataSeeder extends Seeder
             // 1 in_progress
             [
                 'site_id' => $cedisNorte->id,
-                'title' => 'Calibrate EM300-TH Cooler B',
-                'description' => 'Sensor drift detected: reading 1.5°C below NIST-traceable reference thermometer. Perform zero-point calibration per SOP-CAL-004.',
+                'title' => 'Calibrar EM300-TH Cooler B',
+                'description' => 'Deriva del sensor detectada: lectura 1.5°C por debajo del termómetro de referencia NIST. Realizar calibración punto-cero según SOP-CAL-004.',
                 'type' => 'maintenance',
                 'priority' => 'high',
                 'status' => 'in_progress',
@@ -481,8 +481,8 @@ class OperationalDataSeeder extends Seeder
             // 2 completed
             [
                 'site_id' => $cedisNorte->id,
-                'title' => 'Install gas detector in kitchen',
-                'description' => 'New GS101 gas leak detector installed in kitchen area per safety module requirements. Paired with gateway, alert rule configured.',
+                'title' => 'Instalar detector de gas en cocina',
+                'description' => 'Nuevo detector de fuga de gas GS101 instalado en área de cocina según requisitos del módulo de seguridad. Emparejado con gateway, regla de alerta configurada.',
                 'type' => 'maintenance',
                 'priority' => 'low',
                 'status' => 'completed',
@@ -493,8 +493,8 @@ class OperationalDataSeeder extends Seeder
             ],
             [
                 'site_id' => $cedisCentro->id,
-                'title' => 'Replace CT101 — Compressor 2',
-                'description' => 'Current transformer clamp sensor failed open-circuit test. Replaced with new unit, verified kWh readings match utility submeter within 2%.',
+                'title' => 'Reemplazar CT101 — Compresor 2',
+                'description' => 'Sensor de pinza de transformador de corriente falló prueba de circuito abierto. Reemplazado con nueva unidad, lecturas de kWh verificadas contra submedidor dentro del 2%.',
                 'type' => 'sensor_replace',
                 'priority' => 'medium',
                 'status' => 'completed',
@@ -507,8 +507,8 @@ class OperationalDataSeeder extends Seeder
             // 1 cancelled
             [
                 'site_id' => $cedisCentro->id,
-                'title' => 'Investigate false humidity alert',
-                'description' => 'Humidity alert at 92% was false — caused by cleaning crew pressure-washing near the sensor. No action needed. Closing.',
+                'title' => 'Investigar falsa alerta de humedad',
+                'description' => 'Alerta de humedad al 92% fue falsa — causada por equipo de limpieza lavando a presión cerca del sensor. No se requiere acción. Cerrando.',
                 'type' => 'inspection',
                 'priority' => 'low',
                 'status' => 'cancelled',
@@ -549,8 +549,8 @@ class OperationalDataSeeder extends Seeder
                 'site_id' => $cedisNorte->id,
                 'org_id' => $org->id,
                 'type' => 'cofepris_audit',
-                'title' => 'COFEPRIS Annual Cold Chain Audit — CEDIS Norte',
-                'description' => 'Annual COFEPRIS inspection for cold chain compliance. Prepare temperature logs, calibration certificates, and corrective action documentation for the past 12 months.',
+                'title' => 'Auditoría Anual COFEPRIS Cadena de Frío — CEDIS Norte',
+                'description' => 'Inspección anual de COFEPRIS para cumplimiento de cadena de frío. Preparar registros de temperatura, certificados de calibración y documentación de acciones correctivas de los últimos 12 meses.',
                 'due_date' => now()->addDays(30)->toDateString(),
                 'status' => 'upcoming',
                 'completed_at' => null,
@@ -561,8 +561,8 @@ class OperationalDataSeeder extends Seeder
                 'site_id' => $cedisCentro->id,
                 'org_id' => $org->id,
                 'type' => 'calibration',
-                'title' => 'Q2 Sensor Calibration — All Temperature Sensors',
-                'description' => 'Quarterly calibration of all EM300-TH temperature sensors against NIST-traceable reference. Includes Cooler A, Cooler B, Freezer, and Vitrina sensors.',
+                'title' => 'Calibración Q2 — Todos los Sensores de Temperatura',
+                'description' => 'Calibración trimestral de todos los sensores de temperatura EM300-TH contra referencia trazable NIST. Incluye sensores de Cooler A, Cooler B, Congelador y Vitrina.',
                 'due_date' => now()->addDays(60)->toDateString(),
                 'status' => 'upcoming',
                 'completed_at' => null,
@@ -575,8 +575,8 @@ class OperationalDataSeeder extends Seeder
                 'site_id' => $cedisNorte->id,
                 'org_id' => $org->id,
                 'type' => 'certificate_renewal',
-                'title' => 'Refrigeration Technician Certification Renewal',
-                'description' => 'SEMARNAT-required refrigerant handling certification for on-site technician expired. Must renew before next scheduled maintenance.',
+                'title' => 'Renovación de Certificación de Técnico en Refrigeración',
+                'description' => 'Certificación de manejo de refrigerantes requerida por SEMARNAT para técnico en sitio expiró. Debe renovarse antes del próximo mantenimiento programado.',
                 'due_date' => now()->subDays(5)->toDateString(),
                 'status' => 'overdue',
                 'completed_at' => null,
@@ -589,8 +589,8 @@ class OperationalDataSeeder extends Seeder
                 'site_id' => $cedisNorte->id,
                 'org_id' => $org->id,
                 'type' => 'inspection',
-                'title' => 'Fire Suppression System Inspection',
-                'description' => 'Annual inspection of kitchen fire suppression system and cold storage CO2 detection. Passed all checks.',
+                'title' => 'Inspección del Sistema de Supresión de Incendios',
+                'description' => 'Inspección anual del sistema de supresión de incendios en cocina y detección de CO2 en almacenamiento frío. Pasó todas las verificaciones.',
                 'due_date' => now()->subDays(20)->toDateString(),
                 'status' => 'completed',
                 'completed_at' => now()->subDays(22)->toDateString(),
@@ -601,8 +601,8 @@ class OperationalDataSeeder extends Seeder
                 'site_id' => $cedisCentro->id,
                 'org_id' => $org->id,
                 'type' => 'permit_renewal',
-                'title' => 'Operating Permit Renewal — CDMX Environmental',
-                'description' => 'Renewed environmental operating permit for CDMX municipality. Valid through March 2027.',
+                'title' => 'Renovación de Permiso de Operación — CDMX Ambiental',
+                'description' => 'Permiso de operación ambiental renovado para municipio de CDMX. Válido hasta marzo 2027.',
                 'due_date' => now()->subDays(45)->toDateString(),
                 'status' => 'completed',
                 'completed_at' => now()->subDays(50)->toDateString(),
@@ -615,8 +615,8 @@ class OperationalDataSeeder extends Seeder
                 'site_id' => $cedisCentro->id,
                 'org_id' => $org->id,
                 'type' => 'cofepris_audit',
-                'title' => 'COFEPRIS Surprise Audit — Rescheduled',
-                'description' => 'Originally scheduled surprise audit was rescheduled by COFEPRIS due to inspector availability. New date to be confirmed.',
+                'title' => 'Auditoría Sorpresa COFEPRIS — Reprogramada',
+                'description' => 'Auditoría sorpresa programada originalmente fue reprogramada por COFEPRIS por disponibilidad del inspector. Nueva fecha por confirmar.',
                 'due_date' => now()->subDays(10)->toDateString(),
                 'status' => 'cancelled',
                 'completed_at' => null,
@@ -643,7 +643,7 @@ class OperationalDataSeeder extends Seeder
         $this->command->info('  Creating maintenance windows...');
 
         // Only add if Phase10DemoSeeder hasn't already created windows for these specific patterns
-        if (MaintenanceWindow::where('title', 'Nightly System Maintenance')->exists()) {
+        if (MaintenanceWindow::where('title', 'Mantenimiento Nocturno del Sistema')->exists()) {
             $this->command->info('    (skipped — operational maintenance windows already exist)');
 
             return;
@@ -654,7 +654,7 @@ class OperationalDataSeeder extends Seeder
             [
                 'site_id' => $cedisNorte->id,
                 'zone' => null,
-                'title' => 'Nightly System Maintenance',
+                'title' => 'Mantenimiento Nocturno del Sistema',
                 'recurrence' => 'daily',
                 'day_of_week' => null,
                 'start_time' => '22:00',
@@ -667,7 +667,7 @@ class OperationalDataSeeder extends Seeder
             [
                 'site_id' => $cedisNorte->id,
                 'zone' => 'Compressor 1',
-                'title' => 'Monday Compressor Check',
+                'title' => 'Revisión de Compresor Lunes',
                 'recurrence' => 'weekly',
                 'day_of_week' => 1, // Monday
                 'start_time' => '06:00',
@@ -680,7 +680,7 @@ class OperationalDataSeeder extends Seeder
             [
                 'site_id' => $cedisCentro->id,
                 'zone' => 'Freezer',
-                'title' => 'Freezer Defrost & Deep Clean',
+                'title' => 'Descongelamiento y Limpieza Profunda del Congelador',
                 'recurrence' => 'once',
                 'day_of_week' => null,
                 'start_time' => '05:00',
@@ -693,7 +693,7 @@ class OperationalDataSeeder extends Seeder
             [
                 'site_id' => $cedisCentro->id,
                 'zone' => null,
-                'title' => 'Daily Opening Checklist Window',
+                'title' => 'Ventana de Checklist de Apertura Diaria',
                 'recurrence' => 'daily',
                 'day_of_week' => null,
                 'start_time' => '07:00',
@@ -829,7 +829,7 @@ class OperationalDataSeeder extends Seeder
                 'status' => 'active',
                 'triggered_at' => now()->subHours(2),
                 'data' => [
-                    'rule_name' => 'Walk-in Cooler Max Temp',
+                    'rule_name' => 'Temp Máx Enfriador Walk-in',
                     'device_name' => $coolerANorte?->name ?? 'EM300-TH - Cooler A',
                     'zone' => 'Cooler A',
                     'metric' => 'temperature',
@@ -846,7 +846,7 @@ class OperationalDataSeeder extends Seeder
                 'status' => 'active',
                 'triggered_at' => now()->subHours(1),
                 'data' => [
-                    'rule_name' => 'Walk-in Cooler Max Temp',
+                    'rule_name' => 'Temp Máx Enfriador Walk-in',
                     'device_name' => $coolerACentro?->name ?? 'EM300-TH - Cooler A',
                     'zone' => 'Cooler A',
                     'metric' => 'temperature',
@@ -863,7 +863,7 @@ class OperationalDataSeeder extends Seeder
                 'status' => 'active',
                 'triggered_at' => now()->subMinutes(45),
                 'data' => [
-                    'rule_name' => 'Freezer Min Temp',
+                    'rule_name' => 'Temp Mín Congelador',
                     'device_name' => $freezerNorte?->name ?? 'EM300-TH - Freezer',
                     'zone' => 'Freezer',
                     'metric' => 'temperature',
@@ -882,7 +882,7 @@ class OperationalDataSeeder extends Seeder
                 'status' => 'active',
                 'triggered_at' => now()->subMinutes(20),
                 'data' => [
-                    'rule_name' => 'Door Open Too Long',
+                    'rule_name' => 'Puerta Abierta Demasiado Tiempo',
                     'device_name' => $doorNorte?->name ?? 'WS301 - Cooler A',
                     'zone' => 'Cooler A',
                     'metric' => 'door_status',
@@ -900,7 +900,7 @@ class OperationalDataSeeder extends Seeder
                 'status' => 'active',
                 'triggered_at' => now()->subDays(1)->subHours(3),
                 'data' => [
-                    'rule_name' => 'Door Open Too Long',
+                    'rule_name' => 'Puerta Abierta Demasiado Tiempo',
                     'device_name' => $doorCentro?->name ?? 'WS301 - Cooler A',
                     'zone' => 'Cooler A',
                     'metric' => 'door_status',
@@ -921,7 +921,7 @@ class OperationalDataSeeder extends Seeder
                 'triggered_at' => now()->subDays(1),
                 'acknowledged_at' => now()->subDays(1)->addMinutes(12),
                 'data' => [
-                    'rule_name' => 'High Humidity Alert',
+                    'rule_name' => 'Alerta de Humedad Alta',
                     'device_name' => $coolerBNorte?->name ?? 'EM300-TH - Cooler B',
                     'zone' => 'Cooler B',
                     'metric' => 'humidity',
@@ -939,7 +939,7 @@ class OperationalDataSeeder extends Seeder
                 'triggered_at' => now()->subDays(2),
                 'acknowledged_at' => now()->subDays(2)->addMinutes(25),
                 'data' => [
-                    'rule_name' => 'Display Case Temp Warning',
+                    'rule_name' => 'Alerta Temp Vitrina',
                     'device_name' => $vitrinaCentro?->name ?? 'EM300-TH - Vitrina 1',
                     'zone' => 'Vitrina 1',
                     'metric' => 'temperature',
@@ -962,7 +962,7 @@ class OperationalDataSeeder extends Seeder
                 'resolved_by' => $manager->id,
                 'resolution_type' => 'manual',
                 'data' => [
-                    'rule_name' => 'Walk-in Cooler Max Temp',
+                    'rule_name' => 'Temp Máx Enfriador Walk-in',
                     'device_name' => $coolerANorte?->name ?? 'EM300-TH - Cooler A',
                     'zone' => 'Cooler A',
                     'metric' => 'temperature',
@@ -983,7 +983,7 @@ class OperationalDataSeeder extends Seeder
                 'resolved_by' => $manager->id,
                 'resolution_type' => 'auto',
                 'data' => [
-                    'rule_name' => 'Walk-in Cooler Max Temp',
+                    'rule_name' => 'Temp Máx Enfriador Walk-in',
                     'device_name' => $coolerACentro?->name ?? 'EM300-TH - Cooler A',
                     'zone' => 'Cooler A',
                     'metric' => 'temperature',
@@ -1005,7 +1005,7 @@ class OperationalDataSeeder extends Seeder
                 'resolved_by' => $manager->id,
                 'resolution_type' => 'dismissed',
                 'data' => [
-                    'rule_name' => 'High Humidity Alert',
+                    'rule_name' => 'Alerta de Humedad Alta',
                     'device_name' => $coolerBNorte?->name ?? 'EM300-TH - Cooler B',
                     'zone' => 'Cooler B',
                     'metric' => 'humidity',

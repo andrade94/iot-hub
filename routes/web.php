@@ -79,6 +79,12 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
+    // Platform outage management (super_admin only) — merged from Command Center
+    Route::middleware('role:super_admin')->group(function () {
+        Route::post('outage/declare', [\App\Http\Controllers\CommandCenterController::class, 'declareOutage'])->name('outage.declare');
+        Route::delete('outage/resolve', [\App\Http\Controllers\CommandCenterController::class, 'resolveOutage'])->name('outage.resolve');
+    });
+
     // Global Search (Cmd+K)
     Route::get('search', SearchController::class)->name('search');
 
@@ -92,7 +98,11 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
 
         $orgId = $request->input('org_id');
 
-        if ($orgId) {
+        // Normalize: treat empty string, 'all', 0, null as "show all orgs"
+        if (! $orgId || $orgId === 'all' || $orgId === '0') {
+            $orgId = null;
+        } else {
+            $orgId = (int) $orgId;
             $org = \App\Models\Organization::find($orgId);
             if (! $org) {
                 abort(404, 'Organization not found.');
@@ -129,6 +139,10 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::get('activity-log', [ActivityLogController::class, 'index'])
         ->middleware('permission:view activity log')
         ->name('activity-log');
+
+    Route::get('activity-log/export', [ActivityLogController::class, 'export'])
+        ->middleware('permission:view activity log')
+        ->name('activity-log.export');
 
     Route::get('activity-log/user/{userId}', [ActivityLogController::class, 'userActivity'])
         ->middleware('permission:view activity log')
@@ -188,7 +202,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
 
     // Device management
     Route::middleware('site.access')->group(function () {
-        Route::get('sites/{site}/devices', [DeviceController::class, 'index'])->name('devices.index');
+        Route::get('sites/{site}/devices', [DeviceController::class, 'index'])->name('sites.devices.index');
         Route::post('sites/{site}/devices', [DeviceController::class, 'store'])->name('devices.store')->middleware('permission:manage devices');
         Route::get('sites/{site}/devices/{device}', [DeviceController::class, 'show'])->name('devices.show');
         Route::put('sites/{site}/devices/{device}', [DeviceController::class, 'update'])->name('devices.update')->middleware('permission:manage devices');
@@ -224,6 +238,9 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     // SLA & KPI Dashboard (Phase 11)
     Route::get('analytics/performance', \App\Http\Controllers\PerformanceAnalyticsController::class)->name('analytics.performance');
 
+    // Predictive Analytics
+    Route::get('analytics/predictions', \App\Http\Controllers\PredictiveAnalyticsController::class)->name('analytics.predictions');
+
     // Site detail & zones
     Route::middleware('site.access')->group(function () {
         Route::get('sites/{site}/timeline', \App\Http\Controllers\SiteTimelineController::class)->name('sites.timeline');
@@ -257,8 +274,9 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
             ->name('modules.industrial');
     });
 
-    // Report builder landing page
-    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    // Report builder landing — merged into Compliance.
+    // Legacy URL redirects so old bookmarks keep working.
+    Route::get('reports', fn () => redirect()->route('compliance.index'))->name('reports.index');
 
     // Reports
     Route::middleware('site.access')->group(function () {
@@ -366,7 +384,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     })->name('exports.download');
 
     // Work Orders
-    Route::get('work-orders', [WorkOrderController::class, 'index'])->name('work-orders.index');
+    Route::get('work-orders', [WorkOrderController::class, 'index'])->name('work-orders.index')->middleware('permission:view work orders');
     Route::get('work-orders/export', [WorkOrderController::class, 'export'])->name('work-orders.export');
     Route::get('work-orders/{workOrder}', [WorkOrderController::class, 'show'])->name('work-orders.show');
     Route::middleware(['site.access'])->group(function () {
@@ -379,14 +397,16 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::post('work-orders/{workOrder}/photos', [WorkOrderController::class, 'addPhoto'])->name('work-orders.add-photo');
     Route::post('work-orders/{workOrder}/notes', [WorkOrderController::class, 'addNote'])->name('work-orders.add-note');
 
-    // Command Center (super_admin only)
+    // Command Center — legacy routes, merged into Dashboard + Organizations.
+    // Outage declaration moved to /outage/declare and /outage/resolve (above).
+    // The index redirect covers old bookmarks.
     Route::middleware('role:super_admin')->prefix('command-center')->name('command-center.')->group(function () {
-        Route::get('/', [CommandCenterController::class, 'index'])->name('index');
-        Route::get('/alerts', [CommandCenterController::class, 'alerts'])->name('alerts');
-        Route::get('/work-orders', [CommandCenterController::class, 'workOrders'])->name('work-orders');
-        Route::get('/devices', [CommandCenterController::class, 'devices'])->name('devices');
-        Route::get('/revenue', [CommandCenterController::class, 'revenue'])->name('revenue');
-        Route::get('/dispatch', [CommandCenterController::class, 'dispatch'])->name('dispatch');
+        Route::get('/', fn () => redirect()->route('dashboard'))->name('index');
+        Route::get('/alerts', fn () => redirect('/alerts'))->name('alerts');
+        Route::get('/work-orders', fn () => redirect('/work-orders'))->name('work-orders');
+        Route::get('/devices', fn () => redirect('/devices'))->name('devices');
+        Route::get('/revenue', fn () => redirect()->route('dashboard'))->name('revenue');
+        Route::get('/dispatch', fn () => redirect('/work-orders'))->name('dispatch');
         Route::post('/outage', [CommandCenterController::class, 'declareOutage'])->name('outage.declare');
         Route::delete('/outage', [CommandCenterController::class, 'resolveOutage'])->name('outage.resolve');
         Route::get('/{organization}', [CommandCenterController::class, 'show'])->name('show');
@@ -443,11 +463,13 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     });
 
     // Compliance Calendar
-    Route::prefix('settings/compliance')->name('compliance.')->group(function () {
+    Route::middleware('permission:manage org settings')->prefix('settings/compliance')->name('compliance.')->group(function () {
         Route::get('/', [ComplianceCalendarController::class, 'index'])->name('index');
         Route::post('/', [ComplianceCalendarController::class, 'store'])->name('store');
         Route::put('{complianceEvent}', [ComplianceCalendarController::class, 'update'])->name('update');
         Route::post('{complianceEvent}/complete', [ComplianceCalendarController::class, 'complete'])->name('complete');
+        Route::post('{complianceEvent}/attach', [ComplianceCalendarController::class, 'attach'])->name('attach');
+        Route::delete('{complianceEvent}/attach', [ComplianceCalendarController::class, 'detach'])->name('detach');
         Route::delete('{complianceEvent}', [ComplianceCalendarController::class, 'destroy'])->name('destroy');
     });
 
@@ -468,6 +490,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     // Organization catalog — super_admin only (list, lifecycle, notes)
     Route::middleware('role:super_admin')->prefix('settings/organizations')->name('organizations.')->group(function () {
         Route::get('/', [OrganizationCatalogController::class, 'index'])->name('index');
+        Route::post('/', [OrganizationCatalogController::class, 'store'])->name('store');
         Route::post('{organization}/suspend', [OrganizationCatalogController::class, 'suspend'])->name('suspend');
         Route::post('{organization}/reactivate', [OrganizationCatalogController::class, 'reactivate'])->name('reactivate');
         Route::post('{organization}/notes', [OrganizationCatalogController::class, 'storeNote'])->name('notes.store');
@@ -514,7 +537,8 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
 
     // Partner Portal (super_admin)
     Route::middleware('role:super_admin')->group(function () {
-        Route::get('partner', [PartnerController::class, 'index'])->name('partner.index');
+        // Legacy Partner Portal — merged into Organization catalog.
+        Route::get('partner', fn () => redirect()->route('organizations.index'))->name('partner.index');
         Route::post('partner', [PartnerController::class, 'store'])->name('partner.store');
         Route::post('partner/{organization}/suspend', [PartnerController::class, 'suspend'])->name('partner.suspend');
         Route::post('partner/{organization}/archive', [PartnerController::class, 'archive'])->name('partner.archive');

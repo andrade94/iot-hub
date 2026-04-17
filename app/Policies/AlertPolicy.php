@@ -14,32 +14,37 @@ class AlertPolicy
 
     public function view(User $user, Alert $alert): bool
     {
-        return $user->hasPermissionTo('view alerts');
+        return $user->hasPermissionTo('view alerts')
+            && ($user->isSuperAdmin() || $user->canAccessSite($alert->site_id));
     }
 
     public function acknowledge(User $user, Alert $alert): bool
     {
-        return $user->hasPermissionTo('acknowledge alerts');
+        return $user->hasPermissionTo('acknowledge alerts')
+            && ($user->isSuperAdmin() || $user->canAccessSite($alert->site_id));
     }
 
     public function resolve(User $user, Alert $alert): bool
     {
-        return $user->hasPermissionTo('acknowledge alerts');
+        return $user->hasPermissionTo('acknowledge alerts')
+            && ($user->isSuperAdmin() || $user->canAccessSite($alert->site_id));
     }
 
     public function dismiss(User $user, Alert $alert): bool
     {
-        // Dismissal is an operator triage action, not a rule-config action.
-        return $user->hasPermissionTo('acknowledge alerts');
+        return $user->hasPermissionTo('acknowledge alerts')
+            && ($user->isSuperAdmin() || $user->canAccessSite($alert->site_id));
     }
 
     public function escalate(User $user, Alert $alert): bool
     {
-        return $user->hasPermissionTo('acknowledge alerts');
+        return $user->hasPermissionTo('acknowledge alerts')
+            && ($user->isSuperAdmin() || $user->canAccessSite($alert->site_id));
     }
 
     public function delete(User $user, Alert $alert): bool
     {
-        return $user->hasPermissionTo('manage alert rules');
+        return $user->hasPermissionTo('manage alert rules')
+            && ($user->isSuperAdmin() || $user->canAccessSite($alert->site_id));
     }
 }

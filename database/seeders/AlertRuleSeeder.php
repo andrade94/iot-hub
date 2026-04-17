@@ -32,6 +32,10 @@ class AlertRuleSeeder extends Seeder
                 continue;
             }
 
+            // Use org locale to pick the right recipe name
+            $locale = $site->organization?->settings['locale'] ?? 'en';
+            $recipeName = $recipe->localizedName($locale);
+
             // Check if rules from this recipe already exist for this site
             // (match by name pattern to avoid duplicates)
             $existingNames = AlertRule::where('site_id', $site->id)
@@ -40,7 +44,7 @@ class AlertRuleSeeder extends Seeder
                 ->toArray();
 
             foreach ($recipe->default_rules as $defaultRule) {
-                $ruleName = $recipe->name.' — '.ucfirst($defaultRule['metric']).' '.ucfirst($defaultRule['condition']).' '.$defaultRule['threshold'];
+                $ruleName = $recipeName.' — '.ucfirst($defaultRule['metric']).' '.ucfirst($defaultRule['condition']).' '.$defaultRule['threshold'];
 
                 if (in_array(strtolower($ruleName), $existingNames)) {
                     continue; // Skip if already exists
@@ -70,10 +74,11 @@ class AlertRuleSeeder extends Seeder
         }
 
         // Always add a battery low rule if not exists
-        if (! in_array('battery low', array_map('strtolower', AlertRule::where('site_id', $site->id)->pluck('name')->toArray()))) {
+        $batteryName = ($site->organization?->settings['locale'] ?? 'en') === 'es' ? 'Batería Baja' : 'Battery Low';
+        if (! in_array(strtolower($batteryName), array_map('strtolower', AlertRule::where('site_id', $site->id)->pluck('name')->toArray()))) {
             AlertRule::create([
                 'site_id' => $site->id,
-                'name' => 'Battery Low',
+                'name' => $batteryName,
                 'type' => 'simple',
                 'severity' => 'low',
                 'cooldown_minutes' => 1440,

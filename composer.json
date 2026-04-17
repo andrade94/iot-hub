@@ -28,6 +28,7 @@
         "laravel/wayfinder": "^0.1.9",
         "league/flysystem-aws-s3-v3": "^3.0",
         "maatwebsite/excel": "^3.1",
+        "php-mqtt/laravel-client": "^1.8",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-permission": "^6.21"
     },
@@ -64,7 +65,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74,#a3e635\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" \"php artisan reverb:start --debug\" --names=server,queue,logs,vite,reverb --kill-others"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74,#a3e635,#67e8f9\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" \"php artisan reverb:start --debug\" \"php artisan mqtt:listen 2>/dev/null || echo MQTT_skipped\" --names=server,queue,logs,vite,reverb,mqtt"
         ],
         "dev:ssr": [
             "npm run build:ssr",

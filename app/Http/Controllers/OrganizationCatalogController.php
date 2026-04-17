@@ -40,6 +40,21 @@ class OrganizationCatalogController extends Controller
         ]);
     }
 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:organizations,slug',
+            'segment' => ['required', 'string', Rule::in(\App\Models\Segment::active()->pluck('name'))],
+            'plan' => 'required|string|in:starter,standard,professional,enterprise',
+            'default_timezone' => 'nullable|string|max:50',
+        ]);
+
+        Organization::create($validated);
+
+        return back()->with('success', "Organization '{$validated['name']}' created.");
+    }
+
     public function show(Request $request, Organization $organization)
     {
         $this->authorizeOrgAccess($request, $organization);

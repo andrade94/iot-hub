@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class ComplianceEvent extends Model
 {
@@ -21,6 +22,8 @@ class ComplianceEvent extends Model
         'status',
         'completed_at',
         'completed_by',
+        'attachment_path',
+        'attachment_name',
         'reminders_sent',
     ];
 
@@ -65,5 +68,17 @@ class ComplianceEvent extends Model
     public function scopeForOrg(Builder $query, int $orgId): Builder
     {
         return $query->where('org_id', $orgId);
+    }
+
+    // -- Lifecycle ────────────────────────────────────────────────
+
+    protected static function booted(): void
+    {
+        // Clean the attachment off disk when the event is deleted.
+        static::deleting(function (ComplianceEvent $event) {
+            if ($event->attachment_path) {
+                Storage::disk('public')->delete($event->attachment_path);
+            }
+        });
     }
 }

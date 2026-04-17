@@ -12,6 +12,23 @@ use Inertia\Inertia;
 
 class ReportController extends Controller
 {
+    /**
+     * Stamp a `report_generated:{type}` row in the activity log so the
+     * Compliance page can show "last generated" per report type + site.
+     */
+    private function logReportGenerated(Site $site, string $type): void
+    {
+        activity('reports')
+            ->performedOn($site)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'org_id' => $site->org_id,
+                'site_name' => $site->name,
+                'report_type' => $type,
+            ])
+            ->log("report_generated:{$type}");
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -32,6 +49,7 @@ class ReportController extends Controller
             : now();
 
         $report = $reportService->generateReport($site, $from, $to);
+        $this->logReportGenerated($site, 'temperature');
 
         return Inertia::render('reports/temperature', [
             'site' => $site,
@@ -51,6 +69,7 @@ class ReportController extends Controller
             : now();
 
         $report = $reportService->generateConsumptionReport($site, $from, $to);
+        $this->logReportGenerated($site, 'energy');
 
         return Inertia::render('reports/energy', [
             'site' => $site,
@@ -125,6 +144,8 @@ class ReportController extends Controller
                 'recipe_name' => $device->recipe?->name,
                 'calibration_status' => $device->calibrationStatus(),
             ]);
+
+        $this->logReportGenerated($site, 'inventory');
 
         return Inertia::render('reports/inventory', [
             'site' => $site,

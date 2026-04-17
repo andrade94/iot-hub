@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work Order Detail — Astrea IoT Platform</title>
+<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,500,600,700,800&family=lexend:300,400,500,600,700&family=fira-code:400,500,700" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0d10;
+    --card: #111318;
+    --surface: #161a20;
+    --surface-2: #1a1f26;
+    --border: #1e2228;
+    --border-subtle: #171b21;
+    --text: #e0e4ea;
+    --text-secondary: #b0b8c4;
+    --muted: #6b7280;
+    --dim: #374151;
+    --emerald: #10b981;
+    --emerald-dim: rgba(16, 185, 129, 0.12);
+    --cyan: #06b6d4;
+    --cyan-dim: rgba(6, 182, 212, 0.12);
+    --coral: #f43f5e;
+    --coral-dim: rgba(244, 63, 94, 0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --violet: #8b5cf6;
+    --violet-dim: rgba(139, 92, 246, 0.12);
+
+    --font-display: 'Bricolage Grotesque', serif;
+    --font-body: 'Lexend', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+    --sidebar-w: 220px;
+  }
+
+  html { font-family: var(--font-body); font-size: 14px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+  body { display: flex; min-height: 100vh; }
+
+  .variant-label {
+    position: fixed; top: 12px; right: 16px; z-index: 999;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.08em; color: var(--cyan);
+    background: rgba(15,14,12,0.85); backdrop-filter: blur(12px);
+    border: 1px solid var(--border); padding: 5px 12px; border-radius: 4px;
+  }
+
+  /* Sidebar placeholder */
+  .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card); border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; z-index: 100; display: flex; flex-direction: column; }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 28px; height: 28px; background: linear-gradient(135deg, var(--cyan), var(--amber)); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--bg); }
+  .logo-text { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--text); letter-spacing: -0.02em; }
+
+  main.shell { margin-left: var(--sidebar-w); flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .breadcrumb-bar { height: 44px; display: flex; align-items: center; padding: 0 32px; gap: 6px; font-size: 12px; color: var(--muted); background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+  .breadcrumb-bar a { color: var(--muted); text-decoration: none; }
+  .breadcrumb-bar a:hover { color: var(--text); }
+  .breadcrumb-bar .sep { color: var(--dim); margin: 0 2px; }
+  .breadcrumb-bar .current { color: var(--text-secondary); font-weight: 500; }
+
+  .content { padding: 32px; max-width: 900px; }
+
+  /* ============================================================
+     HERO — compact, SLA integrated, no separate stepper
+     ============================================================ */
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
+    background-size: 24px 24px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .hero.overdue { border-left: 4px solid var(--coral); }
+
+  .hero-row {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 20px;
+    position: relative;
+  }
+  .hero-left { flex: 1; min-width: 0; }
+  .hero-kicker {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-title {
+    font-family: var(--font-display); font-size: 28px; font-weight: 700;
+    color: var(--text); letter-spacing: -0.025em; line-height: 1.15;
+    margin-top: 8px;
+  }
+
+  .badge-row {
+    display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-family: var(--font-mono); font-size: 9px;
+    font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .badge.priority-medium { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(6,182,212,0.25); }
+  .badge.priority-high { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+  .badge.priority-urgent { background: var(--coral-dim); color: var(--coral); border: 1px solid rgba(244,63,94,0.25); }
+  .badge.priority-low { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+  .badge.status-open { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
+  .badge.status-assigned { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+  .badge.status-in-progress { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(6,182,212,0.25); }
+  .badge.status-completed { background: var(--emerald-dim); color: var(--emerald); border: 1px solid rgba(16,185,129,0.25); }
+  .badge.status-cancelled { background: var(--surface-2); color: var(--dim); border: 1px solid var(--border); }
+  .badge.sla-overdue { background: var(--coral-dim); color: var(--coral); border: 1px solid rgba(244,63,94,0.3); }
+  .badge.sla-overdue svg { width: 10px; height: 10px; }
+  .badge.type { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+
+  .hero-meta {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--muted); margin-top: 10px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .hero-meta .sep { color: var(--dim); }
+  .hero-meta .overdue-text { color: var(--coral); font-weight: 600; }
+
+  .hero-actions {
+    display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 12px;
+    background: var(--surface); color: var(--text);
+    font-family: var(--font-body); font-size: 11px; font-weight: 500;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; transition: all 0.15s; text-decoration: none;
+  }
+  .btn:hover { background: var(--surface-2); border-color: var(--dim); }
+  .btn svg { width: 12px; height: 12px; }
+  .btn-primary { background: var(--emerald-dim); color: var(--emerald); border-color: rgba(16,185,129,0.25); }
+  .btn-primary:hover { background: rgba(16,185,129,0.2); border-color: var(--emerald); }
+  .btn-danger { color: var(--muted); }
+  .btn-danger:hover { color: var(--coral); border-color: rgba(244,63,94,0.3); }
+  .btn-ghost { background: transparent; border-color: transparent; color: var(--muted); padding: 5px 8px; }
+  .btn-ghost:hover { color: var(--text); background: var(--surface); }
+
+  /* ============================================================
+     DESCRIPTION — prominent, first thing after hero
+     ============================================================ */
+  .description-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
+  .description-card .label {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .description-card .label svg { width: 11px; height: 11px; opacity: 0.6; }
+
+  /* ============================================================
+     METADATA STRIP — compact 2-row grid replacing the old Details table
+     ============================================================ */
+  .meta-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--border-subtle);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .meta-item {
+    background: var(--card);
+    padding: 14px 16px;
+  }
+  .meta-item .meta-label {
+    font-family: var(--font-mono); font-size: 8px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--dim); margin-bottom: 5px;
+  }
+  .meta-item .meta-value {
+    font-size: 13px; font-weight: 500;
+    color: var(--text);
+  }
+  .meta-item .meta-value.muted { color: var(--muted); font-weight: 400; }
+  .meta-item .meta-value a {
+    color: var(--cyan); text-decoration: none;
+    font-weight: 500;
+  }
+  .meta-item .meta-value a:hover { text-decoration: underline; }
+
+  /* Linked alert inline */
+  .linked-alert {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .linked-alert:hover { background: var(--surface); border-color: var(--dim); }
+  .linked-alert .alert-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--coral-dim);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--coral); font-weight: 700; font-size: 14px;
+  }
+  .linked-alert .alert-body { flex: 1; }
+  .linked-alert .alert-title { font-size: 12px; font-weight: 500; color: var(--text); }
+  .linked-alert .alert-meta { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ============================================================
+     ACTIVITY FEED — merges timeline + notes chronologically
+     ============================================================ */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  .section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-title svg { width: 12px; height: 12px; opacity: 0.6; }
+  .section-count {
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--dim); font-weight: 600;
+  }
+  .section-rule { flex: 1; height: 1px; background: var(--border-subtle); }
+
+  .feed { position: relative; }
+  .feed::before {
+    content: '';
+    position: absolute; left: 15px; top: 20px; bottom: 20px;
+    width: 1px; background: var(--border-subtle);
+  }
+
+  .feed-item {
+    display: flex; gap: 14px;
+    padding: 10px 0;
+    position: relative;
+  }
+  .feed-item:first-child { padding-top: 0; }
+  .feed-item:last-child { padding-bottom: 0; }
+
+  .feed-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    position: relative; z-index: 1;
+  }
+  .feed-dot svg { width: 13px; height: 13px; }
+  .feed-dot.created  { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+  .feed-dot.assigned { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+  .feed-dot.started  { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(6,182,212,0.25); }
+  .feed-dot.completed{ background: var(--emerald-dim); color: var(--emerald); border: 1px solid rgba(16,185,129,0.25); }
+  .feed-dot.note     { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
+  .feed-dot.photo    { background: var(--violet-dim); color: var(--violet); border: 1px solid rgba(139,92,246,0.25); }
+
+  .feed-body { flex: 1; min-width: 0; padding-top: 4px; }
+  .feed-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px;
+  }
+  .feed-actor { font-weight: 600; color: var(--text); }
+  .feed-action { color: var(--muted); }
+  .feed-time {
+    margin-left: auto;
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--dim);
+  }
+  .feed-detail {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .feed-detail.note-text {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+  .feed-detail img {
+    max-width: 200px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-top: 4px;
+  }
+
+  /* SLA overdue feed item */
+  .feed-item.sla-warning .feed-dot {
+    background: var(--coral-dim); color: var(--coral);
+    border: 1px solid rgba(244,63,94,0.3);
+  }
+  .feed-item.sla-warning .feed-detail {
+    background: rgba(244,63,94,0.04);
+    border: 1px solid rgba(244,63,94,0.15);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: var(--coral);
+    font-family: var(--font-mono); font-size: 10px;
+  }
+
+  /* Note input at the bottom of the feed */
+  .note-input-row {
+    display: flex; gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .note-input {
+    flex: 1;
+    padding: 9px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--font-body); font-size: 12px;
+    color: var(--text);
+  }
+  .note-input:focus { outline: none; border-color: var(--dim); }
+  .note-input::placeholder { color: var(--dim); }
+  .send-btn {
+    width: 36px; height: 36px;
+    background: var(--cyan); color: var(--bg);
+    border: none; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .send-btn:hover { background: #0891b2; }
+  .send-btn svg { width: 14px; height: 14px; }
+
+  /* ============================================================
+     PHOTOS — collapsed when empty, gallery when populated
+     ============================================================ */
+  .photos-empty {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .photos-empty:hover { border-color: var(--dim); color: var(--text-secondary); }
+  .photos-empty svg { width: 14px; height: 14px; }
+
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+  .photo-thumb {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .photo-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .photo-thumb .caption {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.65);
+    padding: 5px 8px;
+    font-size: 10px; color: white;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .anim-1 { animation: fadeUp 0.5s ease-out 0.05s both; }
+  .anim-2 { animation: fadeUp 0.5s ease-out 0.12s both; }
+  .anim-3 { animation: fadeUp 0.5s ease-out 0.19s both; }
+  .anim-4 { animation: fadeUp 0.5s ease-out 0.26s both; }
+  .anim-5 { animation: fadeUp 0.5s ease-out 0.33s both; }
+</style>
+</head>
+<body>
+
+<div class="variant-label">WORK ORDER SHOW · X4 EDITORIAL COOL</div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">A</div>
+    <div class="logo-text">Astrea</div>
+  </div>
+</aside>
+
+<main class="shell">
+  <div class="breadcrumb-bar">
+    <a href="#">Work Orders</a>
+    <span class="sep">/</span>
+    <span class="current">Inspeccionar ubicación sensor Vitrina 1</span>
+  </div>
+
+  <div class="content">
+
+    <!-- ============================================================
+         [A] HERO — compact, SLA integrated
+         ============================================================ -->
+    <div class="hero overdue anim-1">
+      <div class="hero-row">
+        <div class="hero-left">
+          <div class="hero-kicker">
+            <span>Orden de trabajo #2</span>
+          </div>
+          <h1 class="hero-title">Inspeccionar ubicación sensor Vitrina 1</h1>
+          <div class="badge-row">
+            <span class="badge priority-medium">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/></svg>
+              Media
+            </span>
+            <span class="badge status-open">Abierta</span>
+            <span class="badge type">Inspección</span>
+            <span class="badge sla-overdue">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1"/></svg>
+              SLA vencido
+            </span>
+          </div>
+          <div class="hero-meta">
+            <span>CEDIS Centro</span>
+            <span class="sep">·</span>
+            <span>Creado 15/Abr/2026</span>
+            <span class="sep">·</span>
+            <span class="overdue-text">abierta 2d · SLA era 24h</span>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <button class="btn">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 2l3 3-9 9H2v-3z"/></svg>
+            Editar
+          </button>
+          <button class="btn">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 2.5-5 6-5s6 2 6 5"/></svg>
+            Asignar
+          </button>
+          <button class="btn btn-danger">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6"/><path d="M5 5l6 6M11 5l-6 6"/></svg>
+            Cancelar
+          </button>
+          <button class="btn btn-ghost" title="Eliminar">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5h10M6 5V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2M5 5v9a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [B] DESCRIPTION — the work instruction, prominent
+         ============================================================ -->
+    <div class="description-card anim-2">
+      <div class="label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M6 6h4M6 9h4"/></svg>
+        Instrucciones de trabajo
+      </div>
+      Las lecturas del exhibidor están 3°C más altas de lo esperado. Verificar que el sensor no esté cerca de la luminaria. Reubicar si es necesario.
+    </div>
+
+    <!-- ============================================================
+         [C] METADATA STRIP — compact grid, replaces old Details table
+         ============================================================ -->
+    <div class="meta-strip anim-3">
+      <div class="meta-item">
+        <div class="meta-label">Tipo</div>
+        <div class="meta-value">Inspección</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Prioridad</div>
+        <div class="meta-value" style="color: var(--cyan);">Media</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Dispositivo</div>
+        <div class="meta-value"><a href="#">EM300-TH · Vitrina 1 →</a></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Sitio</div>
+        <div class="meta-value">CEDIS Centro</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Asignado a</div>
+        <div class="meta-value muted">Sin asignar</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Creado por</div>
+        <div class="meta-value">Admin Cadena Frio</div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [D] LINKED ALERT (optional — shows when WO was created from an alert)
+         ============================================================ -->
+    <a class="linked-alert anim-3" href="#">
+      <div class="alert-icon">!</div>
+      <div class="alert-body">
+        <div class="alert-title">Alerta vinculada · Alerta Temp Vitrina</div>
+        <div class="alert-meta">critical · reconocida · disparada hace 2d · CEDIS Centro</div>
+      </div>
+      <span class="badge status-assigned" style="font-size: 8px;">Reconocida</span>
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--muted);"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </a>
+
+    <!-- ============================================================
+         [E] PHOTOS — collapsed empty state, expands on click
+         ============================================================ -->
+    <div class="card anim-4">
+      <div class="section-header">
+        <span class="section-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="12" height="10" rx="1"/><circle cx="6" cy="7" r="1.5"/><path d="M14 13l-3-3-2 2-2-2-5 5"/></svg>
+          Fotos
+        </span>
+        <span class="section-count">0</span>
+        <span class="section-rule"></span>
+      </div>
+      <div class="photos-empty">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3v10M3 8h10"/></svg>
+        Agregar foto — evidencia de la inspección
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [F] ACTIVITY FEED — timeline + notes merged chronologically
+         ============================================================ -->
+    <div class="card anim-5">
+      <div class="section-header">
+        <span class="section-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" transform="scale(0.67)"/></svg>
+          Actividad
+        </span>
+        <span class="section-count">4 eventos</span>
+        <span class="section-rule"></span>
+      </div>
+
+      <div class="feed">
+        <!-- SLA overdue warning (injected at the right timestamp) -->
+        <div class="feed-item sla-warning">
+          <div class="feed-dot">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2l6 10H2z"/><path d="M8 7v2M8 11h.01"/></svg>
+          </div>
+          <div class="feed-body">
+            <div class="feed-head">
+              <span class="feed-actor" style="color: var(--coral);">SLA vencido</span>
+              <span class="feed-action">— la OT excedió las 24h para prioridad media</span>
+              <span class="feed-time">hace 2m</span>
+            </div>
+            <div class="feed-detail">
+              Abierta por <strong>2d</strong> sin completar. Las OTs de prioridad media deben resolverse en 24 horas.
+            </div>
+          </div>
+        </div>
+
+        <!-- Created -->
+        <div class="feed-item">
+          <div class="feed-dot created">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 1"/></svg>
+          </div>
+          <div class="feed-body">
+            <div class="feed-head">
+              <span class="feed-actor">Admin Cadena Frio</span>
+              <span class="feed-action">creó la orden de trabajo</span>
+              <span class="feed-time">hace 1d</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Note example (from a different WO state — showing how they'd look) -->
+        <div class="feed-item">
+          <div class="feed-dot note">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M6 6h4M6 9h2"/></svg>
+          </div>
+          <div class="feed-body">
+            <div class="feed-head">
+              <span class="feed-actor">Admin Cadena Frio</span>
+              <span class="feed-action">agregó una nota</span>
+              <span class="feed-time">hace 22h</span>
+            </div>
+            <div class="feed-detail note-text">
+              Revisé las lecturas remotas. El sensor parece estar reportando 3°C arriba del resto de la zona. Probablemente esté recibiendo calor radiante de la luminaria LED superior. Programar visita para reubicar.
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo upload event -->
+        <div class="feed-item">
+          <div class="feed-dot photo">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="12" height="10" rx="1"/><circle cx="6" cy="7" r="1.5"/></svg>
+          </div>
+          <div class="feed-body">
+            <div class="feed-head">
+              <span class="feed-actor">Admin Cadena Frio</span>
+              <span class="feed-action">subió una foto</span>
+              <span class="feed-time">hace 22h</span>
+            </div>
+            <div class="feed-detail">
+              <div style="width: 160px; height: 120px; background: var(--surface-2); border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--dim); font-size: 10px;">
+                [foto del sensor]
+              </div>
+              <div style="font-family: var(--font-mono); font-size: 9px; color: var(--muted); margin-top: 4px;">
+                "Sensor junto a luminaria LED"
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Note input -->
+      <div class="note-input-row">
+        <input class="note-input" placeholder="Agregar una nota..." />
+        <button class="send-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8l12-6-4 6 4 6z"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

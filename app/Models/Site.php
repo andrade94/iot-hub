@@ -30,6 +30,7 @@ class Site extends Model
         'install_date',
         'status',
         'floor_plan_count',
+        'chirpstack_application_id',
     ];
 
     public function setNameAttribute(string $value): void

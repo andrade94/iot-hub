@@ -27,17 +27,18 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
 
-    // Organization settings — redirect to catalog edit page
-    Route::middleware(['verified', 'org.scope', 'permission:manage org settings'])->group(function () {
+    // Organization settings — super_admin goes to org catalog, client admins go to their own org edit page
+    Route::middleware(['verified'])->group(function () {
         Route::get('settings/organization', function () {
-            $org = app()->bound('current_organization') ? app('current_organization') : null;
-            if (!$org && auth()->user()->org_id) {
-                $org = \App\Models\Organization::find(auth()->user()->org_id);
+            $user = auth()->user();
+
+            // Astrea staff (no org) → go to the organizations catalog
+            if (! $user->org_id) {
+                return redirect('/settings/organizations');
             }
-            if (!$org) {
-                return redirect('/settings/profile')->with('error', 'No organization found.');
-            }
-            return redirect("/settings/organizations/{$org->id}/edit");
+
+            // Client admin → go to their org's edit page
+            return redirect("/settings/organizations/{$user->org_id}/edit");
         })->name('organization.edit');
     });
 });

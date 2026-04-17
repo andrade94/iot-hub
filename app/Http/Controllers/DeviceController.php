@@ -67,6 +67,11 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]));
 
+        // Auto-provision on ChirpStack when configured
+        if (config('services.chirpstack.api_key')) {
+            \App\Jobs\ProvisionDeviceOnChirpStack::dispatch($device->id);
+        }
+
         return back()->with('success', "Device '{$device->name}' registered successfully.");
     }
 
@@ -101,7 +106,14 @@ class DeviceController extends Controller
 
     public function destroy(Request $request, Site $site, Device $device)
     {
+        $devEui = $device->dev_eui;
+
         $device->delete();
+
+        // Remove from ChirpStack when configured
+        if ($devEui && config('services.chirpstack.api_key')) {
+            \App\Jobs\DeprovisionDeviceFromChirpStack::dispatch($devEui);
+        }
 
         return back()->with('success', 'Device removed successfully.');
     }

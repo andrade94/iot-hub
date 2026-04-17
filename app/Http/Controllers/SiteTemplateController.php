@@ -15,7 +15,7 @@ class SiteTemplateController extends Controller
         $user = $request->user();
         abort_unless($user->hasPermissionTo('manage site templates'), 403);
 
-        $templates = SiteTemplate::forOrg($user->org_id)
+        $templates = SiteTemplate::when($user->org_id, fn ($q) => $q->forOrg($user->org_id))
             ->with('createdByUser:id,name')
             ->withCount('sites as usage_count')
             ->withMax('sites as last_applied_at', 'template_applied_at')
@@ -67,7 +67,7 @@ class SiteTemplateController extends Controller
             ->values();
 
         // Stats bar
-        $allSites = Site::where('org_id', $user->org_id)->whereNotNull('template_id')->count();
+        $allSites = Site::when($user->org_id, fn ($q) => $q->where('org_id', $user->org_id))->whereNotNull('template_id')->count();
         $mostUsed = $templates->sortByDesc('usage_count')->first();
         $lastAppliedTemplate = $templates
             ->filter(fn ($t) => $t['last_applied_at'] !== null)
@@ -77,7 +77,7 @@ class SiteTemplateController extends Controller
         $stats = [
             'total_templates' => $templates->count(),
             'sites_using' => $allSites,
-            'total_sites' => Site::where('org_id', $user->org_id)->count(),
+            'total_sites' => Site::when($user->org_id, fn ($q) => $q->where('org_id', $user->org_id))->count(),
             'most_used' => $mostUsed && $mostUsed['usage_count'] > 0
                 ? ['name' => $mostUsed['name'], 'usage_count' => $mostUsed['usage_count']]
                 : null,
@@ -121,7 +121,7 @@ class SiteTemplateController extends Controller
         $config = $service->capture($sourceSite);
 
         SiteTemplate::create([
-            'org_id' => $user->org_id,
+            'org_id' => $user->org_id ?? $sourceSite->org_id,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             ...$config,

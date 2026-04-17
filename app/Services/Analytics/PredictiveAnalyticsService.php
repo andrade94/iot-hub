@@ -44,7 +44,7 @@ class PredictiveAnalyticsService
         // Simple linear regression: y = battery_pct, x = days since first reading
         $firstTime = Carbon::parse($readings->first()->time);
         $points = $readings->map(fn ($r) => [
-            'x' => Carbon::parse($r->time)->diffInHours($firstTime) / 24.0,
+            'x' => $firstTime->diffInHours(Carbon::parse($r->time)) / 24.0,
             'y' => (float) $r->value,
         ]);
 
@@ -62,7 +62,7 @@ class PredictiveAnalyticsService
         }
 
         // Project: when does y = 20 (replacement threshold)?
-        $currentDay = now()->diffInHours($firstTime) / 24.0;
+        $currentDay = $firstTime->diffInHours(now()) / 24.0;
         $currentProjected = $regression['slope'] * $currentDay + $regression['intercept'];
         $daysToThreshold = $regression['slope'] != 0
             ? ($currentProjected - 20) / abs($regression['slope'])

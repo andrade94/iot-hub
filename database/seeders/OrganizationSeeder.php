@@ -14,7 +14,7 @@ class OrganizationSeeder extends Seeder
             'slug' => 'cadena-frio-demo',
             'segment' => 'retail',
             'plan' => 'professional',
-            'settings' => ['alerts_enabled' => true, 'report_frequency' => 'daily'],
+            'settings' => ['alerts_enabled' => true, 'report_frequency' => 'daily', 'locale' => 'es'],
             'default_timezone' => 'America/Mexico_City',
         ]);
 
@@ -23,7 +23,7 @@ class OrganizationSeeder extends Seeder
             'slug' => 'retail-energy-demo',
             'segment' => 'industrial',
             'plan' => 'starter',
-            'settings' => ['alerts_enabled' => true, 'report_frequency' => 'weekly'],
+            'settings' => ['alerts_enabled' => true, 'report_frequency' => 'weekly', 'locale' => 'es'],
             'default_timezone' => 'America/Mexico_City',
         ]);
 

@@ -14,7 +14,7 @@ class DataExportController extends Controller
         $user = $request->user();
         abort_unless($user->hasPermissionTo('export organization data'), 403);
 
-        $exports = DataExport::forOrg($user->org_id)
+        $exports = DataExport::when($user->org_id, fn ($q) => $q->forOrg($user->org_id))
             ->with('requestedByUser:id,name')
             ->latest()
             ->take(10)

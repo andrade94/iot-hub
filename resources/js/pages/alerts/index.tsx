@@ -508,12 +508,11 @@ function AlertRow({
                     )}
                 />
                 <Badge variant={severityVariant(alert.severity)} className="text-[9px]">
-                    {alert.severity}
+                    {t(alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1))}
                 </Badge>
             </div>
             <div className="cursor-pointer" onClick={onClick}>
                 <p className="text-[13px] font-medium">{(data?.rule_name as string) ?? alert.rule?.name ?? t('Unknown rule')}</p>
-                <p className="font-mono text-[9px] text-muted-foreground/60">rule_id={alert.rule_id ?? '?'}</p>
                 {alert.corrective_actions && alert.corrective_actions.length > 0 && (
                     <p className="mt-0.5 flex items-center gap-1 text-[9px] text-emerald-500">
                         <CheckCircle2 className="h-2.5 w-2.5" />
@@ -547,7 +546,7 @@ function AlertRow({
             </div>
             <div>
                 <Badge variant={statusVariant(alert.status)} className="text-[9px]">
-                    {alert.status}
+                    {t(alert.status.charAt(0).toUpperCase() + alert.status.slice(1))}
                 </Badge>
             </div>
             <div className="font-mono text-[10px] text-muted-foreground">
