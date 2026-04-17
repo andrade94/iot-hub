@@ -16,7 +16,7 @@ class IntegrationController extends Controller
             ->latest()
             ->get();
 
-        return Inertia::render('settings/integrations/index', [
+        return Inertia::render('settings/integrations', [
             'integrations' => $integrations,
         ]);
     }

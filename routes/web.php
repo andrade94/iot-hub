@@ -204,7 +204,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
     Route::middleware('site.access')->group(function () {
         Route::get('sites/{site}/devices', [DeviceController::class, 'index'])->name('sites.devices.index');
         Route::post('sites/{site}/devices', [DeviceController::class, 'store'])->name('devices.store')->middleware('permission:manage devices');
-        Route::get('sites/{site}/devices/{device}', [DeviceController::class, 'show'])->name('devices.show');
+        Route::get('sites/{site}/devices/{device}', [DeviceController::class, 'show'])->name('sites.devices.show');
         Route::put('sites/{site}/devices/{device}', [DeviceController::class, 'update'])->name('devices.update')->middleware('permission:manage devices');
         Route::delete('sites/{site}/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy')->middleware('permission:manage devices');
         Route::post('sites/{site}/devices/{device}/replace', [DeviceController::class, 'replace'])->name('devices.replace')->middleware('permission:manage devices');
@@ -254,8 +254,7 @@ Route::middleware(['auth', 'org.scope', 'privacy'])->group(function () {
         Route::get('sites/{site}/zones/{zone}', [SiteDetailController::class, 'zone'])->name('sites.zone');
     });
 
-    // Device predictions (Phase 13)
-    Route::get('devices/{device}/predictions', [\App\Http\Controllers\PredictiveAnalyticsController::class, 'devicePrediction'])->name('devices.predictions');
+    // Device predictions — moved to /analytics/predictions (Phase 13)
 
     // Device calibrations (Phase 12)
     Route::post('devices/{device}/calibrations', [\App\Http\Controllers\DeviceCalibrationController::class, 'store'])->name('calibrations.store');
